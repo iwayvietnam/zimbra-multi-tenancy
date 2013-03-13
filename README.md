@@ -5,6 +5,7 @@
 Copyright (C) 2013 [iWay Vietnam] (http://www.iwayvietnam.com/)
 
 ##Licensing
+[GNU Affero General Public License] (http://www.gnu.org/licenses/agpl-3.0.html)
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU Affero General Public License as
@@ -68,4 +69,4 @@ Copyright (C) 2013 [iWay Vietnam] (http://www.iwayvietnam.com/)
 **Many other functionalities would be added later.**
 
 ##Credits
-Special thanks to: iWay Developers team and [Community Space] (http://khonggiancongdong.org/)
+Special thanks to: iWay Development team and [Community Space] (http://khonggiancongdong.org/)
