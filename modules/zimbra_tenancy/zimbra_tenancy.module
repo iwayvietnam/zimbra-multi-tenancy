@@ -1,0 +1,55 @@
+<?php
+
+/**
+ * Implements hook_init().
+ */
+function zimbra_tenancy_init(){
+	//$type = node_type_get_type('article');
+	//print_r($type);
+	
+	$field_name ='field_tenant_text';
+	$field = field_info_field($field_name);
+	//print_r( $field);print '|';
+
+	$instance = field_info_instance('node', $field_name, 'tenant');
+	//print_r($instance);
+}
+
+/**
+ * Implements hook_form_alter().
+ */
+function zimbra_tenancy_form_alter(&$form, &$form_state, $form_id){
+	//print $form_id;
+}
+
+
+/**
+ * Implements hook_menu().
+ */
+function zimbra_tenancy_menu(){
+  $items['admin/zimbra1'] = array(
+    'title' => t('Zimbra'),
+    'page callback' => 'zimbra_page_content1',
+    'access arguments' => array('access zimbra'),
+    'weight' => 1,
+  );
+  
+ 
+  return $items;
+}
+
+function zimbra_page_content1(){
+//	_zimbra_add_nodetype_tenant();
+//	_zimbra_add_nodetype_domain();
+//	_zimbra_add_nodetype_group();
+//	_zimbra_add_nodetype_alias();
+//	_zimbra_add_nodetype_mailbox();
+	return 'aa';
+}
+
+
+
+
+
+
+
