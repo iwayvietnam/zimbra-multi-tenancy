@@ -6,17 +6,14 @@
 function zimbra_tenancy_init(){
 	drupal_add_js(drupal_get_path('module', 'zimbra_tenancy') .'/zimbra_tenancy.js');	
 	
-	//$type = node_type_get_type('article');
-	//print_r($type);
-	
+/*
 	$field_name ='field_tenant_user';
 	$field = field_info_field($field_name);
 	//print_r( $field);print '|';
 
 	$instance = field_info_instance('node', $field_name, 'tenant');
 	//print_r($instance);
-	
-	//print_r(node_type_load('tenant'));
+*/
 }
 
 /**
@@ -42,6 +39,15 @@ function zimbra_tenancy_permission() {
 function zimbra_tenancy_form_alter(&$form, &$form_state, $form_id){
 	global $user;
 	//print_r($user);
+	
+	
+	//Delete denied
+	if($form_id == "node_delete_confirm" && $user ->uid !=1){
+		drupal_access_denied();
+		exit;
+	}
+	
+	
 	if($form_id =='tenant_node_form'){
 		$tenant_access =0;
 		if(user_access('administer zimbra')){
@@ -70,7 +76,7 @@ function zimbra_tenancy_form_alter(&$form, &$form_state, $form_id){
 		$form['field_domain_user']['und']['#options']['_none'] =t('New user');
 		$form['#validate'][] ='domain_validate';
 	}
-	
+		
 	if($form_id =='group_node_form'){
 	    drupal_add_css(drupal_get_path('module', 'zimbra_tenancy') .'/zimbra_tenancy.css');
 		$user_get_domain =user_get_domain($user ->uid);
@@ -156,6 +162,10 @@ function zimbra_tenancy_form_alter(&$form, &$form_state, $form_id){
 		if( count($user_get_domain) <1){
 			drupal_access_denied();
 			exit;
+		}
+		$form['field_mailbox_password']['und'][0]['value']['#default_value'] ='';
+		if(arg(1) !='add'){
+			//$form['field_mailbox_password']['#access'] =0;
 		}
 		$form['field_node_domain_id']['und']['#options'] =$user_get_domain;
 		$form['#validate'][] ='mailbox_validate';
@@ -368,9 +378,10 @@ function domain_validate($form, &$form_state){
 			
 			//Insert into queue_command table
 			if($nid ==0){
-				$command ='Create new Domain: ' .$domain_name;
+				$command ='zmprov cd ' .$domain_name;
 				$notes ='Create new Domain';
-				$sql ="INSERT INTO zimbra_queuedcommand(command, notes, status) VALUES('$command', '$notes', 0);";
+				$time_created =time();
+				$sql ="INSERT INTO zimbra_queuedcommand(command, notes, status, created, changed) VALUES('$command', '$notes', 0, " .$time_created .", " .$time_created .");";
 				@db_query($sql);
 			}
 		}
@@ -398,16 +409,49 @@ function mailbox_validate($form, &$form_state){
 
 		if(!form_set_error()){		
 			$form_state['values']['title'] =trim($form_state['values']['title']);
+			$mail_domain =node_load($mailbox_domain);
+			$mail_address =$mailbox_name .'@' .$mail_domain->title;
+			$mail_password =$form_state['values']['field_mailbox_password']['und'][0]['value'];
+			$mail_fullname =trim($form_state['values']['field_mailbox_fullname']['und'][0]['value']);
 			
-			//Insert into queue_command table
-			if($nid ==0){
-				$mail_domain =node_load($mailbox_domain);
-				$mail_address =$mailbox_name .'@' .$mail_domain->title;
-				
-				$command ='Create new Mailbox: ' .$mail_address;
+			//Insert new account into queue_command table
+			if($nid ==0){				
+				$command ='zmprov ca ' .$mail_address .' "' .$mail_password .'" displayName "' .$mail_fullname .'"';
 				$notes ='Create new Mailbox';
-				$sql ="INSERT INTO zimbra_queuedcommand(command, notes, status) VALUES('$command', '$notes', 0);";
+				$time_created =time();
+				$sql ="INSERT INTO zimbra_queuedcommand(command, notes, status, created, changed) VALUES('$command', '$notes', 0, " .$time_created .", " .$time_created .");";
 				@db_query($sql);
+			}else{
+				//Change mailbox information
+				
+				$old_node =node_load($nid);
+				$old_domain =node_load($old_node ->field_node_domain_id['und'][0]['nid']);
+				$old_address =$old_node ->title .'@' .$old_domain ->title;
+				$old_password =$old_node ->field_mailbox_password['und'][0]['value'];
+				$old_fullname =$old_node ->field_mailbox_fullname['und'][0]['value'];
+				$time_created =time();
+				
+				//Change fullname for Mailbox
+				if($old_fullname !=$mail_fullname){
+					$command ='zmprov ma ' .$old_address .' displayName "' .$mail_fullname .'"';
+					$notes ='Change fullname for Mailbox';
+					$sql ="INSERT INTO zimbra_queuedcommand(command, notes, status, created, changed) VALUES('$command', '$notes', 0, " .$time_created .", " .$time_created .");";
+					@db_query($sql);
+				}
+				//Change password of Mailbox
+				if($old_password != $mail_password && $mail_password !=''){
+					$command ='zmprov sp ' .$old_address .' "' .$mail_password .'"';
+					$notes ='Change password of Mailbox';
+					$sql ="INSERT INTO zimbra_queuedcommand(command, notes, status, created, changed) VALUES('$command', '$notes', 0, " .$time_created .", " .$time_created .");";
+					@db_query($sql);
+				}
+				//Rename Mailbox
+				if($old_address !=$mail_address){
+					$command ='zmprov ra ' .$old_address .' ' .$mail_address;
+					$notes ='Rename Mailbox';
+					$sql ="INSERT INTO zimbra_queuedcommand(command, notes, status, created, changed) VALUES('$command', '$notes', 0, " .$time_created .", " .$time_created .");";
+					@db_query($sql);
+				}			
 			}
 		}
 	}	
@@ -438,12 +482,21 @@ function alias_validate($form, &$form_state){
 			//Insert into queue_command table
 			if($nid ==0){
 				$mail_domain =node_load($mailbox_domain);
-				$mail_address =$mailbox_name .'@' .$mail_domain->title;
+				$alias_address =$mailbox_name .'@' .$mail_domain->title;
 				
-				$command ='Create new Alias: ' .$mail_address;
+				$mapping_id =$form_state['values']['field_alias_mapping_mailbox']['und'][0]['nid'];
+				$mapping_node =node_load($mapping_id);
+				
+				$mapping_domain_node =node_load( $mapping_node ->field_node_domain_id['und'][0]['nid']);
+				$mapping_mailbox =$mapping_node ->title .'@' .$mapping_domain_node ->title;
+				
+				
+				$command ='zmprov aaa ' .$mapping_mailbox .' ' .$alias_address;
 				$notes ='Create new Alias';
-				$sql ="INSERT INTO zimbra_queuedcommand(command, notes, status) VALUES('$command', '$notes', 0);";
-				@db_query($sql);
+				
+				$time_created =time();
+				$sql ="INSERT INTO zimbra_queuedcommand(command, notes, status, created, changed) VALUES('$command', '$notes', 0, " .$time_created .", " .$time_created .");";
+				@db_query($sql);				
 			}			
 		}
 	}	
@@ -479,7 +532,7 @@ function group_validate($form, &$form_state){
 				$all_account =user_get_all_account($user ->uid);
 				$members_list ='';
 		
-				$members_default_array =explode('|', $form_state['values']['field_group_members']['und']['value']);
+				$members_default_array =explode('|', $form_state['values']['field_group_members']['und'][0]['value']);
 		
 				if(count($members_default_array) >0){
 					foreach($members_default_array as $value){
@@ -488,18 +541,24 @@ function group_validate($form, &$form_state){
 						if(count($mem_arr) >1 && isset($all_account[$mem_arr[1]])) $mem_val =$all_account[$mem_arr[1]];
 						if($mem_val =='') $mem_val =$value;
 						
-						if( $members_list !='') $members_list .='|' ;
+						if( $members_list !='') $members_list .=' ' ;
 						if($mem_val !='') $members_list .=$mem_val;
 					}
 				}
 					
 				
-				$command ='Create new Group: ' .$mail_address .' Members: ' .$members_list;
+				$command ='zmprov cdl ' .$mail_address;
 				$notes ='Create new Group';
-				$sql ="INSERT INTO zimbra_queuedcommand(command, notes, status) VALUES('$command', '$notes', 0);";
+				$time_created =time();
+				$sql ="INSERT INTO zimbra_queuedcommand(command, notes, status, created, changed) VALUES('$command', '$notes', 0, " .$time_created .", " .$time_created .");";
+				@db_query($sql);
+
+				//Add members in Group
+				$command ='zmprov adlm ' .$mail_address .' ' .$members_list;
+				$notes ='Add members into Group';
+				$sql ="INSERT INTO zimbra_queuedcommand(command, notes, status, created, changed) VALUES('$command', '$notes', 0, " .$time_created .", " .$time_created .");";
 				@db_query($sql);
 			}
-			exit;
 		}
 	}	
 }
