@@ -30,6 +30,7 @@ function zimbra_tenancy_schema() {
       'notes' 			=> array('type' => 'text', 'size' => 'big', 'not null' => TRUE,),
       'status' 			=> array('type' => 'int', 'not null' => TRUE, 'default' => 0),
       'number_of_deads' 	=> array('type' => 'int', 'not null' => TRUE, 'default' => 0),
+      'nid' 			=> array('type' => 'int', 'not null' => TRUE, 'default' => 0),
       'created' 		=> array('type' => 'int', 'not null' => TRUE, 'default' => 0,), //Time created Command
       'changed' 		=> array('type' => 'int', 'not null' => TRUE, 'default' => 0,), //Time last update Command
     ),

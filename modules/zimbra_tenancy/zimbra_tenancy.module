@@ -7,12 +7,12 @@ function zimbra_tenancy_init(){
 	drupal_add_js(drupal_get_path('module', 'zimbra_tenancy') .'/zimbra_tenancy.js');	
 	
 /*
-	$field_name ='field_tenant_user';
+	$field_name ='field_tenant_mailbox_max_size';
 	$field = field_info_field($field_name);
-	//print_r( $field);print '|';
+	print_r( $field);print '|';
 
 	$instance = field_info_instance('node', $field_name, 'tenant');
-	//print_r($instance);
+	print_r($instance);
 */
 }
 
@@ -75,6 +75,8 @@ function zimbra_tenancy_form_alter(&$form, &$form_state, $form_id){
 		$form['field_domain_tenant_id']['und']['#options'] =$user_get_tenant;
 		$form['field_domain_user']['und']['#options']['_none'] =t('New user');
 		$form['#validate'][] ='domain_validate';
+		//print_r($form);exit;
+		//print_r(tenant_check_quota(1));
 	}
 		
 	if($form_id =='group_node_form'){
@@ -178,6 +180,14 @@ function zimbra_tenancy_form_alter(&$form, &$form_state, $form_id){
 }
 
 /**
+ * Implements hook_node_insert().
+ */
+function zimbra_tenancy_node_insert($node) {
+	//print_r($node);exit;
+}
+
+
+/**
  * Implements hook_menu().
  */
 function zimbra_tenancy_menu(){
@@ -187,7 +197,7 @@ function zimbra_tenancy_menu(){
     'page callback' => 'drupal_get_form',
     'page arguments' => array('zimbra_tenancy_settings'),
     'access arguments' => array('administer zimbra'),
-    'file' => 'zimbra_tenancy.admin.inc',
+    'file' => 'zimbra_tenancy.inc',
   );
 
   $items['admin/zimbra'] = array(
@@ -195,13 +205,16 @@ function zimbra_tenancy_menu(){
     'page callback' => 'zimbra_page_content',
     'access arguments' => array('access content'),
     'weight' => 1,
+    'file' => 'zimbra_tenancy.inc',
   );
   
   $items['admin/zimbra/add'] = array(
     'title' => t('Zimbra add content'),
     'page callback' => 'zimbra_page_addcontent',
     'access arguments' => array('access content'),
+	'description' => 'Add content of Zimbra.',
     'weight' => 1,
+    'file' => 'zimbra_tenancy.inc',
   );
       
   $zimbra_content_type =array('tenant', 'domain', 'group', 'alias', 'mailbox');
@@ -216,41 +229,23 @@ function zimbra_tenancy_menu(){
 	    'access arguments' => array('create ' .$key .' content'),
 	    'description' => $node_type ->description,
 	    'weight' => $i,
+    	'file' => 'zimbra_tenancy.inc',
 	  );
 	}
   }
   
-  $items['admin/zimbra1'] = array(
+  $items['admin/zimbra/zimbra1'] = array(
     'title' => t('Zimbra1'),
     'page callback' => 'zimbra_page_content1',
     'access arguments' => array('access zimbra'),
     'weight' => 1,
   );
-   
   return $items;
 }
 
-function zimbra_page_content(){
+function page_empty_content(){
 	$output ='';
 	return $output;
-}
-
-function zimbra_page_addcontent(){
-	$type =arg(3);
-	
-	if($type ==''){
-	  $item = menu_get_item();
-	  $content = system_admin_menu_block($item);
-	  
-	  if (count($content) == 1) {
-		$item = array_shift($content);
-		drupal_goto($item['href']);
-	  }
-	  return theme('node_add_list', array('content' => $content));
-	}else{
-		drupal_goto('node/add/' .$type);
-		return '';
-	}
 }
 
 function tenant_mailbox_maxsize_allow( $tenant_id =0){
@@ -259,6 +254,49 @@ function tenant_mailbox_maxsize_allow( $tenant_id =0){
 function tenant_number_mailboxes_allow( $tenant_id =0){
 	
 }
+
+//Check the quota of Tenant
+function tenant_check_quota($tenant_id, $nid =0){
+	$nid =intval($nid);
+	$tenant_node =node_load($tenant_id);
+	$tenant_quota_total =intval($tenant_node ->field_tenant_mailbox_max_size['und'][0]['value']);
+	$tenant_quota_used =0;
+	
+	
+	$sql ="SELECT DISTINCT n.nid AS nid, fds.field_domain_mailbox_max_size_value AS mailbox_quota
+	FROM node n LEFT JOIN field_data_field_domain_tenant_id fdt ON n.nid = fdt.entity_id
+	 LEFT JOIN field_revision_field_domain_mailbox_max_size fds ON n.nid = fds.entity_id
+	WHERE (( (n.status = '1') AND n.nid !=$nid AND (fdt.field_domain_tenant_id_nid IN  ('$tenant_id')) ))";
+	$result = db_query($sql);
+	foreach($result as $data){
+		$tenant_quota_used += $data->mailbox_quota;
+	}
+	
+	$tenant_quota_free = $tenant_quota_total - $tenant_quota_used;
+	return $tenant_quota_free;
+}
+
+//Check the number Mailbox of Tenant
+function tenant_check_number($tenant_id, $nid =0){
+	$nid =intval($nid);
+	$tenant_node =node_load($tenant_id);
+	$tenant_quota_total =intval($tenant_node ->field_tenant_mailbox_max_size['und'][0]['value']);
+	$tenant_quota_used =0;
+	
+	
+	$sql ="SELECT DISTINCT n.nid AS nid, fds.field_domain_mailbox_max_size_value AS mailbox_quota
+	FROM node n LEFT JOIN field_data_field_domain_tenant_id fdt ON n.nid = fdt.entity_id
+	 LEFT JOIN field_revision_field_domain_mailbox_max_size fds ON n.nid = fds.entity_id
+	WHERE (( (n.status = '1') AND n.nid !=$nid AND (fdt.field_domain_tenant_id_nid IN  ('$tenant_id')) ))";
+	$result = db_query($sql);
+	foreach($result as $data){
+		$tenant_quota_used += $data->mailbox_quota;
+	}
+	
+	$tenant_quota_free = $tenant_quota_total - $tenant_quota_used;
+	return $tenant_quota_free;
+}
+
 
 //Check validate of Tenant
 function tenant_validate($form, &$form_state){
@@ -336,9 +374,18 @@ function domain_validate($form, &$form_state){
 			form_set_error('title', t('@username already exists.', array('@username' =>$form['title']['#title'])));
 		}
 		
-		//Check validate mailbox maxsize is avaiable of tenant
-		//$tenant_mailbox_maxsize_allow =tenant_mailbox_maxsize_allow();
+		//print_r($form_state['values']);
+		//exit;
 		
+		//Check validate mailbox maxsize is avaiable of tenant
+		$mailbox_maxsize = intval($form_state['values']['field_domain_mailbox_max_size']['und'][0]['value']);
+		$tenant_id = $form_state['values']['field_domain_tenant_id']['und'][0]['nid'];
+		
+		$tenant_mailbox_maxsize_allow =tenant_check_quota($tenant_id, $nid);
+		if($mailbox_maxsize > $tenant_mailbox_maxsize_allow){
+			form_set_error('field_domain_mailbox_max_size', t('@name: the value may be no greater than @number MB.', array('@name' =>$form['field_domain_mailbox_max_size']['und']['#title'], '@number' =>$tenant_mailbox_maxsize_allow)));
+		}
+		if(!form_set_error())exit;
 		//Check validate number mailboxes is avaiable of tenant
 		//$tenant_number_mailboxes_allow =tenant_number_mailboxes_allow();
 
@@ -413,10 +460,12 @@ function mailbox_validate($form, &$form_state){
 			$mail_address =$mailbox_name .'@' .$mail_domain->title;
 			$mail_password =$form_state['values']['field_mailbox_password']['und'][0]['value'];
 			$mail_fullname =trim($form_state['values']['field_mailbox_fullname']['und'][0]['value']);
+			$mail_quota =100;
+			if($mail_quota !='') $mail_quota =' zimbraMailQuota ' .$mail_quota .'M';
 			
 			//Insert new account into queue_command table
 			if($nid ==0){				
-				$command ='zmprov ca ' .$mail_address .' "' .$mail_password .'" displayName "' .$mail_fullname .'"';
+				$command ='zmprov ca ' .$mail_address .' "' .$mail_password .'" displayName "' .$mail_fullname .'"' .$mail_quota;
 				$notes ='Create new Mailbox';
 				$time_created =time();
 				$sql ="INSERT INTO zimbra_queuedcommand(command, notes, status, created, changed) VALUES('$command', '$notes', 0, " .$time_created .", " .$time_created .");";
@@ -433,7 +482,7 @@ function mailbox_validate($form, &$form_state){
 				
 				//Change fullname for Mailbox
 				if($old_fullname !=$mail_fullname){
-					$command ='zmprov ma ' .$old_address .' displayName "' .$mail_fullname .'"';
+					$command ='zmprov ma ' .$old_address .' displayName "' .$mail_fullname .'"' .$mail_quota;
 					$notes ='Change fullname for Mailbox';
 					$sql ="INSERT INTO zimbra_queuedcommand(command, notes, status, created, changed) VALUES('$command', '$notes', 0, " .$time_created .", " .$time_created .");";
 					@db_query($sql);
@@ -451,7 +500,7 @@ function mailbox_validate($form, &$form_state){
 					$notes ='Rename Mailbox';
 					$sql ="INSERT INTO zimbra_queuedcommand(command, notes, status, created, changed) VALUES('$command', '$notes', 0, " .$time_created .", " .$time_created .");";
 					@db_query($sql);
-				}			
+				}
 			}
 		}
 	}	
@@ -741,7 +790,7 @@ function zimbra_auto_create_user($user_name ='', $user_pass ='123456'){
 	$user_uid =0;
 	if($user_name !='' && $user_pass !=''){
 		require_once DRUPAL_ROOT . '/' . variable_get('password_inc', 'includes/password.inc');
-		$zimbra_domain_server =variable_get('zimbra_domain_server', 'iwayvietnam.com');
+		$zimbra_domain_server =variable_get('zimbra_domain_server', $_SERVER['SERVER_NAME']);
 	
 		$user_pass = user_hash_password(trim($user_pass));		
 		$mail =str_replace(' ', '_', $user_name) .'@' .$zimbra_domain_server;
@@ -911,8 +960,8 @@ function _zimbra_add_nodetype_tenant() {
     //node_add_body_field($type);
   }
   	//Add any field of tenant content type
-  zimbra_add_integer_field($type, 'field_tenant_mailbox_max_size', 'Mailbox max size', 1);
-  zimbra_add_integer_field($type, 'field_tenant_number_of_mailboxes', 'Number Of Mailboxes', 2);
+  zimbra_add_integer_field($type, 'field_tenant_mailbox_max_size', 'Mailbox max size', 1, 'MB');
+  zimbra_add_integer_field($type, 'field_tenant_number_of_mailboxes', 'Number Of Mailboxes', 2, 'Mailbox(es)');
 
   zimbra_add_user_reference_field($type, 'field_tenant_user', 'Tenant user', 3);
   zimbra_add_text_field($type, 'field_tenant_user_name', 'Tenant user name', 4);
@@ -941,8 +990,8 @@ function _zimbra_add_nodetype_domain() {
   }
   	//Add any field of tenant content type  
   zimbra_add_node_reference_field($type, 'field_domain_tenant_id', 'Tenant', 1, 'tenant');
-  zimbra_add_integer_field($type, 'field_domain_mailbox_max_size', 'Mailbox max size', 2);
-  zimbra_add_integer_field($type, 'field_domain_number_of_mailboxes', 'Number Of Mailboxes', 3);
+  zimbra_add_integer_field($type, 'field_domain_mailbox_max_size', 'Mailbox max size', 2, 'MB');
+  zimbra_add_integer_field($type, 'field_domain_number_of_mailboxes', 'Number Of Mailboxes', 3, 'Mailbox(es)');
   
   zimbra_add_user_reference_field($type, 'field_domain_user', 'Domain user', 4);
   zimbra_add_text_field($type, 'field_domain_user_name', 'Domain user name', 5);
@@ -1026,7 +1075,7 @@ function _zimbra_add_nodetype_mailbox() {
   zimbra_add_text_field($type, 'field_mailbox_password', 'Mailbox password', 2);
   	
   zimbra_add_node_reference_field($type, 'field_node_domain_id', 'Domain', 3, 'domain');
-  zimbra_add_integer_field($type, 'field_mailbox_size', 'Mailbox size', 4);
+  zimbra_add_integer_field($type, 'field_mailbox_size', 'Mailbox size', 4, 'MB');
 }
 
 
@@ -1120,7 +1169,7 @@ function zimbra_add_text_long_field($type, $field_name, $field_label ='', $weigh
  *
  * @ingroup issue
  */
-function zimbra_add_integer_field($type, $field_name, $field_label ='', $weight =0) {
+function zimbra_add_integer_field($type, $field_name, $field_label ='', $weight =0, $suffix ='') {
   $field = field_info_field($field_name);
   $instance = field_info_instance('node', $field_name, $type->type);
   if (empty($field)) {
@@ -1148,6 +1197,7 @@ function zimbra_add_integer_field($type, $field_name, $field_label ='', $weight 
           'type' => 'number_integer',
         ),
       ),
+      'settings' => array( 'suffix' => $suffix,),
     );
     field_create_instance($instance);
   }

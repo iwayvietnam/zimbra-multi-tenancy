@@ -2,8 +2,10 @@ name = Zimbra Multi-tenancy
 description = Zimbra Multi tenancy
 package = Zimbra
 core = 7.x
+dependencies[] = references
 dependencies[] = node_reference
 dependencies[] = user_reference
+dependencies[] = number
 
 ;configure = admin/structure/domain/settings
 
