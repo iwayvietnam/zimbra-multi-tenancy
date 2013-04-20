@@ -23,7 +23,7 @@ ____________
 INSTALLATION
 ____________
 
-Add this module to the modules folder, enable it and configure to meet your needs.
+Add this module to the modules folder (sites/all/modules), enable it and configure to meet your needs.
 
 AUTHOR
 ------

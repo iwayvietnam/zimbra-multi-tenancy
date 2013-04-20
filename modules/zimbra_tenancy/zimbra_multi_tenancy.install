@@ -1,0 +1,115 @@
+<?php
+/**
+ * Install the module with a new database table
+ * @file
+ */
+
+/**
+ * Implements hook_install().
+ */ 
+function zimbra_multi_tenancy_install() {
+  // add nodetype with zimbra
+  _zimbra_add_nodetype_tenant();
+  _zimbra_add_nodetype_domain();
+  _zimbra_add_nodetype_group();
+  _zimbra_add_nodetype_alias();
+  _zimbra_add_nodetype_mailbox();  
+  
+  zimbra_add_role();
+}
+
+/**
+ * Implements hook_uninstall().
+ */ 
+function zimbra_multi_tenancy_uninstall() {
+	variable_del('zimbra_tenant_role_id');
+	variable_del('zimbra_domain_role_id');	
+}
+
+/**
+ * Implementation of hook_schema().
+ */
+function zimbra_multi_tenancy_schema() {
+  $schema = array();
+
+  $schema['zimbra_queuedcommand'] = array(
+    'fields' => array(
+      'cid'  	=> array('type' => 'serial', 'not null' => TRUE,),
+      'command'			=> array('type' => 'text', 'size' => 'big', 'not null' => TRUE,),
+      'notes' 			=> array('type' => 'text', 'size' => 'big', 'not null' => TRUE,),
+      'status' 			=> array('type' => 'int', 'not null' => TRUE, 'default' => 0),
+      'number_of_deads' 	=> array('type' => 'int', 'not null' => TRUE, 'default' => 0),
+      'nid' 			=> array('type' => 'int', 'not null' => TRUE, 'default' => 0),
+      'created' 		=> array('type' => 'int', 'not null' => TRUE, 'default' => 0,), //Time created Command
+      'changed' 		=> array('type' => 'int', 'not null' => TRUE, 'default' => 0,), //Time last update Command
+    ),
+    'primary key' => array('cid'),
+  );
+  return $schema;
+}
+
+
+function zimbra_add_role(){
+	$tenant_name ='Tenant';
+	$domain_name ='Domain';
+	$roles = user_roles();
+	
+    if(!in_array($tenant_name, $roles)){
+		$addRole =new stdClass();
+		$addRole ->name = $tenant_name;
+    	user_role_save($addRole);
+    }
+    
+    if(!in_array($domain_name, $roles)){
+		$addRole =new stdClass();
+		$addRole ->name = $domain_name;
+    	user_role_save($addRole);
+    }
+	
+	$roles_new = user_roles();
+	
+	$tenant_rid =0;
+	$domain_rid =0;
+	foreach($roles_new as $key =>$role){
+		if($role ==$tenant_name) $tenant_rid =$key;
+		if($role ==$domain_name) $domain_rid =$key;		
+	}
+	$tenant_perm =array(
+		'create domain content' => 1,	
+		'create group content' => 1,	
+		'create alias content' => 1,	
+		'create mailbox content' => 1,	
+		
+		'edit own domain content' => 1,	
+		'edit own group content' => 1,	
+		'edit own alias content' => 1,	
+		'edit own mailbox content' => 1,	
+		
+		'delete own domain content' => 1,	
+		'delete own group content' => 1,	
+		'delete own alias content' => 1,	
+		'delete own mailbox content' => 1,	
+	);	
+	
+	$domain_perm =array(	
+		'create group content' => 1,	
+		'create alias content' => 1,	
+		'create mailbox content' => 1,	
+		
+		'edit own domain content' => 1,	
+		'edit own group content' => 1,	
+		'edit own alias content' => 1,	
+		'edit own mailbox content' => 1,	
+		
+		'delete own domain content' => 1,	
+		'delete own group content' => 1,	
+		'delete own alias content' => 1,	
+		'delete own mailbox content' => 1,	
+	);	
+	user_role_change_permissions($tenant_rid, $tenant_perm);
+	user_role_change_permissions($domain_rid, $domain_perm);
+	
+	variable_set('zimbra_tenant_role_id', $tenant_rid);
+	variable_set('zimbra_domain_role_id', $domain_rid);
+}
+
