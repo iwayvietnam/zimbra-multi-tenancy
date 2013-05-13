@@ -1,0 +1,19 @@
+
+REQUIREMENTS
+____________
+
+- Drupal 7.x;
+- Zimbra mail server
+
+
+INSTALLATION
+____________
+
+Add this module to the modules folder (sites/all/modules), enable it and configure to meet your needs.
+
+
+AUTHOR
+______
+
+- Lê Anh Quyến
+Email: leanhquyen@gmail.com

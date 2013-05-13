@@ -2,17 +2,38 @@
 
 Implements Zimbra multi-tenacy of Zimbra mail.
 
-FEATURES
---------
 
-- Creates a new tenant of Zimbra
-- Manage tenant of Zimbra
-- Creates a new domain of Zimbra
-- Manage domain of Zimbra
-- Creates a new mailbox of Zimbra
-- Manage mailbox of Zimbra
-- Reset password of email on Zimbra
-- Provide commands for Zimbra implementation;
+FEATURES
+________
+
+1. Tenant management
+  * Create a new tenant (create tenant-account and set permissions at the same time)
+  * Update an existing tenant
+  * Delete an existing tenant
+
+2. Domain management
+  * Create a new domain (create domain-admin-account and set permissions at the same time)
+  * Update an existing domain
+  * Delete an existing domain
+
+3. Group/Distribution List management
+  * Create a new distribution list
+  * Update an existing distribution list
+  * Delete an existing distribution list
+  
+4. Mailbox/Account management
+  * Create a new mailbox
+  * Update an existing mailbox
+  * Delete an existing mailbox
+  * Reset mailbox password
+
+5. Alias management
+  * Create a new alias
+  * Update an existing alias
+  * Delete an existing alias
+
+6. Provide commands for Zimbra implementation in zimbra_queuedcommand table.
+
 
 REQUIREMENTS
 ____________
@@ -20,17 +41,16 @@ ____________
 - Drupal 7.x;
 - Zimbra server
 
+
 INSTALLATION
 ____________
 
 Add this module to the modules folder (sites/all/modules), enable it and configure to meet your needs.
 
+
 AUTHOR
-------
+______
 
 - Lê Anh Quyến
 Email: leanhquyen@gmail.com
-
-- Nguyễn Thị Dần
-Email: dannt@iwayvietnam.com
 
