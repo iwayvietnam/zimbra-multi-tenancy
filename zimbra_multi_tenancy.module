@@ -1601,7 +1601,7 @@ function user_access_list_tenant($uid){
 	foreach($result as $data){
 		$total =$data ->total;
 	}
-	if($total >0){
+	if($total >0 || user_access('administer zimbra')){
 		$output['total'] =$total;
 	}
 	return $output;	
