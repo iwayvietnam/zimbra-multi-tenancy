@@ -76,6 +76,7 @@ function zimbra_multi_tenancy_form_alter(&$form, &$form_state, $form_id){
 		//Check permission create, edit domain
 		$user_get_tenant =user_get_tenant($user ->uid);
 		if( count($user_get_tenant) <1){
+			drupal_set_message(t('Please <a href="' .url('node/add/tenant') .'">add Tenant</a> before create Domain.'), 'error');
 			drupal_access_denied();
 			exit;
 		}
@@ -97,7 +98,7 @@ function zimbra_multi_tenancy_form_alter(&$form, &$form_state, $form_id){
 	    drupal_add_css(drupal_get_path('module', 'zimbra_multi_tenancy') .'/zimbra_multi_tenancy.css');
 		$user_get_domain =user_get_domain($user ->uid);
 		if( count($user_get_domain) <1){
-			drupal_set_message(t('Please add Domain before create Group.'), 'error');
+			drupal_set_message(t('Please <a href="' .url('node/add/domain') .'">add Domain</a> before create Group.'), 'error');
 			
 			drupal_access_denied();
 			exit;
@@ -168,13 +169,14 @@ function zimbra_multi_tenancy_form_alter(&$form, &$form_state, $form_id){
 		$user_get_mailbox =user_get_mailbox($user ->uid);
 		$user_get_domain =user_get_domain($user ->uid);
 		if( count($user_get_domain) <1){
-			drupal_set_message(t('Please add Domain before create Alias.'), 'error');
+			drupal_set_message(t('Please <a href="' .url('node/add/domain') .'">add Domain</a> before create Alias.'), 'error');
 			
 			drupal_access_denied();
 			exit;
 		}
 		$form['field_node_domain_id']['und']['#options'] =$user_get_domain;
 		$form['field_alias_mapping_mailbox']['und']['#options'] =$user_get_mailbox;
+		if(count($user_get_mailbox) ==0) $form['field_alias_mapping_mailbox']['und']['#description'] =t('Please <a href="' .url('node/add/mailbox') .'">add Mailbox</a> before create Alias.');
 		$form['#validate'][] ='alias_validate';
 		$form['#action'] =url($_GET['q'], array('query' => array('destination' =>'admin/zimbra/alias')));
 	}
@@ -182,7 +184,7 @@ function zimbra_multi_tenancy_form_alter(&$form, &$form_state, $form_id){
 	if($form_id =='mailbox_node_form'){
 		$user_get_domain =user_get_domain($user ->uid);
 		if( count($user_get_domain) <1){
-			drupal_set_message(t('Please add Domain before create Mailbox.'), 'error');
+			drupal_set_message(t('Please <a href="' .url('node/add/domain') .'">add Domain</a> before create Mailbox.'), 'error');
 			
 			drupal_access_denied();
 			exit;
@@ -777,6 +779,7 @@ function mailbox_validate($form, &$form_state){
 	if(!form_set_error()){
 		$mailbox_name =trim($form_state['values']['title']);
 		$mailbox_domain =$form_state['values']['field_node_domain_id']['und'][0]['nid'];
+		$mail_password =$form_state['values']['field_mailbox_password']['und'][0]['value'];
 		$nid =intval($form_state['values']['nid']);
 		
 		//Check invalid of Mailbox name
@@ -804,12 +807,16 @@ function mailbox_validate($form, &$form_state){
 		if($domain_mailbox_maxsize_allow <=0 && arg(1) =='add'){			
 			form_set_error('title', t('Number of Mailbox is limited.'));
 		}
-
+		
+		//Check validate password of mailbox
+		if(!preg_match('!^[a-zA-Z0-9_\.]+$!', $mail_password)){
+			form_set_error('field_mailbox_password', t('The @fieldname must contain only letters, punctuation, numbers, and underscores.', array('@fieldname' =>$form['field_mailbox_password']['und']['#title'])));
+		}
+		
 		if(!form_set_error()){		
 			$form_state['values']['title'] =trim($form_state['values']['title']);
 			$mail_domain =node_load($mailbox_domain);
 			$mail_address =$mailbox_name .'@' .$mail_domain->title;
-			$mail_password =$form_state['values']['field_mailbox_password']['und'][0]['value'];
 			$mail_fullname =trim($form_state['values']['field_mailbox_fullname']['und'][0]['value']);
 			$mail_quota =100;
 			if($mail_quota !='') $mail_quota =' zimbraMailQuota ' .$mail_quota .'M';
