@@ -40,7 +40,7 @@ ____________
 
 - Drupal 7.x;
 - Zimbra server
-
+- References module (https://drupal.org/project/references)
 
 INSTALLATION
 ____________

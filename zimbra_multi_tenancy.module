@@ -64,6 +64,8 @@ function zimbra_multi_tenancy_form_alter(&$form, &$form_state, $form_id){
 		}
 		$form['field_tenant_user_name']['und'][0]['value']['#required'] =1;
 		$form['field_tenant_user_mail']['und'][0]['value']['#required'] =1;
+		$form['field_tenant_mailbox_max_size']['und'][0]['value']['#required'] =1;
+		$form['field_tenant_number_of_mailboxes']['und'][0]['value']['#required'] =1;
 		if(arg(1) =='add')$form['field_tenant_user_password']['und'][0]['value']['#required'] =1;
 
 		$form['field_tenant_user']['und']['#options']['_none'] =t('New user');
@@ -85,6 +87,8 @@ function zimbra_multi_tenancy_form_alter(&$form, &$form_state, $form_id){
 		
 		$form['field_domain_tenant_id']['und']['#required'] =1;
 		$form['field_domain_user_mail']['und'][0]['value']['#required'] =1;
+		$form['field_domain_mailbox_max_size']['und'][0]['value']['#required'] =1;
+		$form['field_domain_number_of_mailboxes']['und'][0]['value']['#required'] =1;
 		if(arg(1) =='add')$form['field_domain_user_password']['und'][0]['value']['#required'] =1;
 		
 		$form['field_domain_tenant_id']['und']['#options'] =$user_get_tenant;
@@ -105,6 +109,7 @@ function zimbra_multi_tenancy_form_alter(&$form, &$form_state, $form_id){
 		}
 		$nid =$form['nid']['#value'];
 		
+		$form['field_node_domain_id']['und']['#required'] =1;
 		$all_account =user_get_all_account($user ->uid);
 		$account_list =array();
 		$members_list =array();
@@ -174,6 +179,9 @@ function zimbra_multi_tenancy_form_alter(&$form, &$form_state, $form_id){
 			drupal_access_denied();
 			exit;
 		}
+		$form['field_node_domain_id']['und']['#required'] =1;
+		$form['field_alias_mapping_mailbox']['und']['#required'] =1;
+		
 		$form['field_node_domain_id']['und']['#options'] =$user_get_domain;
 		$form['field_alias_mapping_mailbox']['und']['#options'] =$user_get_mailbox;
 		if(count($user_get_mailbox) ==0) $form['field_alias_mapping_mailbox']['und']['#description'] =t('Please <a href="' .url('node/add/mailbox') .'">add Mailbox</a> before create Alias.');
@@ -192,6 +200,7 @@ function zimbra_multi_tenancy_form_alter(&$form, &$form_state, $form_id){
 		$form['field_mailbox_password']['und'][0]['value']['#default_value'] ='';
 
 		$form['field_node_domain_id']['und']['#required'] =1;
+		$form['field_mailbox_size']['und'][0]['value']['#required'] =1;
 		if(arg(1) =='add')$form['field_mailbox_password']['und'][0]['value']['#required'] =1;
 
 
@@ -236,6 +245,14 @@ function zimbra_multi_tenancy_menu(){
   );
 
   $items['admin/zimbra'] = array(
+    'title' => t('Zimbra multi tenancy'),
+    'page callback' => 'zimbra_page_content',
+    'access arguments' => array('access content'),
+    'weight' => 1,
+    'file' => 'zimbra_multi_tenancy.inc',
+  );
+  
+  $items['admin/zimbra/%'] = array(
     'title' => t('Zimbra multi tenancy'),
     'page callback' => 'zimbra_page_content',
     'access arguments' => array('access content'),
@@ -818,8 +835,12 @@ function mailbox_validate($form, &$form_state){
 			$mail_domain =node_load($mailbox_domain);
 			$mail_address =$mailbox_name .'@' .$mail_domain->title;
 			$mail_fullname =trim($form_state['values']['field_mailbox_fullname']['und'][0]['value']);
-			$mail_quota =100;
-			if($mail_quota !='') $mail_quota =' zimbraMailQuota ' .$mail_quota .'M';
+			
+			$mail_quota =trim($form_state['values']['field_mailbox_size']['und'][0]['value']);//100;
+			if($mail_quota !=''){
+				$mail_quota =$mail_quota *1024 *1024;
+				$mail_quota =' zimbraMailQuota ' .$mail_quota;
+			}
 			
 			//Insert new account into queue_command table
 			if($nid ==0){				
