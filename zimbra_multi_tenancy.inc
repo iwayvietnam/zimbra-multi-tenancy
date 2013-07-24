@@ -1,6 +1,55 @@
 <?php
 
 /**
+ * Display list command
+ */
+function zimbra_list_command(){
+	$output ='';		
+	
+  	$header = array(
+    	'stt' => t('No.'),
+    	'cid' => array('data' => t('Command ID'), 'field' => 'c.cid', 'sort' => 'desc'),
+    	'command' => array('data' => t('Command'), 'field' => 'c.command'),
+    	'notes' => array('data' => t('Notes'), 'field' => 'c.notes'),
+    	'status' => array('data' => t('Status'), 'field' => 'c.status'),
+    	'deads' => array('data' => t('Number of deads'), 'field' => 'c.number_of_deads'),
+    	'created' => array('data' => t('Time created'), 'field' => 'c.created'),
+  	);	
+	
+  	$query = db_select('zimbra_queuedcommand', 'c')->extend('PagerDefault')->extend('TableSort');
+  
+	$query->fields('c', array('cid', 'command', 'notes', 'status', 'number_of_deads', 'created' )); 
+    
+    $row_limit =50;
+  	$result = $query
+    	->limit($row_limit)
+    	->orderByHeader($header)
+    	->execute();
+
+	$rows = array();
+	$current_page =isset($_GET['page'])? intval($_GET['page']) :0;
+	$i =$current_page*$row_limit ;
+	$destination = drupal_get_destination();
+	foreach($result as $data){
+		$i++;
+				
+		$row =array();
+    	$row['stt'] = $i;
+    	$row['cid'] = $data ->cid;
+    	$row['command'] = $data ->command;
+    	$row['notes'] = $data ->notes;
+    	$row['status'] = $data ->status;
+    	$row['deads'] = $data ->number_of_deads;
+    	$row['created'] = ($data ->created !='')? date('d/m/Y H:i:s', $data ->created) : '';
+    	$rows[] = $row;
+	}
+	
+	$output .=theme('table', array('header' => $header, 'rows' => $rows,'empty' => t('No log messages available.'))) .theme('pager');
+	return $output;
+}
+
+
+/**
  * Form builder function for module settings.
  */
 function zimbra_multi_tenancy_settings(){
@@ -10,21 +59,28 @@ function zimbra_multi_tenancy_settings(){
     '#default_value' => variable_get('zimbra_domain_server', 'iwayvietnam.com'),
     '#description' => t('Domain for automatic create new user. Do not input "@" character.'),
 	'#require' => 1,
-	'#weight' => -9,
+	'#weight' => -10,
   );
   
   $roles = user_roles();
+  $form['zimbra_zimbra_role_id'] = array(
+  	'#type' => 'select',
+    '#title' => t('Role manage Zimbra multi tenancy'),
+    '#default_value' => variable_get('zimbra_zimbra_role_id', 4),
+  	'#options' => $roles,
+    '#weight' => -9,
+  );
   $form['zimbra_tenant_role_id'] = array(
   	'#type' => 'select',
     '#title' => t('Role manage Tenant'),
-    '#default_value' => variable_get('zimbra_tenant_role_id', 2),
+    '#default_value' => variable_get('zimbra_tenant_role_id', 5),
   	'#options' => $roles,
     '#weight' => -8,
   );
   $form['zimbra_domain_role_id'] = array(
   	'#type' => 'select',
     '#title' => t('Role manage Domain'),
-    '#default_value' => variable_get('zimbra_domain_role_id', 2),
+    '#default_value' => variable_get('zimbra_domain_role_id', 6),
   	'#options' => $roles,
     '#weight' => -7,
   );  
@@ -62,8 +118,16 @@ function zimbra_page_addcontent(){
 }
 
 function zimbra_page_content(){
+	if(arg(0) =='admin' && arg(1) =='zimbra' && arg(2) =='list'){
+		$url_reditect ='zimbra/content/list';
+		$url_reditect .=(arg(3) !='')? '/' .arg(3):'';
+		drupal_goto($url_reditect);
+	}
+	
 	$output ='';
-	$zimbra_type =arg(2);
+	$zimbra_type =arg(3);
+	$additem =1;
+	if(arg(2) =='list' || arg(0) =='zimbra') $additem =0;
 	
 	switch($zimbra_type){
 	case 'tenant':
@@ -82,29 +146,36 @@ function zimbra_page_content(){
 		$output =page_list_mailbox();
 		break;
 	default:
-		$output =page_content_general();
+		$output =page_content_general($additem);
 		break;			
 	}
 	
 	return $output;
 }
 
-function page_content_general(){
+function page_content_general( $additem =1){
 	global $user;
 	$output ='';
 	$menu_items =array();
-	if(count(user_access_list_tenant($user ->uid)) >0) $menu_items[] =l('List of Tenant','admin/zimbra/tenant');
-	if(count(user_access_list_domain($user ->uid)) >0) $menu_items[] =l('List of Domain','admin/zimbra/domain');
-	if(count(user_access_list_domain($user ->uid)) >0) $menu_items[] =l('List of Group','admin/zimbra/group');
-	if(count(user_access_list_domain($user ->uid)) >0) $menu_items[] =l('List of Alias','admin/zimbra/alias');
-	if(count(user_access_list_domain($user ->uid)) >0) $menu_items[] =l('List of Mailbox','admin/zimbra/mailbox');
+	if(user_access('create tenant content'))//(count(user_access_list_tenant($user ->uid)) >0) 
+		$menu_items[] =l(t('List of @type', array('@type' => 'Tenant')),'zimbra/content/list/tenant');
+	if(user_access('create domain content'))//(count(user_access_list_domain($user ->uid)) >0) 
+		$menu_items[] =l(t('List of @type', array('@type' => 'Domain')),'zimbra/content/list/domain');
+	if(user_access('create group content'))//(count(user_access_list_domain($user ->uid)) >0) 
+		$menu_items[] =l(t('List of @type', array('@type' => 'Group')),'zimbra/content/list/group');
+	if(user_access('create alias content'))//(count(user_access_list_domain($user ->uid)) >0) 
+		$menu_items[] =l(t('List of @type', array('@type' => 'Alias')),'zimbra/content/list/alias');
+	if(user_access('create mailbox content'))//(count(user_access_list_domain($user ->uid)) >0) 
+		$menu_items[] =l(t('List of @type', array('@type' => 'Mailbox')),'zimbra/content/list/mailbox');
 	
-	if(user_access('create tenant content')) $menu_items[] =l('Add new Tenant','node/add/tenant');
-	if(user_access('create domain content')) $menu_items[] =l('Add new Domain','node/add/domain');
-	if(user_access('create group content')) $menu_items[] =l('Add new Group','node/add/group');
-	if(user_access('create alias content')) $menu_items[] =l('Add new Alias','node/add/alias');
-	if(user_access('create mailbox content')) $menu_items[] =l('Add new Mailbox','node/add/mailbox');
-		
+	if( $additem ==1){
+		if(user_access('create tenant content')) $menu_items[] =l('Add new Tenant','node/add/tenant');
+		if(user_access('create domain content')) $menu_items[] =l('Add new Domain','node/add/domain');
+		if(user_access('create group content')) $menu_items[] =l('Add new Group','node/add/group');
+		if(user_access('create alias content')) $menu_items[] =l('Add new Alias','node/add/alias');
+		if(user_access('create mailbox content')) $menu_items[] =l('Add new Mailbox','node/add/mailbox');
+	}	
+	
 	$i =0;
 	foreach($menu_items as $value){
 		$i++;
@@ -132,7 +203,8 @@ function page_list_tenant(){
     	'title' => array('data' => t('Tenant name'), 'field' => 'n.title', 'sort' => 'asc'),
     	'user' => t('Tenant user'),
     	'maxsize' => array('data' => t('Quota of Mailbox'), 'field' => 'fms.field_tenant_mailbox_max_size_value'),
-    	'number' => array('data' => t('Number of Mailbox'), 'field' => 'fnm.field_tenant_number_of_mailboxes_value')
+    	'number' => array('data' => t('Number of Mailbox'), 'field' => 'fnm.field_tenant_number_of_mailboxes_value'),
+    	'operations' => t('Operations'),
   	);	
 	
   	$query = db_select('node', 'n')->extend('PagerDefault')->extend('TableSort');
@@ -156,6 +228,7 @@ function page_list_tenant(){
 
 	$rows = array();
 	$i =0;
+	$destination = drupal_get_destination();
 	foreach($result as $data){
 		$i++;
 		
@@ -164,13 +237,17 @@ function page_list_tenant(){
 				
 		$mailbox_max_size =$data ->mailbox_max_size;
 		$number_of_mailboxes =$data ->number_of_mailboxes;
+		$operations ='<ul class="links inline">		
+			<li class="delete last"><a href="' .url('node/' .$data ->nid .'/edit', array('query' =>$destination)) .'">' .t('edit') .'</a></li>
+		</ul>';
 		
 		$row =array();
 		$row['stt'] =$i;
     	$row['title'] = $data ->tenant_name;
     	$row['user'] = $tenant_user_name;
-    	$row['maxsize'] = t('@number MB', array('@number' =>$mailbox_max_size));
+    	$row['maxsize'] = ($mailbox_max_size =='')? '': t('@number MB', array('@number' =>$mailbox_max_size));
     	$row['number'] = $number_of_mailboxes;
+    	$row['operations'] = $operations;
     	$rows[] = $row;
 	}
 	
@@ -207,7 +284,8 @@ function page_list_domain(){
     	'title' => array('data' => t('Domain name'), 'field' => 'n.title', 'sort' => 'asc'),
     	'user' => t('Domain user'),
     	'maxsize' => array('data' => t('Quota of Mailbox'), 'field' => 'fms.field_domain_mailbox_max_size_value'),
-    	'number' => array('data' => t('Number of Mailbox'), 'field' => 'fnm.field_domain_number_of_mailboxes_value')
+    	'number' => array('data' => t('Number of Mailbox'), 'field' => 'fnm.field_domain_number_of_mailboxes_value'),
+    	'operations' => t('Operations'),
   	);	
 	
   	$query = db_select('node', 'n')->extend('PagerDefault')->extend('TableSort');
@@ -233,14 +311,18 @@ function page_list_domain(){
 
 	$rows = array();
 	$i =0;
+	$destination = drupal_get_destination();
 	foreach($result as $data){
 		$i++;
 		
 		$domain_user =user_load($data ->domain_user_uid);
 		$domain_user_name =(isset($domain_user ->name))?$domain_user ->name :'';
 				
-		$mailbox_max_size = t('@number MB', array('@number' =>$data ->mailbox_max_size));
+		$mailbox_max_size = ($data ->mailbox_max_size =='')? '': t('@number MB', array('@number' =>$data ->mailbox_max_size));
 		$number_of_mailboxes =$data ->number_of_mailboxes;
+		$operations ='<ul class="links inline">		
+			<li class="delete last"><a href="' .url('node/' .$data ->nid .'/edit', array('query' =>$destination)) .'">' .t('edit') .'</a></li>
+		</ul>';
 		
 		$row =array();
 		$row['stt'] =$i;
@@ -248,6 +330,7 @@ function page_list_domain(){
     	$row['user'] = $domain_user_name;
     	$row['maxsize'] = $mailbox_max_size;
     	$row['number'] = $number_of_mailboxes;
+    	$row['operations'] = $operations;
     	$rows[] = $row;
 	}
 	
@@ -307,6 +390,7 @@ function page_list_group(){
 
 	$rows = array();
 	$i =0;
+	$destination = drupal_get_destination();
 	foreach($result as $data){
 		$i++;
 		$domain_node =node_load($data ->domain_id);
@@ -314,7 +398,7 @@ function page_list_group(){
 		
 		$group_address =$data ->groupname .'@' .$domain_name;
 		$group_fullname =$data ->fullname;
-		$destination = drupal_get_destination();
+		
 		$operations ='<ul class="links inline">		
 			<li class="delete last"><a href="' .url('node/' .$data ->nid .'/edit', array('query' =>$destination)) .'">' .t('edit') .'</a></li>
 		</ul>';
@@ -382,6 +466,7 @@ function page_list_alias(){
 
 	$rows = array();
 	$i =0;
+	$destination = drupal_get_destination();
 	foreach($result as $data){
 		$i++;
 		$domain_node =node_load($data ->domain_id);
@@ -391,7 +476,7 @@ function page_list_alias(){
 		$alias_mapping ='';
 		$mailbox_info =mailbox_get_info($data ->mapping_id);
 		if(isset($mailbox_info['mail'])) $alias_mapping =$mailbox_info['mail'];
-		$destination = drupal_get_destination();
+		
 		$operations ='<ul class="links inline">		
 			<li class="delete last"><a href="' .url('node/' .$data ->nid .'/edit', array('query' =>$destination)) .'">' .t('edit') .'</a></li>
 		</ul>';
@@ -462,6 +547,7 @@ function page_list_mailbox(){
 
 	$rows = array();
 	$i =0;
+	$destination = drupal_get_destination();
 	foreach($result as $data){
 		$i++;
 		$domain_node =node_load($data ->domain_id);
@@ -469,8 +555,8 @@ function page_list_mailbox(){
 		
 		$mailbox_address =$data ->mailbox .'@' .$domain_name;
 		$mailbox_fullname =$data ->fullname;
-		$mailbox_size =t('@number MB', array('@number' =>$data ->mailbox_size));
-		$destination = drupal_get_destination();
+		$mailbox_size =($data ->mailbox_size =='')? '': t('@number MB', array('@number' =>$data ->mailbox_size));
+		
 		$operations ='<ul class="links inline">		
 			<li class="delete first"><a href="' .url('node/' .$data ->nid .'/edit', array('query' =>$destination)) .'">' .t('edit') .'</a></li>
 			<li class="reset last"><a href="' .url('node/' .$data ->nid .'/edit/reset-password', array('query' =>$destination)) .'">' .t('reset password') .'</a></li>
