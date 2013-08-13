@@ -27,41 +27,6 @@ function zimbra_multi_tenancy_uninstall() {
 	variable_del('zimbra_domain_role_id');	
 }
 
-/**
- * Implementation of hook_schema().
- */
-function zimbra_multi_tenancy_schema() {
-  $schema = array();
-
-  $schema['zimbra_domain'] = array(
-    'fields' => array(
-      'did'  	=> array('type' => 'serial', 'not null' => TRUE,),
-      'domain'			=> array('type' => 'varchar', 'length' => 255, 'not null' => TRUE,),
-      'notes' 			=> array('type' => 'text', 'size' => 'big', 'not null' => TRUE,),
-      'status' 			=> array('type' => 'int', 'not null' => TRUE, 'default' => 0),
-      'created' 		=> array('type' => 'int', 'not null' => TRUE, 'default' => 0,), //Time created Command
-      'changed' 		=> array('type' => 'int', 'not null' => TRUE, 'default' => 0,), //Time last update Command
-    ),
-    'primary key' => array('did'),
-  );
-  
-  $schema['zimbra_queuedcommand'] = array(
-    'fields' => array(
-      'cid'  	=> array('type' => 'serial', 'not null' => TRUE,),
-      'command'			=> array('type' => 'text', 'size' => 'big', 'not null' => TRUE,),
-      'notes' 			=> array('type' => 'text', 'size' => 'big', 'not null' => TRUE,),
-      'status' 			=> array('type' => 'int', 'not null' => TRUE, 'default' => 0),
-      'number_of_deads' 	=> array('type' => 'int', 'not null' => TRUE, 'default' => 0),
-      'nid' 			=> array('type' => 'int', 'not null' => TRUE, 'default' => 0),
-      'created' 		=> array('type' => 'int', 'not null' => TRUE, 'default' => 0,), //Time created Command
-      'changed' 		=> array('type' => 'int', 'not null' => TRUE, 'default' => 0,), //Time last update Command
-    ),
-    'primary key' => array('cid'),
-  );
-  return $schema;
-}
-
-
 function zimbra_add_role(){
 	$zimbra_name ='Zimbra';
 	$tenant_name ='Tenant';
