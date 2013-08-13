@@ -6,6 +6,7 @@ dependencies[] = references
 dependencies[] = node_reference
 dependencies[] = user_reference
 dependencies[] = number
+dependencies[] = field_hidden
 
 ;configure = admin/structure/domain/settings
 
