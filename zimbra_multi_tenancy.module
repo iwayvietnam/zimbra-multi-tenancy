@@ -4,8 +4,10 @@
  * Implements hook_init().
  */
 function zimbra_multi_tenancy_init(){
-	drupal_add_js(drupal_get_path('module', 'zimbra_multi_tenancy') .'/zimbra_multi_tenancy.js');	
-	
+	drupal_add_js(drupal_get_path('module', 'zimbra_multi_tenancy') .'/zimbra_multi_tenancy.js');
+	$file = DRUPAL_ROOT . '/' . drupal_get_path('module', 'zimbra_multi_tenancy') . "/vendor/zap/src/ZAP.php";
+	require_once $file;
+	zimbra_initialize_api();
 }
 
 /**
@@ -27,7 +29,7 @@ function zimbra_multi_tenancy_permission() {
  */
 function zimbra_multi_tenancy_form_alter(&$form, &$form_state, $form_id){
 	global $user;
-		
+
 	//Delete denied
 	if($form_id == "node_delete_confirm" && $user ->uid !=1){
 		drupal_access_denied();
@@ -52,7 +54,7 @@ function zimbra_multi_tenancy_form_alter(&$form, &$form_state, $form_id){
 		$form['revision_information']['#access'] =0;
 		$form['actions']['preview']['#access'] =0;		
 	}
-	
+
 	if($form_id =='tenant_node_form'){
 		$tenant_access =0;
 		if(user_access('administer zimbra')){
@@ -62,18 +64,27 @@ function zimbra_multi_tenancy_form_alter(&$form, &$form_state, $form_id){
 		    drupal_access_denied();
 		    exit;
 		}
-		$form['field_tenant_user_name']['und'][0]['value']['#required'] =1;
-		$form['field_tenant_user_mail']['und'][0]['value']['#required'] =1;
-		$form['field_tenant_mailbox_max_size']['und'][0]['value']['#required'] =1;
-		$form['field_tenant_number_of_mailboxes']['und'][0]['value']['#required'] =1;
-		if(arg(1) =='add')$form['field_tenant_user_password']['und'][0]['value']['#required'] =1;
+		$form['field_tenant_user_name']['und'][0]['value']['#required'] = 1;
+		$form['field_tenant_user_mail']['und'][0]['value']['#required'] = 1;
+		$form['field_tenant_mailbox_max_size']['und'][0]['value']['#required'] = 1;
+		$form['field_tenant_number_of_mailboxes']['und'][0]['value']['#required'] = 1;
+		$form['field_tenant_zimbra_cos']['und']['#options'] = zimbra_list_all_cos();
+
+		if(arg(1) =='add')
+		{
+			$form['field_tenant_user_password']['und'][0]['value']['#required'] = 1;
+		}
+		if(arg(2) =='edit')
+		{
+			$form['field_tenant_user_name']['und'][0]['value']['#attributes'] = array('readonly' => 'readonly');
+		}
 
 		$form['field_tenant_user']['und']['#options']['_none'] =t('New user');
 		$form['field_tenant_user']['#access'] =0;
 		$form['#validate'][] ='tenant_validate';
 		$form['#action'] =url($_GET['q'], array('query' => array('destination' =>'zimbra/content/list/tenant')));
 	}
-	
+
 	if($form_id =='domain_node_form'){		
 		//Check permission create, edit domain
 		$user_get_tenant =user_get_tenant($user ->uid);
@@ -100,20 +111,23 @@ function zimbra_multi_tenancy_form_alter(&$form, &$form_state, $form_id){
 			}
 			$form['title']['#access'] =0;
 		}
-		
+
 		$form['field_domain_tenant_id']['und']['#required'] =1;
 		$form['field_domain_user_mail']['und'][0]['value']['#required'] =1;
 		$form['field_domain_mailbox_max_size']['und'][0]['value']['#required'] =1;
 		$form['field_domain_number_of_mailboxes']['und'][0]['value']['#required'] =1;
-		if(arg(1) =='add')$form['field_domain_user_password']['und'][0]['value']['#required'] =1;
-		
+		if(arg(1) =='add')
+		{
+			$form['field_domain_user_password']['und'][0]['value']['#required'] =1;
+		}
+
 		$form['field_domain_tenant_id']['und']['#options'] =$user_get_tenant;
 		$form['field_domain_user']['und']['#options']['_none'] =t('New user');
 		$form['field_domain_user']['#access'] =0;
 		$form['#validate'][] ='domain_validate';
 		$form['#action'] =url($_GET['q'], array('query' => array('destination' =>'zimbra/content/list/domain')));
 	}
-		
+
 	if($form_id =='group_node_form'){
 	    drupal_add_css(drupal_get_path('module', 'zimbra_multi_tenancy') .'/zimbra_multi_tenancy.css');
 		$user_get_domain =user_get_domain($user ->uid);
@@ -214,7 +228,7 @@ function zimbra_multi_tenancy_form_alter(&$form, &$form_state, $form_id){
 			exit;
 		}
 		//Check Alias edit permission
-		if(arg(2) =='edit'){
+		if(arg(2) == 'edit'){
 			$domain_id =domain_get_id_from_mailbox(arg(1));
 			$allow_edit =0;
 			if(count($user_get_domain) >0){
@@ -291,7 +305,6 @@ function zimbra_multi_tenancy_form_alter(&$form, &$form_state, $form_id){
 	}
 }
 
-
 /**
  * Implements hook_node_insert().
  */
@@ -299,6 +312,28 @@ function zimbra_multi_tenancy_node_insert($node) {
 	//print_r($node);exit;
 }
 
+/**
+ * Implements hook_node_delete().
+ */
+function zimbra_multi_tenancy_node_delete($node) {
+	switch ($node->type) {
+		case 'alias':
+			$domain_id = $node->field_node_domain_id['und'][0]['nid'];
+			$domain_node = node_load($domain_id);
+			$mailbox_id = $node->field_alias_mapping_mailbox['und'][0]['nid'];
+			$mailbox_node = node_load($mailbox_id);
+
+			$zimbra_id = $mailbox_node->field_mailbox_zimbra_id['und'][0]['value'];
+			$alias = $node->title.'@'.$domain_node->title;
+			zimbra_remove_account_alias($alias, $zimbra_id);
+			break;
+		case 'mailbox':
+			$zimbra_id = $node->field_mailbox_zimbra_id['und'][0]['value'];
+			zimbra_delete_account($zimbra_id);
+			break;
+	}
+	//print_r($node);exit;
+}
 
 /**
  * Implement hook_menu_alter()
@@ -313,7 +348,7 @@ function zimbra_multi_tenancy_menu_alter(&$items) {
  * Implements hook_menu().
  */
 function zimbra_multi_tenancy_menu(){
-  $items['admin/config/zimbra-tenancy'] = array(
+  $items['admin/config/system/zimbra-tenancy'] = array(
     'title' => t('Zimbra settings'),
     'description' => 'Zimbra Multi-tenancy settings.',
     'page callback' => 'drupal_get_form',
@@ -400,34 +435,37 @@ function zimbra_multi_tenancy_menu(){
   return $items;
 }
 
-
-function page_empty_content(){
-	$output ='';
-	return $output;
-}
-
-
+/**
+ * Get tenant of domain
+ *
+ * @param  int $domain_id Domain ID
+ * @return mix
+ */
 function tenant_get_id_from_domain($domain_id){
 	$tenant_id =0;
-	$domain_node =node_load($domain_id);
+	$domain_node = node_load($domain_id);
 	if(isset($domain_node ->field_domain_tenant_id['und'][0]['nid'])){
-		$tenant_id =$domain_node ->field_domain_tenant_id['und'][0]['nid'];
+		$tenant_id = $domain_node ->field_domain_tenant_id['und'][0]['nid'];
 	}
 	return $tenant_id;
 }
 
-
-//Zimbra user profile
+/**
+ * Zimbra user profile page
+ *
+ * @param  object $account Account
+ * @return mix
+ */
 function zimbra_profile_page($account){
   global $user;
   if(!is_object($account)) return MENU_NOT_FOUND;
-  $output ='';
-  $tenant_rid =variable_get('zimbra_tenant_role_id', 0);;
-  $domain_rid =variable_get('zimbra_domain_role_id', 0);;
+  $output = '';
+  $tenant_rid = variable_get('zimbra_tenant_role_id', 0);;
+  $domain_rid = variable_get('zimbra_domain_role_id', 0);;
   
   //Tenant Infomation
   $tenant_info ='';
-  $user_get_tenant =user_get_tenant($user ->uid);
+  $user_get_tenant = user_get_tenant($user ->uid);
   if(count($user_get_tenant) >0 && isset( $user ->roles[$tenant_rid])){
   	foreach($user_get_tenant as $key =>$value){
   		$node =node_load($key);
@@ -471,27 +509,36 @@ function zimbra_profile_page($account){
   	}
   }
   
-  $output .= $tenant_info .$domain_info .drupal_render(user_view($account));
+  $output .= $tenant_info . $domain_info . drupal_render(user_view($account));
   return $output;
 }
 
-
-
+/**
+ * Get domain of mailbox
+ *
+ * @param  int $mailbox_id Mailbox ID
+ * @return mix
+ */
 function domain_get_id_from_mailbox($mailbox_id){
-	$domain_id =0;
-	$mailbox_node =node_load($mailbox_id);
-	//print_r($mailbox_node);
-	if(isset($mailbox_node ->field_node_domain_id['und'][0]['nid'])){
-		$domain_id =$mailbox_node ->field_node_domain_id['und'][0]['nid'];
+	$domain_id = 0;
+	$mailbox_node = node_load($mailbox_id);
+	if(isset($mailbox_node->field_node_domain_id['und'][0]['nid'])){
+		$domain_id = $mailbox_node ->field_node_domain_id['und'][0]['nid'];
 	}
 	return $domain_id;
 }
 
-//Check the quota of Tenant
+/**
+ * Check the quota of Tenant
+ *
+ * @param  int $tenant_id Tenant ID
+ * @param  int $nid       Node ID.
+ * @return mix
+ */
 function tenant_check_quota($tenant_id, $nid =0){
-	$tenant_id =intval($tenant_id);
-	$nid =intval($nid);
-	$tenant_node =node_load($tenant_id);
+	$tenant_id = intval($tenant_id);
+	$nid = intval($nid);
+	$tenant_node = node_load($tenant_id);
 
 	if(!isset($tenant_node ->field_tenant_mailbox_max_size['und'][0]['value'])) return 0;
 	$tenant_quota_total =intval($tenant_node ->field_tenant_mailbox_max_size['und'][0]['value']);
@@ -511,7 +558,13 @@ function tenant_check_quota($tenant_id, $nid =0){
 	return $tenant_quota_free;
 }
 
-//Check the quota of Domain
+/**
+ * Check the quota of Domain
+ *
+ * @param  int $domain_id Domain ID
+ * @param  int $nid       Node ID.
+ * @return mix
+ */
 function domain_check_quota($domain_id, $nid =0){
 	$domain_id =intval($domain_id);
 	$nid =intval($nid);
@@ -534,7 +587,13 @@ function domain_check_quota($domain_id, $nid =0){
 	return $domain_quota_free;
 }
 
-//Check the number Mailbox of Tenant
+/**
+ * Check the number Mailbox of Tenant
+ *
+ * @param  int $tenant_id Tenant ID
+ * @param  int $nid       Node ID.
+ * @return mix
+ */
 function tenant_check_number($tenant_id, $nid =0){
 	$tenant_id =intval($tenant_id);
 	$nid =intval($nid);
@@ -557,7 +616,13 @@ function tenant_check_number($tenant_id, $nid =0){
 	return $tenant_number_free;
 }
 
-//Check the number Mailbox of Domain
+/**
+ * Check the number Mailbox of Domain
+ *
+ * @param  int $domain_id Domain ID
+ * @param  int $nid       Node ID.
+ * @return mix
+ */
 function domain_check_number($domain_id, $nid =0){
 	$domain_id =intval($domain_id);
 	$nid =intval($nid);
@@ -579,8 +644,9 @@ function domain_check_number($domain_id, $nid =0){
 	return $domain_number_free;
 }
 
-
-//Check validate of Tenant
+/**
+ * Validate tenant
+ */
 function tenant_validate($form, &$form_state){
 	if(!form_set_error()){
 		$tenant_name =trim($form_state['values']['title']);
@@ -629,7 +695,7 @@ function tenant_validate($form, &$form_state){
 					$user_roles =array();
 					if( variable_get('zimbra_tenant_role_id', 0) !=0) $user_roles[] =variable_get('zimbra_tenant_role_id', 0);
 					
-					$user_uid =zimbra_auto_create_user($user_name, $user_pass, $user_mail, $user_roles);
+					$user_uid =auto_create_user($user_name, $user_pass, $user_mail, $user_roles);
 					$form_state['values']['field_tenant_user']['und'][0]['uid'] =$user_uid;
 				}else{
 					//user already exists
@@ -673,9 +739,10 @@ function tenant_validate($form, &$form_state){
 	}
 }
 
-//Check validate of Domain
+/**
+ * Check validate of Domain
+ */
 function domain_validate($form, &$form_state){
-
 	if(!form_set_error()){
 		$domain_name =trim($form_state['values']['title']);
 		$nid =intval($form_state['values']['nid']);
@@ -701,7 +768,7 @@ function domain_validate($form, &$form_state){
 
 		//Check validate mailbox maxsize is avaiable of tenant
 		$mailbox_maxsize = intval($form_state['values']['field_domain_mailbox_max_size']['und'][0]['value']);		
-		$tenant_mailbox_maxsize_allow =tenant_check_quota($tenant_id, $nid);
+		$tenant_mailbox_maxsize_allow = tenant_check_quota($tenant_id, $nid);
 		if($mailbox_maxsize > $tenant_mailbox_maxsize_allow){
 			form_set_error('field_domain_mailbox_max_size', t('@name: the value may be no greater than @number MB.', array('@name' =>$form['field_domain_mailbox_max_size']['und']['#title'], '@number' =>$tenant_mailbox_maxsize_allow)));
 		}
@@ -714,7 +781,7 @@ function domain_validate($form, &$form_state){
 			form_set_error('field_domain_number_of_mailboxes', t('@name: the value may be no greater than @number Mailbox(es).', array('@name' =>$form['field_domain_number_of_mailboxes']['und']['#title'], '@number' =>$tenant_mailbox_number_allow)));
 		}
 		
-			//Check user manage domain
+		//Check user manage domain
 		$domain_user =$form_state['values']['field_domain_user']['und'][0]['uid'];
 		$user_name =$domain_name;//trim($form_state['values']['field_domain_user_name']['und'][0]['value']);
 		$user_pass =trim($form_state['values']['field_domain_user_password']['und'][0]['value']);
@@ -727,8 +794,8 @@ function domain_validate($form, &$form_state){
 		}elseif($user_mail !='' && !valid_email_address($user_mail)){
 			form_set_error('field_domain_user_mail', t('The e-mail address @mail is not valid.', array('@mail' =>$user_mail)));
 		}
-		
-		if(!form_set_error()){				
+
+		if(!form_set_error()){
 			if(empty($domain_user)){
 				//Check username
 				$sql ="SELECT uid, name, mail FROM users u WHERE u.name ='$user_name' OR  u.mail ='$user_mail'";
@@ -746,7 +813,7 @@ function domain_validate($form, &$form_state){
 					$user_roles =array();
 					if( variable_get('zimbra_domain_role_id', 0) !=0) $user_roles[] =variable_get('zimbra_domain_role_id', 0);
 					
-					$user_uid =zimbra_auto_create_user($user_name, $user_pass, $user_mail, $user_roles);
+					$user_uid =auto_create_user($user_name, $user_pass, $user_mail, $user_roles);
 					$form_state['values']['field_domain_user']['und'][0]['uid'] =$user_uid;
 				}else{
 					//user already exists
@@ -755,7 +822,7 @@ function domain_validate($form, &$form_state){
 				}				
 				
 			}else{
-				$user_old =user_load($domain_user);
+				$user_old = user_load($domain_user);
 
 				$sql ="SELECT uid, name, mail FROM users u WHERE (u.name ='$user_name' OR u.mail ='$user_mail') AND u.uid !=" .intval($user_old ->uid);
 				$result = db_query($sql);
@@ -782,140 +849,178 @@ function domain_validate($form, &$form_state){
 		}
 		
 		//Clear value of user
-		if(!form_set_error()){
-			$form_state['values']['title'] =trim($form_state['values']['title']);
-			//$form_state['values']['field_domain_user_name']['und'][0]['value'] ='';
-			$form_state['values']['field_domain_user_password']['und'][0]['value'] ='';	
-			
-			//Insert into queue_command table
-			if($nid ==0){
-				$command ='zmprov cd ' .$domain_name;
-				$notes ='Create new Domain';
-				$time_created =time();
-				$sql ="INSERT INTO zimbra_queuedcommand(command, notes, status, created, changed) VALUES('$command', '$notes', 0, " .$time_created .", " .$time_created .");";
-				@db_query($sql);
+		if(!form_set_error())
+		{
+			$form_state['values']['title'] = trim($form_state['values']['title']);
+			$form_state['values']['field_domain_user_password']['und'][0]['value'] = '';
+			$zimbra_domain = zimbra_get_domain($domain_name);
+			if(!$zimbra_domain)
+			{
+				$tenant_node = node_load($tenant_id);
+				$cos_id = isset($tenant_node ->field_tenant_zimbra_cos['und'][0]['value']) ? $tenant_node ->field_tenant_zimbra_cos['und'][0]['value'] : '';;
+				if(!empty($cos_id))
+				{
+					$zimbra_domain = zimbra_create_domain($domain_name, array('zimbraDomainDefaultCOSId' => $cos_id));				
+				}
+				else
+				{
+					$zimbra_domain = zimbra_create_domain($domain_name);				
+				}
 			}
+			$form_state['values']['field_domain_zimbra_id']['und'][0]['value'] = $zimbra_domain->id;
 		}
 	}	
 }
 
-//Check validate of Group
+/**
+ * Validate group
+ */
 function group_validate($form, &$form_state){
 	if(!form_set_error()){
 		global $user;
 		
 		$mailbox_name =trim($form_state['values']['title']);
 		$mailbox_domain =$form_state['values']['field_node_domain_id']['und'][0]['nid'];
+		$group_fullname =$form_state['values']['field_group_fullname']['und'][0]['value'];
+
 		$nid =intval($form_state['values']['nid']);
 		
 		//Check invalid of Mailbox name
 		if(!preg_match('!^[a-zA-Z0-9_\.]+$!', $mailbox_name)){
 			form_set_error('title', t('The @fieldname must contain only letters, punctuation, numbers, and underscores.', array('@fieldname' =>$form['title']['#title'])));
 		}
-		
+
 		//Check existence of mailbox.
-		$mailbox_exist =mailbox_check_exists($mailbox_name, $mailbox_domain, $nid);
+		$mailbox_exist = mailbox_check_exists($mailbox_name, $mailbox_domain, $nid);
 		if($mailbox_exist ==1){
 			form_set_error('title', t('Group or Mailbox or Alias already exists.', array('@username' =>$form['title']['#title'])));
-		}		
+		}
+
 		if(!form_set_error()){		
 			$form_state['values']['title'] =trim($form_state['values']['title']);
+			$mail_domain = node_load($mailbox_domain);
+			$mail_address = $mailbox_name .'@' .$mail_domain->title;
+			$all_account = user_get_all_account($user ->uid);
+			$members = array();
+	
+			$members_default_array = explode('|', $form_state['values']['field_group_members']['und'][0]['value']);
+	
+			if(count($members_default_array) >0){
+				foreach($members_default_array as $value)
+				{
+					$mem_arr = explode(':', $value);
+					$mem_val = '';
+					if(count($mem_arr) AND isset($all_account[$mem_arr[1]]))
+						$mem_val = $all_account[$mem_arr[1]];
+					if($mem_val == '') $mem_val = $value;
+					
+					$members[] = $mem_val;
+				}
+			}
 
-			//Insert into queue_command table
-			if($nid ==0){
-				$mail_domain =node_load($mailbox_domain);
-				$mail_address =$mailbox_name .'@' .$mail_domain->title;
-				
-				$all_account =user_get_all_account($user ->uid);
-				$members_list ='';
-		
-				$members_default_array =explode('|', $form_state['values']['field_group_members']['und'][0]['value']);
-		
-				if(count($members_default_array) >0){
-					foreach($members_default_array as $value){
-						$mem_arr =explode(':', $value);
-						$mem_val ='';
-						if(count($mem_arr) >1 && isset($all_account[$mem_arr[1]])) $mem_val =$all_account[$mem_arr[1]];
-						if($mem_val =='') $mem_val =$value;
-						
-						if( $members_list !='') $members_list .=' ' ;
-						if($mem_val !='') $members_list .=$mem_val;
+			$zimbra_dl = zimbra_get_dl($mail_address);
+			if(!$zimbra_dl)
+			{
+				$zimbra_dl = zimbra_create_dl($mail_address, array(
+					'displayName' => $group_fullname,
+					'description' => $group_fullname,
+				));
+			}
+
+			$zimbra_dlm = isset($zimbra_dl->dlm) ? $zimbra_dl->dlm : array();
+			$zimbra_members = is_array($zimbra_dlm) ? $zimbra_dlm : array($zimbra_dlm);
+			$remove_members = array();
+			foreach ($zimbra_members as $member)
+			{
+				if(!in_array($member, $members))
+				{
+					$remove_members[] = $member;
+				}
+			}
+			if(count($remove_members))
+			{
+				zimbra_remove_dl_members($zimbra_dl->id, $remove_members);
+			}
+
+			if(count($members))
+			{
+				$add_members = array();
+				foreach ($members as $member)
+				{
+					if(!in_array($member, $zimbra_members))
+					{
+						$add_members[] = $member;
 					}
 				}
-					
-				
-				$command ='zmprov cdl ' .$mail_address;
-				$notes ='Create new Group';
-				$time_created =time();
-				$sql ="INSERT INTO zimbra_queuedcommand(command, notes, status, created, changed) VALUES('$command', '$notes', 0, " .$time_created .", " .$time_created .");";
-				@db_query($sql);
+				zimbra_add_dl_members($zimbra_dl->id, $add_members);
+			}
+			$form_state['values']['field_group_zimbra_id']['und'][0]['value'] = $zimbra_dl->id;
+		}
+	}	
+}
 
-				//Add members in Group
-				$command ='zmprov adlm ' .$mail_address .' ' .$members_list;
-				$notes ='Add members into Group';
-				$sql ="INSERT INTO zimbra_queuedcommand(command, notes, status, created, changed) VALUES('$command', '$notes', 0, " .$time_created .", " .$time_created .");";
-				@db_query($sql);
+/**
+ * Validate alias
+ */
+function alias_validate($form, &$form_state){
+	if(!form_set_error()){
+		$mailbox_name = trim($form_state['values']['title']);
+		$mailbox_domain = $form_state['values']['field_node_domain_id']['und'][0]['nid'];
+		$nid =intval($form_state['values']['nid']);
+
+		//Check invalid of Mailbox name
+		if(!preg_match('!^[a-zA-Z0-9_\.]+$!', $mailbox_name))
+		{
+			form_set_error('title', t('The @fieldname must contain only letters, punctuation, numbers, and underscores.', array('@fieldname' =>$form['title']['#title'])));
+		}
+
+		//Check existence of mailbox.
+		$mailbox_exist = mailbox_check_exists($mailbox_name, $mailbox_domain, $nid);
+		if($mailbox_exist ==1)
+		{
+			form_set_error('title', t('Group or Mailbox or Alias already exists.', array('@username' =>$form['title']['#title'])));
+		}
+		
+		if(!form_set_error()){
+			$form_state['values']['title'] = trim($form_state['values']['title']);
+			$mail_domain = node_load($mailbox_domain);
+			$alias_address = $mailbox_name .'@' .$mail_domain->title;
+			
+			$mapping_id = $form_state['values']['field_alias_mapping_mailbox']['und'][0]['nid'];
+			$mapping_node = node_load($mapping_id);
+			$zimbra_id = $mapping_node->field_mailbox_zimbra_id['und'][0]['value'];
+
+			//Insert into queue_command table
+			if($nid ==0)
+			{
+				zimbra_add_account_alias($zimbra_id, $alias_address);
+			}
+			else
+			{
+				$alias_node = node_load($nid);
+				$alias_name = $alias_node->title;
+				$alias = $alias_name .'@' .$mail_domain->title;
+				zimbra_remove_account_alias($alias, $zimbra_id);
+
+				zimbra_add_account_alias($zimbra_id, $alias_address);
 			}
 		}
 	}	
 }
 
-
-//Check validate of Alias
-function alias_validate($form, &$form_state){
-	if(!form_set_error()){
-		$mailbox_name =trim($form_state['values']['title']);
-		$mailbox_domain =$form_state['values']['field_node_domain_id']['und'][0]['nid'];
-		$nid =intval($form_state['values']['nid']);
-		
-		//Check invalid of Mailbox name
-		if(!preg_match('!^[a-zA-Z0-9_\.]+$!', $mailbox_name)){
-			form_set_error('title', t('The @fieldname must contain only letters, punctuation, numbers, and underscores.', array('@fieldname' =>$form['title']['#title'])));
-		}
-		
-		//Check existence of mailbox.
-		$mailbox_exist =mailbox_check_exists($mailbox_name, $mailbox_domain, $nid);
-		if($mailbox_exist ==1){
-			form_set_error('title', t('Group or Mailbox or Alias already exists.', array('@username' =>$form['title']['#title'])));
-		}
-		
-		if(!form_set_error()){
-			$form_state['values']['title'] =trim($form_state['values']['title']);
-
-			//Insert into queue_command table
-			if($nid ==0){
-				$mail_domain =node_load($mailbox_domain);
-				$alias_address =$mailbox_name .'@' .$mail_domain->title;
-				
-				$mapping_id =$form_state['values']['field_alias_mapping_mailbox']['und'][0]['nid'];
-				$mapping_node =node_load($mapping_id);
-				
-				$mapping_domain_node =node_load( $mapping_node ->field_node_domain_id['und'][0]['nid']);
-				$mapping_mailbox =$mapping_node ->title .'@' .$mapping_domain_node ->title;
-				
-				
-				$command ='zmprov aaa ' .$mapping_mailbox .' ' .$alias_address;
-				$notes ='Create new Alias';
-				
-				$time_created =time();
-				$sql ="INSERT INTO zimbra_queuedcommand(command, notes, status, created, changed) VALUES('$command', '$notes', 0, " .$time_created .", " .$time_created .");";
-				@db_query($sql);				
-			}			
-		}
-	}	
-}
-
-
-//Check validate of Mailbox
+/**
+ * Validate mailbox
+ */
 function mailbox_validate($form, &$form_state){
 	if(!form_set_error()){
-		$mailbox_name =trim($form_state['values']['title']);
-		$mailbox_domain =$form_state['values']['field_node_domain_id']['und'][0]['nid'];
-		$mail_password =$form_state['values']['field_mailbox_password']['und'][0]['value'];
-		$nid =intval($form_state['values']['nid']);
+		$mailbox_name = trim($form_state['values']['title']);
+		$mailbox_domain = $form_state['values']['field_node_domain_id']['und'][0]['nid'];
+		$mail_password = $form_state['values']['field_mailbox_password']['und'][0]['value'];
+		$nid = intval($form_state['values']['nid']);
 		
 		//Check invalid of Mailbox name
-		if(!preg_match('!^[a-zA-Z0-9_\.]+$!', $mailbox_name)){
+		if(!preg_match('!^[a-zA-Z0-9_\.]+$!', $mailbox_name))
+		{
 			form_set_error('title', t('The @fieldname must contain only letters, punctuation, numbers, and underscores.', array('@fieldname' =>$form['title']['#title'])));
 		}
 		
@@ -951,63 +1056,72 @@ function mailbox_validate($form, &$form_state){
 			$mail_address =$mailbox_name .'@' .$mail_domain->title;
 			$mail_fullname =trim($form_state['values']['field_mailbox_fullname']['und'][0]['value']);
 			
-			$mail_quota =trim($form_state['values']['field_mailbox_size']['und'][0]['value']);//100;
-			if($mail_quota !=''){
-				$mail_quota =$mail_quota *1024 *1024;
-				$mail_quota =' zimbraMailQuota ' .$mail_quota;
-			}
-			
 			//Insert new account into queue_command table
-			if($nid ==0){				
-				$command ='zmprov ca ' .$mail_address .' "' .$mail_password .'" displayName "' .$mail_fullname .'"' .$mail_quota;
-				$notes ='Create new Mailbox';
-				$time_created =time();
-				$sql ="INSERT INTO zimbra_queuedcommand(command, notes, status, created, changed) VALUES('$command', '$notes', 0, " .$time_created .", " .$time_created .");";
-				@db_query($sql);
-			}else{
-			
+			if($nid ==0)
+			{
+				$account = zimbra_get_account($mail_address);
+				if(!$account)
+				{
+					$attrs = array(
+						'displayName' => $mail_fullname,
+						'sn' => $mail_fullname,
+					);
+					if($mailbox_maxsize) $attrs['zimbraMailQuota'] = $mailbox_maxsize * 1024 * 1024;
+					$account = zimbra_create_account($mail_address, $mail_password, $attrs);
+				}
+				$form_state['values']['field_mailbox_zimbra_id']['und'][0]['value'] = $account->id;
+			}
+			else
+			{
 				//Change mailbox information				
 				$old_node =node_load($nid);
 				$old_domain =node_load($old_node ->field_node_domain_id['und'][0]['nid']);
 				$old_address =$old_node ->title .'@' .$old_domain ->title;
 				$old_fullname =$old_node ->field_mailbox_fullname['und'][0]['value'];
+				$zimbra_id = $form_state['values']['field_mailbox_zimbra_id']['und'][0]['value'];
 				$time_created =time();
-				
+
 				//Change fullname for Mailbox
-				if($old_fullname !=$mail_fullname){
-					$command ='zmprov ma ' .$old_address .' displayName "' .$mail_fullname .'"' .$mail_quota;
-					$notes ='Change fullname for Mailbox';
-					$sql ="INSERT INTO zimbra_queuedcommand(command, notes, status, created, changed) VALUES('$command', '$notes', 0, " .$time_created .", " .$time_created .");";
-					@db_query($sql);
+				if($old_fullname !== $mail_fullname)
+				{
+					$attrs = array(
+						'displayName' => $mail_fullname,
+						'sn' => $mail_fullname,
+					);
+					if($mailbox_maxsize) $attrs['zimbraMailQuota'] = $mailbox_maxsize * 1024 * 1024;
+					zimbra_modify_account($zimbra_id, $attrs);
 				}
 				//Change password of Mailbox
-				if($mail_password !=''){
-					$command ='zmprov sp ' .$old_address .' "' .$mail_password .'"';
-					$notes ='Change password of Mailbox';
-					$sql ="INSERT INTO zimbra_queuedcommand(command, notes, status, created, changed) VALUES('$command', '$notes', 0, " .$time_created .", " .$time_created .");";
-					@db_query($sql);
+				if($mail_password !=='' )
+				{
+					zimbra_set_password($zimbra_id, $mail_password);
 				}
 				//Rename Mailbox
-				if($old_address !=$mail_address){
-					$command ='zmprov ra ' .$old_address .' ' .$mail_address;
-					$notes ='Rename Mailbox';
-					$sql ="INSERT INTO zimbra_queuedcommand(command, notes, status, created, changed) VALUES('$command', '$notes', 0, " .$time_created .", " .$time_created .");";
-					@db_query($sql);
+				if($old_address !== $mail_address)
+				{
+					zimbra_rename_account($zimbra_id, $mail_address);
 				}
 			}
 		}
 	}	
 }
 
-
-function mailbox_check_exists($mailbox_name, $mailbox_domain, $nid =0){
-	$mailbox_exist =0;
+/**
+ * Check mailbox exists
+ * 
+ * @param  string $name   Mailbox name
+ * @param  string $domain Domain name
+ * @param  int    $nid    Node ID
+ * @return mix
+ */
+function mailbox_check_exists($name, $domain, $nid = 0){
+	$mailbox_exist = 0;
 	
 	//Check in Mailbox table
 	$sql ="SELECT n.title AS n_title, n.nid AS nid
 		FROM node n LEFT JOIN field_data_field_node_domain_id fmd ON n.nid = fmd.entity_id
 		WHERE n.nid !=$nid AND n.type IN ('mailbox')
-		 AND n.title ='$mailbox_name' AND (fmd.field_node_domain_id_nid IN ('$mailbox_domain'))";
+		 AND n.title ='$name' AND (fmd.field_node_domain_id_nid IN ('$domain'))";
 		
 	$result = db_query($sql);
 	foreach($result as $data){
@@ -1019,7 +1133,7 @@ function mailbox_check_exists($mailbox_name, $mailbox_domain, $nid =0){
 		$sql ="SELECT n.title AS n_title, n.nid AS nid
 			FROM node n LEFT JOIN field_data_field_node_domain_id fmd ON n.nid = fmd.entity_id
 			WHERE n.nid !=$nid AND n.type IN ('alias')
-			 AND n.title ='$mailbox_name' AND (fmd.field_node_domain_id_nid IN ('$mailbox_domain'))";
+			 AND n.title ='$name' AND (fmd.field_node_domain_id_nid IN ('$domain'))";
 		
 		$result = db_query($sql);
 		foreach($result as $data){
@@ -1032,7 +1146,7 @@ function mailbox_check_exists($mailbox_name, $mailbox_domain, $nid =0){
 		$sql ="SELECT n.title AS n_title, n.nid AS nid
 			FROM node n LEFT JOIN field_data_field_node_domain_id fmd ON n.nid = fmd.entity_id
 			WHERE n.nid !=$nid AND n.type IN ('alias')
-			 AND n.title ='$mailbox_name' AND (fmd.field_node_domain_id_nid IN ('$mailbox_domain'))";
+			 AND n.title ='$name' AND (fmd.field_node_domain_id_nid IN ('$domain'))";
 		
 		$result = db_query($sql);
 		foreach($result as $data){
@@ -1043,7 +1157,12 @@ function mailbox_check_exists($mailbox_name, $mailbox_domain, $nid =0){
 	return $mailbox_exist;
 }
 
-//Get all Tenant of user
+/**
+ * Get all Tenant of user
+ * 
+ * @param  int $uid User ID
+ * @return mix
+ */
 function user_get_tenant( $uid){
 	$output =array();	
 	$uid =intval($uid);
@@ -1073,7 +1192,12 @@ function user_get_tenant( $uid){
 	return $output;
 }
 
-//Get all domain of user
+/**
+ * Get all domain of user
+ * 
+ * @param  int $uid User ID
+ * @return mix
+ */
 function user_get_domain( $uid){
 	$output =array();	
 	$uid =intval($uid);
@@ -1119,7 +1243,12 @@ function user_get_domain( $uid){
 	return $output;
 }
 
-    //Get all mailbox of user
+/**
+ * Get all mailbox of user
+ * 
+ * @param  int $uid User ID
+ * @return mix
+ */
 function user_get_mailbox( $uid){
 	$output =array();
 	$user_get_domain =user_get_domain($uid);
@@ -1145,7 +1274,12 @@ function user_get_mailbox( $uid){
 	return $output;
 }
 
-    //Get all mailbox of user
+/**
+ * Get all account of user
+ * 
+ * @param  int $uid User ID
+ * @return mix
+ */
 function user_get_all_account($uid){
 	$output =array();
 	$user_get_domain =user_get_domain($uid);
@@ -1171,8 +1305,16 @@ function user_get_all_account($uid){
 	return $output;
 }
 
-
-function zimbra_auto_create_user($user_name ='', $user_pass ='123456', $user_mail ='', $roles =array()){
+/**
+ * Auto create user.
+ * 
+ * @param  string $user_name User name
+ * @param  string $user_pass User password
+ * @param  string $user_mail User email
+ * @param  array  $roles     User roles
+ * @return mix
+ */
+function auto_create_user($user_name ='', $user_pass ='123456', $user_mail ='', $roles =array()){
 	$user_uid =0;
 	if($user_name !='' && $user_pass !=''){
 		require_once DRUPAL_ROOT . '/' . variable_get('password_inc', 'includes/password.inc');
@@ -1217,7 +1359,6 @@ function zimbra_auto_create_user($user_name ='', $user_pass ='123456', $user_mai
 	return $user_uid;
 }
 
-
 /**
  * Verify the syntax of the given name.
  */
@@ -1254,13 +1395,6 @@ function zimbra_user_validate_name($name, $field_name ='username') {
   }
 }
 
-
-
-
-
-
-
-
 /**
  * Create Tenant node type.
  */
@@ -1287,8 +1421,8 @@ function _zimbra_add_nodetype_tenant() {
   zimbra_add_password_field($type, 'field_tenant_user_password', 'Tenant user password', 3);
   zimbra_add_integer_field($type, 'field_tenant_mailbox_max_size', 'Mailbox max size', 4, 'MB');
   zimbra_add_integer_field($type, 'field_tenant_number_of_mailboxes', 'Number Of Mailboxes', 5, 'Mailbox(es)');
-
   zimbra_add_user_reference_field($type, 'field_tenant_user', 'Tenant user', 6);
+  zimbra_add_list_text_field($type, 'field_tenant_zimbra_cos', 'Zimbra COS', 7);
 }
 
 /**
@@ -1313,12 +1447,12 @@ function _zimbra_add_nodetype_domain() {
   }
   	//Add any field of tenant content type  
   zimbra_add_text_field($type, 'field_domain_user_mail', 'Domain user e-mail', 1);  
-  zimbra_add_password_field($type, 'field_domain_user_password', 'Domain user password', 2);  
+  zimbra_add_password_field($type, 'field_domain_user_password', 'Domain user password', 2);
   zimbra_add_node_reference_field($type, 'field_domain_tenant_id', 'Tenant', 3, 'tenant');
   zimbra_add_integer_field($type, 'field_domain_mailbox_max_size', 'Mailbox max size', 4, 'MB');
   zimbra_add_integer_field($type, 'field_domain_number_of_mailboxes', 'Number Of Mailboxes',5, 'Mailbox(es)');
-  
   zimbra_add_user_reference_field($type, 'field_domain_user', 'Domain user', 6);
+  zimbra_add_hidden_text_field($type, 'field_domain_zimbra_id', 'Zimbra domain ID', 7);  
 }
 
 /**
@@ -1343,9 +1477,9 @@ function _zimbra_add_nodetype_group() {
   }
   	//Add any field of tenant content type
   zimbra_add_text_field($type, 'field_group_fullname', 'Group fullname', 1);
-  
   zimbra_add_node_reference_field($type, 'field_node_domain_id', 'Domain name', 2, 'domain');
   zimbra_add_text_long_field($type, 'field_group_members', 'Members', 3);
+  zimbra_add_hidden_text_field($type, 'field_group_zimbra_id', 'Zimbra group ID', 4);  
 }
 
 /**
@@ -1396,9 +1530,10 @@ function _zimbra_add_nodetype_mailbox() {
   	//Add any field of tenant content type
   zimbra_add_text_field($type, 'field_mailbox_fullname', 'Mailbox fullname', 1);
   zimbra_add_password_field($type, 'field_mailbox_password', 'Mailbox password', 2);
-  	
+
   zimbra_add_node_reference_field($type, 'field_node_domain_id', 'Domain', 3, 'domain');
   zimbra_add_integer_field($type, 'field_mailbox_size', 'Mailbox size', 4, 'MB');
+  zimbra_add_hidden_text_field($type, 'field_mailbox_zimbra_id', 'Zimbra mailbox ID', 5);  
 }
 
 
@@ -1442,7 +1577,6 @@ function zimbra_add_password_field($type, $field_name, $field_label ='', $weight
     field_create_instance($instance);
   }
 }
-
 
 /**
  * Add the text field
@@ -1568,7 +1702,87 @@ function zimbra_add_integer_field($type, $field_name, $field_label ='', $weight 
   }
 }
 
+/**
+ * Add the hidden text field
+ *
+ * @param $type
+ *   A node type object.
+ *
+ * @ingroup issue
+ */
+function zimbra_add_hidden_text_field($type, $field_name, $field_label ='', $weight =0) {
+  $field = field_info_field($field_name);
+  $instance = field_info_instance('node', $field_name, $type->type);
+  if (empty($field)) {
+    $field = array(
+      'field_name' => $field_name,
+      'type' => 'field_hidden_text',
+      'entity_types' => array('node'),
+    );
+    $field = field_create_field($field);
+  }
+  if (empty($instance)) {
+    $instance = array(
+      'field_name' => $field_name,
+      'entity_type' => 'node',
+      'bundle' => $type->type,
+      'label' => t($field_label),
+      'widget' => array('type' => 'field_hidden', 'weight' => $weight),
+      'display' => array(
+        'default' => array(
+          'label' => 'hidden',
+          'type' => 'hidden',
+        ),
+        'teaser' => array(
+          'label' => 'hidden',
+          'type' => 'hidden',
+        ),
+      ),
+    );
+    field_create_instance($instance);
+  }
+}
 
+/**
+ * Add the text field
+ *
+ * @param $type
+ *   A node type object.
+ *
+ * @ingroup issue
+ */
+function zimbra_add_list_text_field($type, $field_name, $field_label ='', $weight =0) {
+  $field = field_info_field($field_name);
+  $instance = field_info_instance('node', $field_name, $type->type);
+  if (empty($field)) {
+    $field = array(
+      'field_name' => $field_name,
+      'type' => 'list_text',
+      'entity_types' => array('node'),
+    );
+    $field = field_create_field($field);
+  }
+  if (empty($instance)) {
+    $instance = array(
+      'field_name' => $field_name,
+      'entity_type' => 'node',
+      'bundle' => $type->type,
+      'label' => t($field_label),
+      'widget' => array('type' => 'options_select', 'weight' => $weight),
+      'display' => array(
+        'default' => array(
+          'label' => 'above',
+          'type' => 'text_default',
+        ),
+        'teaser' => array(
+          'label' => 'hidden',
+          'type' => 'hidden',
+        ),
+      ),
+    );
+    field_create_instance($instance);
+  }
+}
 
 /**
  * Add the Node reference field
@@ -1660,7 +1874,10 @@ function zimbra_add_user_reference_field($type, $field_name, $field_label ='', $
 }
 
 /**
- * get total tenant of user
+ * Get total tenant of user
+ *
+ * @param  int $uid User ID.
+ * @return mix
  */
 function user_access_list_tenant($uid){
 	$output =array();
@@ -1685,7 +1902,10 @@ function user_access_list_tenant($uid){
 }
 
 /**
- * get total domain of user
+ * Get total domain of user
+ *
+ * @param  int $uid User ID.
+ * @return mix
  */
 function user_access_list_domain($uid){
 	$output =array();
@@ -1727,7 +1947,10 @@ function user_access_list_domain($uid){
 }
 
 /**
- * get information of Mailbox
+ * Get information of mailbox
+ *
+ * @param  string $mid Mailbox ID.
+ * @return mix
  */
 function mailbox_get_info($mid){
 	$mailbox =array();
@@ -1753,5 +1976,394 @@ function mailbox_get_info($mid){
 	return $mailbox;
 }
 
+/**
+ * Initialize Zimbra API
+ *
+ * @return void
+ */
+function zimbra_initialize_api()
+{
+	global $api;
+	$driver = variable_get('zimbra_client_type', 'soap');
+	$location = variable_get('zimbra_service_address', 'https://localhost:7071/service/admin/soap');
+	$zimbra_user = variable_get('zimbra_admin_user', '');
+	$zimbra_password = variable_get('zimbra_admin_password', '');
+	$api = ZAP::admin($driver, $location);
 
+	$is_authenticated = FALSE;
+	$auth_by_token = FALSE;
+	$authToken = isset($_SESSION['authToken']) ? $_SESSION['authToken'] : '';
+	if(!empty($authToken))
+	{
+		try
+		{
+			$result = $api->authByToken($zimbra_user, $authToken);
+			$is_authenticated = isset($result->authToken);
+		}
+		catch(Exception $ex){}
+	}
+	if(!$is_authenticated)
+	{
+		try
+		{
+			$result = $api->auth($zimbra_user, $zimbra_password);
+			$is_authenticated = isset($result->authToken);
+			$_SESSION['authToken'] = $result->authToken;
+		}
+		catch(Exception $ex){}
+	}
+	if(!$is_authenticated AND current_path() !== 'admin/config/system/zimbra-tenancy')
+	{
+		$message = 'Your config parameters for Zimbra is invalid!';
+		$message .= 'Please <a href="' .url('admin/config/system/zimbra-tenancy') .'">config</a> before using this module.';
+		drupal_set_message(t($message), 'error');
+		drupal_access_denied();
+		exit;
+	}
+}
 
+/**
+ * Get information of Zimbra domain
+ *
+ * @param  string $domain Domain name.
+ * @return mix
+ */
+function zimbra_get_domain($domain)
+{
+	global $api;
+	try
+	{
+		$result = $api->getDomain($domain);
+		return $result->domain;
+	}
+	catch(Exception $ex)
+	{
+		return NULL;
+	}
+}
+
+/**
+ * Create Zimbra domain
+ *
+ * @param  string $domain Domain name.
+ * @param  array  $attrs  Domain attributes.
+ * @return mix
+ */
+function zimbra_create_domain($domain, array $attrs = array())
+{
+	global $api;
+	try
+	{
+		$result = $api->createDomain($domain, $attrs);
+		return $result->domain;
+	}
+	catch(Exception $ex)
+	{
+		return NULL;
+	}
+}
+
+/**
+ * Delete Zimbra domain
+ *
+ * @param  string $zimbra_id Domain Zimbra ID.
+ * @return mix
+ */
+function zimbra_delete_domain($zimbra_id)
+{
+	global $api;
+	try
+	{
+		return $api->deleteDomain($zimbra_id);
+	}
+	catch(Exception $ex)
+	{
+		return FALSE;
+	}
+}
+
+/**
+ * Get information of Zimbra distribution list
+ *
+ * @param  string $dl Distribution list name.
+ * @return mix
+ */
+function zimbra_get_dl($dl)
+{
+	global $api;
+	try
+	{
+		$result = $api->getDistributionList($dl);
+		return $result->dl;
+	}
+	catch(Exception $ex)
+	{
+		return NULL;
+	}
+}
+
+/**
+ * Create Zimbra distribution list
+ *
+ * @param  string $dl    Distribution list name.
+ * @param  array  $attrs Domain attributes.
+ * @return mix
+ */
+function zimbra_create_dl($dl, array $attrs = array())
+{
+	global $api;
+	try
+	{
+		$result = $api->createDistributionList($dl, $attrs);
+		return $result->dl;
+	}
+	catch(Exception $ex)
+	{
+		return NULL;
+	}
+}
+
+/**
+ * Adding members to a distribution list.
+ *
+ * @param  string $zimbra_id Value of zimbra identify.
+ * @param  array  $members   Distribution list members.
+ * @return mix
+ */
+function zimbra_add_dl_members($zimbra_id, array $members = array())
+{
+	global $api;
+	try
+	{
+		return $api->addDistributionListMember($zimbra_id, $members);
+	}
+	catch(Exception $ex)
+	{
+		return NULL;
+	}
+}
+
+/**
+ * Remove distribution list members.
+ *
+ * @param  string $zimbra_id Value of zimbra identify.
+ * @param  array  $members   Distribution list members.
+ * @return mix
+ */
+function zimbra_remove_dl_members($id, array $members)
+{
+	global $api;
+	try
+	{
+		return $api->removeDistributionListMember($id, $members);
+	}
+	catch(Exception $ex)
+	{
+		return NULL;
+	}
+}
+
+/**
+ * Delete Zimbra distribution list
+ *
+ * @param  string $zimbra_id Distribution list Zimbra ID.
+ * @return mix
+ */
+function zimbra_delete_dl($zimbra_id)
+{
+	global $api;
+	try
+	{
+		return $api->deleteDistributionList($zimbra_id);
+	}
+	catch(Exception $ex)
+	{
+		return FALSE;
+	}
+}
+
+/**
+ * Get information of Zimbra account
+ *
+ * @param  string $account The name used to identify the account.
+ * @return mix
+ */
+function zimbra_get_account($account)
+{
+	global $api;
+	try
+	{
+		$result = $api->getAccount($account);
+		return $result->account;
+	}
+	catch(Exception $ex)
+	{
+		return NULL;
+	}
+}
+
+/**
+ * Create Zimbra account
+ *
+ * @param  string $name     New account's name. Must include domain (uid@name), and domain specified in name must exist.
+ * @param  string $password New account's password.
+ * @param  array  $attrs    Account attributes.
+ * @return mix
+ */
+function zimbra_create_account($account, $password, array $attrs = array())
+{
+	global $api;
+	try
+	{
+		$result = $api->createAccount($account, $password, $attrs);
+		return $result->account;
+	}
+	catch(Exception $ex)
+	{
+		return NULL;
+	}
+}
+
+/**
+ * Modify Zimbra account
+ *
+ * @param  string $id    Zimbra ID of account.
+ * @param  array  $attrs Attributes.
+ * @return mix
+ */
+function zimbra_modify_account($id, array $attrs = array())
+{
+	global $api;
+	try
+	{
+		$result = $api->modifyAccount($id, $attrs);
+		return $result->account;
+	}
+	catch(Exception $ex)
+	{
+		return NULL;
+	}
+}
+
+/**
+ * Rename Zimbra account
+ *
+ * @param  string $id   Zimbra ID of account.
+ * @param  array  $name New account name.
+ * @return mix
+ */
+function zimbra_rename_account($id, $name)
+{
+	global $api;
+	try
+	{
+		$result = $api->renameAccount($id, $name);
+		return $result->account;
+	}
+	catch(Exception $ex)
+	{
+		return NULL;
+	}
+}
+
+/**
+ * Delete Zimbra account
+ *
+ * @param  string $zimbra_id Account Zimbra ID.
+ * @return mix
+ */
+function zimbra_delete_account($zimbra_id)
+{
+	global $api;
+	try
+	{
+		return $api->deleteAccount($zimbra_id);
+	}
+	catch(Exception $ex)
+	{
+		return FALSE;
+	}
+}
+
+/**
+ * Add Zimbra account alias
+ *
+ * @param  string $id    Value of zimbra identify.
+ * @param  string $alias Account alias.
+ * @return mix
+ */
+function zimbra_add_account_alias($id, $alias)
+{
+	global $api;
+	try
+	{
+		return $api->addAccountAlias($id, $alias);
+	}
+	catch(Exception $ex)
+	{
+		return FALSE;
+	}
+}
+
+/**
+ * Remove Zimbra account alias.
+ * 
+ * @param  string $alias Account alias.
+ * @param  string $id    Zimbra ID.
+ * @return mix
+ */
+function zimbra_remove_account_alias($alias, $id = '')
+{
+	global $api;
+	try
+	{
+		return $api->removeAccountAlias($alias, $id);
+	}
+	catch(Exception $ex)
+	{
+		return FALSE;
+	}
+}
+
+/**
+ * Set password.
+ * 
+ * @param  string $id       Zimbra ID.
+ * @param  string $password New password.
+ * @return mix
+ */
+function zimbra_set_password($id, $password)
+{
+	global $api;
+	try
+	{
+		$result = $api->setPassword($id, $password);
+		return $result->message;
+	}
+	catch(Exception $ex)
+	{
+		return NULL;
+	}
+}
+
+/**
+ * Get all classes of service
+ *
+ * @return mix
+ */
+function zimbra_list_all_cos()
+{
+	global $api;
+	$all_cos = array('_none' => t('- None -'));
+	global $api;
+	$result = $api->getAllCos();
+	if(isset($result->cos))
+	{
+		$arr_cos = is_array($result->cos) ? $result->cos : array($result->cos);
+		foreach ($arr_cos as $cos)
+		{
+			$all_cos[$cos->id] = $cos->name;
+		}
+	}
+	return $all_cos;
+}
