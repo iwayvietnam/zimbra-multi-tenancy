@@ -53,36 +53,75 @@ function zimbra_list_command(){
  * Form builder function for module settings.
  */
 function zimbra_multi_tenancy_settings(){
+  $form['zimbra_service_address'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Zimbra admin server address'),
+    '#default_value' => variable_get('zimbra_service_address', 'https://localhost:7071/service/admin/soap'),
+    '#description' => t('Zimbra admin server address.'),
+	'#require' => 1,
+	'#weight' => -10,
+  );
+  $form['zimbra_client_type'] = array(
+    '#type' => 'select',
+    '#title' => t('Zimbra client type'),
+    '#options' => array(
+    	'curl' => t('CURL'),
+    	'http' => t('HTTP'),
+    	'soap' => t('Soap'),
+    	'socket' => t('Socket'),
+    	'wsdl' => t('WSDL'),
+	),
+    '#default_value' => variable_get('zimbra_client_type', 'soap'),
+    '#description' => t('Zimbra client type.'),
+	'#require' => 1,
+	'#weight' => -9,
+  );
+  $form['zimbra_admin_user'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Admin user in zimbra server'),
+    '#default_value' => variable_get('zimbra_admin_user', ''),
+    '#description' => t('User in zimbra server.'),
+	'#require' => 1,
+	'#weight' => -8,
+  );
+  $form['zimbra_admin_password'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Admin password in zimbra server'),
+    '#default_value' => variable_get('zimbra_admin_password', ''),
+    '#description' => t('Admin password in zimbra server.'),
+	'#require' => 1,
+	'#weight' => -7,
+  );
   $form['zimbra_domain_server'] = array(
     '#type' => 'textfield',
     '#title' => t('Domain for automatic create new user'),
     '#default_value' => variable_get('zimbra_domain_server', 'iwayvietnam.com'),
     '#description' => t('Domain for automatic create new user. Do not input "@" character.'),
 	'#require' => 1,
-	'#weight' => -10,
+	'#weight' => -6,
   );
-  
+
   $roles = user_roles();
   $form['zimbra_zimbra_role_id'] = array(
   	'#type' => 'select',
     '#title' => t('Role manage Zimbra multi tenancy'),
     '#default_value' => variable_get('zimbra_zimbra_role_id', 4),
   	'#options' => $roles,
-    '#weight' => -9,
+    '#weight' => -5,
   );
   $form['zimbra_tenant_role_id'] = array(
   	'#type' => 'select',
     '#title' => t('Role manage Tenant'),
     '#default_value' => variable_get('zimbra_tenant_role_id', 5),
   	'#options' => $roles,
-    '#weight' => -8,
+    '#weight' => -4,
   );
   $form['zimbra_domain_role_id'] = array(
   	'#type' => 'select',
     '#title' => t('Role manage Domain'),
     '#default_value' => variable_get('zimbra_domain_role_id', 6),
   	'#options' => $roles,
-    '#weight' => -7,
+    '#weight' => -3,
   );  
   
   $form = system_settings_form($form);
@@ -185,7 +224,6 @@ function page_content_general( $additem =1){
 	if($output !='') $output ='<ul class="zimbra-general-page">' .$output .'</ul>';
 	return $output;	
 }
-
 
 function page_list_tenant(){
 	global $user;
