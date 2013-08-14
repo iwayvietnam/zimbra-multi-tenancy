@@ -3,8 +3,8 @@ REQUIREMENTS
 ____________
 
 - Drupal 7.x;
-- References module;
-- Field Hidden module;
+- References module (https://drupal.org/project/references);
+- Field Hidden module (https://drupal.org/project/field_hidden);
 - Zimbra mail server;
 
 
@@ -13,6 +13,9 @@ ____________
 
 Add this module to the modules folder (sites/all/modules), enable it and configure to meet your needs.
 
+CONFIGURATION
+_____________
+Go to Configuration->System->Zimbra settings ('admin/config/system/zimbra-tenancy') and configure to meet your needs.
 
 AUTHOR
 ______
