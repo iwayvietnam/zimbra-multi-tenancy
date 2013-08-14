@@ -32,7 +32,7 @@ ________
   * Update an existing alias
   * Delete an existing alias
 
-6. Integrated Zimbra API (libraries) in PHP.
+6. Integrated with Zimbra API (libraries) in PHP.
 
 
 REQUIREMENTS
@@ -42,16 +42,15 @@ ____________
 - Zimbra server
 - References module (https://drupal.org/project/references)
 - Field Hidden module (https://drupal.org/project/field_hidden)
+- Zimbra API (libraries) in PHP (https://github.com/iwayvietnam/zimbra-api-php)
 
 INSTALLATION
 ____________
 
-Add this module to the modules folder (sites/all/modules), enable it and configure to meet your needs.
-
-CONFIGURATION
-_____________
+Add this module to the modules folder (sites/all/modules).
+Download Zimbra API (libraries) in PHP and put all content in extracted folder to vendor/zap folder in this module.
+Enable it.
 Go to Configuration->System->Zimbra settings ('admin/config/system/zimbra-tenancy') and configure to meet your needs.
-
 
 AUTHOR
 ______
@@ -59,3 +58,4 @@ ______
 - Lê Anh Quyến
 Email: leanhquyen@gmail.com
 
+Integrated with Zimbra API (libraries) in PHP by Nguyen Van Nguyen - nguyennv1981@gmail.com
