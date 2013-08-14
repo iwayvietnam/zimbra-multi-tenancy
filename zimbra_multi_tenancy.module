@@ -2038,7 +2038,6 @@ function zimbra_initialize_api()
 		$zimbra_password = variable_get('zimbra_admin_password', '');
 		$api = ZAP::admin($driver, $location);
 
-		$auth_by_token = FALSE;
 		$authToken = isset($_SESSION['authToken']) ? $_SESSION['authToken'] : '';
 		if(!empty($authToken))
 		{
