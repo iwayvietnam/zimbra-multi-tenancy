@@ -1,1 +1,3 @@
 //Tạo thêm Role: Admin tenant
+
+// Tích hợp với Zimbra API PHP
