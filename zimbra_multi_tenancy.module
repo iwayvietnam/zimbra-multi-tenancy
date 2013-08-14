@@ -7,7 +7,6 @@ function zimbra_multi_tenancy_init(){
 	drupal_add_js(drupal_get_path('module', 'zimbra_multi_tenancy') .'/zimbra_multi_tenancy.js');
 	$file = DRUPAL_ROOT . '/' . drupal_get_path('module', 'zimbra_multi_tenancy') . "/vendor/zap/src/ZAP.php";
 	require_once $file;
-	zimbra_initialize_api();
 }
 
 /**
@@ -69,6 +68,9 @@ function zimbra_multi_tenancy_form_alter(&$form, &$form_state, $form_id){
 		$form['field_tenant_mailbox_max_size']['und'][0]['value']['#required'] = 1;
 		$form['field_tenant_number_of_mailboxes']['und'][0]['value']['#required'] = 1;
 		$form['field_tenant_zimbra_cos']['und']['#options'] = zimbra_list_all_cos();
+		$form['field_tenant_zimbra_cos']['und']['#ajax'] = array(
+      		'callback' => 'ajax_cos_dropdown_callback',			
+		);
 
 		if(arg(1) =='add')
 		{
@@ -1066,7 +1068,7 @@ function mailbox_validate($form, &$form_state){
 						'displayName' => $mail_fullname,
 						'sn' => $mail_fullname,
 					);
-					if($mailbox_maxsize) $attrs['zimbraMailQuota'] = $mailbox_maxsize * 1024 * 1024;
+					$attrs['zimbraMailQuota'] = $mailbox_maxsize * 1024 * 1024;
 					$account = zimbra_create_account($mail_address, $mail_password, $attrs);
 				}
 				$form_state['values']['field_mailbox_zimbra_id']['und'][0]['value'] = $account->id;
@@ -1081,16 +1083,12 @@ function mailbox_validate($form, &$form_state){
 				$zimbra_id = $form_state['values']['field_mailbox_zimbra_id']['und'][0]['value'];
 				$time_created =time();
 
-				//Change fullname for Mailbox
-				if($old_fullname !== $mail_fullname)
-				{
-					$attrs = array(
-						'displayName' => $mail_fullname,
-						'sn' => $mail_fullname,
-					);
-					if($mailbox_maxsize) $attrs['zimbraMailQuota'] = $mailbox_maxsize * 1024 * 1024;
-					zimbra_modify_account($zimbra_id, $attrs);
-				}
+				$attrs = array(
+					'displayName' => $mail_fullname,
+					'sn' => $mail_fullname,
+				);
+				$attrs['zimbraMailQuota'] = $mailbox_maxsize * 1024 * 1024;
+				zimbra_modify_account($zimbra_id, $attrs);
 				//Change password of Mailbox
 				if($mail_password !=='' )
 				{
@@ -1976,50 +1974,101 @@ function mailbox_get_info($mid){
 	return $mailbox;
 }
 
+function ajax_cos_dropdown_callback($form, $form_state)
+{
+	$commands = array();
+	$zimbra_id = isset($form_state['values']['field_tenant_zimbra_cos']['und'][0]['value']) ? $form_state['values']['field_tenant_zimbra_cos']['und'][0]['value'] : '';
+	$zimbra_cos = NULL;
+
+	$api = zimbra_initialize_api();
+	$result = $api->getAllCos();
+	if(isset($result->cos))
+	{
+		$arr_cos = is_array($result->cos) ? $result->cos : array($result->cos);
+		foreach ($arr_cos as $cos)
+		{
+			if($cos->id == $zimbra_id)
+			{
+				$zimbra_cos = $cos;
+				break;
+			}
+		}
+	}
+	$zimbra_mail_quota = 0;
+	if($zimbra_cos AND isset($zimbra_cos->a))
+	{
+		$attrs = is_array($zimbra_cos->a) ? $zimbra_cos->a : array($zimbra_cos->a);
+		foreach ($attrs as $attr)
+		{
+			if($attr->n === 'zimbraMailQuota' AND isset($attr->_))
+			{
+				$zimbra_mail_quota = (int) $attr->_;
+				$zimbra_mail_quota = $zimbra_mail_quota / (1024 * 1024);
+			}
+		}
+	}
+
+	$selector = '#edit-field-tenant-mailbox-max-size-und-0-value';
+	$commands[] = ajax_command_invoke($selector, 'val', array($zimbra_mail_quota));
+	if($zimbra_mail_quota > 0)
+	{
+		$commands[] = ajax_command_invoke($selector, 'attr', array('readonly', 'readonly'));
+	}
+	else
+	{
+		$commands[] = ajax_command_invoke($selector, 'attr', array('readonly', FALSE));
+	}
+	return array('#type' => 'ajax', '#commands' => $commands);
+}
+
 /**
  * Initialize Zimbra API
  *
- * @return void
+ * @return Zimbra Admin API
  */
 function zimbra_initialize_api()
 {
-	global $api;
-	$driver = variable_get('zimbra_client_type', 'soap');
-	$location = variable_get('zimbra_service_address', 'https://localhost:7071/service/admin/soap');
-	$zimbra_user = variable_get('zimbra_admin_user', '');
-	$zimbra_password = variable_get('zimbra_admin_password', '');
-	$api = ZAP::admin($driver, $location);
+	static $api = NULL;
+	static $zimbra_authenticated = FALSE;
+	if(!($api instanceof ZAP_API_Admin_Interface) OR ($zimbra_authenticated === FALSE))
+	{
+		$driver = variable_get('zimbra_client_type', 'soap');
+		$location = variable_get('zimbra_service_address', 'https://localhost:7071/service/admin/soap');
+		$zimbra_user = variable_get('zimbra_admin_user', '');
+		$zimbra_password = variable_get('zimbra_admin_password', '');
+		$api = ZAP::admin($driver, $location);
 
-	$is_authenticated = FALSE;
-	$auth_by_token = FALSE;
-	$authToken = isset($_SESSION['authToken']) ? $_SESSION['authToken'] : '';
-	if(!empty($authToken))
-	{
-		try
+		$auth_by_token = FALSE;
+		$authToken = isset($_SESSION['authToken']) ? $_SESSION['authToken'] : '';
+		if(!empty($authToken))
 		{
-			$result = $api->authByToken($zimbra_user, $authToken);
-			$is_authenticated = isset($result->authToken);
+			try
+			{
+				$result = $api->authByToken($zimbra_user, $authToken);
+				$zimbra_authenticated = isset($result->authToken);
+			}
+			catch(Exception $ex){}
 		}
-		catch(Exception $ex){}
-	}
-	if(!$is_authenticated)
-	{
-		try
+		if(!$zimbra_authenticated)
 		{
-			$result = $api->auth($zimbra_user, $zimbra_password);
-			$is_authenticated = isset($result->authToken);
-			$_SESSION['authToken'] = $result->authToken;
+			try
+			{
+				$result = $api->auth($zimbra_user, $zimbra_password);
+				$zimbra_authenticated = isset($result->authToken);
+				$_SESSION['authToken'] = $result->authToken;
+			}
+			catch(Exception $ex){}
 		}
-		catch(Exception $ex){}
+		if(!$zimbra_authenticated)
+		{
+			$message = 'Authentication to Zimbra server failed! <br />';
+			$message .= 'Please <a href="' .url('admin/config/system/zimbra-tenancy') .'">config</a> before using this module.';
+			drupal_set_message(t($message), 'error');
+			drupal_access_denied();
+			exit;
+		}
 	}
-	if(!$is_authenticated AND current_path() !== 'admin/config/system/zimbra-tenancy')
-	{
-		$message = 'Your config parameters for Zimbra is invalid!';
-		$message .= 'Please <a href="' .url('admin/config/system/zimbra-tenancy') .'">config</a> before using this module.';
-		drupal_set_message(t($message), 'error');
-		drupal_access_denied();
-		exit;
-	}
+	return $api;
 }
 
 /**
@@ -2030,7 +2079,7 @@ function zimbra_initialize_api()
  */
 function zimbra_get_domain($domain)
 {
-	global $api;
+	$api = zimbra_initialize_api();
 	try
 	{
 		$result = $api->getDomain($domain);
@@ -2051,7 +2100,7 @@ function zimbra_get_domain($domain)
  */
 function zimbra_create_domain($domain, array $attrs = array())
 {
-	global $api;
+	$api = zimbra_initialize_api();
 	try
 	{
 		$result = $api->createDomain($domain, $attrs);
@@ -2071,7 +2120,7 @@ function zimbra_create_domain($domain, array $attrs = array())
  */
 function zimbra_delete_domain($zimbra_id)
 {
-	global $api;
+	$api = zimbra_initialize_api();
 	try
 	{
 		return $api->deleteDomain($zimbra_id);
@@ -2090,7 +2139,7 @@ function zimbra_delete_domain($zimbra_id)
  */
 function zimbra_get_dl($dl)
 {
-	global $api;
+	$api = zimbra_initialize_api();
 	try
 	{
 		$result = $api->getDistributionList($dl);
@@ -2111,7 +2160,7 @@ function zimbra_get_dl($dl)
  */
 function zimbra_create_dl($dl, array $attrs = array())
 {
-	global $api;
+	$api = zimbra_initialize_api();
 	try
 	{
 		$result = $api->createDistributionList($dl, $attrs);
@@ -2132,7 +2181,7 @@ function zimbra_create_dl($dl, array $attrs = array())
  */
 function zimbra_add_dl_members($zimbra_id, array $members = array())
 {
-	global $api;
+	$api = zimbra_initialize_api();
 	try
 	{
 		return $api->addDistributionListMember($zimbra_id, $members);
@@ -2152,7 +2201,7 @@ function zimbra_add_dl_members($zimbra_id, array $members = array())
  */
 function zimbra_remove_dl_members($id, array $members)
 {
-	global $api;
+	$api = zimbra_initialize_api();
 	try
 	{
 		return $api->removeDistributionListMember($id, $members);
@@ -2171,7 +2220,7 @@ function zimbra_remove_dl_members($id, array $members)
  */
 function zimbra_delete_dl($zimbra_id)
 {
-	global $api;
+	$api = zimbra_initialize_api();
 	try
 	{
 		return $api->deleteDistributionList($zimbra_id);
@@ -2190,7 +2239,7 @@ function zimbra_delete_dl($zimbra_id)
  */
 function zimbra_get_account($account)
 {
-	global $api;
+	$api = zimbra_initialize_api();
 	try
 	{
 		$result = $api->getAccount($account);
@@ -2212,7 +2261,7 @@ function zimbra_get_account($account)
  */
 function zimbra_create_account($account, $password, array $attrs = array())
 {
-	global $api;
+	$api = zimbra_initialize_api();
 	try
 	{
 		$result = $api->createAccount($account, $password, $attrs);
@@ -2233,7 +2282,7 @@ function zimbra_create_account($account, $password, array $attrs = array())
  */
 function zimbra_modify_account($id, array $attrs = array())
 {
-	global $api;
+	$api = zimbra_initialize_api();
 	try
 	{
 		$result = $api->modifyAccount($id, $attrs);
@@ -2254,7 +2303,7 @@ function zimbra_modify_account($id, array $attrs = array())
  */
 function zimbra_rename_account($id, $name)
 {
-	global $api;
+	$api = zimbra_initialize_api();
 	try
 	{
 		$result = $api->renameAccount($id, $name);
@@ -2274,7 +2323,7 @@ function zimbra_rename_account($id, $name)
  */
 function zimbra_delete_account($zimbra_id)
 {
-	global $api;
+	$api = zimbra_initialize_api();
 	try
 	{
 		return $api->deleteAccount($zimbra_id);
@@ -2294,7 +2343,7 @@ function zimbra_delete_account($zimbra_id)
  */
 function zimbra_add_account_alias($id, $alias)
 {
-	global $api;
+	$api = zimbra_initialize_api();
 	try
 	{
 		return $api->addAccountAlias($id, $alias);
@@ -2314,7 +2363,7 @@ function zimbra_add_account_alias($id, $alias)
  */
 function zimbra_remove_account_alias($alias, $id = '')
 {
-	global $api;
+	$api = zimbra_initialize_api();
 	try
 	{
 		return $api->removeAccountAlias($alias, $id);
@@ -2334,7 +2383,7 @@ function zimbra_remove_account_alias($alias, $id = '')
  */
 function zimbra_set_password($id, $password)
 {
-	global $api;
+	$api = zimbra_initialize_api();
 	try
 	{
 		$result = $api->setPassword($id, $password);
@@ -2353,9 +2402,8 @@ function zimbra_set_password($id, $password)
  */
 function zimbra_list_all_cos()
 {
-	global $api;
+	$api = zimbra_initialize_api();
 	$all_cos = array('_none' => t('- None -'));
-	global $api;
 	$result = $api->getAllCos();
 	if(isset($result->cos))
 	{
