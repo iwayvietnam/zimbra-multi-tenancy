@@ -1080,19 +1080,27 @@ function mailbox_validate($form, &$form_state){
 				$old_domain =node_load($old_node ->field_node_domain_id['und'][0]['nid']);
 				$old_address =$old_node ->title .'@' .$old_domain ->title;
 				$zimbra_id = $form_state['values']['field_mailbox_zimbra_id']['und'][0]['value'];
-				if(empty($zimbra_id))
-				{
-					$account = zimbra_get_account($old_address);
-					$zimbra_id = $account->id;
-					$form_state['values']['field_mailbox_zimbra_id']['und'][0]['value'] = $zimbra_id;
-				}
 
 				$attrs = array(
 					'displayName' => $mail_fullname,
 					'sn' => $mail_fullname,
 				);
 				$attrs['zimbraMailQuota'] = $mailbox_maxsize * 1024 * 1024;
-				zimbra_modify_account($zimbra_id, $attrs);
+
+				if(empty($zimbra_id))
+				{
+					$account = zimbra_get_account($old_address);
+					if(!$account)
+					{
+						$account = zimbra_create_account($mail_address, $mail_password, $attrs);
+					}
+					$zimbra_id = $account->id;
+					$form_state['values']['field_mailbox_zimbra_id']['und'][0]['value'] = $zimbra_id;
+				}
+				else
+				{
+					zimbra_modify_account($zimbra_id, $attrs);
+				}
 				//Change password of Mailbox
 				if($mail_password !=='' )
 				{
