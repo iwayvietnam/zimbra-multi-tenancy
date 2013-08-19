@@ -1079,9 +1079,13 @@ function mailbox_validate($form, &$form_state){
 				$old_node =node_load($nid);
 				$old_domain =node_load($old_node ->field_node_domain_id['und'][0]['nid']);
 				$old_address =$old_node ->title .'@' .$old_domain ->title;
-				$old_fullname =$old_node ->field_mailbox_fullname['und'][0]['value'];
 				$zimbra_id = $form_state['values']['field_mailbox_zimbra_id']['und'][0]['value'];
-				$time_created =time();
+				if(empty($zimbra_id))
+				{
+					$account = zimbra_get_account($old_address);
+					$zimbra_id = $account->id;
+					$form_state['values']['field_mailbox_zimbra_id']['und'][0]['value'] = $zimbra_id;
+				}
 
 				$attrs = array(
 					'displayName' => $mail_fullname,
