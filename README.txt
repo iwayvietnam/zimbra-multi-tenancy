@@ -41,6 +41,7 @@ ____________
 - Drupal 7.x;
 - Zimbra server
 - References module (https://drupal.org/project/references)
+- Zimbra scheduled commands (libraries) in PHP (https://github.com/tuanta/zimbra-scheduled-commands)
 
 INSTALLATION
 ____________
