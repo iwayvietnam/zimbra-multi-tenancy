@@ -140,6 +140,7 @@ function zimbra_multi_tenancy_form_alter(&$form, &$form_state, $form_id){
 		$form['field_domain_user_mail']['und'][0]['value']['#required'] = 1;
 		$form['field_domain_mailbox_max_size']['und'][0]['value']['#required'] = 1;
 		$form['field_domain_number_of_mailboxes']['und'][0]['value']['#required'] = 1;
+		$form['field_domain_zimbra_cos']['und']['#options'] = zimbra_list_all_cos();
 		$form['field_domain_zimbra_cos']['und']['#ajax'] = array(
       		'callback' => 'ajax_domain_cos_dropdown_callback',			
 		);
