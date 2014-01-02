@@ -796,12 +796,12 @@ function tenant_validate($form, &$form_state)
 					if($data->name == $user_name) $user_name_exist = 1;
 					if($data->mail == $user_mail) $user_mail_exist = 1;
 				}
-				
+
 				if($user_uid == 0)
 				{
 					$user_roles =array();
 					if( variable_get('zimbra_tenant_role_id', 0) != 0) $user_roles[] = variable_get('zimbra_tenant_role_id', 0);
-					
+
 					$user_uid = auto_create_user($user_name, $user_pass, $user_mail, $user_roles);
 					$form_state['values']['field_tenant_user']['und'][0]['uid'] = $user_uid;
 				}
@@ -846,7 +846,7 @@ function tenant_validate($form, &$form_state)
 				}				
 			}
 		}
-		
+
 		//Clear value of user
 		if(!form_set_error())
 		{
@@ -1014,11 +1014,14 @@ function domain_validate($form, &$form_state)
 		{
 			$form_state['values']['title'] = trim($form_state['values']['title']);
 			$form_state['values']['field_domain_user_password']['und'][0]['value'] = '';
+
+			$tenant_node = node_load($tenant_id);
+			$tenant_cos_id = isset($tenant_node ->field_tenant_zimbra_cos['und'][0]['value']) ? $tenant_node ->field_tenant_zimbra_cos['und'][0]['value'] : '';;
+			$domain_cos_id = isset($form_state['values']['field_domain_zimbra_cos']['und'][0]['value']) ? $form_state['values']['field_domain_zimbra_cos']['und'][0]['value'] : '';
+			$cos_id = (!empty($domain_cos_id)) ? $domain_cos_id : $tenant_cos_id;
 			$zimbra_domain = zimbra_get_domain($domain_name);
 			if(!$zimbra_domain)
 			{
-				$tenant_node = node_load($tenant_id);
-				$cos_id = isset($tenant_node ->field_tenant_zimbra_cos['und'][0]['value']) ? $tenant_node ->field_tenant_zimbra_cos['und'][0]['value'] : '';;
 				if(!empty($cos_id))
 				{
 					$zimbra_domain = zimbra_create_domain($domain_name, array('zimbraDomainDefaultCOSId' => $cos_id));				
@@ -1027,6 +1030,23 @@ function domain_validate($form, &$form_state)
 				{
 					$zimbra_domain = zimbra_create_domain($domain_name);				
 				}
+			}
+			else
+			{
+				$attrs = $zimbra_domain->a;
+				$a = array();
+				foreach($attrs as $attr)
+				{
+					if($attr->n == 'zimbraDomainDefaultCOSId' && !empty($cos_id))
+					{
+						$attr->_ = $cos_id;
+					}
+					$a[] = array(
+						'n' => $attr->n,
+						'_' => $attr->_,
+					);
+				}
+				$zimbra_domain = zimbra_modify_domain($zimbra_domain->id, $a);				
 			}
 			$form_state['values']['field_domain_zimbra_id']['und'][0]['value'] = $zimbra_domain->id;
 		}
@@ -2428,6 +2448,28 @@ function zimbra_create_domain($domain, array $attrs = array())
 	try
 	{
 		$result = $api->createDomain($domain, $attrs);
+		return $result->domain;
+	}
+	catch(Exception $ex)
+	{
+		watchdog('zimbra', $ex->__toString());
+		return NULL;
+	}
+}
+
+/**
+ * Modify Zimbra domain
+ *
+ * @param  string $id Zimbra domain ID.
+ * @param  array  $attrs  Domain attributes.
+ * @return mix
+ */
+function zimbra_modify_domain($id, array $attrs = array())
+{
+	$api = zimbra_initialize_api();
+	try
+	{
+		$result = $api->modifyDomain($id, $attrs);
 		return $result->domain;
 	}
 	catch(Exception $ex)
