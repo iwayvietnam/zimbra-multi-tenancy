@@ -32,7 +32,7 @@ ________
   * Update an existing alias
   * Delete an existing alias
 
-6. Provide commands for Zimbra implementation in zimbra_queuedcommand table.
+6. Integrated with Zimbra API (libraries) in PHP.
 
 
 REQUIREMENTS
@@ -41,13 +41,14 @@ ____________
 - Drupal 7.x;
 - Zimbra server
 - References module (https://drupal.org/project/references)
-- Zimbra scheduled commands (libraries) in PHP (https://github.com/tuanta/zimbra-scheduled-commands)
+- Field Hidden module (https://drupal.org/project/field_hidden)
 
 INSTALLATION
 ____________
 
-Add this module to the modules folder (sites/all/modules), enable it and configure to meet your needs.
-
+Add this module to the modules folder (sites/all/modules).
+Enable it.
+Go to Configuration->System->Zimbra settings ('admin/config/system/zimbra-tenancy') and configure to meet your needs.
 
 AUTHOR
 ______
@@ -55,3 +56,4 @@ ______
 - Lê Anh Quyến
 Email: leanhquyen@gmail.com
 
+Integrated with Zimbra API (libraries) in PHP by Nguyen Van Nguyen - nguyennv1981@gmail.com
