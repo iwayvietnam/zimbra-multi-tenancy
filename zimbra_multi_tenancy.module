@@ -190,6 +190,7 @@ function zimbra_multi_tenancy_form_alter(&$form, &$form_state, $form_id){
                 drupal_access_denied();
                 exit;
             }
+            $form['title']['#access'] = 0;
         }
 
         $nid = $form['nid']['#value'];
@@ -1043,12 +1044,9 @@ function domain_validate($form, &$form_state)
                     {
                         $attr->_ = $cos_id;
                     }
-                    $a[] = array(
-                        'n' => $attr->n,
-                        '_' => $attr->_,
-                    );
+                    $a[$attr->n] = isset($attr->_) ? $attr->_ : '';
                 }
-                $zimbra_domain = zimbra_modify_domain($zimbra_domain->id, $a);              
+                zimbra_modify_domain($zimbra_domain->id, $a);              
             }
             $form_state['values']['field_domain_zimbra_id']['und'][0]['value'] = $zimbra_domain->id;
         }
@@ -1099,7 +1097,7 @@ function group_validate($form, &$form_state)
                 {
                     $mem_arr = explode(':', $value);
                     $mem_val = '';
-                    if(count($mem_arr) AND isset($all_account[$mem_arr[1]]))
+                    if(count($mem_arr) > 1 AND isset($all_account[$mem_arr[1]]))
                         $mem_val = $all_account[$mem_arr[1]];
                     if($mem_val == '') $mem_val = $value;
                     
@@ -1111,6 +1109,13 @@ function group_validate($form, &$form_state)
             if(!$zimbra_dl)
             {
                 $zimbra_dl = zimbra_create_dl($mail_address, array(
+                    'displayName' => $group_fullname,
+                    'description' => $group_fullname,
+                ));
+            }
+            else
+            {
+                zimbra_modify_dl($zimbra_dl->id, array(
                     'displayName' => $group_fullname,
                     'description' => $group_fullname,
                 ));
@@ -1183,7 +1188,7 @@ function alias_validate($form, &$form_state)
             $zimbra_id = $mapping_node->field_mailbox_zimbra_id['und'][0]['value'];
 
             //Insert into queue_command table
-            if($nid ==0)
+            if($nid == 0)
             {
                 zimbra_add_account_alias($zimbra_id, $alias_address);
             }
@@ -1228,7 +1233,7 @@ function mailbox_validate($form, &$form_state)
         //Check validate mailbox maxsize is avaiable of Domain
         $mailbox_maxsize = intval($form_state['values']['field_mailbox_size']['und'][0]['value']);
         $domain_id = $form_state['values']['field_node_domain_id']['und'][0]['nid'];
-        
+
         $domain_mailbox_maxsize_allow =domain_check_quota($domain_id, $nid);
         if($mailbox_maxsize > $domain_mailbox_maxsize_allow)
         {
@@ -1239,7 +1244,7 @@ function mailbox_validate($form, &$form_state)
                 )
             ));
         }
-        
+
         //Check validate number mailboxes is avaiable of Domain
         $domain_mailbox_maxsize_allow = domain_check_number($domain_id, $nid);
         if($domain_mailbox_maxsize_allow <= 0 && arg(1) == 'add')
@@ -1248,12 +1253,12 @@ function mailbox_validate($form, &$form_state)
         }
         
         //Check validate password of mailbox
-        if(!preg_match('!^[a-zA-Z0-9_\.]+$!', $mail_password)
+        /*if(!preg_match('!^[a-zA-Z0-9_\.]+$!', $mail_password)
             && (arg(1) =='add'
             || arg(3) =='reset-password'))
         {
             form_set_error('field_mailbox_password', t('The @fieldname must contain only letters, punctuation, numbers, and underscores.', array('@fieldname' => $form['field_mailbox_password']['und']['#title'])));
-        }
+        }*/
         
         if(!form_set_error())
         {
@@ -2539,6 +2544,28 @@ function zimbra_create_dl($dl, array $attrs = array())
     try
     {
         $result = $api->createDistributionList($dl, $attrs);
+        return $result->dl;
+    }
+    catch(Exception $ex)
+    {
+        watchdog('zimbra', $ex->__toString());
+        return NULL;
+    }
+}
+
+/**
+ * Modify Zimbra distribution list
+ *
+ * @param  string $zimbra_id   Zimbra ID.
+ * @param  array  $attrs Domain attributes.
+ * @return mix
+ */
+function zimbra_modify_dl($zimbra_id, array $attrs = array())
+{
+    $api = zimbra_initialize_api();
+    try
+    {
+        $result = $api->modifyDistributionList($zimbra_id, $attrs);
         return $result->dl;
     }
     catch(Exception $ex)
