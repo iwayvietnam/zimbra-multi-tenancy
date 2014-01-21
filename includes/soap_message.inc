@@ -150,8 +150,8 @@ class soap_message
             {
                 throw new Exception('Error to load xml string!');
             }
+            return self::xml_to_object($xml->children('soap', TRUE)->Body);
         }
-        return self::xml_to_object($xml->children('soap', TRUE)->Body);
     }
 
     /**
