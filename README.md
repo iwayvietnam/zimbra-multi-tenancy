@@ -2,8 +2,6 @@
 
 **Add Multi-tenancy and Domain Administration & Role-based Delegate features to Zimbra OSE.**
 
-Copyright (C) 2013 [iWay Vietnam] (http://www.iwayvietnam.com/)
-
 ##Licensing
 [GNU Affero General Public License] (http://www.gnu.org/licenses/agpl-3.0.html)
 
@@ -20,6 +18,9 @@ Copyright (C) 2013 [iWay Vietnam] (http://www.iwayvietnam.com/)
     You should have received a copy of the GNU Affero General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+##Communication
+  * Mailing list: zmt-devel@lists.iwayvietnam.com
+
 ##Backgrounds
 
 ###Community Needs background
@@ -32,6 +33,7 @@ Copyright (C) 2013 [iWay Vietnam] (http://www.iwayvietnam.com/)
   * Programming language: PHP
 
 ##Functionality Details
+Basic functionality included:
 
 ###For supervisors
 
@@ -66,7 +68,9 @@ Copyright (C) 2013 [iWay Vietnam] (http://www.iwayvietnam.com/)
   * Update an existing alias
   * Delete an existing alias
 
+####Integrated with Zimbra API (libraries) in PHP.
+
 **Many other functionalities would be added later.**
 
 ##Credits
-Special thanks to: iWay Development team and [Community Space] (http://khonggiancongdong.org/)
+Special thanks to: [iWay Vietnam team] (http://www.iwayvietnam.com/) and [Community Space] (http://khonggiancongdong.org/)
