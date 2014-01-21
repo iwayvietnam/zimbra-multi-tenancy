@@ -3,11 +3,6 @@
  * Changelog file for Zimbra as a service 7.x-1.x.
  */
 
-Zimbra multi tenancy 4.0, 2014-01-20
-----------------------
-- Remove using schedule cron job for fetching queued commands.
-- Add zimbra soap api support.
-
 Documentation has moved online. Important changes are noted below.
 
 
@@ -16,7 +11,6 @@ Version history
 ===============
 
 /*
-7.x-4.0 20-JAN-2014
 7.x-3.8 27-JAN-2013
 7.x-3.7 01-JAN-2013
 7.x-3.6 07-DEC-2012
