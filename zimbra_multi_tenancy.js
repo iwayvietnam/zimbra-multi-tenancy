@@ -1,143 +1,112 @@
 (function($){
+    Drupal.behaviors.groupform_action = {
+        attach: function(context, settings) {
+            $('#members_add').unbind('click');
+            $('#members_add').click(function(e) {
+                move_options('.group_account_list', '.group_members_list');
+            });
+            $('#members_remove').unbind('click');
+            $('#members_remove').click(function(e) {
+                move_options('.group_members_list', '.group_account_list');
+            });
 
-Drupal.behaviors.groupform_action = {
-  attach: function(context, settings) {
-     $('#members_add').click(function(e) {
-        AddRemoveOptions( 'edit-field-group-account-list', 'edit-field-group-members-list');
-     });
-     $('#members_remove').click(function(e) {
-        AddRemoveOptions( 'edit-field-group-members-list', 'edit-field-group-account-list');
-     });
-     
-     $('#edit-field-group-account-list').dblclick(function(e) {
-        AddRemoveOptions( 'edit-field-group-account-list', 'edit-field-group-members-list');
-     });
-     $('#edit-field-group-members-list').dblclick(function(e) {
-        AddRemoveOptions( 'edit-field-group-members-list', 'edit-field-group-account-list');
-     });     
-  }
-};
+            $('.group_account_list').unbind('dblclick');
+            $('.group_account_list').dblclick(function(e) {
+                move_options('.group_account_list', '.group_members_list');
+            });
+            $('.group_members_list').unbind('dblclick');
+            $('.group_members_list').dblclick(function(e) {
+                move_options('.group_members_list', '.group_account_list');
+            });
 
-Drupal.behaviors.tenant_form_action = {
-  attach: function(context, settings) {
-  
-  /*
-    //Disable 2 textbox username and password when value of tenant user is null
-    if($('#edit-field-tenant-user-und').val() && $('#edit-field-tenant-user-und').val()!='_none'){
-        $('#edit-field-tenant-user-name').css("display","none");
-        $('#edit-field-tenant-user-password').css("display","none");
-    }
-    $('#edit-field-tenant-user-und').change(function(){
-        if($('#edit-field-tenant-user-und').val()!='_none'){
-            $('#edit-field-tenant-user-name').css("display","none");
-            $('#edit-field-tenant-user-password').css("display","none");
-        }else{
-            $('#edit-field-tenant-user-name').css("display","");
-            $('#edit-field-tenant-user-password').css("display","");
+            $('#group-node-form').submit(function(){
+                before_sumbit();
+            });
+
+            for (ajax_el in settings.ajax){
+                if (Drupal.ajax[ajax_el].element.form){
+                    if (Drupal.ajax[ajax_el].element.form.id === 'group-node-form'){
+                        Drupal.ajax[ajax_el].beforeSerialize = function($form, options){
+                            before_sumbit();
+                        }
+                        /*Drupal.ajax[ajax_el].beforeSubmit = function(arr, $form, options)
+                        {
+                            before_sumbit();
+                        }*/
+                    }
+                }
+            }
         }
-    });
-    
-    //Disable 2 textbox username and password when value of domain user is null
-    if($('#edit-field-domain-user-und').val() && $('#edit-field-domain-user-und').val()!='_none'){
-        $('#edit-field-domain-user-name').css("display","none");
-        $('#edit-field-domain-user-password').css("display","none");
-    }
-    $('#edit-field-domain-user-und').change(function(){
-        if($('#edit-field-domain-user-und').val()!='_none'){
-            $('#edit-field-domain-user-name').css("display","none");
-            $('#edit-field-domain-user-password').css("display","none");
-        }else{
-            $('#edit-field-domain-user-name').css("display","");
-            $('#edit-field-domain-user-password').css("display","");
-        }
-    });
-    */
-    //alert('sss');
-  }
-};
-
+    };
 })(jQuery);
 
+function before_sumbit(){
+    var members_list = '';
+    jQuery('.group_account_list option:selected').each(function(){
+        this.selected = false;
+    });
+    jQuery('.group_members_list option:selected').each(function(){
+        this.selected = false;
+    });
+    jQuery('.group_members_list option').each(function(){
+        if(members_list.length === 0){
+            members_list = this.value;
+        }else{
+            members_list += '|' + this.value;
+        }
+    });
+    jQuery('#edit-field-group-members-und-0-value').val(members_list);
+}
 
-function group_before_validate(){
-    
-    combRemoveID ='edit-field-group-account-list';
-    combAddID ='edit-field-group-members-list';
-    comboRemove =GetE(combRemoveID);
-    comboAdd =GetE(combAddID); 
-    
-    //Unselected item
-    comboRemove.selectedIndex =-1;
-    comboAdd.selectedIndex =-1;
-    
-	// Insert value into item Members
-	members_list ="";
-	var oOptions = comboAdd.options ;
-	
-	for ( var i =0; i <oOptions.length; i++ ){
-	    if(members_list !='')members_list +="|";
-		members_list += oOptions[i].value;
-	}
-    GetE('edit-field-group-members-und-0-value').value =members_list;
+function move_options(from_selector, to_selector){
+    var from_select = jQuery(from_selector).get(0);
+    var to_select = jQuery(to_selector).get(0);
+
+    // Save the selected index
+    var selectedIndex = from_select.selectedIndex;
+    var options = from_select.options;
+
+    // Remove all selected options
+    for ( var i =0; i < options.length; i++ ){
+        if (options[i].selected){ 
+            var text = options[i].innerHTML;
+            var value = options[i].value;
+            add_option_item(to_select, text, value);
+        }
+    }
+    for (var i = options.length - 1 ; i >= 0 ; i-- ){
+        if (options[i].selected){ 
+            from_select.remove(i) ;
+        }
+    }
+
+    // Reset the selection based on the original selected index
+    if (from_select.options.length > 0){
+        if ( selectedIndex >= from_select.options.length )
+        {
+            selectedIndex = from_select.options.length - 1;
+        } 
+        from_select.selectedIndex = selectedIndex ;
+    }
+    if (to_select.selectedIndex == -1 && to_select.options.length > 0){
+        to_select.selectedIndex = 0;
+    }
 }
 
 
-function AddRemoveOptions( combRemoveID, combAddID){
-	
-	comboRemove =GetE(combRemoveID);
-	comboAdd =GetE(combAddID);
+function add_option_item(select_object, option_text, option_value, document_object, index){ 
+    var option;
 
-	// Save the selected index
-	var iSelectedIndex = comboRemove.selectedIndex ;
-	var oOptions = comboRemove.options ;
+    if (document_object)
+        option = document_object.createElement("option");
+    else
+        option = document.createElement("option") ;
+    if (index != null)
+        select_object.options.add(option, index);
+    else
+        select_object.options.add(option);
 
-	// Remove all selected options
-	for ( var i =0; i < oOptions.length; i++ ){
-		if (oOptions[i].selected){ 
-			iText =oOptions[i].innerHTML;
-			iValue =oOptions[i].value;
-			AddItemOption( combAddID, iText, iValue);
-		}
-	}
-	for ( var i = oOptions.length - 1 ; i >= 0 ; i-- ){
-		if (oOptions[i].selected){ 
-			comboRemove.remove(i) ;
-		}
-	}
-
-	// Reset the selection based on the original selected index
-	if ( comboRemove.options.length > 0 ){
-		if ( iSelectedIndex >= comboRemove.options.length ) 
-			iSelectedIndex = comboRemove.options.length - 1 ;
-		comboRemove.selectedIndex = iSelectedIndex ;
-	}
-	if (comboAdd.selectedIndex == -1 && comboAdd.options.length >0) comboAdd.selectedIndex=0;
+    option.innerHTML = option_text.length > 0 ? option_text : "&nbsp;";
+    option.value     = option_value ;
+    return option;
 }
-
-
-function AddItemOption(comboID, optionText, optionValue, documentObject, index ){	
-	combo=GetE(comboID);
-	var oOption ;
-
-	if ( documentObject )
-		oOption = documentObject.createElement("OPTION") ;
-	else
-		oOption = document.createElement("OPTION") ;
-	if ( index != null )
-		combo.options.add( oOption, index ) ;
-	else
-		combo.options.add( oOption ) ;
-
-	oOption.innerHTML = optionText.length > 0 ? optionText : "&nbsp;" ;
-	oOption.value     = optionValue ;
-	return oOption;
-}
-
-function GetE(obj){
-	if(document.all)
-		return document.all[obj];
-	else
-		return document.getElementById(obj);
-}
-
-
