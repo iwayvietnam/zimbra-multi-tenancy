@@ -2799,8 +2799,7 @@ function zimbra_set_password($id, $password)
     $api = zimbra_initialize_api();
     try
     {
-        $result = $api->setPassword($id, $password);
-        return $result->message;
+        return $api->setPassword($id, $password);
     }
     catch(Exception $ex)
     {
