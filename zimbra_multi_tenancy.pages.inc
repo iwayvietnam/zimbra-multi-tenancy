@@ -35,7 +35,6 @@ function zimbra_pull_data($server_nid)
             node_save($node);
         }
     }
-    $add_groups = array();
     $zimbra_dls = zimbra_list_al_dl($api, $domain->name);
     foreach ($zimbra_dls as $dl)
     {
@@ -51,6 +50,12 @@ function zimbra_pull_data($server_nid)
  */
 function zimbra_multi_tenancy_settings()
 {
+    $form['zimbra_enable_debug'] = array(
+        '#type' => 'checkbox',
+        '#title' => t('Enable debug'),
+        '#default_value' => variable_get('zimbra_enable_debug', 0),
+        '#weight' => -6,
+    );
     $roles = user_roles();
     $form['zimbra_zimbra_role_id'] = array(
         '#type' => 'select',
@@ -238,7 +243,7 @@ function page_list_server()
     {
         $operations = '<ul class="links inline">'
             .'<li class="edit first"><a href="'.url('node/'.$node ->nid.'/edit', array('query' => $destination)) .'">'.t('edit').'</a></li>'
-            .'<li class="edit last"><a href="'.url('pull-data/'.$node ->nid, array('query' => $destination)) .'">'.t('pull data').'</a></li>'
+            .'<li class="edit last"><a href="'.url('zimbra/pull-data/'.$node ->nid, array('query' => $destination)) .'">'.t('pull data').'</a></li>'
         .'</ul>';
 
         $server = normalize_server($node);
