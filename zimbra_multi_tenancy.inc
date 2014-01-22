@@ -69,6 +69,23 @@ function tenant_get_id_from_domain($domain_id)
 }
 
 /**
+ * Get server of domain
+ *
+ * @param  int $domain_id Domain ID
+ * @return mix
+ */
+function server_get_id_from_domain($domain_id)
+{
+    $server_id = 0;
+    $domain_node = node_load($domain_id);
+    if(isset($domain_node->field_domain_server[LANGUAGE_NONE][0]['nid']))
+    {
+        $server_id = $domain_node->field_domain_server[LANGUAGE_NONE][0]['nid'];
+    }
+    return $server_id;
+}
+
+/**
  * Get domain of mailbox
  *
  * @param  int $mailbox_id Mailbox ID
@@ -341,34 +358,41 @@ function ternant_get_server($nid)
 {
     $node = node_load($nid);
     $server_nid = isset($node->field_tenant_server[LANGUAGE_NONE][0]['nid']) ? $node->field_tenant_server[LANGUAGE_NONE][0]['nid'] : 0;
-
-    $server_node = node_load($server_nid);
-    if($server_node)
-    {
-        return normalize_server($server_node);
-    }
-    return null;
+    return normalize_server(node_load($server_nid));
 }
 
 /**
- * Get all Tenant of user
+ * Get Server form Domain
  * 
- * @param  int $uid User ID
+ * @param  int $nid Domain ID
  * @return mix
  */
-function user_get_tenant($uid)
+function domain_get_server($nid)
+{
+    $node = node_load($nid);
+    $server_nid = isset($node->field_domain_server[LANGUAGE_NONE][0]['nid']) ? $node->field_domain_server[LANGUAGE_NONE][0]['nid'] : 0;
+    return normalize_server(node_load($server_nid));
+}
+
+/**
+ * Get all Tenant of server
+ * 
+ * @param  int $nid Server node ID
+ * @return array
+ */
+function server_get_tenant($nid)
 {
     $cache = &drupal_static(__FUNCTION__, array());
-    if (isset($cache[$uid]))
+    if (isset($cache[$nid]))
     {
-        return $cache[$uid];
+        return $cache[$nid];
     }
     $efq = new EntityFieldQuery();
     $efq->entityCondition('entity_type', 'node')
         ->entityCondition('bundle', 'tenant');
     if(!user_access('administer zimbra'))
     {
-        $efq->fieldCondition('field_tenant_user', 'uid', $uid, '=');
+        $efq->fieldCondition('field_tenant_server', 'nid', $nid, '=');
     }
     $result = $efq->execute();
     $nids = (isset($result['node']) AND is_array($result['node'])) ? array_keys($result['node']) : array();
@@ -378,7 +402,44 @@ function user_get_tenant($uid)
     {
         $tenants[$nid] = normalize_tenant($node);
     }
-    $cache[$uid] = $tenants;
+    $cache[$nid] = $tenants;
+    return $tenants;
+}
+
+/**
+ * Get all Tenant of user
+ * 
+ * @param  int $uid User ID
+ * @param  int $server_id Server node ID
+ * @return array
+ */
+function user_get_tenant($uid, $server_id = 0)
+{
+    $cache = &drupal_static(__FUNCTION__, array());
+    if (isset($cache[$uid . $server_id]))
+    {
+        return $cache[$uid . $server_id];
+    }
+    $efq = new EntityFieldQuery();
+    $efq->entityCondition('entity_type', 'node')
+        ->entityCondition('bundle', 'tenant');
+    if(!user_access('administer zimbra'))
+    {
+        $efq->fieldCondition('field_tenant_user', 'uid', $uid, '=');
+    }
+    if((int) $server_id > 0)
+    {
+        $efq->fieldCondition('field_tenant_server', 'nid', $server_id, '=');
+    }
+    $result = $efq->execute();
+    $nids = (isset($result['node']) AND is_array($result['node'])) ? array_keys($result['node']) : array();
+    $nodes = node_load_multiple($nids);
+    $tenants = array();
+    foreach ($nodes as $nid => $node)
+    {
+        $tenants[$nid] = normalize_tenant($node);
+    }
+    $cache[$uid . $server_id] = $tenants;
     return $tenants;
 }
 
@@ -591,6 +652,43 @@ function user_get_mailbox($uid)
 }
 
 /**
+ * Get account by name
+ * 
+ * @param  string $name Account name
+ * @return mix
+ */
+function get_account_by_name($name, $domain_id = 0)
+{
+    $efq = new EntityFieldQuery();
+    $efq->entityCondition('entity_type', 'node')
+        ->entityCondition('bundle', array('mailbox', 'alias', 'group'), 'IN')
+        ->propertyCondition('title', $name, '=')
+        ->fieldCondition('field_node_domain', 'nid', $domain_id, '=');
+    $result = $efq->execute();
+    $nids = (isset($result['node']) AND is_array($result['node'])) ? array_keys($result['node']) : array();
+    $nid = count($nids) ? (int) $nids[0] : 0;
+    return node_load($nid);
+}
+
+/**
+ * Get domain by name
+ * 
+ * @param  string $domain Domain name
+ * @return mix
+ */
+function get_domain_by_name($domain)
+{
+    $efq = new EntityFieldQuery();
+    $efq->entityCondition('entity_type', 'node')
+        ->entityCondition('bundle', 'domain')
+        ->propertyCondition('title', $domain, '=');
+    $result = $efq->execute();
+    $nids = (isset($result['node']) AND is_array($result['node'])) ? array_keys($result['node']) : array();
+    $nid = count($nids) ? (int) $nids[0] : 0;
+    return normalize_domain(node_load($nid));
+}
+
+/**
  * Check domain exists
  * 
  * @param  string $domain Domain name
@@ -630,7 +728,7 @@ function mailbox_exists($name, $domain, $nid = 0)
     {
         $efq = new EntityFieldQuery();
         $efq->entityCondition('entity_type', 'node')
-            ->entityCondition('bundle', 'mailbox')
+            ->entityCondition('bundle', 'group')
             ->propertyCondition('nid', $nid, '!=')
             ->propertyCondition('title', $name, '=')
             ->fieldCondition('field_node_domain', 'nid', $domain, '=');
@@ -641,7 +739,7 @@ function mailbox_exists($name, $domain, $nid = 0)
     {
         $efq = new EntityFieldQuery();
         $efq->entityCondition('entity_type', 'node')
-            ->entityCondition('bundle', 'mailbox')
+            ->entityCondition('bundle', 'alias')
             ->propertyCondition('nid', $nid, '!=')
             ->propertyCondition('title', $name, '=')
             ->fieldCondition('field_node_domain', 'nid', $domain, '=');
@@ -660,7 +758,7 @@ function mailbox_exists($name, $domain, $nid = 0)
 function normalize_server($node)
 {
     $server = new stdClass;
-    $server->nid = isset($node->nid) ? $node->nid : 0;
+    $server->nid = isset($node->nid) ? (int) $node->nid : 0;
     $server->title = isset($node->title) ? $node->title : '';
 
     $server->service_location = isset($node->field_server_service_location[LANGUAGE_NONE][0]['value']) ? $node->field_server_service_location[LANGUAGE_NONE][0]['value'] : '';
@@ -680,7 +778,7 @@ function normalize_server($node)
 function normalize_tenant($node)
 {
     $tenant = new stdClass;
-    $tenant->nid = isset($node->nid) ? $node->nid : 0;
+    $tenant->nid = isset($node->nid) ? (int) $node->nid : 0;
     $tenant->title = isset($node->title) ? $node->title : '';
 
     $tenant->user_name = isset($node->field_tenant_user_name[LANGUAGE_NONE][0]['value']) ? $node->field_tenant_user_name[LANGUAGE_NONE][0]['value'] : '';
@@ -708,7 +806,7 @@ function normalize_tenant($node)
 function normalize_domain($node)
 {
     $domain = new stdClass;
-    $domain->nid = isset($node->nid) ? $node->nid : 0;
+    $domain->nid = isset($node->nid) ? (int) $node->nid : 0;
     $domain->title = isset($node->title) ? $node->title : '';
 
     $domain->user_mail = isset($node->field_domain_user_mail[LANGUAGE_NONE][0]['value']) ? $node->field_domain_user_mail[LANGUAGE_NONE][0]['value'] : '';
@@ -738,13 +836,15 @@ function normalize_domain($node)
 function normalize_group($node)
 {
     $group = new stdClass;
-    $group->nid = isset($node->nid) ? $node->nid : 0;
+    $group->nid = isset($node->nid) ? (int) $node->nid : 0;
     $group->title = isset($node->title) ? $node->title : '';
 
     $group->fullname = isset($node->field_group_fullname[LANGUAGE_NONE][0]['value']) ? $node->field_group_fullname[LANGUAGE_NONE][0]['value'] : '';
     $group->user_password = isset($node->field_group_user_password[LANGUAGE_NONE][0]['value']) ? $node->field_group_user_password[LANGUAGE_NONE][0]['value'] : '';
     $group->zimbra_id = isset($node->field_group_zimbra_id[LANGUAGE_NONE][0]['value']) ? $node->field_group_zimbra_id[LANGUAGE_NONE][0]['value'] : '';
-    $group->members = field_get_items('node', $node, 'field_group_members');
+
+    $group_members = isset($node->field_group_members[LANGUAGE_NONE][0]['value']) ? $node->field_group_members[LANGUAGE_NONE][0]['value'] : '';
+    $group->members = explode('|', $group_members);
 
     $domain_nid = isset($node->field_node_domain[LANGUAGE_NONE][0]['nid']) ? $node->field_node_domain[LANGUAGE_NONE][0]['nid'] : 0;
     $group->domain = normalize_domain(node_load($domain_nid));
@@ -764,7 +864,7 @@ function normalize_group($node)
 function normalize_mailbox($node)
 {
     $mailbox = new stdClass;
-    $mailbox->nid = isset($node->nid) ? $node->nid : 0;
+    $mailbox->nid = isset($node->nid) ? (int) $node->nid : 0;
     $mailbox->title = isset($node->title) ? $node->title : '';
 
     $mailbox->fullname = isset($node->field_mailbox_fullname[LANGUAGE_NONE][0]['value']) ? $node->field_mailbox_fullname[LANGUAGE_NONE][0]['value'] : '';
@@ -790,7 +890,7 @@ function normalize_mailbox($node)
 function normalize_alias($node)
 {
     $alias = new stdClass;
-    $alias->nid = isset($node->nid) ? $node->nid : 0;
+    $alias->nid = isset($node->nid) ? (int) $node->nid : 0;
     $alias->title = isset($node->title) ? $node->title : '';
 
     $domain_nid = isset($node->field_node_domain[LANGUAGE_NONE][0]['nid']) ? $node->field_node_domain[LANGUAGE_NONE][0]['nid'] : 0;
