@@ -65,7 +65,7 @@ class soap_client
      * Response header string
      * @var string
      */
-    private $_response_header;
+    protected $_response_header;
 
     /**
      * Request headers
@@ -74,21 +74,29 @@ class soap_client
     protected $_headers = array();
 
     /**
+     * Enable debugging
+     * @var string
+     */
+    private $_debug;
+
+    /**
      * soap_client constructor
      *
      * @param string $location  The URL to request.
      * @param string $namespace The SOAP namespace.
+     * @param bool   $debug     Enable debugging.
      */
-    public function __construct($location, $namespace = 'urn:zimbra'){
+    public function __construct($location, $namespace = 'urn:zimbra', $debug = false)
+    {
         $this->_location = $location;
         $this->_namespace = !empty($namespace) ? $namespace : 'urn:zimbra';
-        $this->_soap_message = new soap_message($this->_namespace);
-
+        $this->_debug = (bool) $debug;
         $this->_headers = array(
             'Content-Type' => 'text/xml; charset=utf-8',
             'Method'       => 'POST',
             'User-Agent'   => $_SERVER['HTTP_USER_AGENT'],
         );
+        $this->_soap_message = new soap_message($this->_namespace);
     }
 
     /**
@@ -129,14 +137,21 @@ class soap_client
 
         $this->_soap_message->set_body($name, $attrs, $params);
 
+        if($this->_debug)
+        {
+            watchdog('zimbra '.$name, htmlentities($this->last_request()), array(), WATCHDOG_DEBUG);
+        }
         $response = drupal_http_request($this->_location, array(
             'headers' => $this->_headers,
             'method' => 'POST',
             'data' => (string) $this->_soap_message,
         ));
-
         $this->_response_header = $response->headers;
         $this->_response = $response->data;
+        if($this->_debug)
+        {
+            watchdog('zimbra '.str_replace('Request', 'Response', $name), htmlentities($this->last_response()), array(), WATCHDOG_DEBUG);
+        }
         return $this->_soap_message->process_response($this->_response);
     }
 

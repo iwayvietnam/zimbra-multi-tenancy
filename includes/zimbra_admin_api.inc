@@ -54,19 +54,39 @@ class zimbra_admin_api
      *
      * @param string $location The Zimbra api soap location.
      */
-    public function __construct($location, $client = 'soap')
+    public function __construct($location, $client = 'soap', $debug = false)
     {
         $this->_location = $location;
         $this->_namespace = 'urn:zimbraAdmin';
         switch ($client)
         {
             case 'wsdl':
-                $this->_client = new wsdl_client($location, $this->_namespace);
+                $this->_client = new wsdl_client($location, $debug);
                 break;
             default:
-                $this->_client = new soap_client($location, $this->_namespace);
+                $this->_client = new soap_client($location, $this->_namespace, $debug);
                 break;
         }
+    }
+
+    /**
+     * Gets api client.
+     *
+     * @return mix
+     */
+    public function client()
+    {
+        return $this->_client;
+    }
+
+    /**
+     * Gets service location.
+     *
+     * @return mix
+     */
+    public function location()
+    {
+        return $this->_location;
     }
 
     /**
@@ -2014,7 +2034,7 @@ class zimbra_admin_api
      */
     public function getAllDomains($applyConfig = TRUE)
     {
-        $options['applyCos'] = (bool) $applyCos ? 1 : 0;
+        $options['applyConfig'] = (bool) $applyConfig ? 1 : 0;
         return $this->_client->getAllDomains(array(), $options);
     }
 
