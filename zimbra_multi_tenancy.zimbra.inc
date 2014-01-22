@@ -39,6 +39,12 @@ function zimbra_test_connection(
 function zimbra_admin_api_by_tenant($tenant_id)
 {
     $server = ternant_get_server($tenant_id);
+    return zimbra_admin_api_by_server($server->nid);
+}
+
+function zimbra_admin_api_by_server($server_id)
+{
+    $server = normalize_server(node_load($server_id));
     $location = isset($server->service_location) ? $server->service_location : 'https://localhost:7071/service/admin/soap';
     $client = isset($server->client_type) ? $server->client_type : 'soap';
     $user = isset($server->admin_user) ? $server->admin_user : '';
@@ -70,7 +76,8 @@ function zimbra_admin_api($location = 'https://localhost:7071/service/admin/soap
     static $api = NULL;
     if(!($api instanceof zimbra_admin_api))
     {
-        $api = new zimbra_admin_api($location, $client);
+        $debug = (bool) variable_get('zimbra_enable_debug', 0);
+        $api = new zimbra_admin_api($location, $client, $debug);
     }
     return $api;
 }
@@ -128,7 +135,7 @@ function zimbra_list_all_domain(zimbra_admin_api $api)
     {
         return $cache[__FUNCTION__];
     }
-    $all_domain = array('_none' => t('- None -'));
+    $all_domain = array();
     try
     {
         $result = $api->getAllDomains();
@@ -137,7 +144,7 @@ function zimbra_list_all_domain(zimbra_admin_api $api)
             $domains = is_array($result->domain) ? $result->domain : array($result->domain);
             foreach ($domains as $domain)
             {
-                $all_domain[$domain->id] = $domain->name;
+                $all_domain[$domain->id] = $domain;
             }
         }
     }
@@ -255,7 +262,7 @@ function zimbra_list_al_dl(zimbra_admin_api $api, $domain = '')
     {
         return $cache[$domain];
     }
-    $all_dl = array('_none' => t('- None -'));
+    $all_dl = array();
     try
     {
         $result = $api->getAllDistributionLists($domain);
@@ -264,7 +271,7 @@ function zimbra_list_al_dl(zimbra_admin_api $api, $domain = '')
             $dls = is_array($result->dl) ? $result->dl : array($result->dl);
             foreach ($dls as $dl)
             {
-                $all_dl[$dl->id] = $dl->name;
+                $all_dl[$dl->id] = $dl;
             }
         }
     }
@@ -482,7 +489,7 @@ function zimbra_list_all_account(zimbra_admin_api $api, $domain = '', $server = 
     {
         return $cache[$cache_key];
     }
-    $all_account = array('_none' => t('- None -'));
+    $all_account = array();
     try
     {
         $result = $api->getAllAccounts($server, $domain);
@@ -491,7 +498,7 @@ function zimbra_list_all_account(zimbra_admin_api $api, $domain = '', $server = 
             $accounts = is_array($result->account) ? $result->account : array($result->account);
             foreach ($accounts as $account)
             {
-                $all_account[$account->id] = $account->name;
+                $all_account[$account->id] = $account;
             }
         }
     }
@@ -633,7 +640,7 @@ function zimbra_list_all_alias(zimbra_admin_api $api, $domain = '', $server = ''
     {
         return $cache[$cache_key];
     }
-    $all_alias = array('_none' => t('- None -'));
+    $all_alias = array();
     try
     {
         $result = $api->getAllAccounts($server, $domain);
@@ -642,20 +649,24 @@ function zimbra_list_all_alias(zimbra_admin_api $api, $domain = '', $server = ''
             $accounts = is_array($result->account) ? $result->account : array($result->account);
             foreach ($accounts as $account)
             {
-                if(isset($account->a) && is_array($account->a))
+                $attrs = isset($account->a) ? $account->a : array();
+                if(is_array($attrs))
                 {
-                    if(isset($account->a['zimbraMailAlias']))
+                    foreach ($attrs as $attr)
                     {
-                        $aliases = is_array($account->a['zimbraMailAlias']) ? $account->a['zimbraMailAlias'] : array($account->a['zimbraMailAlias']);
-                        foreach ($aliases as $alias)
+                        if($attr->n === 'zimbraMailAlias')
                         {
-                            $mail_alias = new stdClass;
-                            $mail_alias->alias = $alias;
-                            $mail_alias->account_id = $account->id;
-                            $mail_alias->account_name = $account->name;
-                            $mail_alias->server = $server;
-                            $mail_alias->domain = $domain;
-                            $all_alias[] = $mail_alias;
+                            $alias = isset($attr->_) ? $attr->_ : '';
+                            if(!empty($alias))
+                            {
+                                $mail_alias = new stdClass;
+                                $mail_alias->name = $alias;
+                                $mail_alias->account_id = $account->id;
+                                $mail_alias->account_name = $account->name;
+                                $mail_alias->server = $server;
+                                $mail_alias->domain = $domain;
+                                $all_alias[] = $mail_alias;
+                            }
                         }
                     }
                 }
@@ -746,7 +757,7 @@ function zimbra_list_all_cos(zimbra_admin_api $api)
     {
         return $cache[__FUNCTION__];
     }
-    $all_cos = array('_none' => t('- None -'));
+    $all_cos = array();
     try
     {
         $result = $api->getAllCos();
