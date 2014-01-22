@@ -1,23 +1,19 @@
 (function($){
-    Drupal.behaviors.groupform_action = {
+    Drupal.behaviors.zimbra_multi_tenancy = {
         attach: function(context, settings) {
-            $('#members_add').unbind('click');
-            $('#members_add').click(function(e) {
+            $('#members_add:not(click-processed)').click(function(e) {
                 move_options('.group_account_list', '.group_members_list');
-            });
-            $('#members_remove').unbind('click');
-            $('#members_remove').click(function(e) {
+            }).addClass('click-processed');
+            $('#members_remove:not(click-processed)').click(function(e) {
                 move_options('.group_members_list', '.group_account_list');
-            });
+            }).addClass('click-processed');
 
-            $('.group_account_list').unbind('dblclick');
-            $('.group_account_list').dblclick(function(e) {
+            $('.group_account_list:not(dblclick-processed)').dblclick(function(e) {
                 move_options('.group_account_list', '.group_members_list');
-            });
-            $('.group_members_list').unbind('dblclick');
-            $('.group_members_list').dblclick(function(e) {
+            }).addClass('dblclick-processed');
+            $('.group_members_list:not(dblclick-processed)').dblclick(function(e) {
                 move_options('.group_members_list', '.group_account_list');
-            });
+            }).addClass('dblclick-processed');
 
             $('#group-node-form').submit(function(){
                 before_sumbit();
@@ -29,13 +25,24 @@
                         Drupal.ajax[ajax_el].beforeSerialize = function($form, options){
                             before_sumbit();
                         }
-                        /*Drupal.ajax[ajax_el].beforeSubmit = function(arr, $form, options)
-                        {
-                            before_sumbit();
-                        }*/
                     }
                 }
             }
+
+            $(':checkbox[name^="data_type"]').click(function(){
+                if(this.value === 'domain' && !this.checked)
+                {
+                    $(':checkbox[name^="data_type"]').attr('checked', '');
+                }
+                if(this.value === 'alias' && this.checked)
+                {
+                    $(':checkbox[name^="data_type"]').attr('checked', 'checked');
+                }
+                if(this.value !== 'domain' && this.checked)
+                {
+                    $('#edit-data-type-domain').attr('checked', 'checked');
+                }
+            });
         }
     };
 })(jQuery);
