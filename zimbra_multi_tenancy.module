@@ -116,11 +116,11 @@ function zimbra_multi_tenancy_node_insert($node)
     switch ($node->type)
     {
         case 'alias':
-            $alias = normalize_alias($node);
+            //$alias = normalize_alias($node);
             //group_add_member($alias->group->nid, $alias->nid);
             break;
         case 'mailbox':
-            $mailbox = normalize_mailbox($node);
+            //$mailbox = normalize_mailbox($node);
             //group_add_member($mailbox->group->nid, $mailbox->nid);
             break;
     }
@@ -134,10 +134,10 @@ function zimbra_multi_tenancy_node_update($node)
     switch ($node->type)
     {
         case 'alias':
-            $alias = normalize_alias($node);
+            //$alias = normalize_alias($node);
             break;
         case 'mailbox':
-            $mailbox = normalize_mailbox($node);
+            //$mailbox = normalize_mailbox($node);
             break;
     }
 }
@@ -222,6 +222,14 @@ function zimbra_multi_tenancy_menu()
         'page callback' => 'zimbra_page_content',
         'access arguments' => array('access content'),
         'file' => 'zimbra_multi_tenancy.pages.inc',
+    );
+
+    $items['zimbra/pull-data'] = array(
+        'page callback' => 'drupal_get_form',
+        'page arguments' => array('zimbra_pull_data_form'),
+        'access callback' => TRUE,
+        'access arguments' => array('create server content'),
+        'type' => MENU_CALLBACK,
     );
       
     $zimbra_content_type =array('server', 'tenant', 'domain', 'group', 'alias', 'mailbox');
