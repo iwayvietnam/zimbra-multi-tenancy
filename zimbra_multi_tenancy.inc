@@ -1,24 +1,5 @@
 <?php
 
-function group_add_member($group_nid, $member_nid)
-{
-    $group = node_load($group_nid);
-    if($group)
-    {
-        $items = field_get_items('node', $group, 'field_group_members', LANGUAGE_NONE);
-        if($items)
-        {
-            $group->field_group_members[LANGUAGE_NONE][] = array(
-                'nid' => $member_nid,
-            );
-        }
-        else
-        {
-            $node->field_group_members[LANGUAGE_NONE][0]['nid'] = $member_nid;
-        }
-    }
-}
-
 /**
  * Get information of mailbox
  *
