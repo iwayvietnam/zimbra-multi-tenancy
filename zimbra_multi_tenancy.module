@@ -3,7 +3,8 @@
 /**
  * Implements hook_init().
  */
-function zimbra_multi_tenancy_init(){
+function zimbra_multi_tenancy_init()
+{
     drupal_add_js(drupal_get_path('module', 'zimbra_multi_tenancy') .'/zimbra_multi_tenancy.js');
     module_load_include('inc', 'zimbra_multi_tenancy', 'includes/soap_message');
     module_load_include('inc', 'zimbra_multi_tenancy', 'includes/soap_client');
@@ -18,7 +19,8 @@ function zimbra_multi_tenancy_init(){
 /**
  * Implementation of hook_perm().
  */
-function zimbra_multi_tenancy_permission() {
+function zimbra_multi_tenancy_permission()
+{
     return array(
         'administer zimbra' => array(
             'title' => t('Administer Zimbra Multi-tenancy'),
@@ -29,7 +31,8 @@ function zimbra_multi_tenancy_permission() {
 /**
  * Implements hook_form_alter().
  */
-function zimbra_multi_tenancy_form_alter(&$form, &$form_state, $form_id){
+function zimbra_multi_tenancy_form_alter(&$form, &$form_state, $form_id)
+{
     global $user;
 
     //Delete denied
