@@ -1,50 +1,5 @@
 <?php
 
-function zimbra_pull_data($server_nid)
-{
-    $node = node_load($server_nid);
-    $server = normalize_server($node);
-
-    $location = isset($server->service_location) ? $server->service_location : 'https://localhost:7071/service/admin/soap';
-    $client = isset($server->client_type) ? $server->client_type : 'soap';
-    $user = isset($server->admin_user) ? $server->admin_user : '';
-    $password = isset($server->admin_password) ? $server->admin_password : '';
-
-    $api = zimbra_admin_api($location, $client);
-    $authenticated = zimbra_authentication($api, $user, $password);
-    if(!$authenticated)
-    {
-        $message = 'Connection or authentication to Zimbra server failed! <br />';
-        $message .= 'Please contact to administrator to report this error.';
-        drupal_set_message(t($message), 'error');
-        drupal_access_denied();
-        exit;
-    }
-
-    $zimbra_domains = zimbra_list_all_domain($api);
-    foreach ($zimbra_domains as $domain)
-    {
-        if(!domain_exists($domain->name))
-        {
-            $node = new stdClass();
-            $node->type = 'domain';
-            node_object_prepare($node);
-
-            $node->title = $domain->name;
-            $node->field_domain_zimbra_id[LANGUAGE_NONE][0]['value'] = $domain->id;
-            node_save($node);
-        }
-    }
-    $zimbra_dls = zimbra_list_al_dl($api, $domain->name);
-    foreach ($zimbra_dls as $dl)
-    {
-        $name = substr($dl->name, 0, (int) strpos($dl->name, '@'));
-        if(!empty($name))
-        {
-        }
-    }
-}
-
 /**
  * Form builder function for module settings.
  */
@@ -97,17 +52,9 @@ function zimbra_multi_tenancy_settings()
     return $form;
 }
 
-function zimbra_multi_tenancy_settings_validate($form, &$form_state)
-{
-    //Check invalid of Tenant name
-    $values = $form_state['values'];
-    /*$zimbra_domain_server = strtolower($form_state['values']['zimbra_domain_server']);
-    if(!preg_match('!^[a-z0-9_.-]+$!', $zimbra_domain_server))
-    {
-        form_set_error('zimbra_domain_server', t('The @fieldname must contain only lowercase letters, numbers, and underscores.', array('@fieldname' => $form['zimbra_domain_server']['#title'])));
-    }*/
-}
-
+/**
+ * Zimbra add content page
+ */
 function zimbra_page_addcontent()
 {
     $type = arg(3);
@@ -131,6 +78,9 @@ function zimbra_page_addcontent()
     }
 }
 
+/**
+ * Zimbra content page
+ */
 function zimbra_page_content()
 {
     if(arg(0) == 'admin' && arg(1) == 'zimbra' && arg(2) == 'list')
@@ -173,6 +123,9 @@ function zimbra_page_content()
     return $output;
 }
 
+/**
+ * General content page
+ */
 function page_content_general($add_item = 1)
 {
     global $user;
@@ -210,6 +163,9 @@ function page_content_general($add_item = 1)
     return $output; 
 }
 
+/**
+ * List server page
+ */
 function page_list_server()
 {
     global $user;
@@ -264,6 +220,9 @@ function page_list_server()
     return $output;
 }
 
+/**
+ * List tenant page
+ */
 function page_list_tenant()
 {
     global $user;
@@ -323,6 +282,9 @@ function page_list_tenant()
     return $output;
 }
 
+/**
+ * List domain page
+ */
 function page_list_domain()
 {
     global $user;
@@ -391,6 +353,9 @@ function page_list_domain()
     return $output;
 }
 
+/**
+ * List group page
+ */
 function page_list_group()
 {
     global $user;
@@ -452,6 +417,9 @@ function page_list_group()
     return $output;
 }
 
+/**
+ * List alias page
+ */
 function page_list_alias(){
     global $user;
     drupal_set_title('Alias list');
@@ -511,6 +479,9 @@ function page_list_alias(){
     return $output;
 }
 
+/**
+ * List mailbox page
+ */
 function page_list_mailbox(){
     global $user;
     $output = '';
