@@ -1,27 +1,29 @@
 (function($){
     Drupal.behaviors.zimbra_multi_tenancy = {
         attach: function(context, settings) {
-            $('#members_add:not(click-processed)').click(function(e) {
+            $('#members_add:not(.click-processed)').click(function(e) {
                 move_options('.group_account_list', '.group_members_list');
             }).addClass('click-processed');
-            $('#members_remove:not(click-processed)').click(function(e) {
+            $('#members_remove:not(.click-processed)').click(function(e) {
                 move_options('.group_members_list', '.group_account_list');
             }).addClass('click-processed');
 
-            $('.group_account_list:not(dblclick-processed)').dblclick(function(e) {
+            $('.group_account_list:not(.dblclick-processed)').dblclick(function(e) {
                 move_options('.group_account_list', '.group_members_list');
             }).addClass('dblclick-processed');
-            $('.group_members_list:not(dblclick-processed)').dblclick(function(e) {
+            $('.group_members_list:not(.dblclick-processed)').dblclick(function(e) {
                 move_options('.group_members_list', '.group_account_list');
             }).addClass('dblclick-processed');
 
-            $('#group-node-form').submit(function(){
+            $('#group-node-form:not(.submit-processed)').submit(function(){
                 before_sumbit();
-            });
+            }).addClass('submit-processed');
 
             for (ajax_el in settings.ajax){
                 if (Drupal.ajax[ajax_el].element.form){
-                    if (Drupal.ajax[ajax_el].element.form.id === 'group-node-form'){
+                    var form = Drupal.ajax[ajax_el].element.form;
+                    if (form.id === 'group-node-form' && !$(form).hasClass('before-serialize-processed')){
+                        $(form).addClass('before-serialize-processed');
                         Drupal.ajax[ajax_el].beforeSerialize = function($form, options){
                             before_sumbit();
                         }
@@ -74,14 +76,14 @@ function move_options(from_selector, to_selector){
     var options = from_select.options;
 
     // Remove all selected options
-    for ( var i =0; i < options.length; i++ ){
+    for (var i =0; i < options.length; i++){
         if (options[i].selected){ 
             var text = options[i].innerHTML;
             var value = options[i].value;
             add_option_item(to_select, text, value);
         }
     }
-    for (var i = options.length - 1 ; i >= 0 ; i-- ){
+    for (var i = options.length - 1 ; i >= 0 ; i--){
         if (options[i].selected){ 
             from_select.remove(i) ;
         }
@@ -89,8 +91,7 @@ function move_options(from_selector, to_selector){
 
     // Reset the selection based on the original selected index
     if (from_select.options.length > 0){
-        if ( selectedIndex >= from_select.options.length )
-        {
+        if ( selectedIndex >= from_select.options.length ){
             selectedIndex = from_select.options.length - 1;
         } 
         from_select.selectedIndex = selectedIndex ;
@@ -99,7 +100,6 @@ function move_options(from_selector, to_selector){
         to_select.selectedIndex = 0;
     }
 }
-
 
 function add_option_item(select_object, option_text, option_value, document_object, index){ 
     var option;
