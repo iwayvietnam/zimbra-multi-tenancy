@@ -1425,7 +1425,7 @@ function mailbox_validate($form, &$form_state)
         if(!form_set_error())
         {
             $form_state['values']['title'] = trim($form_state['values']['title']);
-            $mail_domain = node_load($domain_id);
+            $mail_domain = normalize_domain(node_load($domain_id));
             $mail_address = $mailbox_name .'@' .$mail_domain->title;
             $mail_fullname = trim($form_state['values']['field_mailbox_fullname'][LANGUAGE_NONE][0]['value']);
 
@@ -1444,7 +1444,15 @@ function mailbox_validate($form, &$form_state)
                     $attrs['zimbraMailQuota'] = $mailbox_maxsize * 1024 * 1024;
                     $account = zimbra_create_account($api, $mail_address, $mail_password, $attrs);
                 }
-                $form_state['values']['field_mailbox_zimbra_id'][LANGUAGE_NONE][0]['value'] = $account->id;
+                if($account instanceof Exception)
+                {
+                    $message = $account->getMessage();
+                    form_set_error('title', t($message));
+                }
+                else
+                {
+                    $form_state['values']['field_mailbox_zimbra_id'][LANGUAGE_NONE][0]['value'] = $account->id;
+                }
             }
             else
             {
@@ -1466,6 +1474,11 @@ function mailbox_validate($form, &$form_state)
                     if(!$account)
                     {
                         $account = zimbra_create_account($api, $mail_address, $mail_password, $attrs);
+                        if($account instanceof Exception)
+                        {
+                            $message = $account->getMessage();
+                            form_set_error('title', t($message));
+                        }
                     }
                     $zimbra_id = $account->id;
                     $form_state['values']['field_mailbox_zimbra_id'][LANGUAGE_NONE][0]['value'] = $zimbra_id;
@@ -1477,12 +1490,27 @@ function mailbox_validate($form, &$form_state)
                 //Change password of Mailbox
                 if($mail_password !== '' )
                 {
-                    zimbra_set_password($api, $zimbra_id, $mail_password);
+                    $result = zimbra_set_password($api, $zimbra_id, $mail_password);
+                    if(isset($result->message))
+                    {
+                        $message = $result->message;
+                        form_set_error('title', t($message));
+                    }
+                    if($result instanceof Exception)
+                    {
+                        $message = $account->getMessage();
+                        form_set_error('title', t($message));
+                    }
                 }
                 //Rename Mailbox
                 if($old_address !== $mail_address)
                 {
-                    zimbra_rename_account($api, $zimbra_id, $mail_address);
+                    $result = zimbra_rename_account($api, $zimbra_id, $mail_address);
+                    if($result instanceof Exception)
+                    {
+                        $message = $account->getMessage();
+                        form_set_error('title', t($message));
+                    }
                 }
             }
         }
