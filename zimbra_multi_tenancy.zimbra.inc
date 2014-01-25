@@ -252,7 +252,7 @@ function zimbra_delete_domain(zimbra_admin_api $api, $zimbra_id)
     catch(Exception $ex)
     {
         watchdog('zimbra', $ex->__toString());
-        return FALSE;
+        return false;
     }
 }
 
@@ -476,7 +476,7 @@ function zimbra_delete_dl(zimbra_admin_api $api, $zimbra_id)
     catch(Exception $ex)
     {
         watchdog('zimbra', $ex->__toString());
-        return FALSE;
+        return false;
     }
 }
 
@@ -566,7 +566,7 @@ function zimbra_create_account(zimbra_admin_api $api, $account, $password, array
     catch(Exception $ex)
     {
         watchdog('zimbra', $ex->__toString());
-        return null;
+        return $ex;
     }
 }
 
@@ -588,7 +588,7 @@ function zimbra_modify_account(zimbra_admin_api $api, $id, array $attrs = array(
     catch(Exception $ex)
     {
         watchdog('zimbra', $ex->__toString());
-        return null;
+        return $ex;
     }
 }
 
@@ -610,7 +610,7 @@ function zimbra_rename_account(zimbra_admin_api $api, $id, $name)
     catch(Exception $ex)
     {
         watchdog('zimbra', $ex->__toString());
-        return null;
+        return $ex;
     }
 }
 
@@ -630,7 +630,7 @@ function zimbra_delete_account(zimbra_admin_api $api, $zimbra_id)
     catch(Exception $ex)
     {
         watchdog('zimbra', $ex->__toString());
-        return FALSE;
+        return $ex;
     }
 }
 
@@ -701,7 +701,7 @@ function zimbra_add_account_alias(zimbra_admin_api $api, $id, $alias)
     catch(Exception $ex)
     {
         watchdog('zimbra', $ex->__toString());
-        return FALSE;
+        return false;
     }
 }
 
@@ -722,7 +722,7 @@ function zimbra_remove_account_alias(zimbra_admin_api $api, $alias, $id = '')
     catch(Exception $ex)
     {
         watchdog('zimbra', $ex->__toString());
-        return FALSE;
+        return false;
     }
 }
 
@@ -743,7 +743,7 @@ function zimbra_set_password(zimbra_admin_api $api, $id, $password)
     catch(Exception $ex)
     {
         watchdog('zimbra', $ex->__toString());
-        return null;
+        return $ex;
     }
 }
 
@@ -779,4 +779,25 @@ function zimbra_list_all_cos(zimbra_admin_api $api)
     }
     $cache[__FUNCTION__] = $all_cos;
     return $all_cos;
+}
+
+/**
+ * Check password strength.
+ * 
+ * @param  zimbra_admin_api $api Zimbra admin api.
+ * @param  string $id       Zimbra ID.
+ * @param  string $password New password.
+ * @return mix
+ */
+function zimbra_check_password(zimbra_admin_api $api, $id, $password)
+{
+    try
+    {
+        return $api->checkPasswordStrength($id, $password);
+    }
+    catch(Exception $ex)
+    {
+        watchdog('zimbra', $ex->__toString());
+        return $ex->getMessage();
+    }
 }
