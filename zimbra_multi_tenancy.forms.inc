@@ -114,8 +114,8 @@ function zimbra_pull_data_callback($form, &$form_state)
                         && !mailbox_exists($group_name, $domain->nid)
                     )
                     {
-                        $user_name = $user_pass = $group_name;
-                        $user_mail = $dl->name;
+                        $user_name = $user_mail = $dl->name;
+                        $user_pass = $group_name;
                         $user_roles = array();
                         if( variable_get('zimbra_group_role_id', 0) != 0) $user_roles[] = variable_get('zimbra_group_role_id', 0);
                         $user_uid = auto_create_user($user_name, $user_pass, $user_mail, $user_roles);
