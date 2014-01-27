@@ -202,6 +202,10 @@ function zimbra_pull_data_callback($form, &$form_state)
 function zimbra_server_hook_form(&$form, &$form_state)
 {
     $form['field_server_service_location'][LANGUAGE_NONE][0]['value']['#required'] = 1;
+    $form['field_server_service_location']['#suffix'] = '
+        <span>E.g: "https://mail.zimbra.com:7071/service/admin/soap" for Soap.</br />
+        "https://mail.zimbra.com:7071/service/wsdl/ZimbraAdminService.wsdl" for WSDL</span>
+    ';
     $form['field_server_admin_user'][LANGUAGE_NONE][0]['value']['#required'] = 1;
     $form['field_server_admin_password'][LANGUAGE_NONE][0]['value']['#required'] = 1;
 
@@ -1474,14 +1478,16 @@ function mailbox_validate($form, &$form_state)
                     if(!$account)
                     {
                         $account = zimbra_create_account($api, $mail_address, $mail_password, $attrs);
-                        if($account instanceof Exception)
-                        {
-                            $message = $account->getMessage();
-                            form_set_error('title', t($message));
-                        }
                     }
-                    $zimbra_id = $account->id;
-                    $form_state['values']['field_mailbox_zimbra_id'][LANGUAGE_NONE][0]['value'] = $zimbra_id;
+                    if($account instanceof Exception)
+                    {
+                        $message = $account->getMessage();
+                        form_set_error('title', t($message));
+                    }
+                    else
+                    {
+                        $form_state['values']['field_mailbox_zimbra_id'][LANGUAGE_NONE][0]['value'] = $account->id;
+                    }
                 }
                 else
                 {
@@ -1494,12 +1500,12 @@ function mailbox_validate($form, &$form_state)
                     if(isset($result->message))
                     {
                         $message = $result->message;
-                        form_set_error('title', t($message));
+                        form_set_error('field_mailbox_password', t($message));
                     }
                     if($result instanceof Exception)
                     {
                         $message = $account->getMessage();
-                        form_set_error('title', t($message));
+                        form_set_error('field_mailbox_password', t($message));
                     }
                 }
                 //Rename Mailbox
