@@ -1391,6 +1391,7 @@ function mailbox_validate($form, &$form_state)
         $nid = intval($form_state['values']['nid']);
         $mailbox_name = trim($form_state['values']['title']);
         $domain_id = $form_state['values']['field_node_domain'][LANGUAGE_NONE][0]['nid'];
+        $group_id = $form_state['values']['field_node_group'][LANGUAGE_NONE][0]['nid'];
         $mail_password = $form_state['values']['field_mailbox_password'][LANGUAGE_NONE][0]['value'];
         $mailbox_maxsize = intval($form_state['values']['field_mailbox_size'][LANGUAGE_NONE][0]['value']);
 
@@ -1517,6 +1518,23 @@ function mailbox_validate($form, &$form_state)
                         $message = $account->getMessage();
                         form_set_error('title', t($message));
                     }
+                }
+            }
+            $mail_group = normalize_group(node_load($group_id));
+            if($mail_group->nid)
+            {
+                $zimbra_dl = zimbra_get_dl($api, $mail_group->title.'@' .$mail_group->domain->title);
+
+                $zimbra_dlm = isset($zimbra_dl->dlm) ? $zimbra_dl->dlm : array();
+                $zimbra_members = is_array($zimbra_dlm) ? $zimbra_dlm : array($zimbra_dlm);
+                $add_members = array();
+                if(!in_array($mail_address, $zimbra_members))
+                {
+                    $add_members[] = $mail_address;
+                }
+                if(count($add_members))
+                {
+                    zimbra_add_dl_members($api, $zimbra_dl->id, $add_members);
                 }
             }
         }
