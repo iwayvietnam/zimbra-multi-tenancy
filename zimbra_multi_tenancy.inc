@@ -916,7 +916,7 @@ function zimbra_add_password_field(
     {
         $field = array(
             'field_name' => $field_name,
-            'type' => 'text',
+            'type' => 'password_field',
             'entity_types' => array('node'),
         );
         $field = field_create_field($field);
@@ -928,7 +928,7 @@ function zimbra_add_password_field(
             'entity_type' => 'node',
             'bundle' => $type->type,
             'label' => t($field_label),
-            'widget' => array('type' => 'text_textfield', 'weight' => $weight),
+            'widget' => array('type' => 'password_field', 'weight' => $weight),
             'display' => array(
                 'default' => array(
                     'label' => 'hidden',
