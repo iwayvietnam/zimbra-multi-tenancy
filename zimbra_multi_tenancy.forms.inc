@@ -223,7 +223,7 @@ function zimbra_server_hook_form(&$form, &$form_state)
             'callback' => 'ajax_server_test_connection_callback',
         ),
     );
-    $form['#validate'][] = 'server_validate';
+    $form['#validate'][] = 'zimbra_server_validate';
 }
 
 /**
@@ -255,7 +255,7 @@ function ajax_server_test_connection_callback($form, $form_state)
 /**
  * Server validation callback
  */
-function server_validate($form, &$form_state)
+function zimbra_server_validate($form, &$form_state)
 {
     if(is_ajax_request())
     {
@@ -320,15 +320,14 @@ function zimbra_ternant_hook_form(&$form, &$form_state)
 
     $form['field_tenant_user'][LANGUAGE_NONE]['#options']['_none'] = t('New user');
     $form['field_tenant_user']['#access'] = 0;
-    $form['#validate'][] = 'tenant_validate';
+    $form['#validate'][] = 'zimbra_tenant_validate';
     $form['#action'] = url($_GET['q'], array('query' => array('destination' => 'zimbra/content/list/tenant')));
 }
-
 
 /**
  * Validate tenant callback
  */
-function tenant_validate($form, &$form_state)
+function zimbra_tenant_validate($form, &$form_state)
 {
     if(is_ajax_request())
     {
@@ -574,7 +573,7 @@ function zimbra_domain_hook_form(&$form, &$form_state)
 
     $form['field_domain_user'][LANGUAGE_NONE]['#options']['_none'] = t('New user');
     $form['field_domain_user']['#access'] = 0;
-    $form['#validate'][] = 'domain_validate';
+    $form['#validate'][] = 'zimbra_domain_validate';
     $form['#action'] = url($_GET['q'], array('query' => array('destination' =>'zimbra/content/list/domain')));
 }
 
@@ -592,7 +591,7 @@ function ajax_domain_server_callback($form, $form_state)
 /**
  * Domain validation callback
  */
-function domain_validate($form, &$form_state)
+function zimbra_domain_validate($form, &$form_state)
 {
     if(is_ajax_request())
     {
@@ -906,7 +905,7 @@ function zimbra_group_hook_form(&$form, &$form_state)
 
     $form['field_group_user'][LANGUAGE_NONE]['#options']['_none'] = t('New user');
     $form['field_group_user']['#access'] = 0;
-    $form['#validate'][] = 'group_validate';
+    $form['#validate'][] = 'zimbra_group_validate';
     $form['#action'] = url($_GET['q'], array('query' => array('destination' =>'zimbra/content/list/group')));
 }
 
@@ -921,7 +920,7 @@ function ajax_group_domain_callback($form, $form_state)
 /**
  * Validate group
  */
-function group_validate($form, &$form_state)
+function zimbra_group_validate($form, &$form_state)
 {
     global $user;
     if(is_ajax_request())
@@ -1207,7 +1206,7 @@ function zimbra_alias_hook_form(&$form, &$form_state)
     {
         $form['field_alias_mailbox'][LANGUAGE_NONE]['#description'] = t('Please <a href="' . url('node/add/mailbox') . '">add Mailbox</a> before create Alias.');
     }
-    $form['#validate'][] = 'alias_validate';
+    $form['#validate'][] = 'zimbra_alias_validate';
     $form['#action'] = url($_GET['q'], array('query' => array('destination' => 'zimbra/content/list/alias')));
 }
 
@@ -1225,7 +1224,7 @@ function ajax_alias_domain_callback($form, $form_state)
 /**
  * Validate alias
  */
-function alias_validate($form, &$form_state)
+function zimbra_alias_validate($form, &$form_state)
 {
     if(is_ajax_request())
     {
@@ -1366,7 +1365,7 @@ function zimbra_mailbox_hook_form(&$form, &$form_state)
     }
     $form['field_node_group'][LANGUAGE_NONE]['#options'] = $mailbox_groups;
 
-    $form['#validate'][] = 'mailbox_validate';      
+    $form['#validate'][] = 'zimbra_mailbox_validate';      
     $form['#action'] = url($_GET['q'], array('query' => array('destination' => 'zimbra/content/list/mailbox')));
 }
 
@@ -1380,7 +1379,7 @@ function ajax_mailbox_domain_callback($form, $form_state)
 /**
  * Validate mailbox callback
  */
-function mailbox_validate($form, &$form_state)
+function zimbra_mailbox_validate($form, &$form_state)
 {
     if(is_ajax_request())
     {
