@@ -253,35 +253,35 @@ function zimbra_add_role(){
     }
 
     $zimbra_perm = array(
-        //'create server content' => 1, 
+        'create server content' => 1, 
         'create tenant content' => 1,   
         'create domain content' => 1,   
         'create group content' => 1,    
         'create alias content' => 1,    
         'create mailbox content' => 1,  
         
-        //'edit own server content' => 1,   
+        'edit own server content' => 1,   
         'edit own tenant content' => 1, 
         'edit own domain content' => 1, 
         'edit own group content' => 1,  
         'edit own alias content' => 1,  
         'edit own mailbox content' => 1,    
         
-        //'edit any server content' => 1,   
+        'edit any server content' => 1,   
         'edit any tenant content' => 1, 
         'edit any domain content' => 1, 
         'edit any group content' => 1,  
         'edit any alias content' => 1,  
         'edit any mailbox content' => 1,    
         
-        //'delete own server content' => 1,
+        'delete own server content' => 1,
         'delete own tenant content' => 1,
         'delete own domain content' => 1,   
         'delete own group content' => 1,    
         'delete own alias content' => 1,    
         'delete own mailbox content' => 1,  
         
-        //'delete any server content' => 1,
+        'delete any server content' => 1,
         'delete any tenant content' => 1,
         'delete any domain content' => 1,   
         'delete any group content' => 1,    
