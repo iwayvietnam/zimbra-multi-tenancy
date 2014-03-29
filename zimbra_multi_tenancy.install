@@ -60,6 +60,32 @@ function _zimbra_add_nodetype_server()
     zimbra_add_list_text_field($type, 'field_server_client_type', 'Client type', 2);
     zimbra_add_text_field($type, 'field_server_admin_user', 'Server admin user', 3);  
     zimbra_add_password_field($type, 'field_server_admin_password', 'Server admin password', 4);
+    $instance = zimbra_add_text_long_field($type, 'field_server_exclude_mailbox', 'Exclude mailbox', 5);  
+    zimbra_add_boolean_field($type, 'field_server_delete_domain', 'Allow delete domain', 6);
+    zimbra_add_boolean_field($type, 'field_server_delete_group', 'Allow delete group', 7);
+    zimbra_add_boolean_field($type, 'field_server_delete_mailbox', 'Allow delete mailbox', 8);
+    zimbra_add_boolean_field($type, 'field_server_delete_alias', 'Allow delete alias', 9);
+
+	$excludes = array(
+		'postmaster*',
+		'root*',
+		'admin*',
+		'wiki*',
+		'spam\.*',
+		'ham\.*',
+		'virus-quarantine\.*',
+		'galsync\.*',
+	);
+    $instance['default_value'] = array(array('value' => implode("\r\n", $excludes)));
+    field_update_instance($instance);
+
+	$allows = array(
+        'soap' => t('SOAP'),
+        'wsdl' => t('WSDL'),
+	);
+	$field = field_info_field('field_server_client_type');
+	$field['settings'] = array('allowed_values' => $allows);
+	field_update_field($field);
 }
 
 /**
@@ -92,6 +118,14 @@ function _zimbra_add_nodetype_tenant()
     zimbra_add_integer_field($type, 'field_tenant_mailbox_max_size', 'Mailbox max size', 6, 'MB');
     zimbra_add_integer_field($type, 'field_tenant_number_of_mailboxes', 'Number Of Mailboxes', 7, 'Mailbox(es)');
     zimbra_add_user_reference_field($type, 'field_tenant_user', 'Tenant user', 8);
+
+	$allows = array(
+        'domain' => t('Domain base'),
+        'group' => t('Group base'),
+	);
+	$field = field_info_field('field_tenant_base');
+	$field['settings'] = array('allowed_values' => $allows);
+	field_update_field($field);
 }
 
 /**
@@ -101,7 +135,8 @@ function _zimbra_add_nodetype_domain()
 {
     // Create a newsletter type if needed.
     $type = node_type_get_type('domain');
-    if (!$type) {
+    if (!$type)
+    {
         $type = node_type_set_defaults(array(
             'type' => 'domain',
             'name' => t('Domain'),
@@ -150,7 +185,7 @@ function _zimbra_add_nodetype_group()
     zimbra_add_text_field($type, 'field_group_fullname', 'Group fullname', 1);
     zimbra_add_text_field($type, 'field_group_user_password', 'Group user password', 2);
     zimbra_add_node_reference_field($type, 'field_node_domain', 'Domain name', 3, 'domain');
-    zimbra_add_text_long_field($type, 'field_group_members', 'Members', 4);
+    zimbra_add_text_field($type, 'field_group_members', 'Members', 4, true);
     zimbra_add_user_reference_field($type, 'field_group_user', 'Group user', 5);
     zimbra_add_hidden_text_field($type, 'field_group_zimbra_id', 'Zimbra group ID', 6);  
 }
@@ -205,10 +240,22 @@ function _zimbra_add_nodetype_mailbox()
     //Add any field of tenant content type
     zimbra_add_text_field($type, 'field_mailbox_fullname', 'Mailbox fullname', 1);
     zimbra_add_text_field($type, 'field_mailbox_password', 'Mailbox password', 2);
-    zimbra_add_node_reference_field($type, 'field_node_domain', 'Domain', 3, 'domain');
-    zimbra_add_node_reference_field($type, 'field_node_group', 'Group', 4, 'group');
-    zimbra_add_integer_field($type, 'field_mailbox_size', 'Mailbox size', 5, 'MB');
-    zimbra_add_hidden_text_field($type, 'field_mailbox_zimbra_id', 'Zimbra mailbox ID', 6);  
+    zimbra_add_list_text_field($type, 'field_mailbox_status', 'Mailbox status', 3);
+    zimbra_add_node_reference_field($type, 'field_node_domain', 'Domain', 4, 'domain');
+    zimbra_add_node_reference_field($type, 'field_node_group', 'Group', 5, 'group');
+    zimbra_add_integer_field($type, 'field_mailbox_size', 'Mailbox size', 6, 'MB');
+    zimbra_add_hidden_text_field($type, 'field_mailbox_zimbra_id', 'Zimbra mailbox ID', 7);  
+
+	$allows = array(
+        'active' => t('Active'),
+        'closed' => t('Closed'),
+        'locked' => t('Locked'),
+        'pending' => t('Pending'),
+        'maintenance' => t('Maintenance'),
+	);
+	$field = field_info_field('field_mailbox_status');
+	$field['settings'] = array('allowed_values' => $allows);
+	field_update_field($field);
 }
 
 function zimbra_add_role(){
