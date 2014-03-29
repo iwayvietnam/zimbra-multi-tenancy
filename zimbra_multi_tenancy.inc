@@ -588,15 +588,14 @@ function domain_get_mailbox($nid)
     $result = $efq->execute();
     $nids = (isset($result['node']) AND is_array($result['node'])) ? array_keys($result['node']) : array();
     $nodes = node_load_multiple($nids);
-    $groups = array();
+    $mailboxes = array();
     foreach ($nodes as $nid => $node)
     {
-        $groups[$nid] = normalize_mailbox($node);
+        $mailboxes[$nid] = normalize_mailbox($node);
     }
-    $cache[$nid] = $groups;
-    return $groups;
+    $cache[$nid] = $mailboxes;
+    return $mailboxes;
 }
-
 
 function domain_get_alias($nid)
 {
@@ -614,13 +613,38 @@ function domain_get_alias($nid)
     $result = $efq->execute();
     $nids = (isset($result['node']) AND is_array($result['node'])) ? array_keys($result['node']) : array();
     $nodes = node_load_multiple($nids);
-    $groups = array();
+    $aliases = array();
     foreach ($nodes as $nid => $node)
     {
-        $groups[$nid] = normalize_alias($node);
+        $aliases[$nid] = normalize_alias($node);
     }
-    $cache[$nid] = $groups;
-    return $groups;
+    $cache[$nid] = $aliases;
+    return $aliases;
+}
+
+function mailbox_get_alias($nid)
+{
+    $cache = &drupal_static(__FUNCTION__, array());
+    if (isset($cache[$nid]))
+    {
+        return $cache[$nid];
+    }
+    $domain = node_load($nid);
+
+    $efq = new EntityFieldQuery();
+    $efq->entityCondition('entity_type', 'node')
+        ->entityCondition('bundle', 'alias')
+        ->fieldCondition('field_alias_mailbox', 'nid', $nid);
+    $result = $efq->execute();
+    $nids = (isset($result['node']) AND is_array($result['node'])) ? array_keys($result['node']) : array();
+    $nodes = node_load_multiple($nids);
+    $aliases = array();
+    foreach ($nodes as $nid => $node)
+    {
+        $aliases[$nid] = normalize_alias($node);
+    }
+    $cache[$nid] = $aliases;
+    return $aliases;
 }
 
 /**
@@ -792,6 +816,15 @@ function delete_mailbox_by_domain($nid)
 function delete_alias_by_domain($nid)
 {
 	$aliases = domain_get_alias();
+	foreach($aliases as $alias)
+	{
+		node_delete($alias->nid);
+	}
+}
+
+function delete_alias_by_mailbox($nid)
+{
+	$aliases = mailbox_get_alias($nid);
 	foreach($aliases as $alias)
 	{
 		node_delete($alias->nid);
