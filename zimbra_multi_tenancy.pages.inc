@@ -63,7 +63,7 @@ function zimbra_page_addcontent()
     {
         $item = menu_get_item();
         $content = system_admin_menu_block($item);
-      
+        
         if (count($content) == 1)
         {
             $item = array_shift($content);
@@ -178,11 +178,6 @@ function page_list_server()
                 'field' => 'field_server_service_location', 'column' => 'value',
             ),
         ),
-        'user' => array('data' => t('Admin user'), 'type' => 'field',
-            'specifier' => array(
-                'field' => 'field_server_admin_user', 'column' => 'value',
-            ),
-        ),
         'operations' => t('Operations'),
     );
     $efq = new EntityFieldQuery();
@@ -197,9 +192,10 @@ function page_list_server()
     $destination = drupal_get_destination();
     foreach($nodes as $key => $node)
     {
-        $operations = '<ul class="links inline">'
+        $operations = '<ul class="links menu">'
             .'<li class="edit first"><a href="'.url('node/'.$node ->nid.'/edit', array('query' => $destination)) .'">'.t('edit').'</a></li>'
             .'<li class="edit last"><a href="'.url('zimbra/pull-data/'.$node ->nid, array('query' => $destination)) .'">'.t('pull data').'</a></li>'
+			.'<li class="delete last"><a href="'.url('node/'.$node ->nid.'/delete', array('query' => $destination)) .'">'.t('delete').'</a></li>'
         .'</ul>';
 
         $server = normalize_server($node);
@@ -208,7 +204,6 @@ function page_list_server()
         $row['stt'] = $key;
         $row['title'] = $server->title;
         $row['location'] = $server->service_location;
-        $row['user'] = $server->admin_user;
         $row['operations'] = $operations;
         $rows[] = $row;
     }
@@ -260,9 +255,10 @@ function page_list_tenant()
     $destination = drupal_get_destination();
     foreach($nodes as $key => $node)
     {
-        $operations = '<ul class="links inline">'
-            .'<li class="edit first"><a href="'.url('node/'.$node ->nid.'/edit', array('query' => $destination)) .'">'.t('edit').'</a></li>'
-        .'</ul>';
+		$operations = '<ul class="links inline">'
+			.'<li class="delete last"><a href="'.url('node/'.$node ->nid.'/edit', array('query' => $destination)) .'">'.t('edit').'</a></li>'
+			.'<li class="delete last"><a href="'.url('node/'.$node ->nid.'/delete', array('query' => $destination)) .'">'.t('delete').'</a></li>'
+		.'</ul>';
         $tenant = normalize_tenant($node);
 
         $row = array();
@@ -331,9 +327,10 @@ function page_list_domain()
     $destination = drupal_get_destination();
     foreach($nodes as $key => $node)
     {
-        $operations = '<ul class="links inline">'
-            .'<li class="edit first"><a href="'.url('node/'.$node ->nid.'/edit', array('query' => $destination)) .'">'.t('edit').'</a></li>'
-        .'</ul>';
+		$operations = '<ul class="links inline">'
+			.'<li class="delete last"><a href="'.url('node/'.$node ->nid.'/edit', array('query' => $destination)) .'">'.t('edit').'</a></li>'
+			.'<li class="delete last"><a href="'.url('node/'.$node ->nid.'/delete', array('query' => $destination)) .'">'.t('delete').'</a></li>'
+		.'</ul>';
         $domain = normalize_domain($node);
 
         $row = array();
@@ -396,9 +393,10 @@ function page_list_group()
     $destination = drupal_get_destination();
     foreach($nodes as $key => $node)
     {
-        $operations = '<ul class="links inline">'
-            .'<li class="edit first"><a href="'.url('node/'.$node ->nid.'/edit', array('query' => $destination)) .'">'.t('edit').'</a></li>'
-        .'</ul>';
+		$operations = '<ul class="links inline">'
+			.'<li class="delete last"><a href="'.url('node/'.$node ->nid.'/edit', array('query' => $destination)) .'">'.t('edit').'</a></li>'
+			.'<li class="delete last"><a href="'.url('node/'.$node ->nid.'/delete', array('query' => $destination)) .'">'.t('delete').'</a></li>'
+		.'</ul>';
         $group = normalize_group($node);
         $group_address = $group->title . '@' . $group->domain->title;
 
@@ -457,9 +455,10 @@ function page_list_alias(){
     $destination = drupal_get_destination();
     foreach($nodes as $key => $node)
     {
-        $operations = '<ul class="links inline">'
-            .'<li class="edit first"><a href="'.url('node/'.$node ->nid.'/edit', array('query' => $destination)) .'">'.t('edit').'</a></li>'
-        .'</ul>';
+		$operations = '<ul class="links inline">'
+			.'<li class="delete last"><a href="'.url('node/'.$node ->nid.'/edit', array('query' => $destination)) .'">'.t('edit').'</a></li>'
+			.'<li class="delete last"><a href="'.url('node/'.$node ->nid.'/delete', array('query' => $destination)) .'">'.t('delete').'</a></li>'
+		.'</ul>';
         $alias = normalize_alias($node);
         $alias_address = $alias->title . '@' . $alias->domain->title;
         $alias_mapping = $alias->mailbox->title . '@' . $alias->domain->title;;
@@ -495,6 +494,11 @@ function page_list_mailbox(){
                 'field' => 'field_mailbox_fullname', 'column' => 'value',
             ),
         ),
+        'status' => array('data' => t('Mailbox status'), 'type' => 'field',
+            'specifier' => array(
+                'field' => 'field_mailbox_status', 'column' => 'value',
+            ),
+        ),
         'maxsize' => array('data' => t('Mailbox size'), 'type' => 'field',
             'specifier' => array(
                 'field' => 'field_mailbox_size', 'column' => 'value',
@@ -528,9 +532,10 @@ function page_list_mailbox(){
     $destination = drupal_get_destination();
     foreach($nodes as $key => $node)
     {
-        $operations = '<ul class="links inline">'
-            .'<li class="edit first"><a href="'.url('node/'.$node ->nid.'/edit', array('query' => $destination)) .'">'.t('edit').'</a></li>'
-        .'</ul>';
+		$operations = '<ul class="links inline">'
+			.'<li class="delete last"><a href="'.url('node/'.$node ->nid.'/edit', array('query' => $destination)) .'">'.t('edit').'</a></li>'
+			.'<li class="delete last"><a href="'.url('node/'.$node ->nid.'/delete', array('query' => $destination)) .'">'.t('delete').'</a></li>'
+		.'</ul>';
         $mailbox = normalize_mailbox($node);
         $mailbox_address = $mailbox->title . '@' . $mailbox->domain->title;
 
@@ -538,6 +543,7 @@ function page_list_mailbox(){
         $row['stt'] = $key + 1;
         $row['title'] = $mailbox_address;
         $row['fullname'] = $mailbox->fullname;
+        $row['status'] = $mailbox->status;
         $row['maxsize'] = $mailbox->size;
         $row['operations'] = $operations;
         $rows[] = $row;
