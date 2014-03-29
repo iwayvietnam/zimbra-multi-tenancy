@@ -499,7 +499,7 @@ function page_list_mailbox(){
                 'field' => 'field_mailbox_status', 'column' => 'value',
             ),
         ),
-        'maxsize' => array('data' => t('Mailbox size'), 'type' => 'field',
+        'maxsize' => array('data' => t('Mailbox quota'), 'type' => 'field',
             'specifier' => array(
                 'field' => 'field_mailbox_size', 'column' => 'value',
             ),
