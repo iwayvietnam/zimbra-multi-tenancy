@@ -4274,7 +4274,7 @@ class zimbra_admin_api
             'sortAscending' => ((bool) $asc) ? 1 : 0,
             'countOnly' => ((bool) $countOnly) ? 1 : 0,
         );
-        if(!empty($query)) $options['query'] = $query;
+        $options['query'] = $query;
         if(!empty($domain)) $options['domain'] = $domain;
         if(!empty($sort)) $options['sortBy'] = $sort;
         $attrsStr = $this->_commaAttributes($attrs);
