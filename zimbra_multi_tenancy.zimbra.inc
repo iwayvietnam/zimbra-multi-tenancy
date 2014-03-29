@@ -336,12 +336,12 @@ function zimbra_get_dl_members(zimbra_admin_api $api, $dl)
     try
     {
         $result = $api->getDistributionList($dl);
-        $dl = $result->dl;
+        $zimbra_dl = $result->dl;
 
-        $members = isset($dl->dlm) ? $dl->dlm : array();
+        $members = isset($zimbra_dl->dlm) ? $zimbra_dl->dlm : array();
         if(!is_array($members))
         {
-            $members = array($dlm);
+            $members = array($members);
         }
         $cache[$dl] = $members;
     }
@@ -652,7 +652,8 @@ function zimbra_list_all_alias(zimbra_admin_api $api, $domain = '')
     $all_alias = array();
     try
     {
-        $result = $api->searchDirectory('', $domain, false, false, false, array(), array('aliases'));
+		$attrs = array('zimbraAliasTargetId', 'zimbraId', 'targetName', 'uid', 'type', 'description', 'zimbraIsDelegatedAdminAccount', 'zimbraIsAdminAccount', 'zimbraIsSystemResource');
+        $result = $api->searchDirectory('', $domain, false, false, false, $attrs, array('aliases'));
         if(isset($result->alias))
         {
             $aliases = is_array($result->alias) ? $result->alias : array($result->alias);
@@ -799,5 +800,34 @@ function zimbra_check_password(zimbra_admin_api $api, $id, $password)
     {
         watchdog('zimbra', $ex->__toString());
         return $ex->getMessage();
+    }
+}
+
+/**
+ * Get version information .
+ * 
+ * @param  zimbra_admin_api $api Zimbra admin api.
+ * @return mix
+ */
+function zimbra_get_version_info(zimbra_admin_api $api)
+{
+    $cache = &drupal_static(__FUNCTION__, null);
+    if (isset($cache[__FUNCTION__]))
+    {
+        return $cache[__FUNCTION__];
+    }
+    try
+    {
+        $result = $api->getVersionInfo();
+        if(isset($result->info))
+        {
+            $cache[__FUNCTION__] = $result->info;
+        }
+        return isset($result->info) ? $result->info : $result;
+    }
+    catch(Exception $ex)
+    {
+        watchdog('zimbra', $ex->__toString());
+        return null;
     }
 }
