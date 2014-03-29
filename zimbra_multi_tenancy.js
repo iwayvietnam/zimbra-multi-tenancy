@@ -64,7 +64,7 @@ function before_sumbit(){
             members_list += '|' + this.value;
         }
     });
-    jQuery('#edit-field-group-members-und-0-value').val(members_list);
+    jQuery('#field_group_members_value').val(members_list);
 }
 
 function move_options(from_selector, to_selector){
