@@ -597,6 +597,32 @@ function domain_get_mailbox($nid)
     return $groups;
 }
 
+
+function domain_get_alias($nid)
+{
+    $cache = &drupal_static(__FUNCTION__, array());
+    if (isset($cache[$nid]))
+    {
+        return $cache[$nid];
+    }
+    $domain = node_load($nid);
+
+    $efq = new EntityFieldQuery();
+    $efq->entityCondition('entity_type', 'node')
+        ->entityCondition('bundle', 'alias')
+        ->fieldCondition('field_node_domain', 'nid', $nid);
+    $result = $efq->execute();
+    $nids = (isset($result['node']) AND is_array($result['node'])) ? array_keys($result['node']) : array();
+    $nodes = node_load_multiple($nids);
+    $groups = array();
+    foreach ($nodes as $nid => $node)
+    {
+        $groups[$nid] = normalize_alias($node);
+    }
+    $cache[$nid] = $groups;
+    return $groups;
+}
+
 /**
  * Get all mailbox of user
  * 
@@ -731,6 +757,48 @@ function mailbox_exists($name, $domain, $nid = 0)
 }
 
 /**
+ * Delete group by domain
+ * 
+ * @param  int $nid Domain node ID
+ */
+function delete_group_by_domain($nid)
+{
+	$groups = domain_get_group();
+	foreach($groups as $group)
+	{
+		node_delete($group->nid);
+	}
+}
+
+/**
+ * Delete mailbox by domain
+ * 
+ * @param  int $nid Domain node ID
+ */
+function delete_mailbox_by_domain($nid)
+{
+	$mailboxes = domain_get_mailbox();
+	foreach($mailboxes as $mailbox)
+	{
+		node_delete($mailbox->nid);
+	}
+}
+
+/**
+ * Delete alias by domain
+ * 
+ * @param  int $nid Domain node ID
+ */
+function delete_alias_by_domain($nid)
+{
+	$aliases = domain_get_alias();
+	foreach($aliases as $alias)
+	{
+		node_delete($alias->nid);
+	}
+}
+
+/**
  * Normalize server node type
  * 
  * @param  mix $node Server node
@@ -826,6 +894,9 @@ function normalize_domain($node)
     $domain->mailbox_max_size = isset($node->field_domain_mailbox_max_size[LANGUAGE_NONE][0]['value']) ? $node->field_domain_mailbox_max_size[LANGUAGE_NONE][0]['value'] : '';
     $domain->number_of_mailboxes = isset($node->field_domain_number_of_mailboxes[LANGUAGE_NONE][0]['value']) ? $node->field_domain_number_of_mailboxes[LANGUAGE_NONE][0]['value'] : '';
     $domain->zimbra_id = isset($node->field_domain_zimbra_id[LANGUAGE_NONE][0]['value']) ? $node->field_domain_zimbra_id[LANGUAGE_NONE][0]['value'] : '';
+
+    $server_nid = isset($node->field_domain_server[LANGUAGE_NONE][0]['nid']) ? $node->field_domain_server[LANGUAGE_NONE][0]['nid'] : 0;
+    $domain->server = normalize_server(node_load($server_nid));
 
     $tenant_nid = isset($node->field_domain_tenant[LANGUAGE_NONE][0]['nid']) ? $node->field_domain_tenant[LANGUAGE_NONE][0]['nid'] : 0;
     $domain->tenant = normalize_tenant(node_load($tenant_nid));
