@@ -738,6 +738,13 @@ function mailbox_exists($name, $domain, $nid = 0)
  */
 function normalize_server($node)
 {
+    $cache = &drupal_static(__FUNCTION__, array());
+    $nid = isset($node->nid) ? (int) $node->nid : 0;
+    if (isset($cache[$nid]))
+    {
+        return $cache[$nid];
+    }
+
     $server = new stdClass;
     $server->nid = isset($node->nid) ? (int) $node->nid : 0;
     $server->title = isset($node->title) ? $node->title : '';
@@ -745,7 +752,15 @@ function normalize_server($node)
     $server->service_location = isset($node->field_server_service_location[LANGUAGE_NONE][0]['value']) ? $node->field_server_service_location[LANGUAGE_NONE][0]['value'] : '';
     $server->client_type = isset($node->field_server_client_type[LANGUAGE_NONE][0]['value']) ? $node->field_server_client_type[LANGUAGE_NONE][0]['value'] : '';
     $server->admin_user = isset($node->field_server_admin_user[LANGUAGE_NONE][0]['value']) ? $node->field_server_admin_user[LANGUAGE_NONE][0]['value'] : '';
-    $server->admin_password = isset($node->field_server_admin_password[LANGUAGE_NONE][0]['value']) ? $node->field_server_admin_password[LANGUAGE_NONE][0]['value'] : '';
+    $password = isset($node->field_server_admin_password[LANGUAGE_NONE][0]['password_field']) ? $node->field_server_admin_password[LANGUAGE_NONE][0]['password_field'] : '';
+    $server->admin_password = password_field_decrypt($password);
+    $server->exclude_mailbox = isset($node->field_server_exclude_mailbox[LANGUAGE_NONE][0]['value']) ? $node->field_server_exclude_mailbox[LANGUAGE_NONE][0]['value'] : '';
+    $server->delete_domain = isset($node->field_server_delete_domain[LANGUAGE_NONE][0]['value']) ? (int) $node->field_server_delete_domain[LANGUAGE_NONE][0]['value'] : 0;
+    $server->delete_group = isset($node->field_server_delete_group[LANGUAGE_NONE][0]['value']) ? (int) $node->field_server_delete_group[LANGUAGE_NONE][0]['value'] : 0;
+    $server->delete_mailbox = isset($node->field_server_delete_mailbox[LANGUAGE_NONE][0]['value']) ? (int) $node->field_server_delete_mailbox[LANGUAGE_NONE][0]['value'] : 0;
+    $server->delete_alias = isset($node->field_server_delete_alias[LANGUAGE_NONE][0]['value']) ? (int) $node->field_server_delete_alias[LANGUAGE_NONE][0]['value'] : 0;
+
+    $cache[$nid] = $server;
 
     return $server;
 }
@@ -758,6 +773,13 @@ function normalize_server($node)
  */
 function normalize_tenant($node)
 {
+    $cache = &drupal_static(__FUNCTION__, array());
+    $nid = isset($node->nid) ? (int) $node->nid : 0;
+    if (isset($cache[$nid]))
+    {
+        return $cache[$nid];
+    }
+
     $tenant = new stdClass;
     $tenant->nid = isset($node->nid) ? (int) $node->nid : 0;
     $tenant->title = isset($node->title) ? $node->title : '';
@@ -775,6 +797,8 @@ function normalize_tenant($node)
     $user_uid = isset($node->field_tenant_user[LANGUAGE_NONE][0]['uid']) ? $node->field_tenant_user[LANGUAGE_NONE][0]['uid'] : 0;
     $tenant->user = user_load($user_uid);
 
+    $cache[$nid] = $tenant;
+
     return $tenant;
 }
 
@@ -786,6 +810,13 @@ function normalize_tenant($node)
  */
 function normalize_domain($node)
 {
+    $cache = &drupal_static(__FUNCTION__, array());
+    $nid = isset($node->nid) ? (int) $node->nid : 0;
+    if (isset($cache[$nid]))
+    {
+        return $cache[$nid];
+    }
+
     $domain = new stdClass;
     $domain->nid = isset($node->nid) ? (int) $node->nid : 0;
     $domain->title = isset($node->title) ? $node->title : '';
@@ -796,14 +827,13 @@ function normalize_domain($node)
     $domain->number_of_mailboxes = isset($node->field_domain_number_of_mailboxes[LANGUAGE_NONE][0]['value']) ? $node->field_domain_number_of_mailboxes[LANGUAGE_NONE][0]['value'] : '';
     $domain->zimbra_id = isset($node->field_domain_zimbra_id[LANGUAGE_NONE][0]['value']) ? $node->field_domain_zimbra_id[LANGUAGE_NONE][0]['value'] : '';
 
-    /*$server_nid = isset($node->field_domain_server[LANGUAGE_NONE][0]['nid']) ? $node->field_domain_server[LANGUAGE_NONE][0]['nid'] : 0;
-    $domain->server = normalize_server(node_load($server_nid));*/
-
     $tenant_nid = isset($node->field_domain_tenant[LANGUAGE_NONE][0]['nid']) ? $node->field_domain_tenant[LANGUAGE_NONE][0]['nid'] : 0;
     $domain->tenant = normalize_tenant(node_load($tenant_nid));
 
     $user_uid = isset($node->field_domain_user[LANGUAGE_NONE][0]['uid']) ? $node->field_domain_user[LANGUAGE_NONE][0]['uid'] : 0;
     $domain->user = user_load($user_uid);
+
+    $cache[$nid] = $domain;
 
     return $domain;
 }
@@ -816,6 +846,13 @@ function normalize_domain($node)
  */
 function normalize_group($node)
 {
+    $cache = &drupal_static(__FUNCTION__, array());
+    $nid = isset($node->nid) ? (int) $node->nid : 0;
+    if (isset($cache[$nid]))
+    {
+        return $cache[$nid];
+    }
+
     $group = new stdClass;
     $group->nid = isset($node->nid) ? (int) $node->nid : 0;
     $group->title = isset($node->title) ? $node->title : '';
@@ -833,6 +870,8 @@ function normalize_group($node)
     $user_uid = isset($node->field_group_user[LANGUAGE_NONE][0]['uid']) ? $node->field_group_user[LANGUAGE_NONE][0]['uid'] : 0;
     $group->user = user_load($user_uid);
 
+    $cache[$nid] = $group;
+
     return $group;
 }
 
@@ -844,12 +883,20 @@ function normalize_group($node)
  */
 function normalize_mailbox($node)
 {
+    $cache = &drupal_static(__FUNCTION__, array());
+    $nid = isset($node->nid) ? (int) $node->nid : 0;
+    if (isset($cache[$nid]))
+    {
+        return $cache[$nid];
+    }
+
     $mailbox = new stdClass;
     $mailbox->nid = isset($node->nid) ? (int) $node->nid : 0;
     $mailbox->title = isset($node->title) ? $node->title : '';
 
     $mailbox->fullname = isset($node->field_mailbox_fullname[LANGUAGE_NONE][0]['value']) ? $node->field_mailbox_fullname[LANGUAGE_NONE][0]['value'] : '';
     $mailbox->password = isset($node->field_mailbox_password[LANGUAGE_NONE][0]['value']) ? $node->field_mailbox_password[LANGUAGE_NONE][0]['value'] : '';
+    $mailbox->status = isset($node->field_mailbox_status[LANGUAGE_NONE][0]['value']) ? $node->field_mailbox_status[LANGUAGE_NONE][0]['value'] : '';
     $mailbox->size = isset($node->field_mailbox_size[LANGUAGE_NONE][0]['value']) ? $node->field_mailbox_size[LANGUAGE_NONE][0]['value'] : '';
     $mailbox->zimbra_id = isset($node->field_mailbox_zimbra_id[LANGUAGE_NONE][0]['value']) ? $node->field_mailbox_zimbra_id[LANGUAGE_NONE][0]['value'] : '';
 
@@ -858,6 +905,8 @@ function normalize_mailbox($node)
 
     $group_nid = isset($node->field_node_group[LANGUAGE_NONE][0]['nid']) ? $node->field_node_group[LANGUAGE_NONE][0]['nid'] : 0;
     $mailbox->group = normalize_group(node_load($group_nid));
+
+    $cache[$nid] = $mailbox;
 
     return $mailbox;
 }
@@ -870,6 +919,13 @@ function normalize_mailbox($node)
  */
 function normalize_alias($node)
 {
+    $cache = &drupal_static(__FUNCTION__, array());
+    $nid = isset($node->nid) ? (int) $node->nid : 0;
+    if (isset($cache[$nid]))
+    {
+        return $cache[$nid];
+    }
+
     $alias = new stdClass;
     $alias->nid = isset($node->nid) ? (int) $node->nid : 0;
     $alias->title = isset($node->title) ? $node->title : '';
@@ -883,6 +939,8 @@ function normalize_alias($node)
     $mailbox_nid = isset($node->field_alias_mailbox[LANGUAGE_NONE][0]['nid']) ? $node->field_alias_mailbox[LANGUAGE_NONE][0]['nid'] : 0;
     $alias->mailbox = normalize_mailbox(node_load($mailbox_nid));
 
+    $cache[$nid] = $alias;
+
     return $alias;
 }
 
@@ -893,6 +951,14 @@ function is_ajax_request()
 {
     $requested_with = isset($_SERVER['HTTP_X_REQUESTED_WITH']) ? $_SERVER['HTTP_X_REQUESTED_WITH'] : '';
     return strtolower($requested_with) === 'xmlhttprequest';
+}
+
+function is_matches(array $patterns = array(), $subject = '')
+{
+	$is_match = false;
+	$pattern = implode('|', $patterns);
+	$is_match = preg_match('/'.$pattern.'/msS', $subject);
+	return $is_match;
 }
 
 /**
@@ -907,7 +973,8 @@ function zimbra_add_password_field(
     $type,
     $field_name,
     $field_label = '',
-    $weight = 0
+    $weight = 0,
+    $multiple = false
 )
 {
     $field = field_info_field($field_name);
@@ -919,6 +986,10 @@ function zimbra_add_password_field(
             'type' => 'password_field',
             'entity_types' => array('node'),
         );
+        if($multiple === true)
+        {
+			$field['cardinality'] = FIELD_CARDINALITY_UNLIMITED;
+		}
         $field = field_create_field($field);
     }
     if (empty($instance))
@@ -942,6 +1013,7 @@ function zimbra_add_password_field(
         );
         field_create_instance($instance);
     }
+    return $instance;
 }
 
 /**
@@ -956,7 +1028,8 @@ function zimbra_add_text_field(
     $type,
     $field_name,
     $field_label = '',
-    $weight = 0
+    $weight = 0,
+    $multiple = false
 )
 {
     $field = field_info_field($field_name);
@@ -968,6 +1041,10 @@ function zimbra_add_text_field(
             'type' => 'text',
             'entity_types' => array('node'),
         );
+        if($multiple === true)
+        {
+			$field['cardinality'] = FIELD_CARDINALITY_UNLIMITED;
+		}
         $field = field_create_field($field);
     }
     if (empty($instance))
@@ -991,6 +1068,7 @@ function zimbra_add_text_field(
         );
         field_create_instance($instance);
     }
+    return $instance;
 }
 
 /**
@@ -1005,7 +1083,8 @@ function zimbra_add_text_long_field(
     $type,
     $field_name,
     $field_label = '',
-    $weight = 0
+    $weight = 0,
+    $multiple = false
 )
 {
     $field = field_info_field($field_name);
@@ -1017,6 +1096,10 @@ function zimbra_add_text_long_field(
             'type' => 'text_long',
             'entity_types' => array('node'),
         );
+        if($multiple === true)
+        {
+			$field['cardinality'] = FIELD_CARDINALITY_UNLIMITED;
+		}
         $field = field_create_field($field);
     }
     if (empty($instance))
@@ -1040,6 +1123,58 @@ function zimbra_add_text_long_field(
         );
         field_create_instance($instance);
     }
+    return $instance;
+}
+
+function zimbra_add_boolean_field(
+    $type,
+    $field_name,
+    $field_label = '',
+    $weight = 0,
+    $multiple = false
+)
+{
+    $field = field_info_field($field_name);
+    $instance = field_info_instance('node', $field_name, $type->type);
+    if (empty($field))
+    {
+        $field = array(
+            'field_name' => $field_name,
+            'type' => 'list_boolean',
+            'entity_types' => array('node'),
+            'settings' => array('allowed_values' => array(0 => 0, 1 => 1)),
+        );
+        if($multiple === true)
+        {
+			$field['cardinality'] = FIELD_CARDINALITY_UNLIMITED;
+		}
+        $field = field_create_field($field);
+    }
+    if (empty($instance))
+    {
+        $instance = array(
+            'field_name' => $field_name,
+            'entity_type' => 'node',
+            'bundle' => $type->type,
+            'label' => t($field_label),
+            'widget' => array(
+				'type' => 'options_onoff',
+				'weight' => $weight,
+				'settings' => array('display_label' => 1),
+			),
+            'display' => array(
+                'default' => array(
+                    'label' => 'above',
+                ),
+                'teaser' => array(
+                    'label' => 'hidden',
+                    'type' => 'hidden',
+                ),
+            ),
+        );
+        field_create_instance($instance);
+    }
+    return $instance;
 }
 
 /**
@@ -1055,7 +1190,8 @@ function zimbra_add_integer_field(
     $field_name,
     $field_label = '',
     $weight = 0,
-    $suffix = ''
+    $suffix = '',
+    $multiple = false
 )
 {
     $field = field_info_field($field_name);
@@ -1067,6 +1203,10 @@ function zimbra_add_integer_field(
             'type' => 'number_integer',
             'entity_types' => array('node'),
         );
+        if($multiple === true)
+        {
+			$field['cardinality'] = FIELD_CARDINALITY_UNLIMITED;
+		}
         $field = field_create_field($field);
     }
     if (empty($instance))
@@ -1091,6 +1231,7 @@ function zimbra_add_integer_field(
         );
         field_create_instance($instance);
     }
+    return $instance;
 }
 
 /**
@@ -1105,7 +1246,8 @@ function zimbra_add_hidden_text_field(
     $type,
     $field_name,
     $field_label = '',
-    $weight = 0
+    $weight = 0,
+    $multiple = false
 )
 {
     $field = field_info_field($field_name);
@@ -1117,6 +1259,10 @@ function zimbra_add_hidden_text_field(
             'type' => 'field_hidden_text',
             'entity_types' => array('node'),
         );
+        if($multiple === true)
+        {
+			$field['cardinality'] = FIELD_CARDINALITY_UNLIMITED;
+		}
         $field = field_create_field($field);
     }
     if (empty($instance))
@@ -1140,6 +1286,7 @@ function zimbra_add_hidden_text_field(
         );
         field_create_instance($instance);
     }
+    return $instance;
 }
 
 /**
@@ -1154,7 +1301,8 @@ function zimbra_add_list_text_field(
     $type,
     $field_name,
     $field_label = '',
-    $weight = 0
+    $weight = 0,
+    $multiple = false
 )
 {
     $field = field_info_field($field_name);
@@ -1166,6 +1314,10 @@ function zimbra_add_list_text_field(
             'type' => 'list_text',
             'entity_types' => array('node'),
         );
+        if($multiple === true)
+        {
+			$field['cardinality'] = FIELD_CARDINALITY_UNLIMITED;
+		}
         $field = field_create_field($field);
     }
     if (empty($instance))
@@ -1189,6 +1341,7 @@ function zimbra_add_list_text_field(
         );
         field_create_instance($instance);
     }
+    return $instance;
 }
 
 /**
@@ -1204,7 +1357,8 @@ function zimbra_add_node_reference_field(
     $field_name,
     $field_label = '',
     $weight = 0,
-    $reference = 'article'
+    $reference = 'article',
+    $multiple = false
 )
 {
     $field = field_info_field($field_name);
@@ -1219,6 +1373,10 @@ function zimbra_add_node_reference_field(
                 'referenceable_types' => array($reference => $reference),
             ),
         );
+        if($multiple === true)
+        {
+			$field['cardinality'] = FIELD_CARDINALITY_UNLIMITED;
+		}
         $field = field_create_field($field);
     }
     if (empty($instance))
@@ -1242,62 +1400,9 @@ function zimbra_add_node_reference_field(
         );
         field_create_instance($instance);
     }
+    return $instance;
 }
 
-/**
- * Add the Node reference field
- *
- * @param $type
- *   A node type object.
- *
- * @ingroup issue
- */
-function zimbra_add_mutiple_node_reference_field(
-    $type,
-    $field_name,
-    $field_label = '',
-    $weight = 0,
-    $reference = 'article'
-)
-{
-    $field = field_info_field($field_name);
-    $instance = field_info_instance('node', $field_name, $type->type);
-    if (empty($field))
-    {
-        $field = array(
-            'field_name' => $field_name,
-            'type' => 'node_reference',
-            'entity_types' => array(),
-            'cardinality' => FIELD_CARDINALITY_UNLIMITED,
-            'settings' => array(
-                'referenceable_types' => array($reference => $reference),
-            ),
-        );
-        $field = field_create_field($field);
-    }
-    if (empty($instance))
-    {
-        $instance = array(
-            'field_name' => $field_name,
-            'entity_type' => 'node',
-            'bundle' => $type->type,
-            'label' => t($field_label),
-            'widget' => array('type' => 'options_select', 'weight' => $weight),
-            'display' => array(
-                'default' => array(
-                    'label' => 'above',
-                    'type' => 'node_reference_default',
-                ),
-                'teaser' => array(
-                    'label' => 'hidden',
-                    'type' => 'hidden',
-                ),
-            ),
-        );
-        field_create_instance($instance);
-    }
-}
-    
 /**
  * Add the User reference field
  *
@@ -1310,7 +1415,8 @@ function zimbra_add_user_reference_field(
     $type,
     $field_name,
     $field_label = '',
-    $weight = 0
+    $weight = 0,
+    $multiple = false
 )
 {
     $field = field_info_field($field_name);
@@ -1325,6 +1431,10 @@ function zimbra_add_user_reference_field(
                 'referenceable_roles' => array('2' =>2),
             ),
         );
+        if($multiple === true)
+        {
+			$field['cardinality'] = FIELD_CARDINALITY_UNLIMITED;
+		}
         $field = field_create_field($field);
     }
     if (empty($instance))
@@ -1348,4 +1458,5 @@ function zimbra_add_user_reference_field(
         );
         field_create_instance($instance);
     }
+    return $instance;
 }
