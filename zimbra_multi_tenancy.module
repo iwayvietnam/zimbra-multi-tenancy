@@ -201,6 +201,7 @@ function zimbra_multi_tenancy_node_delete($node)
 			}
             break;
         case 'mailbox':
+			delete_alias_by_mailbox($node->nid);
 			$mailbox = normalize_mailbox($node);
 			$domain = $mailbox->domain;
 			if($domain->server)
