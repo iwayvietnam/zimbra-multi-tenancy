@@ -150,8 +150,20 @@ function zimbra_multi_tenancy_node_update($node)
  */
 function zimbra_multi_tenancy_node_delete($node)
 {
-    switch ($node->type)
+    switch($node->type)
     {
+		case 'tenant':
+			$uid = isset($node->field_tenant_user[LANGUAGE_NONE][0]['uid']) ? (int) $node->field_tenant_user[LANGUAGE_NONE][0]['uid'] : 0;
+			user_delete($uid);
+			break;
+		case 'domain':
+			$uid = isset($node->field_domain_user[LANGUAGE_NONE][0]['uid']) ? (int) $node->field_domain_user[LANGUAGE_NONE][0]['uid'] : 0;
+			user_delete($uid);
+			break;
+		case 'group':
+			$uid = isset($node->field_group_user[LANGUAGE_NONE][0]['uid']) ? (int) $node->field_group_user[LANGUAGE_NONE][0]['uid'] : 0;
+			user_delete($uid);
+			break;
         case 'alias':
             $domain_id = $node->field_node_domain['und'][0]['nid'];
             $domain_node = node_load($domain_id);
