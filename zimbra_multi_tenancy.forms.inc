@@ -1300,7 +1300,6 @@ function zimbra_alias_validate($form, &$form_state)
             $mapping_node = node_load($mapping_id);
             $zimbra_id = $mapping_node->field_mailbox_zimbra_id[LANGUAGE_NONE][0]['value'];
 
-            //Insert into queue_command table
             if($nid == 0)
             {
                 zimbra_add_account_alias($api, $zimbra_id, $alias_address);
