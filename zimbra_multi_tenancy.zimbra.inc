@@ -673,7 +673,7 @@ function zimbra_list_all_alias(zimbra_admin_api $api, $domain = '')
                         $mail_alias->account_id = isset($attr->_) ? $attr->_ : '';
                     }
                 }
-                $all_alias[] = $mail_alias;
+                $all_alias[$alias->id] = $mail_alias;
             }
         }
     }
