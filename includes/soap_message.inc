@@ -84,7 +84,7 @@ class soap_message
         }
         else
         {
-            $this->_header->addChild($name, $value);
+            $this->_header->addChild($name, self::bool_to_string($value));
         }
         return $this;
     }
@@ -103,7 +103,7 @@ class soap_message
         $body = $child = $this->_xml->addChild('Body');
         if(isset($params['_']))
         {
-            $body->addChild($name, (string) $params['_'], $this->_namespace);
+            $body->addChild($name, self::bool_to_string((string) $params['_']), $this->_namespace);
         }
         else
         {
@@ -115,7 +115,7 @@ class soap_message
         {
             if(self::is_valid_tag($key))
             {
-                $child->addAttribute($key, $value);             
+                $child->addAttribute($key, self::bool_to_string($value));
             }
         }
         return $this;
@@ -325,6 +325,6 @@ class soap_message
     {
         $value = $value === true ? 'true' : $value;
         $value = $value === false ? 'false' : $value;
-        return $value;
+        return utf8_encode($value);
     }
 }
