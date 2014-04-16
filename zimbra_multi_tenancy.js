@@ -31,6 +31,17 @@
                 }
             }
 
+			$(':checkbox[name^="field_server_delete"]').click(function(){
+				var name = $(this).attr('name');
+				if(name.indexOf("domain") !== -1  && this.checked)
+				{
+					$(':checkbox[name^="field_server_delete"]').attr('checked', 'checked');
+				}
+				if(name.indexOf("mailbox") !== -1  && this.checked)
+				{
+					$(':checkbox[name^="field_server_delete_alias"]').attr('checked', 'checked');
+				}
+			});
             $(':checkbox[name^="data_type"]').click(function(){
                 if(this.value === 'domain' && !this.checked)
                 {
