@@ -1393,7 +1393,7 @@ function zimbra_mailbox_hook_form(&$form, &$form_state)
     $form['field_node_group'][LANGUAGE_NONE]['#suffix'] = '</div>';
 
     $groups = domain_get_group($domain_id);
-    $mailbox_groups = array();
+    $mailbox_groups = array('_none' => t('-- None --'));
     foreach ($groups as $nid => $group)
     {
         $mailbox_groups[$nid] = $group->title . '@' . $group->domain->title;
