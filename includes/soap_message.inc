@@ -325,6 +325,6 @@ class soap_message
     {
         $value = $value === true ? 'true' : $value;
         $value = $value === false ? 'false' : $value;
-        return utf8_encode($value);
+        return $value;
     }
 }
