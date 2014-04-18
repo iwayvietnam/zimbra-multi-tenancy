@@ -362,7 +362,6 @@ function zimbra_ternant_hook_form(&$form, &$form_state)
     $form['field_tenant_user'][LANGUAGE_NONE]['#options']['_none'] = t('New user');
     $form['field_tenant_user']['#access'] = 0;
     $form['#validate'][] = 'zimbra_tenant_validate';
-    $form['#action'] = url($_GET['q'], array('query' => array('destination' => 'zimbra/content/list/tenant')));
 }
 
 /**
@@ -615,7 +614,6 @@ function zimbra_domain_hook_form(&$form, &$form_state)
     $form['field_domain_user'][LANGUAGE_NONE]['#options']['_none'] = t('New user');
     $form['field_domain_user']['#access'] = 0;
     $form['#validate'][] = 'zimbra_domain_validate';
-    $form['#action'] = url($_GET['q'], array('query' => array('destination' =>'zimbra/content/list/domain')));
 }
 
 /**
@@ -951,7 +949,6 @@ function zimbra_group_hook_form(&$form, &$form_state)
     $form['field_group_user'][LANGUAGE_NONE]['#options']['_none'] = t('New user');
     $form['field_group_user']['#access'] = 0;
     $form['#validate'][] = 'zimbra_group_validate';
-    $form['#action'] = url($_GET['q'], array('query' => array('destination' =>'zimbra/content/list/group')));
 }
 
 function ajax_group_domain_callback($form, $form_state)
@@ -1245,7 +1242,6 @@ function zimbra_alias_hook_form(&$form, &$form_state)
         $form['field_alias_mailbox'][LANGUAGE_NONE]['#description'] = t('Please <a href="' . url('node/add/mailbox') . '">add Mailbox</a> before create Alias.');
     }
     $form['#validate'][] = 'zimbra_alias_validate';
-    $form['#action'] = url($_GET['q'], array('query' => array('destination' => 'zimbra/content/list/alias')));
 }
 
 /**
@@ -1404,8 +1400,7 @@ function zimbra_mailbox_hook_form(&$form, &$form_state)
     }
     $form['field_node_group'][LANGUAGE_NONE]['#options'] = $mailbox_groups;
 
-    $form['#validate'][] = 'zimbra_mailbox_validate';      
-    $form['#action'] = url($_GET['q'], array('query' => array('destination' => 'zimbra/content/list/mailbox')));
+    $form['#validate'][] = 'zimbra_mailbox_validate';
 }
 
 function ajax_mailbox_domain_callback($form, $form_state)
@@ -1420,163 +1415,162 @@ function ajax_mailbox_domain_callback($form, $form_state)
  */
 function zimbra_mailbox_validate($form, &$form_state)
 {
-    if(is_ajax_request())
+    if(!is_ajax_request())
     {
-        return true;
+		if(!form_set_error())
+		{
+			$nid = intval($form_state['values']['nid']);
+			$mailbox_name = trim($form_state['values']['title']);
+			$domain_id = $form_state['values']['field_node_domain'][LANGUAGE_NONE][0]['nid'];
+			$group_id = $form_state['values']['field_node_group'][LANGUAGE_NONE][0]['nid'];
+			$mail_password = $form_state['values']['field_mailbox_password'][LANGUAGE_NONE][0]['value'];
+			$mailbox_maxsize = intval($form_state['values']['field_mailbox_size'][LANGUAGE_NONE][0]['value']);
+
+			//Check invalid of Mailbox name
+			if(!preg_match('!^[a-zA-Z0-9_\.]+$!', $mailbox_name))
+			{
+				form_set_error('title', t('The @fieldname must contain only letters, punctuation, numbers, and underscores.', array('@fieldname' => $form['title']['#title'])));
+			}
+
+			//Check existence of mailbox.
+			$mailbox_exist = mailbox_exists($mailbox_name, $domain_id, $nid);
+			if($mailbox_exist == 1)
+			{
+				form_set_error('title', t('Group or Mailbox or Alias already exists.', array('@username' => $form['title']['#title'])));
+			}       
+
+			//Check validate mailbox maxsize is avaiable of Domain
+			$domain_mailbox_maxsize_allow = domain_check_quota($domain_id, $nid);
+			if($mailbox_maxsize > $domain_mailbox_maxsize_allow)
+			{
+				form_set_error('field_mailbox_size',
+					t('@name: the value may be no greater than @number MB.', array(
+						'@name' => $form['field_mailbox_size'][LANGUAGE_NONE]['#title'],
+						'@number' => $domain_mailbox_maxsize_allow
+					)
+				));
+			}
+
+			//Check validate number mailboxes is avaiable of Domain
+			$domain_mailbox_maxsize_allow = domain_check_number($domain_id, $nid);
+			if($domain_mailbox_maxsize_allow <= 0 && arg(1) == 'add')
+			{           
+				form_set_error('title', t('Number of Mailbox is limited.'));
+			}
+
+			if(!form_set_error())
+			{
+				$form_state['values']['title'] = trim($form_state['values']['title']);
+				$mail_domain = normalize_domain(node_load($domain_id));
+				$mail_address = $mailbox_name .'@' .$mail_domain->title;
+				$mail_fullname = trim($form_state['values']['field_mailbox_fullname'][LANGUAGE_NONE][0]['value']);
+
+				$server_id = server_get_id_from_domain($domain_id);
+				$api = zimbra_admin_api_by_server($server_id);
+
+				if($nid ==0)
+				{
+					$account = zimbra_get_account($api, $mail_address);
+					if(!$account)
+					{
+						$attrs = array(
+							'displayName' => $mail_fullname,
+							'sn' => $mail_fullname,
+						);
+						$attrs['zimbraMailQuota'] = $mailbox_maxsize * 1024 * 1024;
+						$account = zimbra_create_account($api, $mail_address, $mail_password, $attrs);
+					}
+					if($account instanceof Exception)
+					{
+						$message = $account->getMessage();
+						form_set_error('title', t($message));
+					}
+					else
+					{
+						$form_state['values']['field_mailbox_zimbra_id'][LANGUAGE_NONE][0]['value'] = $account->id;
+					}
+				}
+				else
+				{
+					//Change mailbox information                
+					$old_node = node_load($nid);
+					$old_domain = node_load($old_node->field_node_domain[LANGUAGE_NONE][0]['nid']);
+					$old_address = $old_node->title .'@' .$old_domain->title;
+					$zimbra_id = $form_state['values']['field_mailbox_zimbra_id'][LANGUAGE_NONE][0]['value'];
+					$mailbox_status = $form_state['values']['field_mailbox_status'][LANGUAGE_NONE][0]['value'];
+
+					$attrs = array(
+						'displayName' => $mail_fullname,
+						'sn' => $mail_fullname,
+					);
+					$attrs['zimbraMailQuota'] = $mailbox_maxsize * 1024 * 1024;
+					$attrs['zimbraAccountStatus'] = $mailbox_status;
+
+					if(empty($zimbra_id))
+					{
+						$account = zimbra_get_account($api, $old_address);
+						if(!$account)
+						{
+							$account = zimbra_create_account($api, $mail_address, $mail_password, $attrs);
+						}
+						if($account instanceof Exception)
+						{
+							$message = $account->getMessage();
+							form_set_error('title', t($message));
+						}
+						else
+						{
+							$form_state['values']['field_mailbox_zimbra_id'][LANGUAGE_NONE][0]['value'] = $account->id;
+						}
+					}
+					else
+					{
+						zimbra_modify_account($api, $zimbra_id, $attrs);
+					}
+					//Change password of Mailbox
+					if($mail_password !== '' )
+					{
+						$result = zimbra_set_password($api, $zimbra_id, $mail_password);
+						if(isset($result->message))
+						{
+							$message = $result->message;
+							form_set_error('field_mailbox_password', t($message));
+						}
+						if($result instanceof Exception)
+						{
+							$message = $account->getMessage();
+							form_set_error('field_mailbox_password', t($message));
+						}
+					}
+					//Rename Mailbox
+					if($old_address !== $mail_address)
+					{
+						$result = zimbra_rename_account($api, $zimbra_id, $mail_address);
+						if($result instanceof Exception)
+						{
+							$message = $account->getMessage();
+							form_set_error('title', t($message));
+						}
+					}
+				}
+				$mail_group = normalize_group(node_load($group_id));
+				if($mail_group->nid)
+				{
+					$zimbra_dl = zimbra_get_dl($api, $mail_group->title.'@' .$mail_group->domain->title);
+
+					$zimbra_dlm = isset($zimbra_dl->dlm) ? $zimbra_dl->dlm : array();
+					$zimbra_members = is_array($zimbra_dlm) ? $zimbra_dlm : array($zimbra_dlm);
+					$add_members = array();
+					if(!in_array($mail_address, $zimbra_members))
+					{
+						$add_members[] = $mail_address;
+					}
+					if(count($add_members))
+					{
+						zimbra_add_dl_members($api, $zimbra_dl->id, $add_members);
+					}
+				}
+			}
+		}
     }
-    if(!form_set_error())
-    {
-        $nid = intval($form_state['values']['nid']);
-        $mailbox_name = trim($form_state['values']['title']);
-        $domain_id = $form_state['values']['field_node_domain'][LANGUAGE_NONE][0]['nid'];
-        $group_id = $form_state['values']['field_node_group'][LANGUAGE_NONE][0]['nid'];
-        $mail_password = $form_state['values']['field_mailbox_password'][LANGUAGE_NONE][0]['value'];
-        $mailbox_maxsize = intval($form_state['values']['field_mailbox_size'][LANGUAGE_NONE][0]['value']);
-
-        //Check invalid of Mailbox name
-        if(!preg_match('!^[a-zA-Z0-9_\.]+$!', $mailbox_name))
-        {
-            form_set_error('title', t('The @fieldname must contain only letters, punctuation, numbers, and underscores.', array('@fieldname' => $form['title']['#title'])));
-        }
-
-        //Check existence of mailbox.
-        $mailbox_exist = mailbox_exists($mailbox_name, $domain_id, $nid);
-        if($mailbox_exist == 1)
-        {
-            form_set_error('title', t('Group or Mailbox or Alias already exists.', array('@username' => $form['title']['#title'])));
-        }       
-
-        //Check validate mailbox maxsize is avaiable of Domain
-        $domain_mailbox_maxsize_allow = domain_check_quota($domain_id, $nid);
-        if($mailbox_maxsize > $domain_mailbox_maxsize_allow)
-        {
-            form_set_error('field_mailbox_size',
-                t('@name: the value may be no greater than @number MB.', array(
-                    '@name' => $form['field_mailbox_size'][LANGUAGE_NONE]['#title'],
-                    '@number' => $domain_mailbox_maxsize_allow
-                )
-            ));
-        }
-
-        //Check validate number mailboxes is avaiable of Domain
-        $domain_mailbox_maxsize_allow = domain_check_number($domain_id, $nid);
-        if($domain_mailbox_maxsize_allow <= 0 && arg(1) == 'add')
-        {           
-            form_set_error('title', t('Number of Mailbox is limited.'));
-        }
-
-        if(!form_set_error())
-        {
-            $form_state['values']['title'] = trim($form_state['values']['title']);
-            $mail_domain = normalize_domain(node_load($domain_id));
-            $mail_address = $mailbox_name .'@' .$mail_domain->title;
-            $mail_fullname = trim($form_state['values']['field_mailbox_fullname'][LANGUAGE_NONE][0]['value']);
-
-            $server_id = server_get_id_from_domain($domain_id);
-            $api = zimbra_admin_api_by_server($server_id);
-
-            if($nid ==0)
-            {
-                $account = zimbra_get_account($api, $mail_address);
-                if(!$account)
-                {
-                    $attrs = array(
-                        'displayName' => $mail_fullname,
-                        'sn' => $mail_fullname,
-                    );
-                    $attrs['zimbraMailQuota'] = $mailbox_maxsize * 1024 * 1024;
-                    $account = zimbra_create_account($api, $mail_address, $mail_password, $attrs);
-                }
-                if($account instanceof Exception)
-                {
-                    $message = $account->getMessage();
-                    form_set_error('title', t($message));
-                }
-                else
-                {
-                    $form_state['values']['field_mailbox_zimbra_id'][LANGUAGE_NONE][0]['value'] = $account->id;
-                }
-            }
-            else
-            {
-                //Change mailbox information                
-                $old_node = node_load($nid);
-                $old_domain = node_load($old_node->field_node_domain[LANGUAGE_NONE][0]['nid']);
-                $old_address = $old_node->title .'@' .$old_domain->title;
-                $zimbra_id = $form_state['values']['field_mailbox_zimbra_id'][LANGUAGE_NONE][0]['value'];
-                $mailbox_status = $form_state['values']['field_mailbox_status'][LANGUAGE_NONE][0]['value'];
-
-                $attrs = array(
-                    'displayName' => $mail_fullname,
-                    'sn' => $mail_fullname,
-                );
-                $attrs['zimbraMailQuota'] = $mailbox_maxsize * 1024 * 1024;
-                $attrs['zimbraAccountStatus'] = $mailbox_status;
-
-                if(empty($zimbra_id))
-                {
-                    $account = zimbra_get_account($api, $old_address);
-                    if(!$account)
-                    {
-                        $account = zimbra_create_account($api, $mail_address, $mail_password, $attrs);
-                    }
-                    if($account instanceof Exception)
-                    {
-                        $message = $account->getMessage();
-                        form_set_error('title', t($message));
-                    }
-                    else
-                    {
-                        $form_state['values']['field_mailbox_zimbra_id'][LANGUAGE_NONE][0]['value'] = $account->id;
-                    }
-                }
-                else
-                {
-                    zimbra_modify_account($api, $zimbra_id, $attrs);
-                }
-                //Change password of Mailbox
-                if($mail_password !== '' )
-                {
-                    $result = zimbra_set_password($api, $zimbra_id, $mail_password);
-                    if(isset($result->message))
-                    {
-                        $message = $result->message;
-                        form_set_error('field_mailbox_password', t($message));
-                    }
-                    if($result instanceof Exception)
-                    {
-                        $message = $account->getMessage();
-                        form_set_error('field_mailbox_password', t($message));
-                    }
-                }
-                //Rename Mailbox
-                if($old_address !== $mail_address)
-                {
-                    $result = zimbra_rename_account($api, $zimbra_id, $mail_address);
-                    if($result instanceof Exception)
-                    {
-                        $message = $account->getMessage();
-                        form_set_error('title', t($message));
-                    }
-                }
-            }
-            $mail_group = normalize_group(node_load($group_id));
-            if($mail_group->nid)
-            {
-                $zimbra_dl = zimbra_get_dl($api, $mail_group->title.'@' .$mail_group->domain->title);
-
-                $zimbra_dlm = isset($zimbra_dl->dlm) ? $zimbra_dl->dlm : array();
-                $zimbra_members = is_array($zimbra_dlm) ? $zimbra_dlm : array($zimbra_dlm);
-                $add_members = array();
-                if(!in_array($mail_address, $zimbra_members))
-                {
-                    $add_members[] = $mail_address;
-                }
-                if(count($add_members))
-                {
-                    zimbra_add_dl_members($api, $zimbra_dl->id, $add_members);
-                }
-            }
-        }
-    }   
 }
