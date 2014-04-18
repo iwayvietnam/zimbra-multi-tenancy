@@ -132,26 +132,32 @@ function page_content_general($add_item = 1)
     $output = '';
     $menu_items = array();
     if(user_access('create server content'))
-        $menu_items[] = l(t('List of @type', array('@type' => t('Server'))),'zimbra/content/list/server');
+        $menu_items[] = l(t('List of @type', array('@type' => t('Server'))), 'zimbra/content/list/server');
     if(user_access('create tenant content'))
-        $menu_items[] = l(t('List of @type', array('@type' => t('Tenant'))),'zimbra/content/list/tenant');
+        $menu_items[] = l(t('List of @type', array('@type' => t('Tenant'))), 'zimbra/content/list/tenant');
     if(user_access('create domain content'))
-        $menu_items[] = l(t('List of @type', array('@type' => t('Domain'))),'zimbra/content/list/domain');
+        $menu_items[] = l(t('List of @type', array('@type' => t('Domain'))), 'zimbra/content/list/domain');
     if(user_access('create group content'))
-        $menu_items[] = l(t('List of @type', array('@type' => t('Group'))),'zimbra/content/list/group');
+        $menu_items[] = l(t('List of @type', array('@type' => t('Group'))), 'zimbra/content/list/group');
     if(user_access('create alias content'))
-        $menu_items[] = l(t('List of @type', array('@type' => t('Alias'))),'zimbra/content/list/alias');
+        $menu_items[] = l(t('List of @type', array('@type' => t('Alias'))), 'zimbra/content/list/alias');
     if(user_access('create mailbox content'))
-        $menu_items[] = l(t('List of @type', array('@type' => t('Mailbox'))),'zimbra/content/list/mailbox');
+        $menu_items[] = l(t('List of @type', array('@type' => t('Mailbox'))), 'zimbra/content/list/mailbox');
     
     if($add_item == 1)
     {
-        if(user_access('create server content')) $menu_items[] = l(t('Add new Server'),'node/add/server');
-        if(user_access('create tenant content')) $menu_items[] = l(t('Add new Tenant'),'node/add/tenant');
-        if(user_access('create domain content')) $menu_items[] = l(t('Add new Domain'),'node/add/domain');
-        if(user_access('create group content')) $menu_items[] = l(t('Add new Group'),'node/add/group');
-        if(user_access('create alias content')) $menu_items[] = l(t('Add new Alias'),'node/add/alias');
-        if(user_access('create mailbox content')) $menu_items[] = l(t('Add new Mailbox'),'node/add/mailbox');
+        if(user_access('create server content'))
+			$menu_items[] = l(t('Add new Server'), 'node/add/server', array('query' => array('destination' => 'zimbra/content/list/domain')));
+        if(user_access('create tenant content'))
+			$menu_items[] = l(t('Add new Tenant'), 'node/add/tenant', array('query' => array('destination' => 'zimbra/content/list/domain')));
+        if(user_access('create domain content'))
+			$menu_items[] = l(t('Add new Domain'), 'node/add/domain', array('query' => array('destination' => 'zimbra/content/list/domain')));
+        if(user_access('create group content'))
+			$menu_items[] = l(t('Add new Group'), 'node/add/group', array('query' => array('destination' => 'zimbra/content/list/group')));
+        if(user_access('create alias content'))
+			$menu_items[] = l(t('Add new Alias'), 'node/add/alias', array('query' => array('destination' => 'zimbra/content/list/alias')));
+        if(user_access('create mailbox content'))
+			$menu_items[] = l(t('Add new Mailbox'),'node/add/mailbox', array('query' => array('destination' => 'zimbra/content/list/mailbox')));
     }   
     
     foreach($menu_items as $key => $value)
