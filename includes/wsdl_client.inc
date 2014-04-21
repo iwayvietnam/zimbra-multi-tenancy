@@ -24,7 +24,7 @@
  * @author    Nguyen Van Nguyen - nguyennv@iwayvietnam.com
  * @copyright Copyright © 2013 by iWay Vietnam. (http://www.iwayvietnam.com)
  */
-class wsdl_client
+class wsdl_client extends SoapClient
 {
 	/**
 	 * Soap namespace
