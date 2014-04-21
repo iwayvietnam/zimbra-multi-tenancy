@@ -22,123 +22,123 @@ function zimbra_multi_tenancy_install() {
  * Implements hook_uninstall().
  */ 
 function zimbra_multi_tenancy_uninstall() {
-	variable_del('zimbra_zimbra_role_id');
-	variable_del('zimbra_tenant_role_id');
-	variable_del('zimbra_domain_role_id');	
+  variable_del('zimbra_zimbra_role_id');
+  variable_del('zimbra_tenant_role_id');
+  variable_del('zimbra_domain_role_id');  
 }
 
 function zimbra_add_role(){
-	$zimbra_name ='Zimbra';
-	$tenant_name ='Tenant';
-	$domain_name ='Domain';
-	$roles = user_roles();
-	
-    if(!in_array($zimbra_name, $roles)){
-		$addRole =new stdClass();
-		$addRole ->name = $zimbra_name;
-    	user_role_save($addRole);
-    }
+  $zimbra_name = 'Zimbra';
+  $tenant_name = 'Tenant';
+  $domain_name = 'Domain';
+  $roles = user_roles();
+  
+  if (!in_array($zimbra_name, $roles)) {
+    $addRole =new stdClass();
+    $addRole->name = $zimbra_name;
+    user_role_save($addRole);
+  }
     
-    if(!in_array($tenant_name, $roles)){
-		$addRole =new stdClass();
-		$addRole ->name = $tenant_name;
-    	user_role_save($addRole);
-    }
+  if(!in_array($tenant_name, $roles)) {
+    $addRole = new stdClass();
+    $addRole->name = $tenant_name;
+    user_role_save($addRole);
+  }
     
-    if(!in_array($domain_name, $roles)){
-		$addRole =new stdClass();
-		$addRole ->name = $domain_name;
-    	user_role_save($addRole);
-    }
-	
-	$roles_new = user_roles();
-	
-	$zimbra_rid =0;
-	$tenant_rid =0;
-	$domain_rid =0;
-	foreach($roles_new as $key =>$role){
-		if($role ==$zimbra_name) $zimbra_rid =$key;
-		if($role ==$tenant_name) $tenant_rid =$key;
-		if($role ==$domain_name) $domain_rid =$key;		
-	}
-	$zimbra_perm =array(
-		'create tenant content' => 1,	
-		'create domain content' => 1,	
-		'create group content' => 1,	
-		'create alias content' => 1,	
-		'create mailbox content' => 1,	
-		
-		'edit own tenant content' => 1,	
-		'edit own domain content' => 1,	
-		'edit own group content' => 1,	
-		'edit own alias content' => 1,	
-		'edit own mailbox content' => 1,	
-		
-		'edit any tenant content' => 1,	
-		'edit any domain content' => 1,	
-		'edit any group content' => 1,	
-		'edit any alias content' => 1,	
-		'edit any mailbox content' => 1,	
-		
-		'delete own tenant content' => 1,	
-		'delete own domain content' => 1,	
-		'delete own group content' => 1,	
-		'delete own alias content' => 1,	
-		'delete own mailbox content' => 1,	
-		
-		'delete any tenant content' => 1,	
-		'delete any domain content' => 1,	
-		'delete any group content' => 1,	
-		'delete any alias content' => 1,	
-		'delete any mailbox content' => 1,	
-		
-		'administer zimbra' => 1,
-		'access list command' => 1,
-	);	
-	
-	$tenant_perm =array(
-		'create domain content' => 1,	
-		'create group content' => 1,	
-		'create alias content' => 1,	
-		'create mailbox content' => 1,	
-		
-		'edit own domain content' => 1,	
-		'edit own group content' => 1,	
-		'edit own alias content' => 1,	
-		'edit own mailbox content' => 1,
-			
-		'edit any domain content' => 1,	
-		'edit any group content' => 1,	
-		'edit any alias content' => 1,	
-		'edit any mailbox content' => 1,	
+  if (!in_array($domain_name, $roles)){
+    $addRole = new stdClass();
+    $addRole->name = $domain_name;
+    user_role_save($addRole);
+  }
+  
+  $roles_new = user_roles();
+  
+  $zimbra_rid = 0;
+  $tenant_rid = 0;
+  $domain_rid = 0;
+  foreach ($roles_new as $key => $role) {
+    if ($role == $zimbra_name) $zimbra_rid = $key;
+    if ($role == $tenant_name) $tenant_rid = $key;
+    if ($role == $domain_name) $domain_rid = $key;    
+  }
+  $zimbra_perm =array(
+    'create tenant content'      => 1,  
+    'create domain content'      => 1,  
+    'create group content'       => 1,  
+    'create alias content'       => 1,  
+    'create mailbox content'     => 1,  
+    
+    'edit own tenant content'    => 1,  
+    'edit own domain content'    => 1,  
+    'edit own group content'     => 1,  
+    'edit own alias content'     => 1,  
+    'edit own mailbox content'   => 1,  
+    
+    'edit any tenant content'    => 1,  
+    'edit any domain content'    => 1,  
+    'edit any group content'     => 1,  
+    'edit any alias content'     => 1,  
+    'edit any mailbox content'   => 1,  
+    
+    'delete own tenant content'  => 1,  
+    'delete own domain content'  => 1,  
+    'delete own group content'   => 1,  
+    'delete own alias content'   => 1,  
+    'delete own mailbox content' => 1,  
+    
+    'delete any tenant content'  => 1,  
+    'delete any domain content'  => 1,  
+    'delete any group content'   => 1,  
+    'delete any alias content'   => 1,  
+    'delete any mailbox content' => 1,  
+    
+    'administer zimbra'          => 1,
+    'access list command'        => 1,
+  );  
+  
+  $tenant_perm =array(
+    'create domain content'      => 1,  
+    'create group content'       => 1,  
+    'create alias content'       => 1,  
+    'create mailbox content'     => 1,  
+    
+    'edit own domain content'    => 1,  
+    'edit own group content'     => 1,  
+    'edit own alias content'     => 1,  
+    'edit own mailbox content'   => 1,
+      
+    'edit any domain content'    => 1,  
+    'edit any group content'     => 1,  
+    'edit any alias content'     => 1,  
+    'edit any mailbox content'   => 1,  
 
-		'delete own domain content' => 1,	
-		'delete own group content' => 1,	
-		'delete own alias content' => 1,	
-		'delete own mailbox content' => 1,	
-	);	
-	
-	$domain_perm =array(	
-		'create group content' => 1,	
-		'create alias content' => 1,	
-		'create mailbox content' => 1,	
-		
-		'edit own group content' => 1,	
-		'edit own alias content' => 1,	
-		'edit own mailbox content' => 1,	
-		
-		'delete own group content' => 1,	
-		'delete own alias content' => 1,	
-		'delete own mailbox content' => 1,	
-	);	
-	user_role_change_permissions($zimbra_rid, $zimbra_perm);
-	user_role_change_permissions($tenant_rid, $tenant_perm);
-	user_role_change_permissions($domain_rid, $domain_perm);
-	
-	variable_set('zimbra_zimbra_role_id', $zimbra_rid);
-	variable_set('zimbra_tenant_role_id', $tenant_rid);
-	variable_set('zimbra_domain_role_id', $domain_rid);
-	
-	drupal_set_message(t('Please <a href="' .url('admin/people/create/' .$zimbra_rid) .'">create user</a> for Zimbra management.'), 'warning');
+    'delete own domain content'  => 1,  
+    'delete own group content'   => 1,  
+    'delete own alias content'   => 1,  
+    'delete own mailbox content' => 1,  
+  );  
+  
+  $domain_perm =array(  
+    'create group content'       => 1,  
+    'create alias content'       => 1,  
+    'create mailbox content'     => 1,  
+    
+    'edit own group content'     => 1,  
+    'edit own alias content'     => 1,  
+    'edit own mailbox content'   => 1,  
+    
+    'delete own group content'   => 1,  
+    'delete own alias content'   => 1,  
+    'delete own mailbox content' => 1,  
+  );  
+  user_role_change_permissions($zimbra_rid, $zimbra_perm);
+  user_role_change_permissions($tenant_rid, $tenant_perm);
+  user_role_change_permissions($domain_rid, $domain_perm);
+  
+  variable_set('zimbra_zimbra_role_id', $zimbra_rid);
+  variable_set('zimbra_tenant_role_id', $tenant_rid);
+  variable_set('zimbra_domain_role_id', $domain_rid);
+  
+  drupal_set_message(t('Please <a href="' . url('admin/people/create/' . $zimbra_rid) . '">create user</a> for Zimbra management.'), 'warning');
 }
 
