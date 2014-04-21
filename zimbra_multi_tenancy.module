@@ -3,323 +3,295 @@
 /**
  * Implements hook_init().
  */
-function zimbra_multi_tenancy_init()
-{
-    drupal_add_js(drupal_get_path('module', 'zimbra_multi_tenancy') .'/zimbra_multi_tenancy.js');
-    module_load_include('inc', 'zimbra_multi_tenancy', 'includes/soap_message');
-    module_load_include('inc', 'zimbra_multi_tenancy', 'includes/soap_client');
-    module_load_include('inc', 'zimbra_multi_tenancy', 'includes/wsdl_client');
-    module_load_include('inc', 'zimbra_multi_tenancy', 'includes/zimbra_admin_api');
+function zimbra_multi_tenancy_init() {
+  drupal_add_js(drupal_get_path('module', 'zimbra_multi_tenancy') .'/zimbra_multi_tenancy.js');
+  module_load_include('inc', 'zimbra_multi_tenancy', 'includes/soap_message');
+  module_load_include('inc', 'zimbra_multi_tenancy', 'includes/soap_client');
+  module_load_include('inc', 'zimbra_multi_tenancy', 'includes/wsdl_client');
+  module_load_include('inc', 'zimbra_multi_tenancy', 'includes/zimbra_admin_api');
 
-    module_load_include('inc', 'zimbra_multi_tenancy', 'zimbra_multi_tenancy');
-    module_load_include('inc', 'zimbra_multi_tenancy', 'zimbra_multi_tenancy.zimbra');
-    module_load_include('inc', 'zimbra_multi_tenancy', 'zimbra_multi_tenancy.forms');
+  module_load_include('inc', 'zimbra_multi_tenancy', 'zimbra_multi_tenancy');
+  module_load_include('inc', 'zimbra_multi_tenancy', 'zimbra_multi_tenancy.zimbra');
+  module_load_include('inc', 'zimbra_multi_tenancy', 'zimbra_multi_tenancy.forms');
 }
 
 /**
  * Implementation of hook_perm().
  */
-function zimbra_multi_tenancy_permission()
-{
-    return array(
-        'administer zimbra' => array(
-            'title' => t('Administer Zimbra Multi-tenancy'),
-        ),
-    );  
+function zimbra_multi_tenancy_permission() {
+  return array(
+    'administer zimbra' => array(
+      'title' => t('Administer Zimbra Multi-tenancy'),
+    ),
+  );  
 }
 
 /**
  * Implements hook_form_alter().
  */
-function zimbra_multi_tenancy_form_alter(&$form, &$form_state, $form_id)
-{
-    global $user;
+function zimbra_multi_tenancy_form_alter(&$form, &$form_state, $form_id) {
+  global $user;
 
-    //Delete denied
-    if($form_id == "node_delete_confirm" && $user ->uid != 1)
-    {
-        drupal_access_denied();
-        exit;
-    }
+  //Delete denied
+  if ($form_id == "node_delete_confirm" && $user ->uid != 1) {
+    drupal_access_denied();
+    exit;
+  }
 
-    //Add user of Zimbra role
-    if($form_id == 'user_register_form'
-        && arg(2) == 'create'
-        && is_numeric(arg(3)))
-    {
-        $form['account']['roles']['#default_value'] = array(arg(3));
-    }
+  //Add user of Zimbra role
+  if($form_id == 'user_register_form'
+    && arg(2) == 'create'
+    && is_numeric(arg(3))) {
+    $form['account']['roles']['#default_value'] = array(arg(3));
+  }
 
-    //Disable items additional in drupal form
-    if($form_id =='server_node_form'
-        || $form_id =='tenant_node_form'
-        || $form_id =='domain_node_form'
-        || $form_id =='group_node_form'
-        || $form_id =='alias_node_form'
-        || $form_id =='mailbox_node_form')
-    {
-        $form['options']['status']['#default_value'] = 1;
-        $form['options']['promote']['#default_value'] = 0;
-        
-        $form['author']['#access'] = 0;
-        $form['options']['#access'] = 0;
-        $form['path']['#access'] = 0;
-        $form['menu']['#access'] = 0;
-        $form['comment_settings']['#access'] = 0;
-        $form['revision_information']['#access'] =  0;
-        $form['actions']['preview']['#access'] = 0;     
-    }
+  //Disable items additional in drupal form
+  if($form_id =='server_node_form'
+    || $form_id =='tenant_node_form'
+    || $form_id =='domain_node_form'
+    || $form_id =='group_node_form'
+    || $form_id =='alias_node_form'
+    || $form_id =='mailbox_node_form') {
+    $form['options']['status']['#default_value'] = 1;
+    $form['options']['promote']['#default_value'] = 0;
+    
+    $form['author']['#access'] = 0;
+    $form['options']['#access'] = 0;
+    $form['path']['#access'] = 0;
+    $form['menu']['#access'] = 0;
+    $form['comment_settings']['#access'] = 0;
+    $form['revision_information']['#access'] =  0;
+    $form['actions']['preview']['#access'] = 0;   
+  }
 
-    switch ($form_id)
-    {
-        case 'server_node_form':
-            zimbra_server_hook_form($form, $form_state);
-            break;
-        case 'tenant_node_form':
-            zimbra_ternant_hook_form($form, $form_state);
-            break;
-        case 'domain_node_form':
-            zimbra_domain_hook_form($form, $form_state);
-            break;
-        case 'group_node_form':
-            zimbra_group_hook_form($form, $form_state);
-            break;
-        case 'alias_node_form':
-            zimbra_alias_hook_form($form, $form_state);
-            break;
-        case 'mailbox_node_form':
-            zimbra_mailbox_hook_form($form, $form_state);
-            break;
-    }
-        
-    if($form_id == 'user_login' || $form_id == 'user_login_block')
-    {
-        if(!isset($_GET['destination']))
-            $form['#action'] = url($_GET['q'], array('query' => array('destination' =>'admin/zimbra')));
-    }
+  switch ($form_id) {
+    case 'server_node_form':
+      zimbra_server_hook_form($form, $form_state);
+      break;
+    case 'tenant_node_form':
+      zimbra_ternant_hook_form($form, $form_state);
+      break;
+    case 'domain_node_form':
+      zimbra_domain_hook_form($form, $form_state);
+      break;
+    case 'group_node_form':
+      zimbra_group_hook_form($form, $form_state);
+      break;
+    case 'alias_node_form':
+      zimbra_alias_hook_form($form, $form_state);
+      break;
+    case 'mailbox_node_form':
+      zimbra_mailbox_hook_form($form, $form_state);
+      break;
+  }
 
-    //Disable comment optional
-    if($form_id == 'server_node_form'
-        || $form_id == 'tenant_node_form'
-        || $form_id == 'domain_node_form'
-        || $form_id == 'group_node_form'
-        || $form_id == 'alias_node_form'
-        || $form_id == 'mailbox_node_form')
-    {
-        $form['actions']['delete']['#access'] = 0;
-        $form['comment_settings']['comment']['#default_value'] = 1;
-    }
+  if($form_id == 'user_login' || $form_id == 'user_login_block') {
+    if(!isset($_GET['destination']))
+      $form['#action'] = url($_GET['q'], array('query' => array('destination' =>'admin/zimbra')));
+  }
+
+  //Disable comment optional
+  if($form_id == 'server_node_form'
+    || $form_id == 'tenant_node_form'
+    || $form_id == 'domain_node_form'
+    || $form_id == 'group_node_form'
+    || $form_id == 'alias_node_form'
+    || $form_id == 'mailbox_node_form') {
+    $form['actions']['delete']['#access'] = 0;
+    $form['comment_settings']['comment']['#default_value'] = 1;
+  }
 }
 
 /**
  * Implements hook_node_insert().
  */
-function zimbra_multi_tenancy_node_insert($node)
-{
-    switch ($node->type)
-    {
-        case 'alias':
-            //$alias = normalize_alias($node);
-            //group_add_member($alias->group->nid, $alias->nid);
-            break;
-        case 'mailbox':
-            //$mailbox = normalize_mailbox($node);
-            //group_add_member($mailbox->group->nid, $mailbox->nid);
-            break;
-    }
+function zimbra_multi_tenancy_node_insert($node) {
+  switch ($node->type) {
+    case 'alias':
+      //$alias = normalize_alias($node);
+      //group_add_member($alias->group->nid, $alias->nid);
+      break;
+    case 'mailbox':
+      //$mailbox = normalize_mailbox($node);
+      //group_add_member($mailbox->group->nid, $mailbox->nid);
+      break;
+  }
 }
 
 /**
  * Implements hook_node_update().
  */
-function zimbra_multi_tenancy_node_update($node)
-{
-    switch ($node->type)
-    {
-        case 'alias':
-            //$alias = normalize_alias($node);
-            break;
-        case 'mailbox':
-            //$mailbox = normalize_mailbox($node);
-            break;
-    }
+function zimbra_multi_tenancy_node_update($node) {
+  switch ($node->type) {
+    case 'alias':
+      //$alias = normalize_alias($node);
+      break;
+    case 'mailbox':
+      //$mailbox = normalize_mailbox($node);
+      break;
+  }
 }
 
 /**
  * Implements hook_node_delete().
  */
-function zimbra_multi_tenancy_node_delete($node)
-{
-    switch($node->type)
-    {
-		case 'tenant':
-			$uid = isset($node->field_tenant_user[LANGUAGE_NONE][0]['uid']) ? (int) $node->field_tenant_user[LANGUAGE_NONE][0]['uid'] : 0;
-			user_delete($uid);
-			break;
-		case 'domain':
-			$uid = isset($node->field_domain_user[LANGUAGE_NONE][0]['uid']) ? (int) $node->field_domain_user[LANGUAGE_NONE][0]['uid'] : 0;
-			user_delete($uid);
-			delete_alias_by_domain($node->nid);
-			delete_group_by_domain($node->nid);
-			delete_mailbox_by_domain($node->nid);
-			$domain = normalize_domain($node);
-			if($domain->server)
-			{
-				$api = zimbra_admin_api_by_server($domain->server->nid);
-				if(isset($domain->server->delete_domain) && $domain->server->delete_domain > 0)
-				{
-					zimbra_delete_domain($api, $domain->zimbra_id);
-				}
-			}
-			break;
-		case 'group':
-			$uid = isset($node->field_group_user[LANGUAGE_NONE][0]['uid']) ? (int) $node->field_group_user[LANGUAGE_NONE][0]['uid'] : 0;
-			user_delete($uid);
-			$group = normalize_group($node);
-			$domain = $group->domain;
-			if($domain->server)
-			{
-				$api = zimbra_admin_api_by_server($domain->server->nid);
-				if(isset($domain->server->delete_group) && $domain->server->delete_group > 0)
-				{
-					zimbra_delete_dl($api, $group->zimbra_id);
-				}
-			}
-			break;
-        case 'alias':
-			$alias = normalize_alias($node);
-			$domain = $alias->domain;
-			$mailbox = $alias->mailbox;
-			if($domain->server)
-			{
-				$api = zimbra_admin_api_by_server($domain->server->nid);
-				if(isset($domain->server->delete_alias) && $domain->server->delete_alias > 0)
-				{
-					$mail_alias = $alias->title.'@'.$domain->title;
-					zimbra_remove_account_alias($api, $mail_alias, $mailbox->zimbra_id);
-				}
-			}
-            break;
-        case 'mailbox':
-			delete_alias_by_mailbox($node->nid);
-			$mailbox = normalize_mailbox($node);
-			$domain = $mailbox->domain;
-			if($domain->server)
-			{
-				$api = zimbra_admin_api_by_server($domain->server->nid);
-				if(isset($domain->server->delete_mailbox) && $domain->server->delete_mailbox > 0)
-				{
-					zimbra_delete_account($api, $mailbox->zimbra_id);
-				}
-			}
-            break;
-    }
+function zimbra_multi_tenancy_node_delete($node) {
+  switch($node->type) {
+    case 'tenant':
+      $uid = isset($node->field_tenant_user[LANGUAGE_NONE][0]['uid']) ? (int) $node->field_tenant_user[LANGUAGE_NONE][0]['uid'] : 0;
+      user_delete($uid);
+      break;
+    case 'domain':
+      $uid = isset($node->field_domain_user[LANGUAGE_NONE][0]['uid']) ? (int) $node->field_domain_user[LANGUAGE_NONE][0]['uid'] : 0;
+      user_delete($uid);
+      delete_alias_by_domain($node->nid);
+      delete_group_by_domain($node->nid);
+      delete_mailbox_by_domain($node->nid);
+      $domain = normalize_domain($node);
+      if ($domain->server) {
+        $api = zimbra_admin_api_by_server($domain->server->nid);
+        if(isset($domain->server->delete_domain) && $domain->server->delete_domain > 0) {
+          zimbra_delete_domain($api, $domain->zimbra_id);
+        }
+      }
+      break;
+    case 'group':
+      $uid = isset($node->field_group_user[LANGUAGE_NONE][0]['uid']) ? (int) $node->field_group_user[LANGUAGE_NONE][0]['uid'] : 0;
+      user_delete($uid);
+      $group = normalize_group($node);
+      $domain = $group->domain;
+      if ($domain->server) {
+        $api = zimbra_admin_api_by_server($domain->server->nid);
+        if(isset($domain->server->delete_group) && $domain->server->delete_group > 0) {
+          zimbra_delete_dl($api, $group->zimbra_id);
+        }
+      }
+      break;
+    case 'alias':
+      $alias = normalize_alias($node);
+      $domain = $alias->domain;
+      $mailbox = $alias->mailbox;
+      if ($domain->server) {
+        $api = zimbra_admin_api_by_server($domain->server->nid);
+        if (isset($domain->server->delete_alias) && $domain->server->delete_alias > 0) {
+          $mail_alias = $alias->title.'@'.$domain->title;
+          zimbra_remove_account_alias($api, $mail_alias, $mailbox->zimbra_id);
+        }
+      }
+      break;
+    case 'mailbox':
+      delete_alias_by_mailbox($node->nid);
+      $mailbox = normalize_mailbox($node);
+      $domain = $mailbox->domain;
+      if ($domain->server) {
+        $api = zimbra_admin_api_by_server($domain->server->nid);
+        if (isset($domain->server->delete_mailbox) && $domain->server->delete_mailbox > 0) {
+          zimbra_delete_account($api, $mailbox->zimbra_id);
+        }
+      }
+      break;
+  }
 }
 
 /**
  * Implement hook_menu_alter()
  */
-function zimbra_multi_tenancy_menu_alter(&$items)
-{
-    if (isset($items['user/%user']))
-    {
-        $items['user/%user']['page callback'] ='zimbra_profile_page';
-        //$items['user/%user']['file'] ='zimbra_multi_tenancy.pages.inc';
-    }
+function zimbra_multi_tenancy_menu_alter(&$items) {
+  if (isset($items['user/%user'])) {
+    $items['user/%user']['page callback'] ='zimbra_profile_page';
+    //$items['user/%user']['file'] ='zimbra_multi_tenancy.pages.inc';
+  }
 }
 
 /**
  * Implements hook_menu().
  */
-function zimbra_multi_tenancy_menu()
-{
-    $items['admin/config/system/zimbra-tenancy'] = array(
-        'title' => t('Zimbra settings'),
-        'description' => 'Zimbra Multi-tenancy settings.',
-        'page callback' => 'drupal_get_form',
-        'page arguments' => array('zimbra_multi_tenancy_settings'),
-        'access arguments' => array('administer zimbra'),
-        'file' => 'zimbra_multi_tenancy.pages.inc',
-    );
+function zimbra_multi_tenancy_menu() {
+  $items['admin/config/system/zimbra-tenancy'] = array(
+    'title' => t('Zimbra settings'),
+    'description' => 'Zimbra Multi-tenancy settings.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('zimbra_multi_tenancy_settings'),
+    'access arguments' => array('administer zimbra'),
+    'file' => 'zimbra_multi_tenancy.pages.inc',
+  );
 
-    $items['admin/zimbra'] = array(
-        'title' => t('Zimbra multi tenancy'),
-        'page callback' => 'zimbra_page_content',
-        'access arguments' => array('access content'),
-        'weight' => 1,
-        'file' => 'zimbra_multi_tenancy.pages.inc',
-    );
+  $items['admin/zimbra'] = array(
+    'title' => t('Zimbra multi tenancy'),
+    'page callback' => 'zimbra_page_content',
+    'access arguments' => array('access content'),
+    'weight' => 1,
+    'file' => 'zimbra_multi_tenancy.pages.inc',
+  );
   
-    $items['admin/zimbra/add'] = array(
-        'title' => t('Zimbra add content'),
-        'page callback' => 'zimbra_page_addcontent',
-        'access arguments' => array('access content'),
-        'description' => 'Add content of Zimbra.',
-        'weight' => -9,
-        'file' => 'zimbra_multi_tenancy.pages.inc',
-    );
+  $items['admin/zimbra/add'] = array(
+    'title' => t('Zimbra add content'),
+    'page callback' => 'zimbra_page_addcontent',
+    'access arguments' => array('access content'),
+    'description' => 'Add content of Zimbra.',
+    'weight' => -9,
+    'file' => 'zimbra_multi_tenancy.pages.inc',
+  );
 
-    $items['admin/zimbra/list'] = array(
-        'title' => t('Zimbra content'),
-        'page callback' => 'zimbra_page_content',
-        'access arguments' => array('access content'),
-        'weight' => -8,
-        'file' => 'zimbra_multi_tenancy.pages.inc',
-    );
+  $items['admin/zimbra/list'] = array(
+    'title' => t('Zimbra content'),
+    'page callback' => 'zimbra_page_content',
+    'access arguments' => array('access content'),
+    'weight' => -8,
+    'file' => 'zimbra_multi_tenancy.pages.inc',
+  );
+  
+  $items['zimbra'] = array(
+    'title' => t('Zimbra content'),
+    'page callback' => 'zimbra_page_content',
+    'access arguments' => array('access content'),
+    'file' => 'zimbra_multi_tenancy.pages.inc',
+  );
+
+  $items['zimbra/pull-data'] = array(
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('zimbra_pull_data_form'),
+    'access callback' => TRUE,
+    'access arguments' => array('create server content'),
+    'type' => MENU_CALLBACK,
+  );
     
-    $items['zimbra'] = array(
-        'title' => t('Zimbra content'),
-        'page callback' => 'zimbra_page_content',
-        'access arguments' => array('access content'),
+  $zimbra_content_type =array('server', 'tenant', 'domain', 'group', 'alias', 'mailbox');
+  $i =0;
+  foreach ($zimbra_content_type as $key) {
+    $i++;
+    $node_type = node_type_load($key);
+    if (is_object($node_type)) {
+      $items['admin/zimbra/add/' .$key] = array(
+        'title' => t($node_type->name),
+        'page callback' => 'zimbra_page_addcontent',
+        'access arguments' => array('create ' . $key .' content'),
+        'description' => $node_type->description,
+        'weight' => $i,
         'file' => 'zimbra_multi_tenancy.pages.inc',
-    );
-
-    $items['zimbra/pull-data'] = array(
-        'page callback' => 'drupal_get_form',
-        'page arguments' => array('zimbra_pull_data_form'),
-        'access callback' => TRUE,
-        'access arguments' => array('create server content'),
-        'type' => MENU_CALLBACK,
-    );
+      );
       
-    $zimbra_content_type =array('server', 'tenant', 'domain', 'group', 'alias', 'mailbox');
-    $i =0;
-    foreach($zimbra_content_type as $key)
-    {
-        $i++;
-        $node_type = node_type_load($key);
-        if(is_object($node_type))
-        {
-            $items['admin/zimbra/add/' .$key] = array(
-                'title' => t($node_type->name),
-                'page callback' => 'zimbra_page_addcontent',
-                'access arguments' => array('create ' . $key .' content'),
-                'description' => $node_type->description,
-                'weight' => $i,
-                'file' => 'zimbra_multi_tenancy.pages.inc',
-            );
-          
-            $items['admin/zimbra/list/' .$key] = array(
-                'title' => t('List of @type',array('@type' => $node_type->name)),
-                'page callback' => 'zimbra_page_content',
-                'access arguments' => array('create ' . $key . ' content'),
-                'description' => $node_type->description,
-                'weight' => $i,
-                'file' => 'zimbra_multi_tenancy.pages.inc',
-            );
-          
-            $items['zimbra/content/list/' . $key] = array(
-                'title' => t('List of @type',array('@type' => $node_type->name)),
-                'page callback' => 'zimbra_page_content',
-                'access arguments' => array('create ' . $key . ' content'),
-                'description' => $node_type->description,
-                'weight' => $i,
-                'file' => 'zimbra_multi_tenancy.pages.inc',
-            );
-        }
+      $items['admin/zimbra/list/' .$key] = array(
+        'title' => t('List of @type',array('@type' => $node_type->name)),
+        'page callback' => 'zimbra_page_content',
+        'access arguments' => array('create ' . $key . ' content'),
+        'description' => $node_type->description,
+        'weight' => $i,
+        'file' => 'zimbra_multi_tenancy.pages.inc',
+      );
+      
+      $items['zimbra/content/list/' . $key] = array(
+        'title' => t('List of @type',array('@type' => $node_type->name)),
+        'page callback' => 'zimbra_page_content',
+        'access arguments' => array('create ' . $key . ' content'),
+        'description' => $node_type->description,
+        'weight' => $i,
+        'file' => 'zimbra_multi_tenancy.pages.inc',
+      );
     }
+  }
 
-    return $items;
+  return $items;
 }
 
 /**
@@ -328,105 +300,93 @@ function zimbra_multi_tenancy_menu()
  * @param  string $user_name User name
  * @param  string $user_pass User password
  * @param  string $user_mail User email
- * @param  array  $roles     User roles
+ * @param  array  $roles   User roles
  * @return mix
  */
 function auto_create_user(
-    $user_name = 'zimbra',
-    $user_pass = 'zimbra',
-    $user_mail = '',
-    array $roles = array()
-)
-{
-    $user_uid = 0;
-    if($user_name != '' && $user_pass != '')
-    {
-        require_once DRUPAL_ROOT . '/' . variable_get('password_inc', 'includes/password.inc');
-        $zimbra_domain_server = variable_get('zimbra_domain_server', $_SERVER['SERVER_NAME']);
+  $user_name = 'zimbra',
+  $user_pass = 'zimbra',
+  $user_mail = '',
+  array $roles = array()
+) {
+  $user_uid = 0;
+  if ($user_name != '' && $user_pass != '') {
+    require_once DRUPAL_ROOT . '/' . variable_get('password_inc', 'includes/password.inc');
+    $zimbra_domain_server = variable_get('zimbra_domain_server', $_SERVER['SERVER_NAME']);
+  
+    $user_pass = user_hash_password(trim($user_pass));  
+    $mail = $user_mail;
+    if ($mail =='') $mail =str_replace(' ', '_', $user_name) . '@' . $zimbra_domain_server;
+
+    $account = new stdClass();
+    $account->is_new = TRUE;
+    $account->uid = db_next_id(db_query('SELECT MAX(uid) FROM {users}')->fetchField());
+    $account->created = REQUEST_TIME;   
+
+    $account->hostname = ip_address();
+
+    $account->administer_users = 1;
+    $account->name = $user_name;
+    $account->mail = $mail;
+    $account->pass = $user_pass;
+    $account->status = 1;
+    $account->timezone = variable_get('date_default_timezone', date_default_timezone_get());
+    $account->init = $mail;
     
-        $user_pass = user_hash_password(trim($user_pass));  
-        $mail = $user_mail;
-        if($mail =='') $mail =str_replace(' ', '_', $user_name) . '@' . $zimbra_domain_server;
-
-        $account = new stdClass();
-        $account->is_new = TRUE;
-        $account->uid = db_next_id(db_query('SELECT MAX(uid) FROM {users}')->fetchField());
-        $account->created = REQUEST_TIME;   
-
-        $account->hostname = ip_address();
-
-        $account->administer_users = 1;
-        $account->name = $user_name;
-        $account->mail = $mail;
-        $account->pass = $user_pass;
-        $account->status = 1;
-        $account->timezone = variable_get('date_default_timezone', date_default_timezone_get());
-        $account->init = $mail;
-        
-        $user_uid = $account->uid;
-        $success = drupal_write_record('users', $account);
-        
-        if(!is_array($roles)) $roles = array();
-        if (count($roles) > 0)
-        {
-            $query = db_insert('users_roles')->fields(array('uid', 'rid'));
-            foreach ($roles as $rid)
-            {
-                if (!in_array($rid, array(DRUPAL_ANONYMOUS_RID, DRUPAL_AUTHENTICATED_RID)))
-                {
-                    $query->values(array(
-                        'uid' => $account->uid,
-                        'rid' => $rid,
-                    ));
-                }
-            }
-            $query->execute();
+    $user_uid = $account->uid;
+    $success = drupal_write_record('users', $account);
+    
+    if(!is_array($roles)) $roles = array();
+    if (count($roles) > 0) {
+      $query = db_insert('users_roles')->fields(array('uid', 'rid'));
+      foreach ($roles as $rid) {
+        if (!in_array($rid, array(DRUPAL_ANONYMOUS_RID, DRUPAL_AUTHENTICATED_RID))) {
+          $query->values(array(
+            'uid' => $account->uid,
+            'rid' => $rid,
+          ));
         }
+      }
+      $query->execute();
     }
-    return $user_uid;
+  }
+  return $user_uid;
 }
 
 /**
  * Verify the syntax of the given name.
  */
-function zimbra_user_validate_name($name, $field_name ='username')
-{
-    if (!$name)
-    {
-        return t('You must enter a @username.', array('@username' => $field_name));
-    }
-    if (substr($name, 0, 1) == ' ')
-    {
-        return t('The @username cannot begin with a space.', array('@username' => $field_name));
-    }
-    if (substr($name, -1) == ' ')
-    {
-        return t('The @username cannot end with a space.', array('@username' => $field_name));
-    }
-    if (strpos($name, '  ') !== FALSE)
-    {
-        return t('The @username cannot contain multiple spaces in a row.', array('@username' =>$field_name));
-    }
-    if (preg_match('/[^\x{80}-\x{F7} a-z0-9@_.\'-]/i', $name)) {
-        return t('The @username contains an illegal character.', array('@username' =>$field_name));
-    }
-    if (preg_match('/[\x{80}-\x{A0}' .       // Non-printable ISO-8859-1 + NBSP
-                   '\x{AD}' .                // Soft-hyphen
-                   '\x{2000}-\x{200F}' .     // Various space characters
-                   '\x{2028}-\x{202F}' .     // Bidirectional text overrides
-                   '\x{205F}-\x{206F}' .     // Various text hinting characters
-                   '\x{FEFF}' .              // Byte order mark
-                   '\x{FF01}-\x{FF60}' .     // Full-width latin
-                   '\x{FFF9}-\x{FFFD}' .     // Replacement characters
-                   '\x{0}-\x{1F}]/u',        // NULL byte and control characters
-                   $name))
-    {
-        return t('The username contains an illegal character.', array('@username' =>$field_name));
-    }
-    if (drupal_strlen($name) > USERNAME_MAX_LENGTH)
-    {
-        return t('The @username %name is too long: it must be %max characters or less.', array('%name' => $name, '%max' => USERNAME_MAX_LENGTH, '@username' =>$field_name));
-    }
+function zimbra_user_validate_name($name, $field_name ='username') {
+  if (!$name) {
+    return t('You must enter a @username.', array('@username' => $field_name));
+  }
+  if (substr($name, 0, 1) == ' ') {
+    return t('The @username cannot begin with a space.', array('@username' => $field_name));
+  }
+  if (substr($name, -1) == ' ') {
+    return t('The @username cannot end with a space.', array('@username' => $field_name));
+  }
+  if (strpos($name, '  ') !== false) {
+    return t('The @username cannot contain multiple spaces in a row.', array('@username' =>$field_name));
+  }
+  if (preg_match('/[^\x{80}-\x{F7} a-z0-9@_.\'-]/i', $name)) {
+    return t('The @username contains an illegal character.', array('@username' =>$field_name));
+  }
+  if (preg_match('/[\x{80}-\x{A0}' .     // Non-printable ISO-8859-1 + NBSP
+                 '\x{AD}' .        // Soft-hyphen
+                 '\x{2000}-\x{200F}' .   // Various space characters
+                 '\x{2028}-\x{202F}' .   // Bidirectional text overrides
+                 '\x{205F}-\x{206F}' .   // Various text hinting characters
+                 '\x{FEFF}' .        // Byte order mark
+                 '\x{FF01}-\x{FF60}' .   // Full-width latin
+                 '\x{FFF9}-\x{FFFD}' .   // Replacement characters
+                 '\x{0}-\x{1F}]/u',    // NULL byte and control characters
+    $name)) {
+    return t('The username contains an illegal character.', array('@username' =>$field_name));
+  }
+  if (drupal_strlen($name) > USERNAME_MAX_LENGTH) {
+    return t('The @username %name is too long: it must be %max characters or less.', array('%name' => $name, '%max' => USERNAME_MAX_LENGTH, '@username' =>$field_name));
+  }
 }
 
 /**
@@ -435,64 +395,59 @@ function zimbra_user_validate_name($name, $field_name ='username')
  * @param  object $account Account
  * @return mix
  */
-function zimbra_profile_page($account)
-{
-    global $user;
-    if(!is_object($account)) return MENU_NOT_FOUND;
-    $output = '';
-    $tenant_rid = variable_get('zimbra_tenant_role_id', 0);;
-    $domain_rid = variable_get('zimbra_domain_role_id', 0);;
+function zimbra_profile_page($account) {
+  global $user;
+  if (!is_object($account)) return MENU_NOT_FOUND;
+  $output = '';
+  $tenant_rid = variable_get('zimbra_tenant_role_id', 0);;
+  $domain_rid = variable_get('zimbra_domain_role_id', 0);;
   
-    //Tenant Infomation
-    $tenant_info = '';
-    $tenants = user_get_tenant($user->uid);
-    if(count($tenants) > 0 && isset($user->roles[$tenant_rid]))
-    {
-        foreach($tenants as $tenant)
-        {
-            $quota_value = !empty($tenant->mailbox_max_size) ? $tenant->mailbox_max_size . ' MB': '';
-            $number_value = ($tenant->number_of_mailboxes) ? $node->number_of_mailboxes : '';
-        
-            $tenant_info .= '<div class="profile tenant-wrapper">
-                <h3>Tenant name: ' . $tenant->title . '</h3>
-                <ul>
-                <li class="field field-label-inline">
-                    <div class="field-label">' . t('Quota of Mailbox') . ':&nbsp;</div><div class="field-item">' . $quota_value . '</div>
-                </li>
-                <li class="field field-label-inline">
-                    <div class="field-label">' . t('Number of Mailbox') . ':&nbsp;</div><div class="field-item">' . $number_value . '</div>
-                </li>
-                </ul>
-            </div>';
-        }
+  //Tenant Infomation
+  $tenant_info = '';
+  $tenants = user_get_tenant($user->uid);
+  if (count($tenants) > 0 && isset($user->roles[$tenant_rid])) {
+    foreach ($tenants as $tenant) {
+      $quota_value = !empty($tenant->mailbox_max_size) ? $tenant->mailbox_max_size . ' MB': '';
+      $number_value = ($tenant->number_of_mailboxes) ? $node->number_of_mailboxes : '';
+    
+      $tenant_info .= '<div class="profile tenant-wrapper">
+        <h3>Tenant name: ' . $tenant->title . '</h3>
+        <ul>
+        <li class="field field-label-inline">
+          <div class="field-label">' . t('Quota of Mailbox') . ':&nbsp;</div><div class="field-item">' . $quota_value . '</div>
+        </li>
+        <li class="field field-label-inline">
+          <div class="field-label">' . t('Number of Mailbox') . ':&nbsp;</div><div class="field-item">' . $number_value . '</div>
+        </li>
+        </ul>
+      </div>';
     }
+  }
   
-    //Domain Infomation
-    $domain_info = '';
-    $user_get_domain = user_get_domain($user->uid);
-    if(count($user_get_domain) > 0 && isset($user->roles[$domain_rid]))
-    {
-        foreach($user_get_domain as $key =>$value)
-        {
-            $node = node_load($key);
-            $quota_value = ($node->field_domain_mailbox_max_size['und']) ? $node->field_domain_mailbox_max_size['und'][0]['value'] . ' MB' : '';
-            $number_value = ($node->field_domain_number_of_mailboxes['und']) ? $node->field_domain_number_of_mailboxes['und'][0]['value'] : '';
-        
-            $domain_info .= '<div class="profile tenant-wrapper">
-                <h3>Domain name: ' .$node->title . '</h3>
-                <ul>
-                <li class="field field-label-inline">
-                    <div class="field-label">' . t('Quota of Mailbox') .':&nbsp;</div><div class="field-item">' . $quota_value .'</div>
-                </li>
-                <li class="field field-label-inline">
-                    <div class="field-label">' . ('Number of Mailbox') .':&nbsp;</div><div class="field-item">' . $number_value .'</div>
-                </li>
-                </ul>
-            </div>';
-        }
+  //Domain Infomation
+  $domain_info = '';
+  $user_get_domain = user_get_domain($user->uid);
+  if (count($user_get_domain) > 0 && isset($user->roles[$domain_rid])) {
+    foreach ($user_get_domain as $key =>$value) {
+      $node = node_load($key);
+      $quota_value = ($node->field_domain_mailbox_max_size['und']) ? $node->field_domain_mailbox_max_size['und'][0]['value'] . ' MB' : '';
+      $number_value = ($node->field_domain_number_of_mailboxes['und']) ? $node->field_domain_number_of_mailboxes['und'][0]['value'] : '';
+    
+      $domain_info .= '<div class="profile tenant-wrapper">
+        <h3>Domain name: ' .$node->title . '</h3>
+        <ul>
+        <li class="field field-label-inline">
+          <div class="field-label">' . t('Quota of Mailbox') .':&nbsp;</div><div class="field-item">' . $quota_value .'</div>
+        </li>
+        <li class="field field-label-inline">
+          <div class="field-label">' . ('Number of Mailbox') .':&nbsp;</div><div class="field-item">' . $number_value .'</div>
+        </li>
+        </ul>
+      </div>';
     }
+  }
   
-    $user_view = user_view($account);
-    $output .= $tenant_info . $domain_info . drupal_render($user_view);
-    return $output;
+  $user_view = user_view($account);
+  $output .= $tenant_info . $domain_info . drupal_render($user_view);
+  return $output;
 }
