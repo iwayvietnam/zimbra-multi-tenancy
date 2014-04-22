@@ -312,7 +312,7 @@ function page_list_domain(){
   foreach ($nodes as $key => $node) {
     $operations = '<ul class="links inline">'
       .'<li class="edit first">' . l(t('edit'), 'node/' . $node ->nid . '/edit', array('query' => $destination)) . '</li>'
-      .'<li class="delete last">' . l(t('delete'), 'node/'.$node ->nid . '/delete', array('query' => $destination)) . '</li>'
+      .'<li class="delete last">' . l(t('delete'), 'zimbra/'.$node ->nid . '/delete', array('query' => $destination)) . '</li>'
     .'</ul>';
     $domain = normalize_domain($node);
 
@@ -372,7 +372,7 @@ function page_list_group() {
   foreach ($nodes as $key => $node) {
     $operations = '<ul class="links inline">'
       .'<li class="edit first">' . l(t('edit'), 'node/' . $node ->nid . '/edit', array('query' => $destination)) . '</li>'
-      .'<li class="delete last">' . l(t('delete'), 'node/'.$node ->nid . '/delete', array('query' => $destination)) . '</li>'
+      .'<li class="delete last">' . l(t('delete'), 'zimbra/'.$node ->nid . '/delete', array('query' => $destination)) . '</li>'
     .'</ul>';
     $group = normalize_group($node);
     $group_address = $group->title . '@' . $group->domain->title;
@@ -433,7 +433,7 @@ function page_list_alias() {
   foreach ($nodes as $key => $node) {
     $operations = '<ul class="links inline">'
       .'<li class="edit first">' . l(t('edit'), 'node/' . $node ->nid . '/edit', array('query' => $destination)) . '</li>'
-      .'<li class="delete last">' . l(t('delete'), 'node/'.$node ->nid . '/delete', array('query' => $destination)) . '</li>'
+      .'<li class="delete last">' . l(t('delete'), 'zimbra/'.$node ->nid . '/delete', array('query' => $destination)) . '</li>'
     .'</ul>';
     $alias = normalize_alias($node);
     $alias_address = $alias->title . '@' . $alias->domain->title;
@@ -511,7 +511,7 @@ function page_list_mailbox() {
   foreach ($nodes as $key => $node) {
     $operations = '<ul class="links inline">'
       .'<li class="edit first">' . l(t('edit'), 'node/' . $node ->nid . '/edit', array('query' => $destination)) . '</li>'
-      .'<li class="delete last">' . l(t('delete'), 'node/'.$node ->nid . '/delete', array('query' => $destination)) . '</li>'
+      .'<li class="delete last">' . l(t('delete'), 'zimbra/'.$node ->nid . '/delete', array('query' => $destination)) . '</li>'
     .'</ul>';
     $mailbox = normalize_mailbox($node);
     $mailbox_address = $mailbox->title . '@' . $mailbox->domain->title;
