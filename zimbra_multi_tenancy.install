@@ -35,8 +35,7 @@ function zimbra_multi_tenancy_uninstall() {
 /**
  * Create Server node type.
  */
-function _zimbra_add_nodetype_server()
-{
+function _zimbra_add_nodetype_server() {
   // Create a newsletter type if needed.
   $type = node_type_get_type('server');
   if (!$type) {
@@ -156,8 +155,7 @@ function _zimbra_add_nodetype_domain() {
 /**
  * Create Group node type.
  */
-function _zimbra_add_nodetype_group()
-{
+function _zimbra_add_nodetype_group() {
   // Create a newsletter type if needed.
   $type = node_type_get_type('group');
   if (!$type) {
@@ -271,9 +269,9 @@ function zimbra_add_role(){
       user_role_save($addRole);
     }
   }
-  
+
   $roles = user_roles();
-  
+
   $zimbra_rid = 0;
   $tenant_rid = 0;
   $tenant_group_rid = 0;
@@ -324,7 +322,7 @@ function zimbra_add_role(){
     'delete any mailbox content' => 1,
 
     'administer zimbra' => 1,
-  );  
+  );
   
   $tenant_perm = array(
     'create domain content'      => 1,
@@ -337,7 +335,6 @@ function zimbra_add_role(){
     'edit own alias content'     => 1,
     'edit own mailbox content'   => 1,
 
-    'edit any domain content'    => 1,
     'edit any group content'     => 1,
     'edit any alias content'     => 1,
     'edit any mailbox content'   => 1,
@@ -347,7 +344,7 @@ function zimbra_add_role(){
     'delete own alias content'   => 1,  
     'delete own mailbox content' => 1,  
   );  
-  
+
   $domain_perm = array(   
     'create group content'       => 1,  
     'create alias content'       => 1,  
@@ -364,13 +361,8 @@ function zimbra_add_role(){
     'delete own group content'   => 1,  
     'delete own alias content'   => 1,  
     'delete own mailbox content' => 1,  
-
-    'delete any group content'   => 1,  
-    'delete any alias content'   => 1,  
-    'delete any mailbox content' => 1,  
   );  
 
-  
   $group_perm =array( 
     'create alias content'       => 1,
     'create mailbox content'     => 1,
@@ -383,10 +375,7 @@ function zimbra_add_role(){
 
     'delete own alias content'   => 1,
     'delete own mailbox content' => 1,
-
-    'delete any alias content'   => 1,
-    'delete any mailbox content' => 1,
-  );  
+  );
 
   user_role_change_permissions($zimbra_rid, $zimbra_perm);
   user_role_change_permissions($tenant_rid, $tenant_perm);
@@ -402,4 +391,3 @@ function zimbra_add_role(){
   
   drupal_set_message(t('Please <a href="' .url('admin/people/create/' .$zimbra_rid) .'">create user</a> for Zimbra management.'), 'warning');
 }
-
