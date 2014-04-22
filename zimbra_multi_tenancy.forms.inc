@@ -1,5 +1,72 @@
 <?php
 
+function zimbra_confirm_delete($form, &$form_state, $node)
+{
+  global $user;
+  $domain_id = 0;
+  switch ($node->type) {
+    case 'domain':
+      $domain_nid = $node->nid;
+      break;
+    case 'group':
+      $group = normalize_group($node);
+      $domain_nid = $group->domain->nid;
+      break;
+    case 'alias':
+      $alias = normalize_alias($node);
+      $domain_nid = $alias->domain->nid;
+      break;
+    case 'mailbox':
+      $mailbox = normalize_mailbox($node);
+      $domain_nid = $mailbox->domain->nid;
+      break;
+  }
+  $domains = user_get_domain($user->uid);
+  $allow_delete = false;
+  if (count($domains) > 0) {
+    $nids = array_keys($domains);
+    foreach ($nids as $nid) {
+      if ($nid == $domain_nid) {
+        $allow_delete = true;
+        break;
+      }
+    }
+  }
+  if ($allow_delete === false) {
+    drupal_access_denied();
+    exit;
+  }
+
+  $form['#node'] = $node;
+  // Always provide entity id in the same form key as in the entity edit form.
+  $form['nid'] = array('#type' => 'value', '#value' => $node->nid);
+  return confirm_form($form,
+    t('Are you sure you want to delete %title?', array('%title' => $node->title)),
+    'node/' . $node->nid,
+    t('This action cannot be undone.'),
+    t('Delete'),
+    t('Cancel')
+  );
+}
+
+/**
+ * Executes node deletion.
+ *
+ * @see node_delete_confirm()
+ */
+function zimbra_confirm_delete_submit($form, &$form_state)
+{
+  if ($form_state['values']['confirm']) {
+    $node = node_load($form_state['values']['nid']);
+    node_delete($form_state['values']['nid']);
+    cache_clear_all();
+    watchdog('content', '@type: deleted %title.', array('@type' => $node->type, '%title' => $node->title));
+    drupal_set_message(t('@type %title has been deleted.', array('@type' => node_type_get_name($node), '%title' => $node->title)));
+  }
+
+  $form_state['redirect'] = '<front>';
+}
+
 /**
  * Zimbra pull data form
  */
