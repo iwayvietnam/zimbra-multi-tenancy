@@ -265,36 +265,34 @@ function zimbra_multi_tenancy_menu() {
     'type' => MENU_CALLBACK,
   );
     
-  $zimbra_content_type =array('server', 'tenant', 'domain', 'group', 'alias', 'mailbox');
-  $i =0;
-  foreach ($zimbra_content_type as $key) {
-    $i++;
-    $node_type = node_type_load($key);
+  $content_types = array('server', 'tenant', 'domain', 'group', 'alias', 'mailbox');
+  foreach ($content_types as $key => $type) {
+    $node_type = node_type_load($type);
     if (is_object($node_type)) {
-      $items['admin/zimbra/add/' .$key] = array(
+      $items['admin/zimbra/add/' . $type] = array(
         'title' => t($node_type->name),
         'page callback' => 'zimbra_page_addcontent',
-        'access arguments' => array('create ' . $key .' content'),
+        'access arguments' => array('create ' . $type .' content'),
         'description' => $node_type->description,
-        'weight' => $i,
+        'weight' => $key,
         'file' => 'zimbra_multi_tenancy.pages.inc',
       );
       
-      $items['admin/zimbra/list/' .$key] = array(
+      $items['admin/zimbra/list/' .$type] = array(
         'title' => t('List of @type',array('@type' => $node_type->name)),
         'page callback' => 'zimbra_page_content',
-        'access arguments' => array('create ' . $key . ' content'),
+        'access arguments' => array('create ' . $type . ' content'),
         'description' => $node_type->description,
-        'weight' => $i,
+        'weight' => $key,
         'file' => 'zimbra_multi_tenancy.pages.inc',
       );
       
-      $items['zimbra/content/list/' . $key] = array(
+      $items['zimbra/content/list/' . $type] = array(
         'title' => t('List of @type',array('@type' => $node_type->name)),
         'page callback' => 'zimbra_page_content',
-        'access arguments' => array('create ' . $key . ' content'),
+        'access arguments' => array('create ' . $type . ' content'),
         'description' => $node_type->description,
-        'weight' => $i,
+        'weight' => $key,
         'file' => 'zimbra_multi_tenancy.pages.inc',
       );
     }
