@@ -115,7 +115,7 @@ function domain_check_quota($domain_id, $nid = 0) {
   $nid = intval($nid);
   $domain_node = node_load($domain_id);
 
-  if(!isset($domain_node->field_domain_mailbox_max_size[LANGUAGE_NONE][0]['value'])) return 0;
+  if (!isset($domain_node->field_domain_mailbox_max_size[LANGUAGE_NONE][0]['value'])) return 0;
   $domain_quota_total = intval($domain_node->field_domain_mailbox_max_size[LANGUAGE_NONE][0]['value']);
   $domain_quota_used = 0;
 
@@ -144,7 +144,7 @@ function domain_check_quota($domain_id, $nid = 0) {
 function tenant_check_number($tenant_id, $nid = 0) {
   $tenant_node = node_load($tenant_id);
 
-  if(!isset($tenant_node->field_tenant_number_of_mailboxes[LANGUAGE_NONE][0]['value'])) return 0;
+  if (!isset($tenant_node->field_tenant_number_of_mailboxes[LANGUAGE_NONE][0]['value'])) return 0;
   $tenant_number_total = intval($tenant_node->field_tenant_number_of_mailboxes[LANGUAGE_NONE][0]['value']);
   $tenant_number_used = 0;
 

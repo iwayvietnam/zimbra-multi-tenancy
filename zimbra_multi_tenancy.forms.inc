@@ -929,7 +929,7 @@ function zimbra_group_validate($form, &$form_state){
 
     //Check invalid of Mailbox name
     if (!preg_match('!^[a-zA-Z0-9_\.]+$!', $mailbox_name)) {
-      form_set_error('title', t('The @fieldname must contain only letters, punctuation, numbers, and underscores.', array('@fieldname' =>$form['title']['#title'])));
+      form_set_error('title', t('The @fieldname must contain only letters, punctuation, numbers, and underscores.', array('@fieldname' => $form['title']['#title'])));
     }
 
     //Check existence of mailbox.
