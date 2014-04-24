@@ -231,12 +231,16 @@ function zimbra_pull_data_callback($form, &$form_state) {
             $attrs = (isset($mailbox->a) && is_array($mailbox->a)) ? $mailbox->a : array($mailbox->a);
             $display_name = $mailbox_name;
             $account_status = 'active';
+            $mail_quota = 0;
             foreach ($attrs as $attr) {
               if ($attr->n === 'displayName') {
                 $display_name = $attr->_;
               }
               if ($attr->n === 'zimbraAccountStatus') {
                 $account_status = $attr->_;
+              }
+              if ($attr->n === 'zimbraMailQuota') {
+                $mail_quota = (int) $attr->_;
               }
             }
 
@@ -252,7 +256,7 @@ function zimbra_pull_data_callback($form, &$form_state) {
             $node->field_mailbox_status[LANGUAGE_NONE][0]['value'] = $account_status;
             $node->field_node_domain[LANGUAGE_NONE][0]['nid'] = $domain->nid;
             $node->field_node_group[LANGUAGE_NONE][0]['nid'] = 0;
-            $node->field_mailbox_size[LANGUAGE_NONE][0]['value'] = 0;
+            $node->field_mailbox_size[LANGUAGE_NONE][0]['value'] = $mail_quota;
             $node->field_mailbox_zimbra_id[LANGUAGE_NONE][0]['value'] = $zimbra_id;
             node_save($node);
           }
