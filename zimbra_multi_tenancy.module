@@ -32,12 +32,6 @@ function zimbra_multi_tenancy_permission() {
 function zimbra_multi_tenancy_form_alter(&$form, &$form_state, $form_id) {
   global $user;
 
-  //Delete denied
-  if ($form_id == "node_delete_confirm" && $user ->uid != 1) {
-    drupal_access_denied();
-    exit;
-  }
-
   //Add user of Zimbra role
   if($form_id == 'user_register_form'
     && arg(2) == 'create'
@@ -46,7 +40,7 @@ function zimbra_multi_tenancy_form_alter(&$form, &$form_state, $form_id) {
   }
 
   //Disable items additional in drupal form
-  if($form_id == 'server_node_form'
+  if ($form_id == 'server_node_form'
     || $form_id == 'tenant_node_form'
     || $form_id == 'domain_node_form'
     || $form_id == 'group_node_form'
@@ -54,7 +48,9 @@ function zimbra_multi_tenancy_form_alter(&$form, &$form_state, $form_id) {
     || $form_id == 'mailbox_node_form') {
     $form['options']['status']['#default_value'] = 1;
     $form['options']['promote']['#default_value'] = 0;
-    
+    $form['actions']['delete']['#access'] = 0;
+    $form['comment_settings']['comment']['#default_value'] = 1;
+
     $form['author']['#access'] = 0;
     $form['options']['#access'] = 0;
     $form['path']['#access'] = 0;
@@ -88,17 +84,6 @@ function zimbra_multi_tenancy_form_alter(&$form, &$form_state, $form_id) {
   if($form_id == 'user_login' || $form_id == 'user_login_block') {
     if(!isset($_GET['destination']))
       $form['#action'] = url($_GET['q'], array('query' => array('destination' => 'admin/zimbra')));
-  }
-
-  //Disable comment optional
-  if($form_id == 'server_node_form'
-    || $form_id == 'tenant_node_form'
-    || $form_id == 'domain_node_form'
-    || $form_id == 'group_node_form'
-    || $form_id == 'alias_node_form'
-    || $form_id == 'mailbox_node_form') {
-    $form['actions']['delete']['#access'] = 0;
-    $form['comment_settings']['comment']['#default_value'] = 1;
   }
 }
 
