@@ -214,47 +214,52 @@ function zimbra_pull_data_callback($form, &$form_state) {
         }
         break;
       case 'mailbox':
-        $zimbra_mailboxes = zimbra_list_all_account($api);
-        foreach ($zimbra_mailboxes as $zimbra_id => $mailbox) {
-          $mailbox_name = substr($mailbox->name, 0, (int) strpos($mailbox->name, '@'));
-          $domain_name = substr($mailbox->name, (int) strpos($mailbox->name, '@') + 1);
-          $domain = get_domain_by_name($domain_name);
-          
-          $excludes = explode("\r\n", $server->exclude_mailbox);
-          $match = is_matches($excludes, $mailbox->name);
+        $zimbra_domains = zimbra_list_all_domain($api);
+        foreach($zimbra_domains as $domain)
+        {
+          $domain_name = $domain->name;
+          $zimbra_mailboxes = zimbra_list_all_account($api, $domain_name);
+          foreach ($zimbra_mailboxes as $zimbra_id => $mailbox) {
+            $mailbox_name = substr($mailbox->name, 0, (int) strpos($mailbox->name, '@'));
+            $domain = get_domain_by_name($domain_name);
 
-          if (!empty($mailbox_name)
-            && ($domain->nid > 0)
-            && !$match
-            && !mailbox_exists($mailbox_name, $domain->nid)
-          ) {
-            $attrs = (isset($mailbox->a) && is_array($mailbox->a)) ? $mailbox->a : array($mailbox->a);
-            $display_name = $mailbox_name;
-            $account_status = 'active';
-            foreach ($attrs as $attr) {
-              if ($attr->n === 'displayName') {
-                $display_name = $attr->_;
+            $excludes = explode("\r\n", $server->exclude_mailbox);
+            $match = is_matches($excludes, $mailbox->name);
+            $mbox_exists = mailbox_exists($mailbox_name, $domain->nid);
+
+            if (!empty($mailbox_name) && $domain->nid && !$match && !$mbox_exists) {
+              $attrs = (isset($mailbox->a) && is_array($mailbox->a)) ? $mailbox->a : array($mailbox->a);
+              $display_name = $mailbox_name;
+              $account_status = 'active';
+              $mail_quota = 0;
+              foreach ($attrs as $attr) {
+                if ($attr->n === 'displayName') {
+                  $display_name = $attr->_;
+                }
+                if ($attr->n === 'zimbraAccountStatus') {
+                  $account_status = $attr->_;
+                }
+                if ($attr->n === 'zimbraMailQuota') {
+                  $mail_quota = (int) $attr->_;
+                }
               }
-              if ($attr->n === 'zimbraAccountStatus') {
-                $account_status = $attr->_;
-              }
+
+              $node = new stdClass();
+              $node->type = 'mailbox';
+              $node->title = $mailbox_name;
+              $node->promote = 0;
+              $node->language = LANGUAGE_NONE;
+              node_object_prepare($node);
+
+              $node->field_mailbox_fullname[LANGUAGE_NONE][0]['value'] = $display_name;
+              $node->field_mailbox_password[LANGUAGE_NONE][0]['value'] = '';
+              $node->field_mailbox_status[LANGUAGE_NONE][0]['value'] = $account_status;
+              $node->field_node_domain[LANGUAGE_NONE][0]['nid'] = $domain->nid;
+              $node->field_node_group[LANGUAGE_NONE][0]['nid'] = 0;
+              $node->field_mailbox_size[LANGUAGE_NONE][0]['value'] = $mail_quota;
+              $node->field_mailbox_zimbra_id[LANGUAGE_NONE][0]['value'] = $zimbra_id;
+              node_save($node);
             }
-
-            $node = new stdClass();
-            $node->type = 'mailbox';
-            $node->title = $mailbox_name;
-            $node->promote = 0;
-            $node->language = LANGUAGE_NONE;
-            node_object_prepare($node);
-
-            $node->field_mailbox_fullname[LANGUAGE_NONE][0]['value'] = $display_name;
-            $node->field_mailbox_password[LANGUAGE_NONE][0]['value'] = '';
-            $node->field_mailbox_status[LANGUAGE_NONE][0]['value'] = $account_status;
-            $node->field_node_domain[LANGUAGE_NONE][0]['nid'] = $domain->nid;
-            $node->field_node_group[LANGUAGE_NONE][0]['nid'] = 0;
-            $node->field_mailbox_size[LANGUAGE_NONE][0]['value'] = 0;
-            $node->field_mailbox_zimbra_id[LANGUAGE_NONE][0]['value'] = $zimbra_id;
-            node_save($node);
           }
         }
         break;
@@ -929,7 +934,7 @@ function zimbra_group_validate($form, &$form_state){
 
     //Check invalid of Mailbox name
     if (!preg_match('!^[a-zA-Z0-9_\.]+$!', $mailbox_name)) {
-      form_set_error('title', t('The @fieldname must contain only letters, punctuation, numbers, and underscores.', array('@fieldname' =>$form['title']['#title'])));
+      form_set_error('title', t('The @fieldname must contain only letters, punctuation, numbers, and underscores.', array('@fieldname' => $form['title']['#title'])));
     }
 
     //Check existence of mailbox.
