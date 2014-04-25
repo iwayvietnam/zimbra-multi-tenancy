@@ -256,7 +256,7 @@ function zimbra_pull_data_callback($form, &$form_state) {
               $node->field_mailbox_status[LANGUAGE_NONE][0]['value'] = $account_status;
               $node->field_node_domain[LANGUAGE_NONE][0]['nid'] = $domain->nid;
               $node->field_node_group[LANGUAGE_NONE][0]['nid'] = 0;
-              $node->field_mailbox_size[LANGUAGE_NONE][0]['value'] = $mail_quota;
+              $node->field_mailbox_size[LANGUAGE_NONE][0]['value'] = $mail_quota / (1024 * 1024);
               $node->field_mailbox_zimbra_id[LANGUAGE_NONE][0]['value'] = $zimbra_id;
               node_save($node);
             }
