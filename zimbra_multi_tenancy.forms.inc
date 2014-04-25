@@ -132,11 +132,11 @@ function zimbra_pull_data_callback($form, &$form_state) {
 
   $server = normalize_server(node_load($server_id));
   $api = zimbra_admin_api_by_server($server_id);
+  $zimbra_domains = zimbra_list_all_domain($api);
 
   foreach ($data_types as $key => $value) {
     switch ($value) {
       case 'domain':
-        $zimbra_domains = zimbra_list_all_domain($api);
         foreach ($zimbra_domains as $zimbra_id => $domain) {
           if (!domain_exists($domain->name)) {
             $user_name = $user_pass = $domain->name;
@@ -168,130 +168,134 @@ function zimbra_pull_data_callback($form, &$form_state) {
         }
         break;
       case 'group':
-        $zimbra_dls = zimbra_list_al_dl($api);
-        foreach ($zimbra_dls as $zimbra_id => $dl) {
-          $group_name = substr($dl->name, 0, (int) strpos($dl->name, '@'));
-          $domain_name = substr($dl->name, (int) strpos($dl->name, '@') + 1);
-          $domain = get_domain_by_name($domain_name);
-          if (!empty($group_name)
-            && ($domain->nid > 0)
-            && !mailbox_exists($group_name, $domain->nid)
-          ) {
-            $members = zimbra_get_dl_members($api, $dl->name);
-
-            $user_name = $user_mail = $dl->name;
-            $user_pass = $group_name;
-            
-            $attrs = (isset($dl->a) && is_array($dl->a)) ? $dl->a : array($dl->a);
-            $display_name = $group_name;
-            foreach ($attrs as $attr) {
-              if ($attr->n === 'displayName') {
-                $display_name = $attr->_;
-              }
-            }
-
-            $user_roles = array();
-            if (variable_get('zimbra_group_role_id', 0) != 0) $user_roles[] = variable_get('zimbra_group_role_id', 0);
-            $user_uid = auto_create_user($user_name, $user_pass, $user_mail, $user_roles);
-
-            $node = new stdClass();
-            $node->type = 'group';
-            $node->title = $group_name;
-            $node->promote = 0;
-            $node->language = LANGUAGE_NONE;
-            node_object_prepare($node);
-
-            $node->field_group_fullname[LANGUAGE_NONE][0]['value'] = $display_name;
-            $node->field_group_user_password[LANGUAGE_NONE][0]['value'] = '';
-            $node->field_node_domain[LANGUAGE_NONE][0]['nid'] = $domain->nid;
-            $node->field_group_zimbra_id[LANGUAGE_NONE][0]['value'] = $zimbra_id;
-            $node->field_group_user[LANGUAGE_NONE][0]['uid'] = $user_uid;
-            foreach ($members as $key => $member) {
-              $node->field_group_members[LANGUAGE_NONE][$key]['value'] = $member;
-            }
-            node_save($node);
-          }
-        }
-        break;
-      case 'mailbox':
-        $zimbra_domains = zimbra_list_all_domain($api);
-        foreach($zimbra_domains as $domain)
-        {
+        foreach ($zimbra_domains as $domain) {
           $domain_name = $domain->name;
-          $zimbra_mailboxes = zimbra_list_all_account($api, $domain_name);
-          foreach ($zimbra_mailboxes as $zimbra_id => $mailbox) {
-            $mailbox_name = substr($mailbox->name, 0, (int) strpos($mailbox->name, '@'));
+          $zimbra_dls = zimbra_list_al_dl($api, $domain_name);
+          foreach ($zimbra_dls as $zimbra_id => $dl) {
+            $group_name = substr($dl->name, 0, (int) strpos($dl->name, '@'));
             $domain = get_domain_by_name($domain_name);
+            $mbox_exists = mailbox_exists($group_name, $domain->nid);
 
-            $excludes = explode("\r\n", $server->exclude_mailbox);
-            $match = is_matches($excludes, $mailbox->name);
-            $mbox_exists = mailbox_exists($mailbox_name, $domain->nid);
+            if (!empty($group_name) && $domain->nid && !$mbox_exists) {
+              $members = zimbra_get_dl_members($api, $dl->name);
 
-            if (!empty($mailbox_name) && $domain->nid && !$match && !$mbox_exists) {
-              $attrs = (isset($mailbox->a) && is_array($mailbox->a)) ? $mailbox->a : array($mailbox->a);
-              $display_name = $mailbox_name;
-              $account_status = 'active';
-              $mail_quota = 0;
+              $user_name = $user_mail = $dl->name;
+              $user_pass = $group_name;
+
+              $attrs = (isset($dl->a) && is_array($dl->a)) ? $dl->a : array($dl->a);
+              $display_name = $group_name;
               foreach ($attrs as $attr) {
                 if ($attr->n === 'displayName') {
                   $display_name = $attr->_;
                 }
-                if ($attr->n === 'zimbraAccountStatus') {
-                  $account_status = $attr->_;
-                }
-                if ($attr->n === 'zimbraMailQuota') {
-                  $mail_quota = (int) $attr->_;
-                }
               }
 
+              $user_roles = array();
+              if (variable_get('zimbra_group_role_id', 0) != 0) $user_roles[] = variable_get('zimbra_group_role_id', 0);
+              $user_uid = auto_create_user($user_name, $user_pass, $user_mail, $user_roles);
+
               $node = new stdClass();
-              $node->type = 'mailbox';
-              $node->title = $mailbox_name;
+              $node->type = 'group';
+              $node->title = $group_name;
               $node->promote = 0;
               $node->language = LANGUAGE_NONE;
               node_object_prepare($node);
 
-              $node->field_mailbox_fullname[LANGUAGE_NONE][0]['value'] = $display_name;
-              $node->field_mailbox_password[LANGUAGE_NONE][0]['value'] = '';
-              $node->field_mailbox_status[LANGUAGE_NONE][0]['value'] = $account_status;
+              $node->field_group_fullname[LANGUAGE_NONE][0]['value'] = $display_name;
+              $node->field_group_user_password[LANGUAGE_NONE][0]['value'] = '';
               $node->field_node_domain[LANGUAGE_NONE][0]['nid'] = $domain->nid;
-              $node->field_node_group[LANGUAGE_NONE][0]['nid'] = 0;
-              $node->field_mailbox_size[LANGUAGE_NONE][0]['value'] = $mail_quota / (1024 * 1024);
-              $node->field_mailbox_zimbra_id[LANGUAGE_NONE][0]['value'] = $zimbra_id;
+              $node->field_group_zimbra_id[LANGUAGE_NONE][0]['value'] = $zimbra_id;
+              $node->field_group_user[LANGUAGE_NONE][0]['uid'] = $user_uid;
+              foreach ($members as $key => $member) {
+                $node->field_group_members[LANGUAGE_NONE][$key]['value'] = $member;
+              }
               node_save($node);
             }
           }
+		}
+        break;
+      case 'mailbox':
+        foreach ($zimbra_domains as $domain) {
+          $domain_name = $domain->name;
+          $pager = array();
+          $limit = 50;
+          $offset = 0;
+          do {
+            $zimbra_mailboxes = zimbra_get_all_account($api, $domain_name, $limit, $offset, $pager);
+            $offset += $limit;
+            foreach ($zimbra_mailboxes as $zimbra_id => $mailbox) {
+              $mailbox_name = substr($mailbox->name, 0, (int) strpos($mailbox->name, '@'));
+              $domain = get_domain_by_name($domain_name);
+
+              $excludes = explode("\r\n", $server->exclude_mailbox);
+              $match = is_matches($excludes, $mailbox->name);
+              $mbox_exists = mailbox_exists($mailbox_name, $domain->nid);
+
+              if (!empty($mailbox_name) && $domain->nid && !$match && !$mbox_exists) {
+                $attrs = (isset($mailbox->a) && is_array($mailbox->a)) ? $mailbox->a : array($mailbox->a);
+                $display_name = $mailbox_name;
+                $account_status = 'active';
+                $mail_quota = 0;
+                foreach ($attrs as $attr) {
+                  if ($attr->n === 'displayName') {
+                    $display_name = $attr->_;
+                  }
+                  if ($attr->n === 'zimbraAccountStatus') {
+                    $account_status = $attr->_;
+                  }
+                  if ($attr->n === 'zimbraMailQuota') {
+                    $mail_quota = (int) $attr->_;
+                  }
+                }
+
+                $node = new stdClass();
+                $node->type = 'mailbox';
+                $node->title = $mailbox_name;
+                $node->promote = 0;
+                $node->language = LANGUAGE_NONE;
+                node_object_prepare($node);
+
+                $node->field_mailbox_fullname[LANGUAGE_NONE][0]['value'] = $display_name;
+                $node->field_mailbox_password[LANGUAGE_NONE][0]['value'] = '';
+                $node->field_mailbox_status[LANGUAGE_NONE][0]['value'] = $account_status;
+                $node->field_node_domain[LANGUAGE_NONE][0]['nid'] = $domain->nid;
+                $node->field_node_group[LANGUAGE_NONE][0]['nid'] = 0;
+                $node->field_mailbox_size[LANGUAGE_NONE][0]['value'] = (int) ($mail_quota / (1024 * 1024));
+                $node->field_mailbox_zimbra_id[LANGUAGE_NONE][0]['value'] = $zimbra_id;
+                node_save($node);
+              }
+            }
+		  } while ($pager['more'] === true);
         }
         break;
       case 'alias':
-        $zimbra_aliases = zimbra_list_all_alias($api);
-        foreach ($zimbra_aliases as $zimbra_id => $alias) {
-          $alias_name = substr($alias->name, 0, (int) strpos($alias->name, '@'));
-          $account_name = substr($alias->account_name, 0, (int) strpos($alias->account_name, '@'));
-          $domain_name = substr($alias->name, (int) strpos($alias->name, '@') + 1);
+        foreach ($zimbra_domains as $domain) {
+          $domain_name = $domain->name;
+          $zimbra_aliases = zimbra_list_all_alias($api, $domain_name);
+          foreach ($zimbra_aliases as $zimbra_id => $alias) {
+            $alias_name = substr($alias->name, 0, (int) strpos($alias->name, '@'));
+            $account_name = substr($alias->account_name, 0, (int) strpos($alias->account_name, '@'));
+            $domain_name = substr($alias->name, (int) strpos($alias->name, '@') + 1);
 
-          $domain = get_domain_by_name($domain_name);
-          $account = get_account_by_name($account_name, $domain->nid);
+            $domain = get_domain_by_name($domain_name);
+            $account = get_account_by_name($account_name, $domain->nid);
 
-          $excludes = explode("\r\n", $server->exclude_mailbox);
-          $match = is_matches($excludes, $alias->name);
+            $excludes = explode("\r\n", $server->exclude_mailbox);
+            $match = is_matches($excludes, $alias->name);
+            $mbox_exists = mailbox_exists($alias_name, $domain->nid);
 
-          if ($account
-            && !empty($alias_name)
-            && ($domain->nid > 0)
-            && !$match
-            && !mailbox_exists($alias_name, $domain->nid)
-          ) {
-            $node = new stdClass();
-            $node->type = 'alias';
-            $node->title = $alias_name;
-            $node->promote = 0;
-            $node->language = LANGUAGE_NONE;
-            node_object_prepare($node);
+            if ($account && !empty($alias_name) && $domain->nid && !$match && !$mbox_exists) {
+              $node = new stdClass();
+              $node->type = 'alias';
+              $node->title = $alias_name;
+              $node->promote = 0;
+              $node->language = LANGUAGE_NONE;
+              node_object_prepare($node);
 
-            $node->field_node_domain[LANGUAGE_NONE][0]['nid'] = $domain->nid;
-            $node->field_alias_mailbox[LANGUAGE_NONE][0]['nid'] = $account->nid;
-            node_save($node);
+              $node->field_node_domain[LANGUAGE_NONE][0]['nid'] = $domain->nid;
+              $node->field_alias_mailbox[LANGUAGE_NONE][0]['nid'] = $account->nid;
+              node_save($node);
+            }
           }
         }
         break;
