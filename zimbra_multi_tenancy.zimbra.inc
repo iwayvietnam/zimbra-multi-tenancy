@@ -1,4 +1,4 @@
-3<?php
+<?php
 
 /**
  * Test connection to Zimbra service
