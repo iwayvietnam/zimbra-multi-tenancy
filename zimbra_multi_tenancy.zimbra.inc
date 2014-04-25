@@ -1,4 +1,4 @@
-<?php
+3<?php
 
 /**
  * Test connection to Zimbra service
@@ -427,6 +427,77 @@ function zimbra_list_all_account(zimbra_admin_api $api, $domain = '', $server = 
 }
 
 /**
+ * Get all Zimbra account
+ *
+ * @param  zimbra_admin_api $api Zimbra admin api.
+ * @param  string $domain The domain name to limit the search to.
+ * @param  int $limit The maximum number of accounts to return (0 is default and means all)
+ * @param  int $offset The starting offset
+ * @return mix
+ */
+function zimbra_get_all_account(zimbra_admin_api $api, $domain = '', $limit = 0, $offset = 0, &$pager = array()) {
+  $cache = &drupal_static(__FUNCTION__, array());
+  $cache_key = md5(__FUNCTION__ . '-' . $domain);
+  if (isset($cache[$cache_key])) {
+    return $cache[$cache_key];
+  }
+  $all_account = array();
+  try {
+    $attrs = array(
+      'displayName',
+      'zimbraId',
+      'zimbraAliasTargetId',
+      'cn',
+      'sn',
+      'zimbraMailHost',
+      'uid',
+      'zimbraCOSId',
+      'zimbraAccountStatus',
+      'zimbraMailQuota',
+      'zimbraLastLogonTimestamp',
+      'description',
+      'zimbraIsSystemAccount',
+      'zimbraIsDelegatedAdminAccount',
+      'zimbraIsAdminAccount',
+      'zimbraIsSystemResource',
+      'zimbraAuthTokenValidityValue',
+      'zimbraIsExternalVirtualAccount',
+      'zimbraMailStatus',
+      'zimbraIsAdminGroup',
+      'zimbraCalResType',
+      'zimbraDomainType',
+      'zimbraDomainName',
+      'zimbraDomainStatus',
+      'zimbraIsDelegatedAdminAccount',
+      'zimbraIsAdminAccount',
+      'zimbraIsSystemResource',
+      'zimbraIsSystemAccount',
+      'zimbraIsExternalVirtualAccount',
+	);
+    $result = $api->searchDirectory(
+      '', $domain, false, false, false, $attrs, array('accounts'), 0, null, true, $limit, $offset
+    );
+	$pager = array(
+      'num' => (int) $result->num,
+      'more' => (bool) $result->more,
+      'total' => (int) $result->searchTotal,
+      'limit' => (int) $limit,
+      'offset' => (int) $offset,
+	);
+    if(isset($result->account)) {
+      $accounts = is_array($result->account) ? $result->account : array($result->account);
+      foreach ($accounts as $account) {
+        $all_account[$account->id] = $account;
+      }
+    }
+  } catch (Exception $ex) {
+    watchdog('zimbra', $ex->__toString());
+  }
+  $cache[$cache_key] = $all_account;
+  return $all_accounts;
+}
+
+/**
  * Get information of Zimbra account
  *
  * @param  zimbra_admin_api $api Zimbra admin api.
@@ -536,7 +607,17 @@ function zimbra_list_all_alias(zimbra_admin_api $api, $domain = '') {
   }
   $all_alias = array();
   try {
-    $attrs = array('zimbraAliasTargetId', 'zimbraId', 'targetName', 'uid', 'type', 'description', 'zimbraIsDelegatedAdminAccount', 'zimbraIsAdminAccount', 'zimbraIsSystemResource');
+    $attrs = array(
+      'zimbraAliasTargetId',
+      'zimbraId',
+      'targetName',
+      'uid',
+      'type',
+      'description',
+      'zimbraIsDelegatedAdminAccount',
+      'zimbraIsAdminAccount',
+      'zimbraIsSystemResource'
+    );
     $result = $api->searchDirectory('', $domain, false, false, false, $attrs, array('aliases'));
     if(isset($result->alias)) {
       $aliases = is_array($result->alias) ? $result->alias : array($result->alias);
