@@ -260,13 +260,11 @@ function zimbra_add_role(){
     $group_role,
   );
   $roles = user_roles();
-  foreach ($new_roles as $role)
-  {
-    if(!in_array($role, $roles))
-    {
-      $addRole = new stdClass();
-      $addRole->name = $role;
-      user_role_save($addRole);
+  foreach ($new_roles as $role) {
+    if(!in_array($role, $roles)) {
+      $add_role = new stdClass();
+      $add_role->name = $role;
+      user_role_save($add_role);
     }
   }
 
