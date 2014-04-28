@@ -66,7 +66,8 @@ function zimbra_page_addcontent() {
       drupal_goto($item['href']);
     }
     return theme('node_add_list', array('content' => $content));
-  } else {
+  }
+  else {
     drupal_goto('node/add/' . $type);
     return '';
   }
@@ -300,7 +301,8 @@ function page_list_domain(){
     if (count($tenants)) {
       $tenant_nids = array_keys($tenants);
       $efq->fieldCondition('field_domain_tenant', 'nid', $tenant_nids, 'IN');
-    } else {
+    }
+    else {
       $efq->fieldCondition('field_domain_user', 'uid', $user->uid, '=');
     }
   }
@@ -360,7 +362,8 @@ function page_list_group() {
     if (count($domains)) {
       $domain_nids = array_keys($domains);
       $efq->fieldCondition('field_node_domain', 'nid', $domain_nids, 'IN');
-    } else {
+    }
+    else {
       $efq->fieldCondition('field_group_user', 'uid', $user->uid, '=');
     }
   }
