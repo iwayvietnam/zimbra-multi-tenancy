@@ -110,7 +110,7 @@ function _zimbra_add_nodetype_tenant() {
   zimbra_add_list_text_field($type, 'field_tenant_base', 'Tenant base', 4);
   zimbra_add_node_reference_field($type, 'field_tenant_server', 'Server', 5, 'server');
   zimbra_add_integer_field($type, 'field_tenant_mailbox_max_size', 'Mailbox max quota', 6, 'MB');
-  zimbra_add_integer_field($type, 'field_tenant_number_of_mailboxes', 'Number Of Mailboxes', 7, 'Mailbox(es)');
+  zimbra_add_integer_field($type, 'field_tenant_number_of_mailboxes', 'Max number of Mailboxes', 7, 'Mailbox(es)');
   zimbra_add_user_reference_field($type, 'field_tenant_user', 'Tenant user', 8);
 
   $allows = array(
@@ -147,7 +147,7 @@ function _zimbra_add_nodetype_domain() {
   zimbra_add_node_reference_field($type, 'field_domain_server', 'Server', 3, 'server');
   zimbra_add_node_reference_field($type, 'field_domain_tenant', 'Tenant', 4, 'tenant');
   zimbra_add_integer_field($type, 'field_domain_mailbox_max_size', 'Mailbox max quota', 5, 'MB');
-  zimbra_add_integer_field($type, 'field_domain_number_of_mailboxes', 'Number Of Mailboxes',6, 'Mailbox(es)');
+  zimbra_add_integer_field($type, 'field_domain_number_of_mailboxes', 'Max number of Mailboxes',6, 'Mailbox(es)');
   zimbra_add_user_reference_field($type, 'field_domain_user', 'Domain user', 7);
   zimbra_add_hidden_text_field($type, 'field_domain_zimbra_id', 'Zimbra domain ID', 8);
 }
@@ -359,6 +359,10 @@ function zimbra_add_role(){
     'delete own group content'   => 1,  
     'delete own alias content'   => 1,  
     'delete own mailbox content' => 1,  
+
+    'delete any group content'   => 1,  
+    'delete any alias content'   => 1,  
+    'delete any mailbox content' => 1,  
   );  
 
   $group_perm =array( 
@@ -373,6 +377,9 @@ function zimbra_add_role(){
 
     'delete own alias content'   => 1,
     'delete own mailbox content' => 1,
+
+    'delete any alias content'   => 1,
+    'delete any mailbox content' => 1,
   );
 
   user_role_change_permissions($zimbra_rid, $zimbra_perm);
