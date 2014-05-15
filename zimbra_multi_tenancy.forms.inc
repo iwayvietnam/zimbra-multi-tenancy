@@ -610,7 +610,7 @@ function zimbra_domain_hook_form(&$form, &$form_state) {
 function ajax_domain_server_callback($form, $form_state) {
   $commands = array();
   $html = render($form['field_domain_tenant']);
-  $commands[] = ajax_command_replace("#domain-tenant-replace", $html);
+  $commands[] = ajax_command_replace('#domain-tenant-replace', $html);
   return array('#type' => 'ajax', '#commands' => $commands);
 }
 
@@ -714,7 +714,7 @@ function zimbra_domain_validate($form, &$form_state) {
       } else {
         $user = user_load($domain_user);
 
-        $sql = "SELECT uid, name, mail FROM users u WHERE (u.name = '$user_name' OR u.mail ='$user_mail') AND u.uid !=" .intval($user->uid);
+        $sql = "SELECT uid, name, mail FROM users u WHERE (u.name = '$user_name' OR u.mail ='$user_mail') AND u.uid !=" . intval($user->uid);
         $result = db_query($sql);
         $user_exist = 0;
         $user_name_exist = 0;
@@ -1240,6 +1240,16 @@ function zimbra_mailbox_hook_form(&$form, &$form_state){
   $form['field_mailbox_password'][LANGUAGE_NONE][0]['value']['#default_value'] = '';
   $form['field_mailbox_fullname'][LANGUAGE_NONE][0]['value']['#required'] = 1;
   $form['field_mailbox_status'][LANGUAGE_NONE]['#required'] = 1;
+  $options = isset($form['field_mailbox_status'][LANGUAGE_NONE]['#options']) ? $form['field_mailbox_status'][LANGUAGE_NONE]['#options'] : array();
+  $statuses = array();
+  foreach ($options as $key => $value) {
+    if ($key !== '_none') {
+      $statuses[$key] = $value;
+    }
+  }
+  if (count($statuses)) {
+    $form['field_mailbox_status'][LANGUAGE_NONE]['#options'] = $statuses;
+  }
 
   $form['field_node_domain'][LANGUAGE_NONE]['#required'] = 1;
   $form['field_mailbox_size'][LANGUAGE_NONE][0]['value']['#required'] = 1;
