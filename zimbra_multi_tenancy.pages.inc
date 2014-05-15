@@ -224,7 +224,7 @@ function page_list_tenant() {
         'field' => 'field_tenant_mailbox_max_size', 'column' => 'value',
       ),
     ),
-    'number' => array('data' => t('Number of Mailbox'), 'type' => 'field',
+    'number' => array('data' => t('Max mumber of Mailbox'), 'type' => 'field',
       'specifier' => array(
         'field' => 'field_tenant_number_of_mailboxes', 'column' => 'value',
       ),
@@ -284,7 +284,7 @@ function page_list_domain(){
         'field' => 'field_domain_mailbox_max_size', 'column' => 'value',
       ),
     ),
-    'number' => array('data' => t('Number of Mailbox'), 'type' => 'field',
+    'number' => array('data' => t('Max mumber of Mailbox'), 'type' => 'field',
       'specifier' => array(
         'field' => 'field_domain_number_of_mailboxes', 'column' => 'value',
       ),
@@ -423,7 +423,14 @@ function page_list_alias() {
       $groups = user_get_group($user->uid);
       $group_nids = array_keys($groups);
       if(count($group_nids)) {
-        $efq->fieldCondition('field_node_group', 'nid', $group_nids, 'IN');
+        $alias_nids = array();
+        foreach ($group_nids as $nid) {
+          $alias_nids += list_alias_id_by_group($nid);
+        }
+        if (count($alias_nids)) {
+          $efq->propertyCondition('nid', $alias_nids, 'IN');
+        }
+        //$efq->fieldCondition('field_node_group', 'nid', $group_nids, 'IN');
       }
     }
   }
@@ -501,7 +508,14 @@ function page_list_mailbox() {
       $group_nids = array_keys($groups);
 
       if (count($group_nids)) {
-        $efq->fieldCondition('field_node_group', 'nid', $group_nids, 'IN');
+        $mailbox_nids = array();
+        foreach ($group_nids as $nid) {
+          $mailbox_nids += list_mailbox_id_by_group($nid);
+        }
+        if (count($mailbox_nids)) {
+          $efq->propertyCondition('nid', $mailbox_nids, 'IN');
+        }
+        //$efq->fieldCondition('field_node_group', 'nid', $group_nids, 'IN');
       }
     }
   }
