@@ -1069,11 +1069,24 @@ function is_ajax_request() {
   return strtolower($requested_with) === 'xmlhttprequest';
 }
 
+/**
+ * Check subject is matches with patterns.
+ */
 function is_matches(array $patterns = array(), $subject = ''){
   $is_match = false;
   $pattern = implode('|', $patterns);
   $is_match = preg_match('/'.$pattern.'/msS', $subject);
   return $is_match;
+}
+
+/**
+ * Get field label.
+ * @param $type
+ *   A node type object.
+ */
+function get_field_label($type, $field_name, $default = '') {
+  $info = field_info_instance('node', $field_name, $type);
+  return !empty($info) ? $info['label'] : $default;
 }
 
 /**
