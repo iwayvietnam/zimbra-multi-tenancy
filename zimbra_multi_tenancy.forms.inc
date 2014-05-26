@@ -386,6 +386,10 @@ function zimbra_ternant_hook_form(&$form, &$form_state) {
   $form['field_tenant_server'][LANGUAGE_NONE]['#required'] = 1;
   $form['field_tenant_base'][LANGUAGE_NONE]['#required'] = 1;
 
+  unset($form['field_tenant_user_password'][LANGUAGE_NONE][0]['value']['#default_value']);
+  unset($form['field_tenant_user_password'][LANGUAGE_NONE][0]['value']['#title']);
+  $form['field_tenant_user_password'][LANGUAGE_NONE][0]['value']['#type'] = 'password_confirm';
+
   if (arg(1) == 'add') {
     $form['field_tenant_user_password'][LANGUAGE_NONE][0]['value']['#required'] = 1;
   }
@@ -571,6 +575,10 @@ function zimbra_domain_hook_form(&$form, &$form_state) {
   );
   $form['field_domain_tenant'][LANGUAGE_NONE]['#prefix'] = '<div id="domain-tenant-replace">';
   $form['field_domain_tenant'][LANGUAGE_NONE]['#suffix'] = '</div>';
+
+  unset($form['field_domain_user_password'][LANGUAGE_NONE][0]['value']['#default_value']);
+  unset($form['field_domain_user_password'][LANGUAGE_NONE][0]['value']['#title']);
+  $form['field_domain_user_password'][LANGUAGE_NONE][0]['value']['#type'] = 'password_confirm';
 
   if (arg(1) =='add') {
     $form['field_domain_user_password'][LANGUAGE_NONE][0]['value']['#required'] = 1;
@@ -810,6 +818,10 @@ function zimbra_group_hook_form(&$form, &$form_state) {
   $form['field_node_domain'][LANGUAGE_NONE]['#ajax'] = array(
     'callback' => 'ajax_group_domain_callback',
   );
+
+  unset($form['field_group_user_password'][LANGUAGE_NONE][0]['value']['#default_value']);
+  unset($form['field_group_user_password'][LANGUAGE_NONE][0]['value']['#title']);
+  $form['field_group_user_password'][LANGUAGE_NONE][0]['value']['#type'] = 'password_confirm';
 
   if(arg(1) == 'add') {
     $form['field_group_user_password'][LANGUAGE_NONE][0]['value']['#required'] = 1;
@@ -1237,7 +1249,6 @@ function zimbra_mailbox_hook_form(&$form, &$form_state){
     }
   }
 
-  $form['field_mailbox_password'][LANGUAGE_NONE][0]['value']['#default_value'] = '';
   $form['field_mailbox_fullname'][LANGUAGE_NONE][0]['value']['#required'] = 1;
   $form['field_mailbox_status'][LANGUAGE_NONE]['#required'] = 1;
   $options = isset($form['field_mailbox_status'][LANGUAGE_NONE]['#options']) ? $form['field_mailbox_status'][LANGUAGE_NONE]['#options'] : array();
@@ -1250,6 +1261,10 @@ function zimbra_mailbox_hook_form(&$form, &$form_state){
   if (count($statuses)) {
     $form['field_mailbox_status'][LANGUAGE_NONE]['#options'] = $statuses;
   }
+
+  unset($form['field_mailbox_password'][LANGUAGE_NONE][0]['value']['#default_value']);
+  unset($form['field_mailbox_password'][LANGUAGE_NONE][0]['value']['#title']);
+  $form['field_mailbox_password'][LANGUAGE_NONE][0]['value']['#type'] = 'password_confirm';
 
   $form['field_node_domain'][LANGUAGE_NONE]['#required'] = 1;
   $form['field_mailbox_size'][LANGUAGE_NONE][0]['value']['#required'] = 1;
