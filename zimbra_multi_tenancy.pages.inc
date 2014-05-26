@@ -253,7 +253,7 @@ function page_list_tenant() {
 
     $row = array();
     $row['stt'] = $key;
-    $row['title'] = $node->title;
+    $row['title'] = l($node->title, 'node/' . $node->nid);
     $row['user'] = $tenant->user->name;
     $row['maxsize'] = ($tenant->mailbox_max_size == '') ? '' : t('@number MB', array('@number' => $tenant->mailbox_max_size));
     $row['number'] = $tenant->number_of_mailboxes;
@@ -320,7 +320,7 @@ function page_list_domain(){
 
     $row = array();
     $row['stt'] = $key;
-    $row['title'] = $node->title;
+    $row['title'] = l($node->title, 'node/' . $node->nid);
     $row['user'] = $domain->user->name;
     $row['maxsize'] = ($domain->mailbox_max_size == '') ? '' : t('@number MB', array('@number' => $domain->mailbox_max_size));
     $row['number'] = $domain->number_of_mailboxes;
@@ -382,7 +382,7 @@ function page_list_group() {
 
     $row = array();
     $row['stt'] = $key;
-    $row['title'] = $group_address;
+    $row['title'] = l($group_address, 'node/' . $node->nid);
     $row['fullname'] = $group->fullname;
     $row['operations'] = $operations;
     $rows[] = $row;
@@ -451,7 +451,7 @@ function page_list_alias() {
 
     $row = array();
     $row['stt'] = $key;
-    $row['title'] = $alias_address;
+    $row['title'] = l($alias_address, 'node/' . $node->nid);
     $row['mapping'] = $alias_mapping;
     $row['operations'] = $operations;
     $rows[] = $row;
@@ -535,7 +535,7 @@ function page_list_mailbox() {
 
     $row = array();
     $row['stt'] = $key + 1;
-    $row['title'] = $mailbox_address;
+    $row['title'] = l($mailbox_address, 'node/' . $node->nid);
     $row['fullname'] = $mailbox->fullname;
     $row['status'] = $mailbox->status;
     $row['maxsize'] = $mailbox->size;
