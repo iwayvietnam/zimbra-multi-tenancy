@@ -42,7 +42,7 @@ function _zimbra_add_nodetype_server() {
     $type = node_type_set_defaults(array(
       'type' => 'server',
       'name' => t('Server'),
-      'title_label' => t('Server Name'),
+      'title_label' => t('Name'),
       'base' => 'node_content',
       'description' => t('Content type for Server'),
       'locked' => 0,
@@ -54,8 +54,8 @@ function _zimbra_add_nodetype_server() {
   //Add any field of server content type
   zimbra_add_text_field($type, 'field_server_service_location', 'Service location', 1);  
   zimbra_add_list_text_field($type, 'field_server_client_type', 'Client type', 2);
-  zimbra_add_text_field($type, 'field_server_admin_user', 'Server admin user', 3);  
-  zimbra_add_password_field($type, 'field_server_admin_password', 'Server admin password', 4);
+  zimbra_add_text_field($type, 'field_server_admin_user', 'Admin user', 3);  
+  zimbra_add_password_field($type, 'field_server_admin_password', 'Admin password', 4);
   $instance = zimbra_add_text_long_field($type, 'field_server_exclude_mailbox', 'Exclude mailbox', 5);  
   zimbra_add_boolean_field($type, 'field_server_delete_domain', 'Allow delete domain', 6);
   zimbra_add_boolean_field($type, 'field_server_delete_group', 'Allow delete group', 7);
@@ -104,13 +104,13 @@ function _zimbra_add_nodetype_tenant() {
     node_type_save($type);
   }
   //Add any field of tenant content type
-  zimbra_add_text_field($type, 'field_tenant_user_name', 'Tenant user name', 1);
-  zimbra_add_text_field($type, 'field_tenant_user_mail', 'Tenant user e-mail', 2);
-  zimbra_add_text_field($type, 'field_tenant_user_password', 'Tenant user password', 3);
+  zimbra_add_text_field($type, 'field_tenant_user_name', 'User name', 1);
+  zimbra_add_text_field($type, 'field_tenant_user_mail', 'Email', 2);
+  zimbra_add_text_field($type, 'field_tenant_user_password', 'Password', 3);
   zimbra_add_list_text_field($type, 'field_tenant_base', 'Tenant base', 4);
   zimbra_add_node_reference_field($type, 'field_tenant_server', 'Server', 5, 'server');
-  zimbra_add_integer_field($type, 'field_tenant_mailbox_max_size', 'Mailbox max quota', 6, 'MB');
-  zimbra_add_integer_field($type, 'field_tenant_number_of_mailboxes', 'Max number of Mailboxes', 7, 'Mailbox(es)');
+  zimbra_add_integer_field($type, 'field_tenant_mailbox_max_size', 'Max mailbox quota', 6, 'MB');
+  zimbra_add_integer_field($type, 'field_tenant_number_of_mailboxes', 'Max mailbox number', 7, 'Mailbox(es)');
   zimbra_add_user_reference_field($type, 'field_tenant_user', 'Tenant user', 8);
 
   $allows = array(
@@ -142,12 +142,12 @@ function _zimbra_add_nodetype_domain() {
     node_type_save($type);
   }
   //Add any field of tenant content type  
-  zimbra_add_text_field($type, 'field_domain_user_mail', 'Domain user e-mail', 1);  
-  zimbra_add_text_field($type, 'field_domain_user_password', 'Domain user password', 2);
+  zimbra_add_text_field($type, 'field_domain_user_mail', 'Email', 1);  
+  zimbra_add_text_field($type, 'field_domain_user_password', 'Password', 2);
   zimbra_add_node_reference_field($type, 'field_domain_server', 'Server', 3, 'server');
   zimbra_add_node_reference_field($type, 'field_domain_tenant', 'Tenant', 4, 'tenant');
-  zimbra_add_integer_field($type, 'field_domain_mailbox_max_size', 'Mailbox max quota', 5, 'MB');
-  zimbra_add_integer_field($type, 'field_domain_number_of_mailboxes', 'Max number of Mailboxes',6, 'Mailbox(es)');
+  zimbra_add_integer_field($type, 'field_domain_mailbox_max_size', 'Max mailbox quota', 5, 'MB');
+  zimbra_add_integer_field($type, 'field_domain_number_of_mailboxes', 'Max mailbox number ',6, 'Mailbox(es)');
   zimbra_add_user_reference_field($type, 'field_domain_user', 'Domain user', 7);
   zimbra_add_hidden_text_field($type, 'field_domain_zimbra_id', 'Zimbra domain ID', 8);
 }
@@ -172,8 +172,8 @@ function _zimbra_add_nodetype_group() {
     node_type_save($type);
   }
   //Add any field of tenant content type
-  zimbra_add_text_field($type, 'field_group_fullname', 'Group fullname', 1);
-  zimbra_add_text_field($type, 'field_group_user_password', 'Group user password', 2);
+  zimbra_add_text_field($type, 'field_group_fullname', 'Fullname', 1);
+  zimbra_add_text_field($type, 'field_group_user_password', 'Password', 2);
   zimbra_add_node_reference_field($type, 'field_node_domain', 'Domain name', 3, 'domain');
   zimbra_add_text_field($type, 'field_group_members', 'Members', 4, true);
   zimbra_add_user_reference_field($type, 'field_group_user', 'Group user', 5);
@@ -225,12 +225,12 @@ function _zimbra_add_nodetype_mailbox() {
     node_type_save($type);
   }
   //Add any field of tenant content type
-  zimbra_add_text_field($type, 'field_mailbox_fullname', 'Mailbox fullname', 1);
-  zimbra_add_text_field($type, 'field_mailbox_password', 'Mailbox password', 2);
-  zimbra_add_list_text_field($type, 'field_mailbox_status', 'Mailbox status', 3);
+  zimbra_add_text_field($type, 'field_mailbox_fullname', 'Fullname', 1);
+  zimbra_add_text_field($type, 'field_mailbox_password', 'Password', 2);
+  zimbra_add_list_text_field($type, 'field_mailbox_status', 'Status', 3);
   zimbra_add_node_reference_field($type, 'field_node_domain', 'Domain', 4, 'domain');
   zimbra_add_node_reference_field($type, 'field_node_group', 'Group', 5, 'group');
-  zimbra_add_integer_field($type, 'field_mailbox_size', 'Mailbox quota', 6, 'MB');
+  zimbra_add_integer_field($type, 'field_mailbox_size', 'Quota', 6, 'MB');
   zimbra_add_hidden_text_field($type, 'field_mailbox_zimbra_id', 'Zimbra mailbox ID', 7);  
 
   $allows = array(
