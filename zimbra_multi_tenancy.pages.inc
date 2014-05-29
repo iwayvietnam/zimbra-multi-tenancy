@@ -218,13 +218,13 @@ function page_list_tenant() {
   $header = array(
     'stt' => t('No.'),
     'title' => array('data' => t(get_field_label('tenant', 'title', 'Tenant name')), 'type' => 'none', 'field' => 'title', 'sort' => 'asc'),
-    'user' => t(get_field_label('tenant', 'field_tenant_user_name', 'Tenant user name')),
-    'maxsize' => array('data' => t(get_field_label('tenant', 'field_tenant_mailbox_max_size', 'Quota of Mailbox')), 'type' => 'field',
+    'user' => t(get_field_label('tenant', 'field_tenant_user_name', 'User name')),
+    'maxsize' => array('data' => t(get_field_label('tenant', 'field_tenant_mailbox_max_size', 'Max mailbox quota')), 'type' => 'field',
       'specifier' => array(
         'field' => 'field_tenant_mailbox_max_size', 'column' => 'value',
       ),
     ),
-    'number' => array('data' => t(get_field_label('tenant', 'field_tenant_number_of_mailboxes', 'Max number of Mailbox')), 'type' => 'field',
+    'number' => array('data' => t(get_field_label('tenant', 'field_tenant_number_of_mailboxes', 'Max mailbox number')), 'type' => 'field',
       'specifier' => array(
         'field' => 'field_tenant_number_of_mailboxes', 'column' => 'value',
       ),
@@ -279,12 +279,12 @@ function page_list_domain(){
     'stt' => t('No.'),
     'title' => array('data' => t(get_field_label('domain', 'title', 'Domain name')), 'type' => 'none', 'field' => 'title', 'sort' => 'asc'),
     'user' => t('Domain user'),
-    'maxsize' => array('data' => t(get_field_label('domain', 'field_domain_mailbox_max_size', 'Quota of Mailbox')), 'type' => 'field',
+    'maxsize' => array('data' => t(get_field_label('domain', 'field_domain_mailbox_max_size', 'Max mailbox quota')), 'type' => 'field',
       'specifier' => array(
         'field' => 'field_domain_mailbox_max_size', 'column' => 'value',
       ),
     ),
-    'number' => array('data' => t(get_field_label('domain', 'field_domain_number_of_mailboxes', 'Max mumber of Mailbox')), 'type' => 'field',
+    'number' => array('data' => t(get_field_label('domain', 'field_domain_number_of_mailboxes', 'Max mailbox mumber')), 'type' => 'field',
       'specifier' => array(
         'field' => 'field_domain_number_of_mailboxes', 'column' => 'value',
       ),
@@ -345,7 +345,7 @@ function page_list_group() {
   $header = array(
     'stt' => t('No.'),
     'title' => array('data' => t(get_field_label('group', 'title', 'Group')), 'type' => 'none', 'field' => 'title', 'sort' => 'asc'),
-    'fullname' => array('data' => t(get_field_label('group', 'field_group_fullname', 'Group fullname')), 'type' => 'field',
+    'fullname' => array('data' => t(get_field_label('group', 'field_group_fullname', 'Fullname')), 'type' => 'field',
       'specifier' => array(
         'field' => 'field_group_fullname', 'column' => 'value',
       ),
@@ -474,22 +474,24 @@ function page_list_mailbox() {
 
   $header = array(
     'stt' => t('No.'),
-    'title' => array('data' => t(get_field_label('mailbox', 'title', 'Email address')), 'type' => 'none', 'field' => 'title', 'sort' => 'asc'),
-    'fullname' => array('data' => t(get_field_label('mailbox', 'field_mailbox_fullname', 'Mailbox fullname')), 'type' => 'field',
+    'title' => array('data' => t(get_field_label('mailbox', 'title', 'Email')), 'type' => 'none', 'field' => 'title', 'sort' => 'asc'),
+    'fullname' => array('data' => t(get_field_label('mailbox', 'field_mailbox_fullname', 'Fullname')), 'type' => 'field',
       'specifier' => array(
         'field' => 'field_mailbox_fullname', 'column' => 'value',
       ),
     ),
-    'status' => array('data' => t(get_field_label('mailbox', 'field_mailbox_status', 'Mailbox status')), 'type' => 'field',
+    'status' => array('data' => t(get_field_label('mailbox', 'field_mailbox_status', 'Status')), 'type' => 'field',
       'specifier' => array(
         'field' => 'field_mailbox_status', 'column' => 'value',
       ),
     ),
-    'maxsize' => array('data' => t(get_field_label('mailbox', 'field_mailbox_size', 'Mailbox quota')), 'type' => 'field',
+    'maxsize' => array('data' => t(get_field_label('mailbox', 'field_mailbox_size', 'Quota')), 'type' => 'field',
       'specifier' => array(
         'field' => 'field_mailbox_size', 'column' => 'value',
       ),
     ),
+    'created' => array('data' => t('Created'), 'type' => 'none', 'field' => 'created'),
+    'creator' => t('Creator'),
     'operations' => t('Operations'),
   );
   $efq = new EntityFieldQuery();
@@ -526,6 +528,7 @@ function page_list_mailbox() {
   $rows = array();
   $destination = drupal_get_destination();
   foreach ($nodes as $key => $node) {
+	$user = user_load($node->uid);
     $operations = '<ul class="links inline">'
       .'<li class="edit first">' . l(t('edit'), 'node/' . $node ->nid . '/edit', array('query' => $destination)) . '</li>'
       .'<li class="delete last">' . l(t('delete'), 'zimbra/'.$node ->nid . '/delete', array('query' => $destination)) . '</li>'
@@ -539,6 +542,8 @@ function page_list_mailbox() {
     $row['fullname'] = $mailbox->fullname;
     $row['status'] = $mailbox->status;
     $row['maxsize'] = $mailbox->size;
+    $row['created'] = date('d-m-Y H:i:s', $node->created);
+    $row['creator'] = $user->name;
     $row['operations'] = $operations;
     $rows[] = $row;
   }
