@@ -204,7 +204,7 @@ function page_list_server() {
   $output = '';
   if(user_access('create server content')) 
     $output .= '<ul class="action-links"><li>' . l(t('Add new Server'), 'node/add/server', array('query' => $destination)) . '</li></ul>';
-  $output .= theme('table', array('header' => $header, 'rows' => $rows)).theme('pager');
+  $output .= theme('table', array('header' => $header, 'rows' => $rows)) . theme('pager');
   return $output;
 }
 
@@ -264,7 +264,7 @@ function page_list_tenant() {
   $output = '';
   if(user_access('create tenant content')) 
     $output .= '<ul class="action-links"><li>' . l(t('Add new Tenant'), 'node/add/tenant', array('query' => $destination)) . '</li></ul>';
-  $output .= theme('table', array('header' => $header, 'rows' => $rows)).theme('pager');
+  $output .= theme('table', array('header' => $header, 'rows' => $rows)) . theme('pager');
   return $output;
 }
 
@@ -331,7 +331,7 @@ function page_list_domain(){
   $output = '';
   if(user_access('create domain content')) 
     $output .= '<ul class="action-links"><li>' . l(t('Add new Domain'), 'node/add/domain', array('query' => $destination)) . '</li></ul>';
-  $output .= theme('table', array('header' => $header, 'rows' => $rows)).theme('pager');
+  $output .= theme('table', array('header' => $header, 'rows' => $rows)) . theme('pager');
   return $output;
 }
 
@@ -391,7 +391,7 @@ function page_list_group() {
   $output = '';
   if(user_access('create group content')) 
     $output .= '<ul class="action-links"><li>' . l(t('Add new Group'), 'node/add/group', array('query' => $destination)) . '</li></ul>';
-  $output .= theme('table', array('header' => $header, 'rows' => $rows)).theme('pager');
+  $output .= theme('table', array('header' => $header, 'rows' => $rows)) . theme('pager');
   return $output;
 }
 
@@ -460,7 +460,7 @@ function page_list_alias() {
   $output = '';
   if(user_access('create alias content')) 
     $output .= '<ul class="action-links"><li>' . l(t('Add new Alias'), 'node/add/alias', array('query' => $destination)) . '</li></ul>';
-  $output .= theme('table', array('header' => $header, 'rows' => $rows)).theme('pager');
+  $output .= theme('table', array('header' => $header, 'rows' => $rows)) . theme('pager');
   return $output;
 }
 
@@ -549,8 +549,12 @@ function page_list_mailbox() {
   }
 
   $output = '';
-  if(user_access('create mailbox content')) 
-    $output .= '<ul class="action-links"><li>' . l(t('Add new Mailbox'), 'node/add/mailbox', array('query' => $destination)) . '</li></ul>';
-  $output .= theme('table', array('header' => $header, 'rows' => $rows)).theme('pager');
+  if (user_access('create mailbox content')) {
+    $output .= '<ul class="action-links">'
+      . '<li>' . l(t('Add new Mailbox'), 'node/add/mailbox', array('query' => $destination)) . '</li>'
+      . '<li>' . l(t('Import Mailbox(es)'), 'zimbra/import-account', array('query' => $destination)) . '</li>'
+      . '</ul>';
+  }
+  $output .= theme('table', array('header' => $header, 'rows' => $rows)) . theme('pager');
   return $output;
 }
