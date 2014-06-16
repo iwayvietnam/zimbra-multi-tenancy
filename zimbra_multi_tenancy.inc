@@ -694,6 +694,114 @@ function mailbox_exists($name, $domain, $nid = 0) {
 }
 
 /**
+ * List alias by group
+ * 
+ * @param  int  $nid  Node ID
+ * @return array of alias
+ */
+function list_alias_by_group($nid) {
+  $cache = &drupal_static(__FUNCTION__, array());
+  if (isset($cache[$nid])) {
+    return $cache[$nid];
+  }
+
+  $mailboxes = array();
+  $nids = list_alias_id_by_group($nid);
+  $nodes = node_load_multiple($nids);
+  foreach ($nodes as $nid => $node) {
+    $mailboxes[$nid] = normalize_alias($node);
+  }
+  $cache[$nid] = $mailboxes;
+  return $mailboxes;
+}
+
+/**
+ * List alias id by group
+ * 
+ * @param  int  $nid  Node ID
+ * @return array of alias node id
+ */
+function list_alias_id_by_group($nid) {
+  $cache = &drupal_static(__FUNCTION__, array());
+  if (isset($cache[$nid])) {
+    return $cache[$nid];
+  }
+
+  $nids = array();
+  $node = node_load($nid);
+  if ($node && $node->type === 'group') {
+    $group = normalize_group($node);
+	$names = array();
+	foreach ($group->members as $member) {
+      $names[] = substr($member, 0, (int) strpos($member, '@'));
+    }
+    $efq = new EntityFieldQuery();
+    $efq->entityCondition('entity_type', 'node')
+        ->entityCondition('bundle', 'alias')
+        ->propertyCondition('title', $names, 'IN')
+        ->fieldCondition('field_node_domain', 'nid', $group->domain->nid, '=');
+    $result = $efq->execute();
+    $nids = (isset($result['node']) AND is_array($result['node'])) ? array_keys($result['node']) : array();
+  }
+  $cache[$nid] = $nids;
+  return $nids;
+}
+
+/**
+ * List mailbox id by group
+ * 
+ * @param  int  $nid  Node ID
+ * @return array of mailbox node id
+ */
+function list_mailbox_id_by_group($nid) {
+  $cache = &drupal_static(__FUNCTION__, array());
+  if (isset($cache[$nid])) {
+    return $cache[$nid];
+  }
+
+  $nids = array();
+  $node = node_load($nid);
+  if ($node && $node->type === 'group') {
+    $group = normalize_group($node);
+	$names = array();
+	foreach ($group->members as $member) {
+      $names[] = substr($member, 0, (int) strpos($member, '@'));
+    }
+    $efq = new EntityFieldQuery();
+    $efq->entityCondition('entity_type', 'node')
+        ->entityCondition('bundle', 'mailbox')
+        ->propertyCondition('title', $names, 'IN')
+        ->fieldCondition('field_node_domain', 'nid', $group->domain->nid, '=');
+    $result = $efq->execute();
+    $nids = (isset($result['node']) AND is_array($result['node'])) ? array_keys($result['node']) : array();
+  }
+  $cache[$nid] = $nids;
+  return $nids;
+}
+
+/**
+ * List mailbox by group
+ * 
+ * @param  int  $nid  Node ID
+ * @return array of mailbox
+ */
+function list_mailbox_by_group($nid) {
+  $cache = &drupal_static(__FUNCTION__, array());
+  if (isset($cache[$nid])) {
+    return $cache[$nid];
+  }
+
+  $mailboxes = array();
+  $nids = list_mailbox_id_by_group($nid);
+  $nodes = node_load_multiple($nids);
+  foreach ($nodes as $nid => $node) {
+    $mailboxes[$nid] = normalize_mailbox($node);
+  }
+  $cache[$nid] = $mailboxes;
+  return $mailboxes;
+}
+
+/**
  * Delete group by domain
  * 
  * @param  int $nid Domain node ID
@@ -867,8 +975,15 @@ function normalize_group($node) {
   $group->user_password = isset($node->field_group_user_password[LANGUAGE_NONE][0]['value']) ? $node->field_group_user_password[LANGUAGE_NONE][0]['value'] : '';
   $group->zimbra_id = isset($node->field_group_zimbra_id[LANGUAGE_NONE][0]['value']) ? $node->field_group_zimbra_id[LANGUAGE_NONE][0]['value'] : '';
 
-  $group_members = isset($node->field_group_members[LANGUAGE_NONE][0]['value']) ? $node->field_group_members[LANGUAGE_NONE][0]['value'] : '';
-  $group->members = explode('|', $group_members);
+  $group->members = array();
+  if ($node) {
+    $items = field_get_items('node', $node, 'field_group_members');
+    if ($items) {
+      foreach ($items as $item) {
+        $group->members[] = $item['value'];
+      }
+    }
+  }
 
   $domain_nid = isset($node->field_node_domain[LANGUAGE_NONE][0]['nid']) ? $node->field_node_domain[LANGUAGE_NONE][0]['nid'] : 0;
   $group->domain = normalize_domain(node_load($domain_nid));
@@ -954,11 +1069,24 @@ function is_ajax_request() {
   return strtolower($requested_with) === 'xmlhttprequest';
 }
 
+/**
+ * Check subject is matches with patterns.
+ */
 function is_matches(array $patterns = array(), $subject = ''){
   $is_match = false;
   $pattern = implode('|', $patterns);
   $is_match = preg_match('/'.$pattern.'/msS', $subject);
   return $is_match;
+}
+
+/**
+ * Get field label.
+ * @param $type
+ *   A node type object.
+ */
+function get_field_label($type, $field_name, $default = '') {
+  $info = field_info_instance('node', $field_name, $type);
+  return !empty($info) ? $info['label'] : $default;
 }
 
 /**
@@ -1397,7 +1525,7 @@ function zimbra_add_user_reference_field(
         'referenceable_roles' => array('2' =>2),
       ),
     );
-    if($multiple === true) {
+    if ($multiple === true) {
       $field['cardinality'] = FIELD_CARDINALITY_UNLIMITED;
     }
     $field = field_create_field($field);

@@ -66,7 +66,8 @@ function zimbra_page_addcontent() {
       drupal_goto($item['href']);
     }
     return theme('node_add_list', array('content' => $content));
-  } else {
+  }
+  else {
     drupal_goto('node/add/' . $type);
     return '';
   }
@@ -165,8 +166,8 @@ function page_list_server() {
   drupal_set_title(t('Server list'));
   $header = array(
     'stt' => t('No.'),
-    'title' => array('data' => t('Server name'), 'type' => 'none', 'field' => 'title', 'sort' => 'asc'),
-    'location' => array('data' => t('Service location'), 'type' => 'field',
+    'title' => array('data' => t(get_field_label('server', 'title', 'Server name')), 'type' => 'none', 'field' => 'title', 'sort' => 'asc'),
+    'location' => array('data' => t(get_field_label('server', 'field_server_service_location', 'Service location')), 'type' => 'field',
       'specifier' => array(
         'field' => 'field_server_service_location', 'column' => 'value',
       ),
@@ -203,7 +204,7 @@ function page_list_server() {
   $output = '';
   if(user_access('create server content')) 
     $output .= '<ul class="action-links"><li>' . l(t('Add new Server'), 'node/add/server', array('query' => $destination)) . '</li></ul>';
-  $output .= theme('table', array('header' => $header, 'rows' => $rows)).theme('pager');
+  $output .= theme('table', array('header' => $header, 'rows' => $rows)) . theme('pager');
   return $output;
 }
 
@@ -216,14 +217,14 @@ function page_list_tenant() {
 
   $header = array(
     'stt' => t('No.'),
-    'title' => array('data' => t('Tenant name'), 'type' => 'none', 'field' => 'title', 'sort' => 'asc'),
-    'user' => t('Tenant user'),
-    'maxsize' => array('data' => t('Quota of Mailbox'), 'type' => 'field',
+    'title' => array('data' => t(get_field_label('tenant', 'title', 'Tenant name')), 'type' => 'none', 'field' => 'title', 'sort' => 'asc'),
+    'user' => t(get_field_label('tenant', 'field_tenant_user_name', 'User name')),
+    'maxsize' => array('data' => t(get_field_label('tenant', 'field_tenant_mailbox_max_size', 'Max mailbox quota')), 'type' => 'field',
       'specifier' => array(
         'field' => 'field_tenant_mailbox_max_size', 'column' => 'value',
       ),
     ),
-    'number' => array('data' => t('Number of Mailbox'), 'type' => 'field',
+    'number' => array('data' => t(get_field_label('tenant', 'field_tenant_number_of_mailboxes', 'Max mailbox number')), 'type' => 'field',
       'specifier' => array(
         'field' => 'field_tenant_number_of_mailboxes', 'column' => 'value',
       ),
@@ -252,7 +253,7 @@ function page_list_tenant() {
 
     $row = array();
     $row['stt'] = $key;
-    $row['title'] = $node->title;
+    $row['title'] = l($node->title, 'node/' . $node->nid);
     $row['user'] = $tenant->user->name;
     $row['maxsize'] = ($tenant->mailbox_max_size == '') ? '' : t('@number MB', array('@number' => $tenant->mailbox_max_size));
     $row['number'] = $tenant->number_of_mailboxes;
@@ -263,7 +264,7 @@ function page_list_tenant() {
   $output = '';
   if(user_access('create tenant content')) 
     $output .= '<ul class="action-links"><li>' . l(t('Add new Tenant'), 'node/add/tenant', array('query' => $destination)) . '</li></ul>';
-  $output .= theme('table', array('header' => $header, 'rows' => $rows)).theme('pager');
+  $output .= theme('table', array('header' => $header, 'rows' => $rows)) . theme('pager');
   return $output;
 }
 
@@ -276,14 +277,14 @@ function page_list_domain(){
 
   $header = array(
     'stt' => t('No.'),
-    'title' => array('data' => t('Domain name'), 'type' => 'none', 'field' => 'title', 'sort' => 'asc'),
+    'title' => array('data' => t(get_field_label('domain', 'title', 'Domain name')), 'type' => 'none', 'field' => 'title', 'sort' => 'asc'),
     'user' => t('Domain user'),
-    'maxsize' => array('data' => t('Quota of Mailbox'), 'type' => 'field',
+    'maxsize' => array('data' => t(get_field_label('domain', 'field_domain_mailbox_max_size', 'Max mailbox quota')), 'type' => 'field',
       'specifier' => array(
         'field' => 'field_domain_mailbox_max_size', 'column' => 'value',
       ),
     ),
-    'number' => array('data' => t('Number of Mailbox'), 'type' => 'field',
+    'number' => array('data' => t(get_field_label('domain', 'field_domain_number_of_mailboxes', 'Max mailbox mumber')), 'type' => 'field',
       'specifier' => array(
         'field' => 'field_domain_number_of_mailboxes', 'column' => 'value',
       ),
@@ -300,7 +301,8 @@ function page_list_domain(){
     if (count($tenants)) {
       $tenant_nids = array_keys($tenants);
       $efq->fieldCondition('field_domain_tenant', 'nid', $tenant_nids, 'IN');
-    } else {
+    }
+    else {
       $efq->fieldCondition('field_domain_user', 'uid', $user->uid, '=');
     }
   }
@@ -318,7 +320,7 @@ function page_list_domain(){
 
     $row = array();
     $row['stt'] = $key;
-    $row['title'] = $node->title;
+    $row['title'] = l($node->title, 'node/' . $node->nid);
     $row['user'] = $domain->user->name;
     $row['maxsize'] = ($domain->mailbox_max_size == '') ? '' : t('@number MB', array('@number' => $domain->mailbox_max_size));
     $row['number'] = $domain->number_of_mailboxes;
@@ -329,7 +331,7 @@ function page_list_domain(){
   $output = '';
   if(user_access('create domain content')) 
     $output .= '<ul class="action-links"><li>' . l(t('Add new Domain'), 'node/add/domain', array('query' => $destination)) . '</li></ul>';
-  $output .= theme('table', array('header' => $header, 'rows' => $rows)).theme('pager');
+  $output .= theme('table', array('header' => $header, 'rows' => $rows)) . theme('pager');
   return $output;
 }
 
@@ -342,8 +344,8 @@ function page_list_group() {
 
   $header = array(
     'stt' => t('No.'),
-    'title' => array('data' => t('Group'), 'type' => 'none', 'field' => 'title', 'sort' => 'asc'),
-    'fullname' => array('data' => t('Group fullname'), 'type' => 'field',
+    'title' => array('data' => t(get_field_label('group', 'title', 'Group')), 'type' => 'none', 'field' => 'title', 'sort' => 'asc'),
+    'fullname' => array('data' => t(get_field_label('group', 'field_group_fullname', 'Fullname')), 'type' => 'field',
       'specifier' => array(
         'field' => 'field_group_fullname', 'column' => 'value',
       ),
@@ -360,7 +362,8 @@ function page_list_group() {
     if (count($domains)) {
       $domain_nids = array_keys($domains);
       $efq->fieldCondition('field_node_domain', 'nid', $domain_nids, 'IN');
-    } else {
+    }
+    else {
       $efq->fieldCondition('field_group_user', 'uid', $user->uid, '=');
     }
   }
@@ -379,7 +382,7 @@ function page_list_group() {
 
     $row = array();
     $row['stt'] = $key;
-    $row['title'] = $group_address;
+    $row['title'] = l($group_address, 'node/' . $node->nid);
     $row['fullname'] = $group->fullname;
     $row['operations'] = $operations;
     $rows[] = $row;
@@ -388,7 +391,7 @@ function page_list_group() {
   $output = '';
   if(user_access('create group content')) 
     $output .= '<ul class="action-links"><li>' . l(t('Add new Group'), 'node/add/group', array('query' => $destination)) . '</li></ul>';
-  $output .= theme('table', array('header' => $header, 'rows' => $rows)).theme('pager');
+  $output .= theme('table', array('header' => $header, 'rows' => $rows)) . theme('pager');
   return $output;
 }
 
@@ -401,8 +404,8 @@ function page_list_alias() {
 
   $header = array(
     'stt' => t('No.'),
-    'title' => array('data' => t('Alias'), 'type' => 'none', 'field' => 'title', 'sort' => 'asc'),
-    'mapping' => t('Mapping mailbox'),
+    'title' => array('data' => t(get_field_label('alias', 'title', 'Alias')), 'type' => 'none', 'field' => 'title', 'sort' => 'asc'),
+    'mapping' => t(get_field_label('alias', 'field_alias_mailbox', 'Mapping mailbox')),
     'operations' => t('Operations'),
   );
   $efq = new EntityFieldQuery();
@@ -420,7 +423,14 @@ function page_list_alias() {
       $groups = user_get_group($user->uid);
       $group_nids = array_keys($groups);
       if(count($group_nids)) {
-        $efq->fieldCondition('field_node_group', 'nid', $group_nids, 'IN');
+        $alias_nids = array();
+        foreach ($group_nids as $nid) {
+          $alias_nids += list_alias_id_by_group($nid);
+        }
+        if (count($alias_nids)) {
+          $efq->propertyCondition('nid', $alias_nids, 'IN');
+        }
+        //$efq->fieldCondition('field_node_group', 'nid', $group_nids, 'IN');
       }
     }
   }
@@ -441,7 +451,7 @@ function page_list_alias() {
 
     $row = array();
     $row['stt'] = $key;
-    $row['title'] = $alias_address;
+    $row['title'] = l($alias_address, 'node/' . $node->nid);
     $row['mapping'] = $alias_mapping;
     $row['operations'] = $operations;
     $rows[] = $row;
@@ -450,7 +460,7 @@ function page_list_alias() {
   $output = '';
   if(user_access('create alias content')) 
     $output .= '<ul class="action-links"><li>' . l(t('Add new Alias'), 'node/add/alias', array('query' => $destination)) . '</li></ul>';
-  $output .= theme('table', array('header' => $header, 'rows' => $rows)).theme('pager');
+  $output .= theme('table', array('header' => $header, 'rows' => $rows)) . theme('pager');
   return $output;
 }
 
@@ -464,22 +474,24 @@ function page_list_mailbox() {
 
   $header = array(
     'stt' => t('No.'),
-    'title' => array('data' => t('Email address'), 'type' => 'none', 'field' => 'title', 'sort' => 'asc'),
-    'fullname' => array('data' => t('Mailbox fullname'), 'type' => 'field',
+    'title' => array('data' => t(get_field_label('mailbox', 'title', 'Email')), 'type' => 'none', 'field' => 'title', 'sort' => 'asc'),
+    'fullname' => array('data' => t(get_field_label('mailbox', 'field_mailbox_fullname', 'Fullname')), 'type' => 'field',
       'specifier' => array(
         'field' => 'field_mailbox_fullname', 'column' => 'value',
       ),
     ),
-    'status' => array('data' => t('Mailbox status'), 'type' => 'field',
+    'status' => array('data' => t(get_field_label('mailbox', 'field_mailbox_status', 'Status')), 'type' => 'field',
       'specifier' => array(
         'field' => 'field_mailbox_status', 'column' => 'value',
       ),
     ),
-    'maxsize' => array('data' => t('Mailbox quota'), 'type' => 'field',
+    'maxsize' => array('data' => t(get_field_label('mailbox', 'field_mailbox_size', 'Quota')), 'type' => 'field',
       'specifier' => array(
         'field' => 'field_mailbox_size', 'column' => 'value',
       ),
     ),
+    'created' => array('data' => t('Created'), 'type' => 'none', 'field' => 'created'),
+    'creator' => t('Creator'),
     'operations' => t('Operations'),
   );
   $efq = new EntityFieldQuery();
@@ -498,7 +510,14 @@ function page_list_mailbox() {
       $group_nids = array_keys($groups);
 
       if (count($group_nids)) {
-        $efq->fieldCondition('field_node_group', 'nid', $group_nids, 'IN');
+        $mailbox_nids = array();
+        foreach ($group_nids as $nid) {
+          $mailbox_nids += list_mailbox_id_by_group($nid);
+        }
+        if (count($mailbox_nids)) {
+          $efq->propertyCondition('nid', $mailbox_nids, 'IN');
+        }
+        //$efq->fieldCondition('field_node_group', 'nid', $group_nids, 'IN');
       }
     }
   }
@@ -509,6 +528,7 @@ function page_list_mailbox() {
   $rows = array();
   $destination = drupal_get_destination();
   foreach ($nodes as $key => $node) {
+	$user = user_load($node->uid);
     $operations = '<ul class="links inline">'
       .'<li class="edit first">' . l(t('edit'), 'node/' . $node ->nid . '/edit', array('query' => $destination)) . '</li>'
       .'<li class="delete last">' . l(t('delete'), 'zimbra/'.$node ->nid . '/delete', array('query' => $destination)) . '</li>'
@@ -518,17 +538,23 @@ function page_list_mailbox() {
 
     $row = array();
     $row['stt'] = $key + 1;
-    $row['title'] = $mailbox_address;
+    $row['title'] = l($mailbox_address, 'node/' . $node->nid);
     $row['fullname'] = $mailbox->fullname;
     $row['status'] = $mailbox->status;
     $row['maxsize'] = $mailbox->size;
+    $row['created'] = date('d-m-Y H:i:s', $node->created);
+    $row['creator'] = $user->name;
     $row['operations'] = $operations;
     $rows[] = $row;
   }
 
   $output = '';
-  if(user_access('create mailbox content')) 
-    $output .= '<ul class="action-links"><li>' . l(t('Add new Mailbox'), 'node/add/mailbox', array('query' => $destination)) . '</li></ul>';
-  $output .= theme('table', array('header' => $header, 'rows' => $rows)).theme('pager');
+  if (user_access('create mailbox content')) {
+    $output .= '<ul class="action-links">'
+      . '<li>' . l(t('Add new Mailbox'), 'node/add/mailbox', array('query' => $destination)) . '</li>'
+      . '<li>' . l(t('Import Mailbox(es)'), 'zimbra/import-account', array('query' => $destination)) . '</li>'
+      . '</ul>';
+  }
+  $output .= theme('table', array('header' => $header, 'rows' => $rows)) . theme('pager');
   return $output;
 }

@@ -214,7 +214,7 @@ class soap_message {
     } else {
       $object = new stdClass();
       foreach ($attributes as $key => $value) {
-        $object->$key = (string)$value;
+        $object->$key = (string) $value;
       }
       if (!empty($text_value)) {
         $object->_ = $text_value;

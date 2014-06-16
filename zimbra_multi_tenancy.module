@@ -212,6 +212,14 @@ function zimbra_multi_tenancy_menu() {
     'access arguments' => array('create server content'),
     'type' => MENU_CALLBACK,
   );
+
+  $items['zimbra/import-account'] = array(
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('import_account_form'),
+    'access callback' => TRUE,
+    'access arguments' => array('create account content'),
+    'type' => MENU_CALLBACK,
+  );
     
   $content_types = array('server', 'tenant', 'domain', 'group', 'alias', 'mailbox');
   foreach ($content_types as $key => $type) {
