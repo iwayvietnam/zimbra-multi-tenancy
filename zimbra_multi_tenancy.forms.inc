@@ -394,6 +394,7 @@ function zimbra_ternant_hook_form(&$form, &$form_state) {
 
   unset($form['field_tenant_user_password'][LANGUAGE_NONE][0]['value']['#default_value']);
   unset($form['field_tenant_user_password'][LANGUAGE_NONE][0]['value']['#title']);
+  unset($form['field_tenant_user_password'][LANGUAGE_NONE][0]['value']['#maxlength']);
   $form['field_tenant_user_password'][LANGUAGE_NONE][0]['value']['#type'] = 'password_confirm';
 
   if (arg(1) == 'add') {
@@ -585,6 +586,7 @@ function zimbra_domain_hook_form(&$form, &$form_state) {
 
   unset($form['field_domain_user_password'][LANGUAGE_NONE][0]['value']['#default_value']);
   unset($form['field_domain_user_password'][LANGUAGE_NONE][0]['value']['#title']);
+  unset($form['field_tenant_user_password'][LANGUAGE_NONE][0]['value']['#maxlength']);
   $form['field_domain_user_password'][LANGUAGE_NONE][0]['value']['#type'] = 'password_confirm';
 
   if (arg(1) =='add') {
@@ -829,6 +831,7 @@ function zimbra_group_hook_form(&$form, &$form_state) {
 
   unset($form['field_group_user_password'][LANGUAGE_NONE][0]['value']['#default_value']);
   unset($form['field_group_user_password'][LANGUAGE_NONE][0]['value']['#title']);
+  unset($form['field_tenant_user_password'][LANGUAGE_NONE][0]['value']['#maxlength']);
   $form['field_group_user_password'][LANGUAGE_NONE][0]['value']['#type'] = 'password_confirm';
 
   if(arg(1) == 'add') {
@@ -1275,6 +1278,7 @@ function zimbra_mailbox_hook_form(&$form, &$form_state){
 
   unset($form['field_mailbox_password'][LANGUAGE_NONE][0]['value']['#default_value']);
   unset($form['field_mailbox_password'][LANGUAGE_NONE][0]['value']['#title']);
+  unset($form['field_tenant_user_password'][LANGUAGE_NONE][0]['value']['#maxlength']);
   $form['field_mailbox_password'][LANGUAGE_NONE][0]['value']['#type'] = 'password_confirm';
 
   $form['field_node_domain'][LANGUAGE_NONE]['#required'] = 1;
