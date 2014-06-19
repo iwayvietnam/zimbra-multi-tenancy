@@ -48,6 +48,7 @@ function _zimbra_add_nodetype_server() {
       'locked' => 0,
       'custom' => 1,
       'modified' => 1,
+      'comment' => array('status' => COMMENT_NODE_CLOSED),
     ));
     node_type_save($type);
   }
@@ -100,6 +101,7 @@ function _zimbra_add_nodetype_tenant() {
       'locked' => 0,
       'custom' => 1,
       'modified' => 1,
+      'comment' => array('status' => COMMENT_NODE_CLOSED),
     ));
     node_type_save($type);
   }
@@ -138,6 +140,7 @@ function _zimbra_add_nodetype_domain() {
       'locked' => 0,
       'custom' => 1,
       'modified' => 1,
+      'comment' => array('status' => COMMENT_NODE_CLOSED),
     ));
     node_type_save($type);
   }
@@ -168,6 +171,7 @@ function _zimbra_add_nodetype_group() {
       'locked' => 0,
       'custom' => 1,
       'modified' => 1,
+      'comment' => array('status' => COMMENT_NODE_CLOSED),
     ));
     node_type_save($type);
   }
@@ -196,6 +200,7 @@ function _zimbra_add_nodetype_alias() {
       'locked' => 0,
       'custom' => 1,
       'modified' => 1,
+      'comment' => array('status' => COMMENT_NODE_CLOSED),
     ));
     node_type_save($type);
   }
@@ -221,6 +226,7 @@ function _zimbra_add_nodetype_mailbox() {
       'locked' => 0,
       'custom' => 1,
       'modified' => 1,
+      'comment' => array('status' => COMMENT_NODE_CLOSED),
     ));
     node_type_save($type);
   }
