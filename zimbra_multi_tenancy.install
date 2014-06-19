@@ -17,7 +17,7 @@ function zimbra_multi_tenancy_install() {
   _zimbra_add_nodetype_group();
   _zimbra_add_nodetype_alias();
   _zimbra_add_nodetype_mailbox();
-  
+
   zimbra_add_role();
 }
 
@@ -48,6 +48,7 @@ function _zimbra_add_nodetype_server() {
       'locked' => 0,
       'custom' => 1,
       'modified' => 1,
+      'comment' => array('status' => COMMENT_NODE_CLOSED),
     ));
     node_type_save($type);
   }
@@ -100,6 +101,7 @@ function _zimbra_add_nodetype_tenant() {
       'locked' => 0,
       'custom' => 1,
       'modified' => 1,
+      'comment' => array('status' => COMMENT_NODE_CLOSED),
     ));
     node_type_save($type);
   }
@@ -138,6 +140,7 @@ function _zimbra_add_nodetype_domain() {
       'locked' => 0,
       'custom' => 1,
       'modified' => 1,
+      'comment' => array('status' => COMMENT_NODE_CLOSED),
     ));
     node_type_save($type);
   }
@@ -168,6 +171,7 @@ function _zimbra_add_nodetype_group() {
       'locked' => 0,
       'custom' => 1,
       'modified' => 1,
+      'comment' => array('status' => COMMENT_NODE_CLOSED),
     ));
     node_type_save($type);
   }
@@ -196,6 +200,7 @@ function _zimbra_add_nodetype_alias() {
       'locked' => 0,
       'custom' => 1,
       'modified' => 1,
+      'comment' => array('status' => COMMENT_NODE_CLOSED),
     ));
     node_type_save($type);
   }
@@ -221,19 +226,22 @@ function _zimbra_add_nodetype_mailbox() {
       'locked' => 0,
       'custom' => 1,
       'modified' => 1,
+      'comment' => array('status' => COMMENT_NODE_CLOSED),
     ));
     node_type_save($type);
   }
   //Add any field of tenant content type
   zimbra_add_text_field($type, 'field_mailbox_fullname', 'Fullname', 1);
   zimbra_add_text_field($type, 'field_mailbox_password', 'Password', 2);
-  zimbra_add_list_text_field($type, 'field_mailbox_status', 'Status', 3);
-  zimbra_add_node_reference_field($type, 'field_node_domain', 'Domain', 4, 'domain');
-  zimbra_add_node_reference_field($type, 'field_node_group', 'Group', 5, 'group');
-  zimbra_add_integer_field($type, 'field_mailbox_size', 'Quota', 6, 'MB');
-  zimbra_add_hidden_text_field($type, 'field_mailbox_zimbra_id', 'Zimbra mailbox ID', 7);  
+  zimbra_add_text_field($type, 'field_mailbox_telephone', 'Telephone', 3);
+  zimbra_add_list_text_field($type, 'field_mailbox_category', 'Category', 4);
+  zimbra_add_list_text_field($type, 'field_mailbox_status', 'Status', 5);
+  zimbra_add_node_reference_field($type, 'field_node_domain', 'Domain', 6, 'domain');
+  zimbra_add_node_reference_field($type, 'field_node_group', 'Group', 7, 'group');
+  zimbra_add_integer_field($type, 'field_mailbox_size', 'Quota', 8, 'MB');
+  zimbra_add_hidden_text_field($type, 'field_mailbox_zimbra_id', 'Zimbra mailbox ID', 9);  
 
-  $allows = array(
+  $statuses = array(
     'active' => t('Active'),
     'closed' => t('Closed'),
     'locked' => t('Locked'),
@@ -241,7 +249,16 @@ function _zimbra_add_nodetype_mailbox() {
     'maintenance' => t('Maintenance'),
   );
   $field = field_info_field('field_mailbox_status');
-  $field['settings'] = array('allowed_values' => $allows);
+  $field['settings'] = array('allowed_values' => $statuses);
+  field_update_field($field);
+
+  $categories = array(
+    'RAM/ZAM' => t('RAM/ZAM'),
+    'IM' => t('IM'),
+    'IA' => t('IA'),
+  );
+  $field = field_info_field('field_mailbox_category');
+  $field['settings'] = array('allowed_values' => $categories);
   field_update_field($field);
 }
 
