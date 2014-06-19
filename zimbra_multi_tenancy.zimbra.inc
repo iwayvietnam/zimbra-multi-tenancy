@@ -459,7 +459,7 @@ function zimbra_get_all_account(zimbra_admin_api $api, $domain = '', $limit = 0,
   if (isset($cache[$cache_key])) {
     return $cache[$cache_key];
   }
-  $all_account = array();
+  $all_accounts = array();
   try {
     $attrs = array(
       'displayName',
@@ -491,28 +491,28 @@ function zimbra_get_all_account(zimbra_admin_api $api, $domain = '', $limit = 0,
       'zimbraIsSystemResource',
       'zimbraIsSystemAccount',
       'zimbraIsExternalVirtualAccount',
-	);
+    );
     $result = $api->searchDirectory(
       '', $domain, false, false, false, $attrs, array('accounts'), 0, null, true, $limit, $offset
     );
-	$pager = array(
-      'num' => (int) $result->num,
+    $pager = array(
+      'num' => isset($result->num) ? (int) $result->num : 0,
       'more' => (bool) $result->more,
       'total' => (int) $result->searchTotal,
       'limit' => (int) $limit,
       'offset' => (int) $offset,
-	);
+    );
     if(isset($result->account)) {
       $accounts = is_array($result->account) ? $result->account : array($result->account);
       foreach ($accounts as $account) {
-        $all_account[$account->id] = $account;
+        $all_accounts[$account->id] = $account;
       }
     }
   }
   catch (Exception $ex) {
     watchdog('zimbra', $ex->__toString());
   }
-  $cache[$cache_key] = $all_account;
+  $cache[$cache_key] = $all_accounts;
   return $all_accounts;
 }
 
