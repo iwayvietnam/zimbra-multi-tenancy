@@ -256,7 +256,7 @@ function user_get_all_account($uid) {
  * @return mix
  */
 function user_access_list_tenant($uid) {
-  $cache = &drupal_static(__FUNCTION__, null);
+  $cache = &drupal_static(__FUNCTION__, NULL);
   if (isset($cache[$uid])) {
     return $cache[$uid];
   }
@@ -276,7 +276,7 @@ function user_access_list_tenant($uid) {
  * @return mix
  */
 function user_access_list_domain($uid) {
-  $cache = &drupal_static(__FUNCTION__, null);
+  $cache = &drupal_static(__FUNCTION__, NULL);
   if (isset($cache[$uid])) {
     return $cache[$uid];
   }
@@ -650,7 +650,7 @@ function domain_exists($domain, $nid = 0) {
       ->propertyCondition('nid', $nid, '!=')
       ->propertyCondition('title', $domain, '=');
   $result = $efq->execute();
-  return (isset($result['node']) AND is_array($result['node'])) ? count($result['node']) > 0 : false;
+  return (isset($result['node']) AND is_array($result['node'])) ? count($result['node']) > 0 : FALSE;
 }
 
 /**
@@ -669,7 +669,7 @@ function mailbox_exists($name, $domain, $nid = 0) {
       ->propertyCondition('title', $name, '=')
       ->fieldCondition('field_node_domain', 'nid', $domain, '=');
   $result = $efq->execute();
-  $exists = (isset($result['node']) AND is_array($result['node'])) ? count($result['node']) > 0 : false;
+  $exists = (isset($result['node']) AND is_array($result['node'])) ? count($result['node']) > 0 : FALSE;
   if (!$exists) {
     $efq = new EntityFieldQuery();
     $efq->entityCondition('entity_type', 'node')
@@ -678,7 +678,7 @@ function mailbox_exists($name, $domain, $nid = 0) {
         ->propertyCondition('title', $name, '=')
         ->fieldCondition('field_node_domain', 'nid', $domain, '=');
     $result = $efq->execute();
-    $exists = (isset($result['node']) AND is_array($result['node'])) ? count($result['node']) > 0 : false;
+    $exists = (isset($result['node']) AND is_array($result['node'])) ? count($result['node']) > 0 : FALSE;
   }
   if(!$exists) {
     $efq = new EntityFieldQuery();
@@ -688,7 +688,7 @@ function mailbox_exists($name, $domain, $nid = 0) {
       ->propertyCondition('title', $name, '=')
       ->fieldCondition('field_node_domain', 'nid', $domain, '=');
     $result = $efq->execute();
-    $exists = (isset($result['node']) AND is_array($result['node'])) ? count($result['node']) > 0 : false;
+    $exists = (isset($result['node']) AND is_array($result['node'])) ? count($result['node']) > 0 : FALSE;
   }
   return $exists;
 }
@@ -1073,7 +1073,7 @@ function is_ajax_request() {
  * Check subject is matches with patterns.
  */
 function is_matches(array $patterns = array(), $subject = ''){
-  $is_match = false;
+  $is_match = FALSE;
   $pattern = implode('|', $patterns);
   $is_match = preg_match('/'.$pattern.'/msS', $subject);
   return $is_match;
@@ -1102,7 +1102,7 @@ function zimbra_add_password_field(
   $field_name,
   $field_label = '',
   $weight = 0,
-  $multiple = false
+  $multiple = FALSE
 ) {
   $field = field_info_field($field_name);
   $instance = field_info_instance('node', $field_name, $type->type);
@@ -1112,7 +1112,7 @@ function zimbra_add_password_field(
       'type' => 'password_field',
       'entity_types' => array('node'),
     );
-    if ($multiple === true) {
+    if ($multiple === TRUE) {
       $field['cardinality'] = FIELD_CARDINALITY_UNLIMITED;
     }
     $field = field_create_field($field);
@@ -1153,7 +1153,7 @@ function zimbra_add_text_field(
   $field_name,
   $field_label = '',
   $weight = 0,
-  $multiple = false
+  $multiple = FALSE
 ) {
   $field = field_info_field($field_name);
   $instance = field_info_instance('node', $field_name, $type->type);
@@ -1163,7 +1163,7 @@ function zimbra_add_text_field(
       'type' => 'text',
       'entity_types' => array('node'),
     );
-    if ($multiple === true) {
+    if ($multiple === TRUE) {
       $field['cardinality'] = FIELD_CARDINALITY_UNLIMITED;
     }
     $field = field_create_field($field);
@@ -1204,7 +1204,7 @@ function zimbra_add_text_long_field(
   $field_name,
   $field_label = '',
   $weight = 0,
-  $multiple = false
+  $multiple = FALSE
 ) {
   $field = field_info_field($field_name);
   $instance = field_info_instance('node', $field_name, $type->type);
@@ -1214,7 +1214,7 @@ function zimbra_add_text_long_field(
       'type' => 'text_long',
       'entity_types' => array('node'),
     );
-    if ($multiple === true) {
+    if ($multiple === TRUE) {
       $field['cardinality'] = FIELD_CARDINALITY_UNLIMITED;
     }
     $field = field_create_field($field);
@@ -1247,7 +1247,7 @@ function zimbra_add_boolean_field(
   $field_name,
   $field_label = '',
   $weight = 0,
-  $multiple = false
+  $multiple = FALSE
 ) {
   $field = field_info_field($field_name);
   $instance = field_info_instance('node', $field_name, $type->type);
@@ -1258,7 +1258,7 @@ function zimbra_add_boolean_field(
       'entity_types' => array('node'),
       'settings' => array('allowed_values' => array(0 => 0, 1 => 1)),
     );
-    if ($multiple === true) {
+    if ($multiple === TRUE) {
       $field['cardinality'] = FIELD_CARDINALITY_UNLIMITED;
     }
     $field = field_create_field($field);
@@ -1303,7 +1303,7 @@ function zimbra_add_integer_field(
   $field_label = '',
   $weight = 0,
   $suffix = '',
-  $multiple = false
+  $multiple = FALSE
 ) {
   $field = field_info_field($field_name);
   $instance = field_info_instance('node', $field_name, $type->type);
@@ -1313,7 +1313,7 @@ function zimbra_add_integer_field(
       'type' => 'number_integer',
       'entity_types' => array('node'),
     );
-    if ($multiple === true) {
+    if ($multiple === TRUE) {
       $field['cardinality'] = FIELD_CARDINALITY_UNLIMITED;
     }
     $field = field_create_field($field);
@@ -1355,7 +1355,7 @@ function zimbra_add_hidden_text_field(
   $field_name,
   $field_label = '',
   $weight = 0,
-  $multiple = false
+  $multiple = FALSE
 ) {
   $field = field_info_field($field_name);
   $instance = field_info_instance('node', $field_name, $type->type);
@@ -1365,7 +1365,7 @@ function zimbra_add_hidden_text_field(
       'type' => 'field_hidden_text',
       'entity_types' => array('node'),
     );
-    if ($multiple === true) {
+    if ($multiple === TRUE) {
       $field['cardinality'] = FIELD_CARDINALITY_UNLIMITED;
     }
     $field = field_create_field($field);
@@ -1406,7 +1406,7 @@ function zimbra_add_list_text_field(
   $field_name,
   $field_label = '',
   $weight = 0,
-  $multiple = false
+  $multiple = FALSE
 ) {
   $field = field_info_field($field_name);
   $instance = field_info_instance('node', $field_name, $type->type);
@@ -1416,7 +1416,7 @@ function zimbra_add_list_text_field(
       'type' => 'list_text',
       'entity_types' => array('node'),
     );
-    if ($multiple === true) {
+    if ($multiple === TRUE) {
       $field['cardinality'] = FIELD_CARDINALITY_UNLIMITED;
     }
     $field = field_create_field($field);
@@ -1445,6 +1445,69 @@ function zimbra_add_list_text_field(
 }
 
 /**
+ * Add the Term reference field
+ *
+ * @param $type Node type object.
+ * @param $field_name Name of field.
+ * @param $field_label Label of field.
+ * @param $vocabulary Vocabulary.
+ * @return void
+ */
+function zimbra_add_term_reference_field(
+  $type,
+  $field_name,
+  $field_label = '',
+  $weight = 0,
+  $vocabulary ='tag',
+  $multiple = FALSE
+){
+  $field = field_info_field($field_name);
+  $instance = field_info_instance('node', $field_name, $type->type);
+  if (empty($field)) {
+    $field = array(
+      'field_name' => $field_name,
+      'type' => 'taxonomy_term_reference',
+      'entity_types' => array(),
+      'settings' => array(
+        'allowed_values' => array(
+          array(
+            'vocabulary' => $vocabulary,
+            'parent' => 0,
+          ),
+        ),
+      ),
+    );
+    if ($multiple === TRUE) {
+      $field['cardinality'] = FIELD_CARDINALITY_UNLIMITED;
+    }
+    $field = field_create_field($field);
+  }
+  if (empty($instance)) {
+    $instance = array(
+      'field_name' => $field_name,
+      'entity_type' => 'node',
+      'bundle' => $type->type,
+      'label' => t($field_label),
+      'widget' => array(
+        'type' => 'options_select',
+        'weight' => $weight,
+      ),
+      'display' => array(
+        'default' => array(
+          'type' => 'taxonomy_term_reference_link',
+          'weight' => 10,
+        ),
+        'teaser' => array(
+          'type' => 'taxonomy_term_reference_link',
+          'weight' => 10,
+        ),
+      ),
+    );
+    field_create_instance($instance);
+  }
+}
+
+/**
  * Add the Node reference field
  *
  * @param $type
@@ -1458,7 +1521,7 @@ function zimbra_add_node_reference_field(
   $field_label = '',
   $weight = 0,
   $reference = 'article',
-  $multiple = false
+  $multiple = FALSE
 ) {
   $field = field_info_field($field_name);
   $instance = field_info_instance('node', $field_name, $type->type);
@@ -1471,7 +1534,7 @@ function zimbra_add_node_reference_field(
         'referenceable_types' => array($reference => $reference),
       ),
     );
-    if ($multiple === true) {
+    if ($multiple === TRUE) {
       $field['cardinality'] = FIELD_CARDINALITY_UNLIMITED;
     }
     $field = field_create_field($field);
@@ -1482,7 +1545,10 @@ function zimbra_add_node_reference_field(
       'entity_type' => 'node',
       'bundle' => $type->type,
       'label' => t($field_label),
-      'widget' => array('type' => 'options_select', 'weight' => $weight),
+      'widget' => array(
+        'type' => 'options_select',
+        'weight' => $weight,
+      ),
       'display' => array(
         'default' => array(
           'label' => 'above',
@@ -1512,7 +1578,7 @@ function zimbra_add_user_reference_field(
   $field_name,
   $field_label = '',
   $weight = 0,
-  $multiple = false
+  $multiple = FALSE
 ) {
   $field = field_info_field($field_name);
   $instance = field_info_instance('node', $field_name, $type->type);
@@ -1525,7 +1591,7 @@ function zimbra_add_user_reference_field(
         'referenceable_roles' => array('2' =>2),
       ),
     );
-    if ($multiple === true) {
+    if ($multiple === TRUE) {
       $field['cardinality'] = FIELD_CARDINALITY_UNLIMITED;
     }
     $field = field_create_field($field);
@@ -1536,7 +1602,10 @@ function zimbra_add_user_reference_field(
       'entity_type' => 'node',
       'bundle' => $type->type,
       'label' => t($field_label),
-      'widget' => array('type' => 'options_select', 'weight' => $weight),
+      'widget' => array(
+        'type' => 'options_select',
+        'weight' => $weight,
+      ),
       'display' => array(
         'default' => array(
           'label' => 'above',
