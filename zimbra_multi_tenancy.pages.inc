@@ -137,9 +137,9 @@ function page_content_general($add_item = 1) {
   
   if ($add_item == 1) {
     if(user_access('create server content'))
-      $menu_items[] = l(t('Add new Server'), 'node/add/server', array('query' => array('destination' => 'zimbra/content/list/domain')));
+      $menu_items[] = l(t('Add new Server'), 'node/add/server', array('query' => array('destination' => 'zimbra/content/list/server')));
     if(user_access('create tenant content'))
-      $menu_items[] = l(t('Add new Tenant'), 'node/add/tenant', array('query' => array('destination' => 'zimbra/content/list/domain')));
+      $menu_items[] = l(t('Add new Tenant'), 'node/add/tenant', array('query' => array('destination' => 'zimbra/content/list/tenant')));
     if(user_access('create domain content'))
       $menu_items[] = l(t('Add new Domain'), 'node/add/domain', array('query' => array('destination' => 'zimbra/content/list/domain')));
     if(user_access('create group content'))
@@ -321,7 +321,7 @@ function page_list_domain(){
     $row = array();
     $row['stt'] = $key;
     $row['title'] = l($node->title, 'node/' . $node->nid);
-    $row['user'] = $domain->user->name;
+    $row['user'] = isset($domain->user->name) ? $domain->user->name : '';
     $row['maxsize'] = ($domain->mailbox_max_size == '') ? '' : t('@number MB', array('@number' => $domain->mailbox_max_size));
     $row['number'] = $domain->number_of_mailboxes;
     $row['operations'] = $operations;
