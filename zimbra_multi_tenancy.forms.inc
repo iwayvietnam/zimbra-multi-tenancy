@@ -147,12 +147,13 @@ function zimbra_pull_data_callback($form, &$form_state) {
               $user_roles[] = variable_get('zimbra_domain_role_id', 0);
             }
 
-            $user_uid = auto_create_user($user_name, $user_pass, $user_mail, $user_roles);
+            // $user_uid = auto_create_user($user_name, $user_pass, $user_mail, $user_roles);
 
             $node = new stdClass();
             $node->type = 'domain';
             $node->title = $domain->name;
             $node->promote = 0;
+            $node->comment = COMMENT_NODE_CLOSED;
             $node->language = LANGUAGE_NONE;
             node_object_prepare($node);
 
@@ -163,7 +164,7 @@ function zimbra_pull_data_callback($form, &$form_state) {
             $node->field_domain_zimbra_id[LANGUAGE_NONE][0]['value'] = $zimbra_id;
             $node->field_domain_mailbox_max_size[LANGUAGE_NONE][0]['value'] = 0;
             $node->field_domain_number_of_mailboxes[LANGUAGE_NONE][0]['value'] = 0;
-            $node->field_domain_user[LANGUAGE_NONE][0]['uid'] = $user_uid;
+            // $node->field_domain_user[LANGUAGE_NONE][0]['uid'] = $user_uid;
             node_save($node);
           }
         }
@@ -193,12 +194,13 @@ function zimbra_pull_data_callback($form, &$form_state) {
 
               $user_roles = array();
               if (variable_get('zimbra_group_role_id', 0) != 0) $user_roles[] = variable_get('zimbra_group_role_id', 0);
-              $user_uid = auto_create_user($user_name, $user_pass, $user_mail, $user_roles);
+              // $user_uid = auto_create_user($user_name, $user_pass, $user_mail, $user_roles);
 
               $node = new stdClass();
               $node->type = 'group';
               $node->title = $group_name;
               $node->promote = 0;
+              $node->comment = COMMENT_NODE_CLOSED;
               $node->language = LANGUAGE_NONE;
               node_object_prepare($node);
 
@@ -206,7 +208,7 @@ function zimbra_pull_data_callback($form, &$form_state) {
               $node->field_group_user_password[LANGUAGE_NONE][0]['value'] = '';
               $node->field_node_domain[LANGUAGE_NONE][0]['nid'] = $domain->nid;
               $node->field_group_zimbra_id[LANGUAGE_NONE][0]['value'] = $zimbra_id;
-              $node->field_group_user[LANGUAGE_NONE][0]['uid'] = $user_uid;
+              // $node->field_group_user[LANGUAGE_NONE][0]['uid'] = $user_uid;
               foreach ($members as $key => $member) {
                 $node->field_group_members[LANGUAGE_NONE][$key]['value'] = $member;
               }
@@ -253,6 +255,7 @@ function zimbra_pull_data_callback($form, &$form_state) {
                 $node->type = 'mailbox';
                 $node->title = $mailbox_name;
                 $node->promote = 0;
+                $node->comment = COMMENT_NODE_CLOSED;
                 $node->language = LANGUAGE_NONE;
                 node_object_prepare($node);
 
@@ -290,6 +293,7 @@ function zimbra_pull_data_callback($form, &$form_state) {
               $node->type = 'alias';
               $node->title = $alias_name;
               $node->promote = 0;
+              $node->comment = COMMENT_NODE_CLOSED;
               $node->language = LANGUAGE_NONE;
               node_object_prepare($node);
 
