@@ -4,7 +4,6 @@
  * Implements hook_init().
  */
 function zimbra_multi_tenancy_init() {
-  drupal_add_js(drupal_get_path('module', 'zimbra_multi_tenancy') .'/zimbra_multi_tenancy.js');
   module_load_include('inc', 'zimbra_multi_tenancy', 'includes/soap_message');
   module_load_include('inc', 'zimbra_multi_tenancy', 'includes/soap_client');
   module_load_include('inc', 'zimbra_multi_tenancy', 'includes/wsdl_client');
@@ -43,7 +42,7 @@ function zimbra_multi_tenancy_form_alter(&$form, &$form_state, $form_id) {
       $form['options']['status']['#default_value'] = 1;
       $form['options']['promote']['#default_value'] = 0;
       $form['actions']['delete']['#access'] = 0;
-      $form['comment_settings']['comment']['#default_value'] = 1;
+      $form['comment_settings']['comment']['#default_value'] = COMMENT_NODE_CLOSED;
 
       $form['author']['#access'] = 0;
       $form['options']['#access'] = 0;
@@ -52,6 +51,7 @@ function zimbra_multi_tenancy_form_alter(&$form, &$form_state, $form_id) {
       $form['comment_settings']['#access'] = 0;
       $form['revision_information']['#access'] = 0;
       $form['actions']['preview']['#access'] = 0;
+      $form['#attached']['js'][] = drupal_get_path('module', 'zimbra_multi_tenancy') . '/zimbra_multi_tenancy.js';
       break;
   }
 
