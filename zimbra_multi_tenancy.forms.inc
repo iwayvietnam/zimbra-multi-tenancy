@@ -119,6 +119,7 @@ function zimbra_pull_data_form($form, &$form_state) {
     '#value' => t('Pull data'),
     '#submit' => array('zimbra_pull_data_callback'),
   );
+  $form['#attached']['js'][] = drupal_get_path('module', 'zimbra_multi_tenancy') . '/zimbra_multi_tenancy.js';
   return $form;
 }
 
