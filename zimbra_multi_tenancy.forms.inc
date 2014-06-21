@@ -119,6 +119,7 @@ function zimbra_pull_data_form($form, &$form_state) {
     '#value' => t('Pull data'),
     '#submit' => array('zimbra_pull_data_callback'),
   );
+  $form['#attached']['js'][] = drupal_get_path('module', 'zimbra_multi_tenancy') . '/zimbra_multi_tenancy.js';
   return $form;
 }
 
@@ -1424,7 +1425,7 @@ function zimbra_mailbox_validate($form, &$form_state) {
               'sn' => $mail_fullname,
             );
             $attrs['telephoneNumber'] = $telephone;
-            $attrs['company'] = $category;
+            $attrs['ou'] = $category;
             $attrs['zimbraMailQuota'] = $mailbox_maxsize * 1024 * 1024;
             $attrs['zimbraAccountStatus'] = $mailbox_status;
             $account = zimbra_create_account($api, $mail_address, $mail_password, $attrs);
@@ -1619,7 +1620,7 @@ function zimbra_import_account_form_callback($form, &$form_state) {
             'displayName' => $node->field_mailbox_fullname[LANGUAGE_NONE][0]['value'],
             'sn' => $node->field_mailbox_fullname[LANGUAGE_NONE][0]['value'],
             'telephoneNumber' => $node->field_mailbox_telephone[LANGUAGE_NONE][0]['value'],
-            'company' => $node->field_mailbox_category[LANGUAGE_NONE][0]['value'],
+            'ou' => $node->field_mailbox_category[LANGUAGE_NONE][0]['value'],
             'zimbraMailQuota' => $quota,
             'zimbraAccountStatus' => $node->field_mailbox_status[LANGUAGE_NONE][0]['value'],
           );
