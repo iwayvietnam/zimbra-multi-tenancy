@@ -264,7 +264,7 @@ function zimbra_pull_data_callback($form, &$form_state) {
                   if ($attr->n === 'telephoneNumber') {
                     $telephone = (int) $attr->_;
                   }
-                  if ($attr->n === 'company') {
+                  if ($attr->n === 'ou') {
                     $category = (int) $attr->_;
                   }
                 }
@@ -1440,6 +1440,7 @@ function zimbra_mailbox_validate($form, &$form_state) {
             );
             $attrs['telephoneNumber'] = $telephone;
             $attrs['ou'] = $category;
+            $attrs['company'] = $category;
             $attrs['zimbraMailQuota'] = $mailbox_maxsize * 1024 * 1024;
             $attrs['zimbraAccountStatus'] = $mailbox_status;
             $account = zimbra_create_account($api, $mail_address, $mail_password, $attrs);
@@ -1635,6 +1636,7 @@ function zimbra_import_account_form_callback($form, &$form_state) {
             'sn' => $node->field_mailbox_fullname[LANGUAGE_NONE][0]['value'],
             'telephoneNumber' => $node->field_mailbox_telephone[LANGUAGE_NONE][0]['value'],
             'ou' => $node->field_mailbox_category[LANGUAGE_NONE][0]['value'],
+            'company' => $node->field_mailbox_category[LANGUAGE_NONE][0]['value'],
             'zimbraMailQuota' => $quota,
             'zimbraAccountStatus' => $node->field_mailbox_status[LANGUAGE_NONE][0]['value'],
           );
