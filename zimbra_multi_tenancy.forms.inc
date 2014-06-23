@@ -1607,51 +1607,57 @@ function zimbra_import_account_form_callback($form, &$form_state) {
       }
       $count = 0;
       while ($row = fgetcsv($handle)) {
-        $record = array();
-        $quota = 0;
-        $mail_password = '';
-        foreach ($row as $i => $field) {
-          if ($columns[$i] === 'quota') {
-           $quota = (int) $field * 1024 * 1024;
-          }
-          if ($columns[$i] === 'password') {
-           $mail_password = $field;
-          }
-          if ($columns[$i] === 'status' && !in_array($field, $statuses)) {
-           $field = 'active';
-          }
+        $row = trim($row);
+        if (!empty($row)) {
+          $record = array();
+          $quota = 0;
+          $mail_password = '';
+          foreach ($row as $i => $field) {
+            if ($columns[$i] === 'quota') {
+             $quota = (int) $field * 1024 * 1024;
+            }
+            if ($columns[$i] === 'password') {
+             $mail_password = $field;
+            }
+            if ($columns[$i] === 'status' && !in_array($field, $statuses)) {
+             $field = 'active';
+            }
 
-          $column = _zimbra_account_mapping_columns($columns[$i]);
-          if ($column) {
-            $record[$column] = $field;
+            $column = _zimbra_account_mapping_columns($columns[$i]);
+            if ($column) {
+              $record[$column] = $field;
+            }
+          }
+          $node = _zimbra_prepare_account_node($record, $domain_nid);
+          $mailbox_exist = mailbox_exists($node->title, $domain_id, $nid);
+          if (!$mailbox_exist) {
+            $mail_address = $node->title .'@' .$domain->title;
+
+            $account = zimbra_get_account($api, $mail_address);
+            if (!$account) {
+              $attrs = array(
+                'displayName' => $node->field_mailbox_fullname[LANGUAGE_NONE][0]['value'],
+                'sn' => $node->field_mailbox_fullname[LANGUAGE_NONE][0]['value'],
+                'telephoneNumber' => $node->field_mailbox_telephone[LANGUAGE_NONE][0]['value'],
+                'ou' => $node->field_mailbox_category[LANGUAGE_NONE][0]['value'],
+                'company' => $node->field_mailbox_category[LANGUAGE_NONE][0]['value'],
+                'zimbraMailQuota' => $quota,
+                'zimbraAccountStatus' => $node->field_mailbox_status[LANGUAGE_NONE][0]['value'],
+              );
+              $account = zimbra_create_account($api, $mail_address, $mail_password, $attrs);
+            }
+            if ($account instanceof Exception) {
+              $message = $account->getMessage();
+              watchdog('zimbra', $message);
+              continue;
+            }
+            else {
+              $node->field_mailbox_zimbra_id[LANGUAGE_NONE][0]['value'] = $account->id;
+            }
+            node_save($node);
+            $count++;
           }
         }
-        $node = _zimbra_prepare_account_node($record, $domain_nid);
-
-        $mail_address = $node->title .'@' .$domain->title;
-        $account = zimbra_get_account($api, $mail_address);
-        if (!$account) {
-          $attrs = array(
-            'displayName' => $node->field_mailbox_fullname[LANGUAGE_NONE][0]['value'],
-            'sn' => $node->field_mailbox_fullname[LANGUAGE_NONE][0]['value'],
-            'telephoneNumber' => $node->field_mailbox_telephone[LANGUAGE_NONE][0]['value'],
-            'ou' => $node->field_mailbox_category[LANGUAGE_NONE][0]['value'],
-            'company' => $node->field_mailbox_category[LANGUAGE_NONE][0]['value'],
-            'zimbraMailQuota' => $quota,
-            'zimbraAccountStatus' => $node->field_mailbox_status[LANGUAGE_NONE][0]['value'],
-          );
-          $account = zimbra_create_account($api, $mail_address, $mail_password, $attrs);
-        }
-        if ($account instanceof Exception) {
-          $message = $account->getMessage();
-          watchdog('zimbra', $message);
-          continue;
-        }
-        else {
-          $node->field_mailbox_zimbra_id[LANGUAGE_NONE][0]['value'] = $account->id;
-        }
-        node_save($node);
-        $count++;
       }
       fclose($handle);
       drupal_set_message($count . ' accounts were updated.');  
