@@ -1606,8 +1606,9 @@ function zimbra_import_account_form_callback($form, &$form_state) {
         $columns[$i] = trim($header);
       }
       $count = 0;
+      $number_col = count($columns);
       while ($row = fgetcsv($handle)) {
-        if (!empty($row)) {
+        if (!empty($row) && count($row) == $number_col) {
           $record = array();
           $quota = 0;
           $mail_password = '';
