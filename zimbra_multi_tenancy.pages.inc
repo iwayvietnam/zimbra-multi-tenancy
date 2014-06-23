@@ -528,7 +528,7 @@ function page_list_mailbox() {
   $rows = array();
   $destination = drupal_get_destination();
   foreach ($nodes as $key => $node) {
-	$node_user = user_load($node->uid);
+	$creator = user_load($node->uid);
     $operations = '<ul class="links inline">'
       .'<li class="edit first">' . l(t('edit'), 'node/' . $node ->nid . '/edit', array('query' => $destination)) . '</li>'
       .'<li class="delete last">' . l(t('delete'), 'zimbra/'.$node ->nid . '/delete', array('query' => $destination)) . '</li>'
@@ -543,7 +543,7 @@ function page_list_mailbox() {
     $row['status'] = $mailbox->status;
     $row['maxsize'] = $mailbox->size;
     $row['created'] = date('d-m-Y H:i:s', $node->created);
-    $row['creator'] = $node_user->name;
+    $row['creator'] = $creator->name;
     $row['operations'] = $operations;
     $rows[] = $row;
   }
