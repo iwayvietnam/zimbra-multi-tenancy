@@ -790,7 +790,7 @@ function zimbra_domain_validate($form, &$form_state) {
     }
     else {
       $user = user_load((int) $domain_user);
-      if ($user) {
+      if ($user && (int) $user->uid > 0) {
         $exists = db_select('users')
           ->fields('users', array('uid'))
           ->condition('uid', (int) $domain_user, '!=')
@@ -1669,14 +1669,14 @@ function _zimbra_prepare_account_node($record, $domain_id = 0) {
   foreach ($record as $field => $value) {
     if ($field === 'title') {
       $node->$field = $value;
-  }
-  else {
+    }
+    else {
       $node->$field = array(
         LANGUAGE_NONE => array(
           array('value' => $value),
         ),
       );
-  }
+    }
   }
   $node->field_node_domain[LANGUAGE_NONE][0]['nid'] = (int) $domain_id;
   $node->field_node_group[LANGUAGE_NONE][0]['nid'] = 0;
