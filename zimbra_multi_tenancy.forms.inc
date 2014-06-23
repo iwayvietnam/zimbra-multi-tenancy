@@ -1607,7 +1607,6 @@ function zimbra_import_account_form_callback($form, &$form_state) {
       }
       $count = 0;
       while ($row = fgetcsv($handle)) {
-        $row = trim($row);
         if (!empty($row)) {
           $record = array();
           $quota = 0;
