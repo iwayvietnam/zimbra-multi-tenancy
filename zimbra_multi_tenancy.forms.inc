@@ -131,6 +131,7 @@ function zimbra_pull_data_callback($form, &$form_state) {
   $server_id = (int) $values['server_id'];
   $tenant_id = (int) $values['tenant'];
   $data_types = $values['data_type'];
+  $tenant = normalize_tenant(node_load($tenant_id));
 
   $server = normalize_server(node_load($server_id));
   $api = zimbra_admin_api_by_server($server_id);
@@ -165,6 +166,9 @@ function zimbra_pull_data_callback($form, &$form_state) {
             $node->field_domain_zimbra_id[LANGUAGE_NONE][0]['value'] = $zimbra_id;
             $node->field_domain_mailbox_max_size[LANGUAGE_NONE][0]['value'] = 0;
             $node->field_domain_number_of_mailboxes[LANGUAGE_NONE][0]['value'] = 0;
+            if ($tenant && $tenant->user) {
+              $node->uid = $tenant->user->uid;
+            }
             // $node->field_domain_user[LANGUAGE_NONE][0]['uid'] = $user_uid;
             node_save($node);
           }
@@ -214,6 +218,9 @@ function zimbra_pull_data_callback($form, &$form_state) {
               // $node->field_group_user[LANGUAGE_NONE][0]['uid'] = $user_uid;
               foreach ($members as $key => $member) {
                 $node->field_group_members[LANGUAGE_NONE][$key]['value'] = $member;
+              }
+              if ($tenant && $tenant->user) {
+                $node->uid = $tenant->user->uid;
               }
               node_save($node);
             }
@@ -279,6 +286,9 @@ function zimbra_pull_data_callback($form, &$form_state) {
                 $node->field_node_group[LANGUAGE_NONE][0]['nid'] = 0;
                 $node->field_mailbox_size[LANGUAGE_NONE][0]['value'] = (int) ($mail_quota / (1024 * 1024));
                 $node->field_mailbox_zimbra_id[LANGUAGE_NONE][0]['value'] = $zimbra_id;
+                if ($tenant && $tenant->user) {
+                  $node->uid = $tenant->user->uid;
+                }
                 node_save($node);
               }
             }
@@ -312,6 +322,9 @@ function zimbra_pull_data_callback($form, &$form_state) {
 
               $node->field_node_domain[LANGUAGE_NONE][0]['nid'] = $domain->nid;
               $node->field_alias_mailbox[LANGUAGE_NONE][0]['nid'] = $account->nid;
+              if ($tenant && $tenant->user) {
+                $node->uid = $tenant->user->uid;
+              }
               node_save($node);
             }
           }
