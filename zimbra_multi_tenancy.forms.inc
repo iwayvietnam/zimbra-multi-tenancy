@@ -1335,6 +1335,7 @@ function zimbra_mailbox_hook_form(&$form, &$form_state){
 
   $form['field_node_domain'][LANGUAGE_NONE]['#required'] = 1;
   $form['field_mailbox_size'][LANGUAGE_NONE][0]['value']['#required'] = 1;
+  $form['field_mailbox_telephone'][LANGUAGE_NONE][0]['value']['#size'] = 30;
   if (arg(1) == 'add' || arg(3) == 'reset-password') {
     $form['field_mailbox_password'][LANGUAGE_NONE][0]['value']['#required'] = 1;
   }
