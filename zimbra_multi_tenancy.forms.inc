@@ -1628,7 +1628,7 @@ function zimbra_import_account_form_callback($form, &$form_state) {
             }
           }
           $node = _zimbra_prepare_account_node($record, $domain_nid);
-          $mailbox_exist = mailbox_exists($node->title, $domain_id, $nid);
+          $mailbox_exist = mailbox_exists($node->title, $domain_nid);
           if (!$mailbox_exist) {
             $mail_address = $node->title .'@' .$domain->title;
 
