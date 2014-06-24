@@ -1007,7 +1007,7 @@ function zimbra_group_create_account_ajax_callback($form, $form_state) {
 function ajax_group_domain_callback($form, $form_state) {
   $commands = array();
   $html = render($form['field_group_account_list']) . render($form['field_group_members_list']);
-  $commands[] = ajax_command_replace("#group-account-replace", $html);
+  $commands[] = ajax_command_replace('#group-account-replace', $html);
   return array('#type' => 'ajax', '#commands' => $commands);
 }
 
@@ -1203,9 +1203,17 @@ function zimbra_alias_hook_form(&$form, &$form_state){
   $form['field_node_group'][LANGUAGE_NONE]['#suffix'] = '</div>';
 
   $alias_mailboxes = array();
-  $domain_mailboxes = domain_get_mailbox($domain_id);
-  foreach ($domain_mailboxes as $nid => $mailbox) {
-    $alias_mailboxes[$nid] = $mailbox->title . '@' . $mailbox->domain->title;
+  if (arg(2) == 'edit') {
+    $mailbox_id = (int) $form['field_alias_mailbox'][LANGUAGE_NONE]['#default_value'][0];
+    $mailbox = node_load($mailbox_id);
+    $alias_mailboxes = array($mailbox->nid => $mailbox->title . '@' . $domain->title);
+  }
+  else {
+    $domain_mailboxes = domain_get_mailbox($domain_id);
+    $alias_mailboxes = array('_none' => t('-- None --'));
+    foreach ($domain_mailboxes as $nid => $mailbox) {
+      $alias_mailboxes[$nid] = $mailbox->title . '@' . $mailbox->domain->title;
+    }
   }
   $form['field_alias_mailbox'][LANGUAGE_NONE]['#options'] = $alias_mailboxes;
   $form['field_alias_mailbox'][LANGUAGE_NONE]['#prefix'] = '<div id="alias-mailbox-replace">';
@@ -1224,8 +1232,8 @@ function zimbra_alias_hook_form(&$form, &$form_state){
  */
 function ajax_alias_domain_callback($form, $form_state) {
   $commands = array();
-  $commands[] = ajax_command_replace("#alias-mailbox-replace", render($form['field_alias_mailbox'][LANGUAGE_NONE]));
-  $commands[] = ajax_command_replace("#alias-group-replace", render($form['field_node_group'][LANGUAGE_NONE]));
+  $commands[] = ajax_command_replace('#alias-mailbox-replace', render($form['field_alias_mailbox'][LANGUAGE_NONE]));
+  $commands[] = ajax_command_replace('#alias-group-replace', render($form['field_node_group'][LANGUAGE_NONE]));
   return array('#type' => 'ajax', '#commands' => $commands);
 }
 
@@ -1406,7 +1414,7 @@ function zimbra_mailbox_hook_form(&$form, &$form_state){
  */
 function ajax_mailbox_domain_callback($form, $form_state) {
   $commands = array();
-  $commands[] = ajax_command_replace("#mailbox-group-replace", render($form['field_node_group'][LANGUAGE_NONE]));
+  $commands[] = ajax_command_replace('#mailbox-group-replace', render($form['field_node_group'][LANGUAGE_NONE]));
   return array('#type' => 'ajax', '#commands' => $commands);
 }
 
