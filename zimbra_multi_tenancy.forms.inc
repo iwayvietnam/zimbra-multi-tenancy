@@ -1193,9 +1193,17 @@ function zimbra_alias_hook_form(&$form, &$form_state){
   $form['field_node_group'][LANGUAGE_NONE]['#suffix'] = '</div>';
 
   $alias_mailboxes = array();
-  $domain_mailboxes = domain_get_mailbox($domain_id);
-  foreach ($domain_mailboxes as $nid => $mailbox) {
-    $alias_mailboxes[$nid] = $mailbox->title . '@' . $mailbox->domain->title;
+  if (arg(2) == 'edit') {
+    $mailbox_id = (int) $form['field_alias_mailbox'][LANGUAGE_NONE]['#default_value'][0];
+    $mailbox = node_load($mailbox_id);
+    $alias_mailboxes = array($mailbox->nid => $mailbox->title . '@' . $domain->title);
+  }
+  else {
+    $domain_mailboxes = domain_get_mailbox($domain_id);
+    $alias_mailboxes = array('_none' => t('-- None --'));
+    foreach ($domain_mailboxes as $nid => $mailbox) {
+      $alias_mailboxes[$nid] = $mailbox->title . '@' . $mailbox->domain->title;
+    }
   }
   $form['field_alias_mailbox'][LANGUAGE_NONE]['#options'] = $alias_mailboxes;
   $form['field_alias_mailbox'][LANGUAGE_NONE]['#prefix'] = '<div id="alias-mailbox-replace">';
