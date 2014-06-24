@@ -1229,6 +1229,7 @@ function zimbra_alias_validate($form, &$form_state) {
   if (!form_set_error()) {
     $mailbox_name = trim($form_state['values']['title']);
     $mailbox_domain = $form_state['values']['field_node_domain'][LANGUAGE_NONE][0]['nid'];
+    $group_id = $form_state['values']['field_node_group'][LANGUAGE_NONE][0]['nid'];
     $nid = intval($form_state['values']['nid']);
 
     //Check invalid of Mailbox name
@@ -1263,6 +1264,37 @@ function zimbra_alias_validate($form, &$form_state) {
         zimbra_remove_account_alias($api, $alias, $zimbra_id);
 
         zimbra_add_account_alias($api, $zimbra_id, $alias_address);
+      }
+
+      $group_node = node_load($group_id);
+      if ($group_node) {
+        $items = field_get_items('node', $group_node, 'field_group_members');
+        if ($items) {
+          $members = array();
+          foreach ($items as $item) {
+            $members[] = $item['value'];
+          }
+          if (!in_array($alias_address, $members)) {
+            $items[] = array('value' => $alias_address);
+          }
+          $group_node->field_group_members[LANGUAGE_NONE] = $items;
+        } else {
+          $group_node->field_group_members[LANGUAGE_NONE][0]['value'] = $alias_address;
+        }
+        node_save($group_node);
+
+        $mail_group = normalize_group(node_load($group_id));
+        $zimbra_dl = zimbra_get_dl($api, $mail_group->title.'@' .$mail_group->domain->title);
+
+        $zimbra_dlm = isset($zimbra_dl->dlm) ? $zimbra_dl->dlm : array();
+        $zimbra_members = is_array($zimbra_dlm) ? $zimbra_dlm : array($zimbra_dlm);
+        $add_members = array();
+        if (!in_array($alias_address, $zimbra_members)) {
+          $add_members[] = $alias_address;
+        }
+        if (count($add_members)) {
+          zimbra_add_dl_members($api, $zimbra_dl->id, $add_members);
+        }
       }
     }
   }
