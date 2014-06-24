@@ -514,9 +514,10 @@ function page_list_mailbox() {
         foreach ($group_nids as $nid) {
           $mailbox_nids += list_mailbox_id_by_group($nid);
         }
-        if (count($mailbox_nids)) {
-          $efq->propertyCondition('nid', $mailbox_nids, 'IN');
+        if (empty($mailbox_nids)) {
+          $mailbox_nids = array(0);
         }
+        $efq->propertyCondition('nid', $mailbox_nids, 'IN');
         //$efq->fieldCondition('field_node_group', 'nid', $group_nids, 'IN');
       }
     }
