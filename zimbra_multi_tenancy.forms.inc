@@ -1194,7 +1194,7 @@ function zimbra_alias_hook_form(&$form, &$form_state){
   );
 
   $groups = domain_get_group($domain_id);
-  $alias_groups = array();
+  $alias_groups = array('_none' => t('-- None --'));
   foreach ($groups as $nid => $group) {
     $alias_groups[$nid] = $group->title . '@' . $group->domain->title;
   }
