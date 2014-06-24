@@ -427,9 +427,10 @@ function page_list_alias() {
         foreach ($group_nids as $nid) {
           $alias_nids += list_alias_id_by_group($nid);
         }
-        if (count($alias_nids)) {
-          $efq->propertyCondition('nid', $alias_nids, 'IN');
+        if (empty($alias_nids)) {
+          $alias_nids = array(0);
         }
+        $efq->propertyCondition('nid', $alias_nids, 'IN');
         //$efq->fieldCondition('field_node_group', 'nid', $group_nids, 'IN');
       }
     }
@@ -514,9 +515,10 @@ function page_list_mailbox() {
         foreach ($group_nids as $nid) {
           $mailbox_nids += list_mailbox_id_by_group($nid);
         }
-        if (count($mailbox_nids)) {
-          $efq->propertyCondition('nid', $mailbox_nids, 'IN');
+        if (empty($mailbox_nids)) {
+          $mailbox_nids = array(0);
         }
+        $efq->propertyCondition('nid', $mailbox_nids, 'IN');
         //$efq->fieldCondition('field_node_group', 'nid', $group_nids, 'IN');
       }
     }
