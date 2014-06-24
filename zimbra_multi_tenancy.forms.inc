@@ -1077,7 +1077,7 @@ function zimbra_group_validate($form, &$form_state){
     }
     else {
       $group_user = user_load((int) $group_user_uid);
-      if ($group_user) {
+      if ($group_user && (int) $group_user->uid > 0) {
         //Change information
         $edit = array();
         if ($group_user->mail != $user_mail){
