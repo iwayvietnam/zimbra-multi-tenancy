@@ -1534,6 +1534,10 @@ function zimbra_mailbox_validate($form, &$form_state) {
         }
       }
     }
+    //Clear value of user
+    if (!form_set_error()) {
+      $form_state['values']['field_mailbox_password'][LANGUAGE_NONE][0]['value'] = '';  
+    }
   }
 }
 
