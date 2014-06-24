@@ -1672,6 +1672,7 @@ function _zimbra_prepare_account_node($record, $domain_id = 0) {
   $node = new stdClass();
   $node->type = 'mailbox';
   $node->promote = 0;
+  $node->comment = COMMENT_NODE_CLOSED;
   $node->language = LANGUAGE_NONE;
   node_object_prepare($node);
 
