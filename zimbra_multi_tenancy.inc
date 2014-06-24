@@ -1427,6 +1427,7 @@ function zimbra_add_list_text_field(
       'entity_type' => 'node',
       'bundle' => $type->type,
       'label' => t($field_label),
+      'settings' => array('text_processing' => 0),
       'widget' => array('type' => 'options_select', 'weight' => $weight),
       'display' => array(
         'default' => array(
