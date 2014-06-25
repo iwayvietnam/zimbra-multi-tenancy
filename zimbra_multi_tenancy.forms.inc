@@ -264,7 +264,7 @@ function zimbra_pull_data_callback($form, &$form_state) {
                   if ($attr->n === 'telephoneNumber') {
                     $telephone = (int) $attr->_;
                   }
-                  if ($attr->n === 'ou') {
+                  if ($attr->n === 'company') {
                     $category = (int) $attr->_;
                   }
                 }
@@ -1480,6 +1480,8 @@ function zimbra_mailbox_validate($form, &$form_state) {
       if (!form_set_error()) {
         $form_state['values']['title'] = trim($form_state['values']['title']);
         $mail_domain = normalize_domain(node_load($domain_id));
+        $group_node = node_load($group_id);
+
         $mail_address = $mailbox_name .'@' .$mail_domain->title;
         $mail_fullname = trim($form_state['values']['field_mailbox_fullname'][LANGUAGE_NONE][0]['value']);
         $telephone = trim($form_state['values']['field_mailbox_telephone'][LANGUAGE_NONE][0]['value']);
@@ -1489,18 +1491,23 @@ function zimbra_mailbox_validate($form, &$form_state) {
         $server_id = server_get_id_from_domain($domain_id);
         $api = zimbra_admin_api_by_server($server_id);
 
+        $group_fullname = '';
+        if ($group_node) {
+          $group_fullname = $group_node->field_group_fullname[LANGUAGE_NONE][0]['value'];
+        }
+
         if ($nid == 0) {
           $account = zimbra_get_account($api, $mail_address);
           if (!$account) {
             $attrs = array(
               'displayName' => $mail_fullname,
               'sn' => $mail_fullname,
+              'telephoneNumber' => $telephone,
+              'ou' => !empty($group_fullname) ? $group_fullname : $category,
+              'company' => $category,
+              'zimbraMailQuota' => $mailbox_maxsize * 1024 * 1024,
+              'zimbraAccountStatus' => $mailbox_status,
             );
-            $attrs['telephoneNumber'] = $telephone;
-            $attrs['ou'] = $category;
-            $attrs['company'] = $category;
-            $attrs['zimbraMailQuota'] = $mailbox_maxsize * 1024 * 1024;
-            $attrs['zimbraAccountStatus'] = $mailbox_status;
             $account = zimbra_create_account($api, $mail_address, $mail_password, $attrs);
           }
           if ($account instanceof Exception) {
@@ -1519,11 +1526,12 @@ function zimbra_mailbox_validate($form, &$form_state) {
           $attrs = array(
             'displayName' => $mail_fullname,
             'sn' => $mail_fullname,
+            'telephoneNumber' => $telephone,
+            'ou' => !empty($group_fullname) ? $group_fullname : $category,
+            'company' => $category,
+            'zimbraMailQuota' => $mailbox_maxsize * 1024 * 1024,
+            'zimbraAccountStatus' => $mailbox_status,
           );
-          $attrs['telephoneNumber'] = $telephone;
-          $attrs['company'] = $category;
-          $attrs['zimbraMailQuota'] = $mailbox_maxsize * 1024 * 1024;
-          $attrs['zimbraAccountStatus'] = $mailbox_status;
 
           if(empty($zimbra_id)) {
             $account = zimbra_get_account($api, $old_address);
@@ -1560,7 +1568,7 @@ function zimbra_mailbox_validate($form, &$form_state) {
             }
           }
         }
-        $group_node = node_load($group_id);
+
         if ($group_node) {
           $items = field_get_items('node', $group_node, 'field_group_members');
           if ($items) {
@@ -1701,7 +1709,7 @@ function zimbra_import_account_form_callback($form, &$form_state) {
                 'displayName' => $node->field_mailbox_fullname[LANGUAGE_NONE][0]['value'],
                 'sn' => $node->field_mailbox_fullname[LANGUAGE_NONE][0]['value'],
                 'telephoneNumber' => $node->field_mailbox_telephone[LANGUAGE_NONE][0]['value'],
-                'ou' => $node->field_mailbox_category[LANGUAGE_NONE][0]['value'],
+                // 'ou' => $node->field_mailbox_category[LANGUAGE_NONE][0]['value'],
                 'company' => $node->field_mailbox_category[LANGUAGE_NONE][0]['value'],
                 'zimbraMailQuota' => $quota,
                 'zimbraAccountStatus' => $node->field_mailbox_status[LANGUAGE_NONE][0]['value'],
