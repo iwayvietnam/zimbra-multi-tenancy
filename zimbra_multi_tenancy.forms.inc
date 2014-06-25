@@ -1183,10 +1183,19 @@ function zimbra_alias_hook_form(&$form, &$form_state){
     'callback' => 'ajax_alias_domain_callback',
   );
 
-  $groups = domain_get_group($domain_id);
-  $alias_groups = array('_none' => t('-- None --'));
-  foreach ($groups as $nid => $group) {
-    $alias_groups[$nid] = $group->title . '@' . $group->domain->title;
+  $alias_groups = array();
+  if (in_array('Group', $user->roles)) {
+    $groups = user_get_group($user->uid);
+    foreach ($groups as $nid => $group) {
+      $alias_groups[$nid] = $group->title . '@' . $group->domain->title;
+    }
+  }
+  else {
+    $groups = domain_get_group($domain_id);
+    $alias_groups = array('_none' => t('-- None --'));
+    foreach ($groups as $nid => $group) {
+      $alias_groups[$nid] = $group->title . '@' . $group->domain->title;
+    }
   }
   $form['field_node_group'][LANGUAGE_NONE]['#options'] = $alias_groups;
   $form['field_node_group'][LANGUAGE_NONE]['#prefix'] = '<div id="alias-group-replace">';
@@ -1387,10 +1396,19 @@ function zimbra_mailbox_hook_form(&$form, &$form_state){
   $form['field_node_group'][LANGUAGE_NONE]['#prefix'] = '<div id="mailbox-group-replace">';
   $form['field_node_group'][LANGUAGE_NONE]['#suffix'] = '</div>';
 
-  $groups = domain_get_group($domain_id);
-  $mailbox_groups = array('_none' => t('-- None --'));
-  foreach ($groups as $nid => $group) {
-    $mailbox_groups[$nid] = $group->title . '@' . $group->domain->title;
+  $mailbox_groups = array();
+  if (in_array('Group', $user->roles)) {
+    $groups = user_get_group($user->uid);
+    foreach ($groups as $nid => $group) {
+      $mailbox_groups[$nid] = $group->title . '@' . $group->domain->title;
+    }
+  }
+  else {
+    $groups = domain_get_group($domain_id);
+    $mailbox_groups = array('_none' => t('-- None --'));
+    foreach ($groups as $nid => $group) {
+      $mailbox_groups[$nid] = $group->title . '@' . $group->domain->title;
+    }
   }
   $form['field_node_group'][LANGUAGE_NONE]['#options'] = $mailbox_groups;
 
