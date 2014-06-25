@@ -1218,10 +1218,25 @@ function zimbra_alias_hook_form(&$form, &$form_state){
     $alias_mailboxes = array($mailbox->nid => $mailbox->title . '@' . $domain->title);
   }
   else {
-    $domain_mailboxes = domain_get_mailbox($domain_id);
     $alias_mailboxes = array('_none' => t('-- None --'));
-    foreach ($domain_mailboxes as $nid => $mailbox) {
-      $alias_mailboxes[$nid] = $mailbox->title . '@' . $mailbox->domain->title;
+    if (in_array('Group', $user->roles)) {
+      $groups = user_get_group($user->uid);
+      $group_nids = array_keys($groups);
+      $group_mailboxes = array();
+      if (count($group_nids)) {
+        foreach ($group_nids as $nid) {
+          $group_mailboxes += list_mailbox_by_group($nid);
+        }
+      }
+     foreach ($group_mailboxes as $nid => $mailbox) {
+       $alias_mailboxes[$nid] = $mailbox->title . '@' . $mailbox->domain->title;
+     }
+    }
+    else {
+     $domain_mailboxes = domain_get_mailbox($domain_id);
+     foreach ($domain_mailboxes as $nid => $mailbox) {
+       $alias_mailboxes[$nid] = $mailbox->title . '@' . $mailbox->domain->title;
+     }
     }
   }
   $form['field_alias_mailbox'][LANGUAGE_NONE]['#options'] = $alias_mailboxes;
