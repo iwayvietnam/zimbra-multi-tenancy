@@ -1636,7 +1636,7 @@ function import_account_form($form, &$form_state){
   $form['import_account']['file'] = array(
     '#type' => 'file',
     '#title' => t('Csv file'),
-    '#description' => t('Csv file fields: username,fullname,password,telephone,category'),
+    '#description' => t('Csv file fields: username,fullname,password,telephone,category,group,status,quota'),
   );
 
   $options = array();
@@ -1650,48 +1650,6 @@ function import_account_form($form, &$form_state){
     '#title' => t('Domain'),
     '#options' => $options,
     '#required' => TRUE,
-    '#ajax' => array(
-      'callback' => 'ajax_import_account_domain_select_callback',
-      'wrapper' => 'dropdown-group-replace',
-    ),
-  );
-
-  $domain_id = isset($form_state['values']['domain']) ? (int) $form_state['values']['domain'] : 0;
-  $groups = domain_get_group($domain_id);
-  $options = array('_none' => t('-- None --'));
-  foreach ($groups as $nid => $group) {
-    $options[$nid] = $group->title . '@' . $group->domain->title;
-  }
-
-  $form['import_account']['group'] = array(
-    '#type' => 'select',
-    '#title' => t('Group'),
-    '#options' => $options,
-    '#prefix' => '<div id="dropdown-group-replace">',
-    '#suffix' => '</div>',
-  );
-
-  $form['import_account']['quota'] = array(
-    '#type' => 'textfield',
-    '#title' => t('Quota'),
-    '#size' => 20,
-    '#element_validate' => array(
-      'element_validate_integer_positive',
-    ),
-    '#required' => TRUE,
-  );
-
-  $options = array(
-    'active' => t('Active'),
-    'closed' => t('Closed'),
-    'locked' => t('Locked'),
-    'pending' => t('Pending'),
-    'maintenance' => t('Maintenance'),
-  );
-  $form['import_account']['status'] = array(
-    '#type' => 'select',
-    '#title' => t('Status'),
-    '#options' => $options,
   );
 
   $form['import_account']['button_import'] = array(
@@ -1703,15 +1661,10 @@ function import_account_form($form, &$form_state){
   return $form;
 }
 
-function ajax_import_account_domain_select_callback($form, $form_state) {
-  return $form['import_account']['group'];
-}
-
 /**
  * Zimbra import account submit callback
  */
 function zimbra_import_account_form_callback($form, &$form_state) {
-  $values = $form_state['values'];
   $destination = 'public://zimbra/';
   if (file_prepare_directory($destination, FILE_CREATE_DIRECTORY)) {
     $file = file_save_upload(
@@ -1720,13 +1673,16 @@ function zimbra_import_account_form_callback($form, &$form_state) {
       $destination
     );
     if ($file) {
-      $domain_nid = (int) $values['domain'];
-      $group_nid = (int) $values['group'];
-      $domain = normalize_domain(node_load($domain_nid));
-      $group_node = node_load($group_nid);
-      $mail_group = normalize_group($group_node);
-      $imported_mailboxes = array();
+      $statuses = array(
+        'active',
+        'closed',
+        'locked',
+        'pending',
+        'maintenance',
+      );
 
+      $domain_nid = (int) $form_state['values']['domain'];
+      $domain = normalize_domain(node_load($domain_nid));
       $server_id = server_get_id_from_domain($domain_nid);
       $api = zimbra_admin_api_by_server($server_id);
 
@@ -1744,8 +1700,14 @@ function zimbra_import_account_form_callback($form, &$form_state) {
           $quota = 0;
           $mail_password = '';
           foreach ($row as $i => $field) {
+            if ($columns[$i] === 'quota') {
+             $quota = (int) $field * 1024 * 1024;
+            }
             if ($columns[$i] === 'password') {
              $mail_password = $field;
+            }
+            if ($columns[$i] === 'status' && !in_array($field, $statuses)) {
+             $field = 'active';
             }
 
             $column = _zimbra_account_mapping_columns($columns[$i]);
@@ -1754,10 +1716,6 @@ function zimbra_import_account_form_callback($form, &$form_state) {
             }
           }
           $node = _zimbra_prepare_account_node($record, $domain_nid);
-          $node->field_mailbox_size[LANGUAGE_NONE][0]['value'] = (int) $values['quota'];
-          $node->field_mailbox_status[LANGUAGE_NONE][0]['value'] = $values['status'];
-          $node->field_node_group[LANGUAGE_NONE][0]['nid'] = $group_nid;
-
           $mailbox_exist = mailbox_exists($node->title, $domain_nid);
           if (!$mailbox_exist) {
             $mail_address = $node->title .'@' .$domain->title;
@@ -1768,9 +1726,9 @@ function zimbra_import_account_form_callback($form, &$form_state) {
                 'displayName' => $node->field_mailbox_fullname[LANGUAGE_NONE][0]['value'],
                 'sn' => $node->field_mailbox_fullname[LANGUAGE_NONE][0]['value'],
                 'telephoneNumber' => $node->field_mailbox_telephone[LANGUAGE_NONE][0]['value'],
-                'ou' => $mail_group->fullname,
+                'ou' => $node->group,
                 'company' => $node->field_mailbox_category[LANGUAGE_NONE][0]['value'],
-                'zimbraMailQuota' => (int) $values['quota'] * 1024 * 1024,
+                'zimbraMailQuota' => $quota,
                 'zimbraAccountStatus' => $node->field_mailbox_status[LANGUAGE_NONE][0]['value'],
               );
               $account = zimbra_create_account($api, $mail_address, $mail_password, $attrs);
@@ -1783,60 +1741,13 @@ function zimbra_import_account_form_callback($form, &$form_state) {
             else {
               $node->field_mailbox_zimbra_id[LANGUAGE_NONE][0]['value'] = $account->id;
             }
+            unset($node->group);
             node_save($node);
-            $imported_mailboxes[$node->nid] = $node;
             $count++;
           }
         }
       }
       fclose($handle);
-
-      if ($group_node) {
-        $mail_addresses = array();
-        foreach ($imported_mailboxes as $nid => $mailbox_node) {
-          $mailbox = normalize_mailbox($mailbox_node);
-          $mail_address = $mailbox->title . '@' . $mailbox->domain->title;
-          $mail_addresses[] = $mail_address;
-        }
-        $items = field_get_items('node', $group_node, 'field_group_members');
-        if ($items) {
-          $members = array();
-          foreach ($items as $item) {
-            $members[] = $item['value'];
-          }
-          foreach ($mail_addresses as $mail_address) {
-            if (!in_array($mail_address, $members)) {
-              $items[] = array('value' => $mail_address);
-            }
-          }
-          $group_node->field_group_members[LANGUAGE_NONE] = $items;
-        }
-        else {
-          $items  = array();
-          foreach ($mail_addresses as $mail_address) {
-            $items[] = array('value' => $mail_address);
-          }
-          $group_node->field_group_members[LANGUAGE_NONE] = $items;
-        }
-        node_save($group_node);
-
-        $zimbra_dl = zimbra_get_dl($api, $mail_group->title.'@' .$mail_group->domain->title);
-
-        $zimbra_dlm = isset($zimbra_dl->dlm) ? $zimbra_dl->dlm : array();
-        $zimbra_members = is_array($zimbra_dlm) ? $zimbra_dlm : array($zimbra_dlm);
-        $add_members = array();
-
-        foreach ($mail_addresses as $mail_address) {
-          if (!in_array($mail_address, $zimbra_members)) {
-            $add_members[] = $mail_address;
-          }
-        }
-
-        if (count($add_members)) {
-          zimbra_add_dl_members($api, $zimbra_dl->id, $add_members);
-        }
-      }
-
       drupal_set_message($count . ' accounts were updated.');  
     }
   }
@@ -1857,6 +1768,9 @@ function _zimbra_prepare_account_node($record, $domain_id = 0) {
     if ($field === 'title') {
       $node->$field = $value;
     }
+    if ($field === 'group') {
+      $node->$field = $value;
+    }
     else {
       $node->$field = array(
         LANGUAGE_NONE => array(
@@ -1866,6 +1780,7 @@ function _zimbra_prepare_account_node($record, $domain_id = 0) {
     }
   }
   $node->field_node_domain[LANGUAGE_NONE][0]['nid'] = (int) $domain_id;
+  $node->field_node_group[LANGUAGE_NONE][0]['nid'] = 0;
   $node->field_mailbox_password[LANGUAGE_NONE][0]['value'] = '';
   return $node;
 }
@@ -1880,6 +1795,9 @@ function _zimbra_account_mapping_columns($column) {
     'password' => 'field_mailbox_password',
     'telephone' => 'field_mailbox_telephone',
     'category' => 'field_mailbox_category',
+    'group' => 'group',
+    'status' => 'field_mailbox_status',
+    'quota' => 'field_mailbox_size',
   );
   return isset($columns[$column]) ? $columns[$column] : NULL;
 }
