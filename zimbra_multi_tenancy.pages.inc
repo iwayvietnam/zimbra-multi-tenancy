@@ -182,6 +182,7 @@ function page_list_server() {
   $result = $efq->execute();
   $nids = (isset($result['node']) AND is_array($result['node'])) ? array_keys($result['node']) : array();
   $nodes = node_load_multiple($nids);
+  $count = 0;
   $rows = array();
   $destination = drupal_get_destination();
   foreach ($nodes as $key => $node) {
@@ -194,11 +195,12 @@ function page_list_server() {
     $server = normalize_server($node);
 
     $row = array();
-    $row['stt'] = $key;
+    $row['stt'] = $count + 1 + (pager_find_page() * 50);
     $row['title'] = $server->title;
     $row['location'] = $server->service_location;
     $row['operations'] = $operations;
     $rows[] = $row;
+    $count++;
   }
 
   $output = '';
@@ -242,6 +244,7 @@ function page_list_tenant() {
   $result = $efq->execute();
   $nids = (isset($result['node']) AND is_array($result['node'])) ? array_keys($result['node']) : array();
   $nodes = node_load_multiple($nids);
+  $count = 0;
   $rows = array();
   $destination = drupal_get_destination();
   foreach ($nodes as $key => $node) {
@@ -252,13 +255,14 @@ function page_list_tenant() {
     $tenant = normalize_tenant($node);
 
     $row = array();
-    $row['stt'] = $key;
+    $row['stt'] = $count + 1 + (pager_find_page() * 50);
     $row['title'] = l($node->title, 'node/' . $node->nid);
     $row['user'] = $tenant->user->name;
     $row['maxsize'] = ($tenant->mailbox_max_size == '') ? '' : t('@number MB', array('@number' => $tenant->mailbox_max_size));
     $row['number'] = $tenant->number_of_mailboxes;
     $row['operations'] = $operations;
     $rows[] = $row;
+    $count++;
   }
 
   $output = '';
@@ -309,6 +313,7 @@ function page_list_domain(){
   $result = $efq->execute();
   $nids = (isset($result['node']) AND is_array($result['node'])) ? array_keys($result['node']) : array();
   $nodes = node_load_multiple($nids);
+  $count = 0;
   $rows = array();
   $destination = drupal_get_destination();
   foreach ($nodes as $key => $node) {
@@ -319,13 +324,14 @@ function page_list_domain(){
     $domain = normalize_domain($node);
 
     $row = array();
-    $row['stt'] = $key;
+    $row['stt'] = $count + 1 + (pager_find_page() * 50);
     $row['title'] = l($node->title, 'node/' . $node->nid);
     $row['user'] = isset($domain->user->name) ? $domain->user->name : '';
     $row['maxsize'] = ($domain->mailbox_max_size == '') ? '' : t('@number MB', array('@number' => $domain->mailbox_max_size));
     $row['number'] = $domain->number_of_mailboxes;
     $row['operations'] = $operations;
     $rows[] = $row;
+    $count++;
   }
 
   $output = '';
@@ -370,6 +376,7 @@ function page_list_group() {
   $result = $efq->execute();
   $nids = (isset($result['node']) AND is_array($result['node'])) ? array_keys($result['node']) : array();
   $nodes = node_load_multiple($nids);
+  $count = 0;
   $rows = array();
   $destination = drupal_get_destination();
   foreach ($nodes as $key => $node) {
@@ -381,11 +388,12 @@ function page_list_group() {
     $group_address = $group->title . '@' . $group->domain->title;
 
     $row = array();
-    $row['stt'] = $key;
+    $row['stt'] = $count + 1 + (pager_find_page() * 50);
     $row['title'] = l($group_address, 'node/' . $node->nid);
     $row['fullname'] = $group->fullname;
     $row['operations'] = $operations;
     $rows[] = $row;
+    $count++;
   }
 
   $output = '';
@@ -439,6 +447,7 @@ function page_list_alias() {
   $result = $efq->execute();
   $nids = (isset($result['node']) AND is_array($result['node'])) ? array_keys($result['node']) : array();
   $nodes = node_load_multiple($nids);
+  $count = 0;
   $rows = array();
   $destination = drupal_get_destination();
   foreach ($nodes as $key => $node) {
@@ -451,11 +460,12 @@ function page_list_alias() {
     $alias_mapping = $alias->mailbox->title . '@' . $alias->domain->title;;
 
     $row = array();
-    $row['stt'] = $key;
+    $row['stt'] = $count + 1 + (pager_find_page() * 50);
     $row['title'] = l($alias_address, 'node/' . $node->nid);
     $row['mapping'] = $alias_mapping;
     $row['operations'] = $operations;
     $rows[] = $row;
+    $count++;
   }
 
   $output = '';
@@ -527,6 +537,7 @@ function page_list_mailbox() {
   $nids = (isset($result['node']) AND is_array($result['node'])) ? array_keys($result['node']) : array();
 
   $nodes = node_load_multiple($nids);
+  $count = 0;
   $rows = array();
   $destination = drupal_get_destination();
   foreach ($nodes as $key => $node) {
@@ -539,7 +550,7 @@ function page_list_mailbox() {
     $mailbox_address = $mailbox->title . '@' . $mailbox->domain->title;
 
     $row = array();
-    $row['stt'] = $key + 1;
+    $row['stt'] = $count + 1 + (pager_find_page() * 50);
     $row['title'] = l($mailbox_address, 'node/' . $node->nid);
     $row['fullname'] = $mailbox->fullname;
     $row['status'] = $mailbox->status;
@@ -548,6 +559,7 @@ function page_list_mailbox() {
     $row['creator'] = $creator->name;
     $row['operations'] = $operations;
     $rows[] = $row;
+    $count++;
   }
 
   $output = '';
