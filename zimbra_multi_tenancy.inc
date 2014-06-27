@@ -91,7 +91,7 @@ function tenant_check_quota($tenant_id, $nid = 0) {
   $efq->entityCondition('entity_type', 'node')
       ->entityCondition('bundle', 'domain')
       ->propertyCondition('nid', $nid, '!=')
-      ->fieldCondition('field_domain_tenant', 'nid', $tenant_id, '=');
+      ->fieldCondition('field_domain_tenant', 'nid', $tenant_id);
   $result = $efq->execute();
   $nids = (isset($result['node']) AND is_array($result['node'])) ? array_keys($result['node']) : array();
   $nodes = node_load_multiple($nids);
@@ -123,7 +123,7 @@ function domain_check_quota($domain_id, $nid = 0) {
   $efq->entityCondition('entity_type', 'node')
       ->entityCondition('bundle', 'mailbox')
       ->propertyCondition('nid', $nid, '!=')
-      ->fieldCondition('field_node_domain', 'nid', $domain_id, '=');
+      ->fieldCondition('field_node_domain', 'nid', $domain_id);
   $result = $efq->execute();
   $nids = (isset($result['node']) AND is_array($result['node'])) ? array_keys($result['node']) : array();
   $nodes = node_load_multiple($nids);
@@ -152,7 +152,7 @@ function tenant_check_number($tenant_id, $nid = 0) {
   $efq->entityCondition('entity_type', 'node')
       ->entityCondition('bundle', 'domain')
       ->propertyCondition('nid', $nid, '!=')
-      ->fieldCondition('field_domain_tenant', 'nid', $tenant_id, '=');
+      ->fieldCondition('field_domain_tenant', 'nid', $tenant_id);
   $result = $efq->execute();
   $nids = (isset($result['node']) AND is_array($result['node'])) ? array_keys($result['node']) : array();
   $nodes = node_load_multiple($nids);
@@ -199,8 +199,8 @@ function user_get_account_by_domain($nid) {
 
   $efq = new EntityFieldQuery();
   $efq->entityCondition('entity_type', 'node')
-      ->entityCondition('bundle', array('mailbox', 'alias', 'group'), 'IN')
-      ->fieldCondition('field_node_domain', 'nid', $nid, '=');
+      ->entityCondition('bundle', array('mailbox', 'alias', 'group'))
+      ->fieldCondition('field_node_domain', 'nid', $nid);
   $result = $efq->execute();
   $nids = (isset($result['node']) AND is_array($result['node'])) ? array_keys($result['node']) : array();
   $nodes = node_load_multiple($nids);
@@ -230,11 +230,11 @@ function user_get_all_account($uid) {
 
   $efq = new EntityFieldQuery();
   $efq->entityCondition('entity_type', 'node')
-      ->entityCondition('bundle', array('mailbox', 'alias', 'group'), 'IN');
+      ->entityCondition('bundle', array('mailbox', 'alias', 'group'));
   $domains = user_get_domain($uid);
   $nids = array_keys($domains);
   if (count($nids)) {
-    $efq->fieldCondition('field_node_domain', 'nid', $nids, 'IN');
+    $efq->fieldCondition('field_node_domain', 'nid', $nids);
   }
   $result = $efq->execute();
   $nids = (isset($result['node']) AND is_array($result['node'])) ? array_keys($result['node']) : array();
@@ -263,7 +263,7 @@ function user_access_list_tenant($uid) {
   $efq = new EntityFieldQuery();
   $efq->entityCondition('entity_type', 'node')
       ->entityCondition('bundle', 'tenant')
-      ->fieldCondition('field_tenant_user', 'uid', $uid, '=');
+      ->fieldCondition('field_tenant_user', 'uid', $uid);
   $total = (int) $efq->count()->execute();
   $cache[$uid] = $total;
   return $total;
@@ -283,11 +283,11 @@ function user_access_list_domain($uid) {
   $efq = new EntityFieldQuery();
   $efq->entityCondition('entity_type', 'node')
       ->entityCondition('bundle', 'domain')
-      ->fieldCondition('field_domain_user', 'uid', $uid, '=');
+      ->fieldCondition('field_domain_user', 'uid', $uid);
   $tenants = user_get_tenant($uid);
   $nids = array_keys($tenants);
   if (count($nids)) {
-    $efq->fieldCondition('field_domain_tenant', 'nid', $nids, 'IN');
+    $efq->fieldCondition('field_domain_tenant', 'nid', $nids);
   }
   $total = (int) $efq->count()->execute();
   $cache[$uid] = $total;
@@ -333,7 +333,7 @@ function server_get_tenant($nid) {
   $efq->entityCondition('entity_type', 'node')
       ->entityCondition('bundle', 'tenant');
   if (!user_access('administer zimbra')) {
-    $efq->fieldCondition('field_tenant_server', 'nid', $nid, '=');
+    $efq->fieldCondition('field_tenant_server', 'nid', $nid);
   }
   $result = $efq->execute();
   $nids = (isset($result['node']) AND is_array($result['node'])) ? array_keys($result['node']) : array();
@@ -362,10 +362,10 @@ function user_get_tenant($uid, $server_id = 0) {
   $efq->entityCondition('entity_type', 'node')
       ->entityCondition('bundle', 'tenant');
   if (!user_access('administer zimbra')) {
-    $efq->fieldCondition('field_tenant_user', 'uid', $uid, '=');
+    $efq->fieldCondition('field_tenant_user', 'uid', $uid);
   }
   if ((int) $server_id > 0) {
-    $efq->fieldCondition('field_tenant_server', 'nid', $server_id, '=');
+    $efq->fieldCondition('field_tenant_server', 'nid', $server_id);
   }
   $result = $efq->execute();
   $nids = (isset($result['node']) AND is_array($result['node'])) ? array_keys($result['node']) : array();
@@ -397,14 +397,14 @@ function user_get_domain($uid){
   if(!user_access('administer zimbra')) {
     $tenant_efq = clone $efq;
 
-    $efq->fieldCondition('field_domain_user', 'uid', $uid, '=');
+    $efq->fieldCondition('field_domain_user', 'uid', $uid);
     $result = $efq->execute();
     $nids = (isset($result['node']) AND is_array($result['node'])) ? array_keys($result['node']) : array();
     if (count($nids) === 0) {
       $tenants = user_get_tenant($uid);
       $tenant_nids = array_keys($tenants);
       if (count($tenant_nids)) {
-        $tenant_efq->fieldCondition('field_domain_tenant', 'nid', $tenant_nids, 'IN');
+        $tenant_efq->fieldCondition('field_domain_tenant', 'nid', $tenant_nids);
         $result = $tenant_efq->execute();
         $nids = (isset($result['node']) AND is_array($result['node'])) ? array_keys($result['node']) : array();
       }
@@ -438,6 +438,50 @@ function user_get_domain($uid){
 }
 
 /**
+ * Get group by name
+ * 
+ * @param  string $name Group name
+ * @return mix
+ */
+function group_get_by_name($name) {
+  $cache = &drupal_static(__FUNCTION__, array());
+  if (!isset($cache[$name])) {
+    $efq = new EntityFieldQuery();
+    $efq->entityCondition('entity_type', 'node')
+        ->entityCondition('bundle', 'group')
+        ->propertyCondition('title', $name);
+    $result = $efq->execute();
+    $nids = (isset($result['node']) AND is_array($result['node'])) ? array_keys($result['node']) : array();
+    $nodes = node_load_multiple($nids);
+    $cache[$name] = $nodes;
+  }
+
+  return reset($cache[$name]);
+}
+
+/**
+ * Get mailbox by name
+ * 
+ * @param  string $name Mailbox name
+ * @return mix
+ */
+function mailbox_get_by_name($name) {
+  $cache = &drupal_static(__FUNCTION__, array());
+  if (!isset($cache[$name])) {
+    $efq = new EntityFieldQuery();
+    $efq->entityCondition('entity_type', 'node')
+        ->entityCondition('bundle', 'mailbox')
+        ->propertyCondition('title', $name);
+    $result = $efq->execute();
+    $nids = (isset($result['node']) AND is_array($result['node'])) ? array_keys($result['node']) : array();
+    $nodes = node_load_multiple($nids);
+    $cache[$name] = $nodes;
+  }
+
+  return reset($cache[$name]);
+}
+
+/**
  * Get all group of user
  * 
  * @param  int $uid User ID
@@ -463,7 +507,7 @@ function user_get_group($uid) {
       $domains = user_get_domain($uid);
       $domain_nids = array_keys($domains);
       if(count($domain_nids)) {
-        $domain_efq->fieldCondition('field_node_domain', 'nid', $domain_nids, 'IN');
+        $domain_efq->fieldCondition('field_node_domain', 'nid', $domain_nids);
         $result = $domain_efq->execute();
         $nids = (isset($result['node']) AND is_array($result['node'])) ? array_keys($result['node']) : array();
       }
@@ -588,7 +632,7 @@ function user_get_mailbox($uid) {
   $domains = user_get_domain($uid);
   $nids = array_keys($domains);
   if (count($nids)) {
-    $efq->fieldCondition('field_node_domain', 'nid', $nids, 'IN');
+    $efq->fieldCondition('field_node_domain', 'nid', $nids);
   }
   $result = $efq->execute();
   $nids = (isset($result['node']) AND is_array($result['node'])) ? array_keys($result['node']) : array();
@@ -610,9 +654,9 @@ function user_get_mailbox($uid) {
 function get_account_by_name($name, $domain_id = 0) {
   $efq = new EntityFieldQuery();
   $efq->entityCondition('entity_type', 'node')
-      ->entityCondition('bundle', array('mailbox', 'alias', 'group'), 'IN')
-      ->propertyCondition('title', $name, '=')
-      ->fieldCondition('field_node_domain', 'nid', $domain_id, '=');
+      ->entityCondition('bundle', array('mailbox', 'alias', 'group'))
+      ->propertyCondition('title', $name)
+      ->fieldCondition('field_node_domain', 'nid', $domain_id);
   $result = $efq->execute();
   $nids = (isset($result['node']) AND is_array($result['node'])) ? array_keys($result['node']) : array();
   $nid = count($nids) ? (int) $nids[0] : 0;
@@ -629,7 +673,7 @@ function get_domain_by_name($domain) {
   $efq = new EntityFieldQuery();
   $efq->entityCondition('entity_type', 'node')
       ->entityCondition('bundle', 'domain')
-      ->propertyCondition('title', $domain, '=');
+      ->propertyCondition('title', $domain);
   $result = $efq->execute();
   $nids = (isset($result['node']) AND is_array($result['node'])) ? array_keys($result['node']) : array();
   $nid = count($nids) ? (int) $nids[0] : 0;
@@ -648,7 +692,7 @@ function domain_exists($domain, $nid = 0) {
   $efq->entityCondition('entity_type', 'node')
       ->entityCondition('bundle', 'domain')
       ->propertyCondition('nid', $nid, '!=')
-      ->propertyCondition('title', $domain, '=');
+      ->propertyCondition('title', $domain);
   $result = $efq->execute();
   return (isset($result['node']) AND is_array($result['node'])) ? count($result['node']) > 0 : FALSE;
 }
@@ -666,8 +710,8 @@ function mailbox_exists($name, $domain, $nid = 0) {
   $efq->entityCondition('entity_type', 'node')
       ->entityCondition('bundle', 'mailbox')
       ->propertyCondition('nid', $nid, '!=')
-      ->propertyCondition('title', $name, '=')
-      ->fieldCondition('field_node_domain', 'nid', $domain, '=');
+      ->propertyCondition('title', $name)
+      ->fieldCondition('field_node_domain', 'nid', $domain);
   $result = $efq->execute();
   $exists = (isset($result['node']) AND is_array($result['node'])) ? count($result['node']) > 0 : FALSE;
   if (!$exists) {
@@ -675,8 +719,8 @@ function mailbox_exists($name, $domain, $nid = 0) {
     $efq->entityCondition('entity_type', 'node')
         ->entityCondition('bundle', 'group')
         ->propertyCondition('nid', $nid, '!=')
-        ->propertyCondition('title', $name, '=')
-        ->fieldCondition('field_node_domain', 'nid', $domain, '=');
+        ->propertyCondition('title', $name)
+        ->fieldCondition('field_node_domain', 'nid', $domain);
     $result = $efq->execute();
     $exists = (isset($result['node']) AND is_array($result['node'])) ? count($result['node']) > 0 : FALSE;
   }
@@ -685,8 +729,8 @@ function mailbox_exists($name, $domain, $nid = 0) {
     $efq->entityCondition('entity_type', 'node')
       ->entityCondition('bundle', 'alias')
       ->propertyCondition('nid', $nid, '!=')
-      ->propertyCondition('title', $name, '=')
-      ->fieldCondition('field_node_domain', 'nid', $domain, '=');
+      ->propertyCondition('title', $name)
+      ->fieldCondition('field_node_domain', 'nid', $domain);
     $result = $efq->execute();
     $exists = (isset($result['node']) AND is_array($result['node'])) ? count($result['node']) > 0 : FALSE;
   }
@@ -738,8 +782,8 @@ function list_alias_id_by_group($nid) {
     $efq = new EntityFieldQuery();
     $efq->entityCondition('entity_type', 'node')
         ->entityCondition('bundle', 'alias')
-        ->propertyCondition('title', $names, 'IN')
-        ->fieldCondition('field_node_domain', 'nid', $group->domain->nid, '=');
+        ->propertyCondition('title', $names)
+        ->fieldCondition('field_node_domain', 'nid', $group->domain->nid);
     $result = $efq->execute();
     $nids = (isset($result['node']) AND is_array($result['node'])) ? array_keys($result['node']) : array();
   }
@@ -770,8 +814,8 @@ function list_mailbox_id_by_group($nid) {
     $efq = new EntityFieldQuery();
     $efq->entityCondition('entity_type', 'node')
         ->entityCondition('bundle', 'mailbox')
-        ->propertyCondition('title', $names, 'IN')
-        ->fieldCondition('field_node_domain', 'nid', $group->domain->nid, '=');
+        ->propertyCondition('title', $names)
+        ->fieldCondition('field_node_domain', 'nid', $group->domain->nid);
     $result = $efq->execute();
     $nids = (isset($result['node']) AND is_array($result['node'])) ? array_keys($result['node']) : array();
   }
