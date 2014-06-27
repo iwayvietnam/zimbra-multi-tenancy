@@ -1770,7 +1770,7 @@ function _zimbra_prepare_account_node($record, $domain_id = 0) {
     if ($field === 'title') {
       $node->$field = $value;
     }
-    if ($field === 'group') {
+    elseif ($field === 'group') {
       $node->$field = $value;
     }
     else {
