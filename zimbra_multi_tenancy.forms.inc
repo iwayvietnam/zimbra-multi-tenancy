@@ -1119,22 +1119,41 @@ function zimbra_group_validate($form, &$form_state){
       $zimbra_members = is_array($zimbra_dlm) ? $zimbra_dlm : array($zimbra_dlm);
       $remove_members = array();
       foreach ($zimbra_members as $member) {
+        $account = zimbra_get_account($api, $member);
+        if ($account) {
+          $attrs = array(
+            'ou' => $group_fullname,
+          );
+          zimbra_modify_account($api, $account->id, $attrs);
+        }
+
         if (!in_array($member, $members)) {
           $remove_members[] = $member;
         }
       }
-      if (count($remove_members)) {
+      if (!empty($remove_members)) {
         zimbra_remove_dl_members($api, $zimbra_dl->id, $remove_members);
       }
 
-      if (count($members)) {
+      if (!empty($members)) {
         $add_members = array();
         foreach ($members as $member) {
           if (!in_array($member, $zimbra_members)) {
             $add_members[] = $member;
           }
         }
-        zimbra_add_dl_members($api, $zimbra_dl->id, $add_members);
+        if (!empty($add_members)) {
+          zimbra_add_dl_members($api, $zimbra_dl->id, $add_members);
+          foreach ($add_members as $mail_address) {
+            $account = zimbra_get_account($api, $mail_address);
+            if ($account) {
+              $attrs = array(
+                'ou' => $group_fullname,
+              );
+              zimbra_modify_account($api, $account->id, $attrs);
+            }
+          }
+        }
       }
     }
   }
@@ -1695,6 +1714,7 @@ function zimbra_import_account_form_callback($form, &$form_state) {
         $columns[$i] = trim($header);
       }
       $count = 0;
+      $imported_accounts = array();
       $number_col = count($columns);
       while ($row = fgetcsv($handle)) {
         if (!empty($row) && count($row) == $number_col) {
@@ -1720,6 +1740,8 @@ function zimbra_import_account_form_callback($form, &$form_state) {
           $node = _zimbra_prepare_account_node($record, $domain_nid);
           $mailbox_exist = mailbox_exists($node->title, $domain_nid);
           if (!$mailbox_exist) {
+            $group_node = group_get_by_name($node->group);
+            $group = normalize_group($group_node);
             $mail_address = $node->title .'@' .$domain->title;
 
             $account = zimbra_get_account($api, $mail_address);
@@ -1728,7 +1750,7 @@ function zimbra_import_account_form_callback($form, &$form_state) {
                 'displayName' => $node->field_mailbox_fullname[LANGUAGE_NONE][0]['value'],
                 'sn' => $node->field_mailbox_fullname[LANGUAGE_NONE][0]['value'],
                 'telephoneNumber' => $node->field_mailbox_telephone[LANGUAGE_NONE][0]['value'],
-                'ou' => $node->group,
+                'ou' => !empty($group->fullname) ? $group->fullname : $node->group,
                 'company' => $node->field_mailbox_category[LANGUAGE_NONE][0]['value'],
                 'zimbraMailQuota' => $quota,
                 'zimbraAccountStatus' => $node->field_mailbox_status[LANGUAGE_NONE][0]['value'],
@@ -1745,12 +1767,44 @@ function zimbra_import_account_form_callback($form, &$form_state) {
             }
             unset($node->group);
             node_save($node);
+            $imported_accounts[] = $node->title;
             $count++;
+
+            if ($group_node) {
+              $items = field_get_items('node', $group_node, 'field_group_members');
+              if ($items) {
+                $members = array();
+                foreach ($items as $item) {
+                  $members[] = $item['value'];
+                }
+                if (!in_array($mail_address, $members)) {
+                  $items[] = array('value' => $mail_address);
+                }
+                $group_node->field_group_members[LANGUAGE_NONE] = $items;
+              }
+              else {
+                $items = array(array('value' => $mail_address));
+                $group_node->field_group_members[LANGUAGE_NONE] = $items;
+              }
+              node_save($group_node);
+
+              $zimbra_dl = zimbra_get_dl($api, $group_node->title.'@' .$domain->title);
+              $zimbra_dlm = isset($zimbra_dl->dlm) ? $zimbra_dl->dlm : array();
+              $zimbra_members = is_array($zimbra_dlm) ? $zimbra_dlm : array($zimbra_dlm);
+              $add_members = array();
+              if (!in_array($mail_address, $zimbra_members)) {
+                $add_members[] = $mail_address;
+              }
+              if (count($add_members)) {
+                zimbra_add_dl_members($api, $zimbra_dl->id, $add_members);
+              }
+            }
           }
         }
       }
       fclose($handle);
-      drupal_set_message($count . ' accounts were updated.');  
+      // drupal_set_message($count . ' accounts were updated.');
+      drupal_set_message(implode(',', $imported_accounts) . ' were imported.');
     }
   }
 }
