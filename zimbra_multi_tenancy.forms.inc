@@ -1212,6 +1212,7 @@ function zimbra_alias_hook_form(&$form, &$form_state){
   $form['field_node_group'][LANGUAGE_NONE]['#options'] = $alias_groups;
   $form['field_node_group'][LANGUAGE_NONE]['#prefix'] = '<div id="alias-group-replace">';
   $form['field_node_group'][LANGUAGE_NONE]['#suffix'] = '</div>';
+  hide($form['field_node_group']);
 
   $alias_mailboxes = array();
   if (arg(2) == 'edit') {
@@ -1439,6 +1440,7 @@ function zimbra_mailbox_hook_form(&$form, &$form_state){
     }
   }
   $form['field_node_group'][LANGUAGE_NONE]['#options'] = $mailbox_groups;
+  hide($form['field_node_group']);
 
   $form['actions']['submit']['#suffix'] = l(t('Cancel'), 'zimbra/content/list/mailbox');
   $form['#validate'][] = 'zimbra_mailbox_validate';
