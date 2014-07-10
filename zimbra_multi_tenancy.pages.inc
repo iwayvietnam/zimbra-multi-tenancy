@@ -439,7 +439,6 @@ function page_list_alias() {
           $alias_nids = array(0);
         }
         $efq->propertyCondition('nid', $alias_nids, 'IN');
-        //$efq->fieldCondition('field_node_group', 'nid', $group_nids, 'IN');
       }
     }
   }
@@ -491,6 +490,16 @@ function page_list_mailbox() {
         'field' => 'field_mailbox_fullname', 'column' => 'value',
       ),
     ),
+    'code' => array('data' => t(get_field_label('mailbox', 'field_mailbox_code', 'Code')), 'type' => 'field',
+      'specifier' => array(
+        'field' => 'field_mailbox_code', 'column' => 'value',
+      ),
+    ),
+    'category' => array('data' => t(get_field_label('mailbox', 'field_mailbox_category', 'Category')), 'type' => 'field',
+      'specifier' => array(
+        'field' => 'field_mailbox_category', 'column' => 'value',
+      ),
+    ),
     'status' => array('data' => t(get_field_label('mailbox', 'field_mailbox_status', 'Status')), 'type' => 'field',
       'specifier' => array(
         'field' => 'field_mailbox_status', 'column' => 'value',
@@ -503,13 +512,12 @@ function page_list_mailbox() {
     ),
     'created' => array('data' => t('Created'), 'type' => 'none', 'field' => 'created'),
     'creator' => t('Creator'),
-    'operations' => t('Operations'),
+    'operations' => t('OP'),
   );
   $efq = new EntityFieldQuery();
   $efq->entityCondition('entity_type', 'node')
       ->entityCondition('bundle', 'mailbox')
-      ->tableSort($header)
-      ->pager(50);
+      ->tableSort($header);
   if (!user_access('administer zimbra')) {
     $domains = user_get_domain($user->uid);
     $domain_nids = array_keys($domains);
@@ -529,7 +537,6 @@ function page_list_mailbox() {
           $mailbox_nids = array(0);
         }
         $efq->propertyCondition('nid', $mailbox_nids, 'IN');
-        //$efq->fieldCondition('field_node_group', 'nid', $group_nids, 'IN');
       }
     }
   }
@@ -542,7 +549,7 @@ function page_list_mailbox() {
   $destination = drupal_get_destination();
   foreach ($nodes as $key => $node) {
 	$creator = user_load($node->uid);
-    $operations = '<ul class="links inline">'
+    $operations = '<ul class="links" style="list-style: none;">'
       .'<li class="edit first">' . l(t('edit'), 'node/' . $node ->nid . '/edit', array('query' => $destination)) . '</li>'
       .'<li class="delete last">' . l(t('delete'), 'zimbra/'.$node ->nid . '/delete', array('query' => $destination)) . '</li>'
     .'</ul>';
@@ -553,9 +560,11 @@ function page_list_mailbox() {
     $row['stt'] = $count + 1 + (pager_find_page() * 50);
     $row['title'] = l($mailbox_address, 'node/' . $node->nid);
     $row['fullname'] = $mailbox->fullname;
+    $row['code'] = $mailbox->code;
+    $row['category'] = $mailbox->category;
     $row['status'] = $mailbox->status;
     $row['maxsize'] = $mailbox->size;
-    $row['created'] = date('d-m-Y H:i:s', $node->created);
+    $row['created'] = date('d-m-y', $node->created) . '<br>' . date('H:i:s', $node->created);
     $row['creator'] = $creator->name;
     $row['operations'] = $operations;
     $rows[] = $row;
