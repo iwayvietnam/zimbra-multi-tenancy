@@ -1657,7 +1657,7 @@ function import_account_form($form, &$form_state){
   $form['import_account']['file'] = array(
     '#type' => 'file',
     '#title' => t('Csv file'),
-    '#description' => t('Csv file fields: username,fullname,password,telephone,category,group,status,quota'),
+    '#description' => t('Csv file fields: username,code,fullname,password,telephone,category,group,status,quota'),
   );
 
   $options = array();
@@ -1847,6 +1847,7 @@ function _zimbra_prepare_account_node($record, $domain_id = 0) {
 function _zimbra_account_mapping_columns($column) {
   $columns = array(
     'username' => 'title',
+    'code' => 'field_mailbox_code',
     'fullname' => 'field_mailbox_fullname',
     'password' => 'field_mailbox_password',
     'telephone' => 'field_mailbox_telephone',
