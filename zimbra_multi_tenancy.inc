@@ -1057,8 +1057,11 @@ function normalize_mailbox($node) {
   $mailbox->nid = isset($node->nid) ? (int) $node->nid : 0;
   $mailbox->title = isset($node->title) ? $node->title : '';
 
+  $mailbox->code = isset($node->field_mailbox_code[LANGUAGE_NONE][0]['value']) ? $node->field_mailbox_code[LANGUAGE_NONE][0]['value'] : '';
   $mailbox->fullname = isset($node->field_mailbox_fullname[LANGUAGE_NONE][0]['value']) ? $node->field_mailbox_fullname[LANGUAGE_NONE][0]['value'] : '';
   $mailbox->password = isset($node->field_mailbox_password[LANGUAGE_NONE][0]['value']) ? $node->field_mailbox_password[LANGUAGE_NONE][0]['value'] : '';
+  $mailbox->telephone = isset($node->field_mailbox_telephone[LANGUAGE_NONE][0]['value']) ? $node->field_mailbox_telephone[LANGUAGE_NONE][0]['value'] : '';
+  $mailbox->category = isset($node->field_mailbox_category[LANGUAGE_NONE][0]['value']) ? $node->field_mailbox_category[LANGUAGE_NONE][0]['value'] : '';
   $mailbox->status = isset($node->field_mailbox_status[LANGUAGE_NONE][0]['value']) ? $node->field_mailbox_status[LANGUAGE_NONE][0]['value'] : '';
   $mailbox->size = isset($node->field_mailbox_size[LANGUAGE_NONE][0]['value']) ? $node->field_mailbox_size[LANGUAGE_NONE][0]['value'] : '';
   $mailbox->zimbra_id = isset($node->field_mailbox_zimbra_id[LANGUAGE_NONE][0]['value']) ? $node->field_mailbox_zimbra_id[LANGUAGE_NONE][0]['value'] : '';
