@@ -1804,7 +1804,12 @@ function zimbra_import_account_form_callback($form, &$form_state) {
       }
       fclose($handle);
       // drupal_set_message($count . ' accounts were updated.');
-      drupal_set_message(implode(',', $imported_accounts) . ' were imported.');
+      if(!empty($imported_accounts)) {
+       drupal_set_message(implode(',', $imported_accounts) . ' were imported.');
+      }
+      else {
+       drupal_set_message('No accounts were imported.');
+      }
     }
   }
 }
