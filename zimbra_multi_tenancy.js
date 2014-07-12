@@ -41,15 +41,26 @@
         }
       });
       $(':checkbox[name^="data_type"]').click(function() {
-        if (this.value === 'domain' && !this.checked) {
-          $(':checkbox[name^="data_type"]').attr('checked', '');
-        }
-        if(this.value === 'alias' && this.checked) {
-          $(':checkbox[name^="data_type"]').attr('checked', 'checked');
-        }
-        if(this.value !== 'domain' && this.checked) {
-          $('#edit-data-type-domain').attr('checked', 'checked');
-        }
+        if (this.checked) {
+          switch(this.value){
+            case 'group':
+              $('#edit-data-type-alias').attr('checked', 'checked');
+            case 'alias':
+              $('#edit-data-type-mailbox').attr('checked', 'checked');
+            case 'mailbox':
+              $('#edit-data-type-domain').attr('checked', 'checked');
+          }
+        };
+        if (!this.checked) {
+          switch(this.value){
+            case 'domain':
+              $('#edit-data-type-mailbox').attr('checked', '');
+            case 'mailbox':
+              $('#edit-data-type-alias').attr('checked', '');
+            case 'alias':
+              $('#edit-data-type-group').attr('checked', '');
+          }
+        };
       });
     }
   };
