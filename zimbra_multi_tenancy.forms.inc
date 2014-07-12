@@ -5,6 +5,7 @@
  */
 function zimbra_confirm_delete($form, &$form_state, $node) {
   global $user;
+  form_load_include($form_state, 'inc', 'zimbra_multi_tenancy', 'zimbra_multi_tenancy.forms');
   $domain_id = 0;
   switch ($node->type) {
     case 'domain':
@@ -71,14 +72,13 @@ function zimbra_confirm_delete_submit($form, &$form_state) {
 /**
  * Zimbra pull data form
  */
-function zimbra_pull_data_form($form, &$form_state) {
+function zimbra_pull_data_form($form, &$form_state, $node) {
   global $user;
-  $server_id = (int) arg(2);
-  $node = node_load($server_id);
-  if (!$node) {
+  if ($node->type !== 'server') {
     drupal_access_denied();
     exit;
   }
+  form_load_include($form_state, 'inc', 'zimbra_multi_tenancy', 'zimbra_multi_tenancy.forms');
   $server = normalize_server($node);
 
   $form['pull_data'] = array(
@@ -91,9 +91,9 @@ function zimbra_pull_data_form($form, &$form_state) {
     '#required' => true,
     '#options' => array(
       'domain' => t('Domain'),
-      'group' => t('Group'),
       'mailbox' => t('Mailbox'),
       'alias' => t('Alias'),
+      'group' => t('Group'),
     ),
   );
 
@@ -111,13 +111,14 @@ function zimbra_pull_data_form($form, &$form_state) {
 
   $form['pull_data']['server_id'] = array(
     '#type' => 'hidden',
-    '#value' => $server_id,
+    '#value' => $node->nid,
   );
 
   $form['pull_data']['pull_data'] = array(
     '#type' => 'submit',
     '#value' => t('Pull data'),
     '#submit' => array('zimbra_pull_data_callback'),
+    '#suffix' => l(t('Cancel'), 'zimbra/server'),
   );
   $form['#attached']['js'][] = drupal_get_path('module', 'zimbra_multi_tenancy') . '/zimbra_multi_tenancy.js';
   return $form;
@@ -133,6 +134,7 @@ function zimbra_pull_data_callback($form, &$form_state) {
   $data_types = $values['data_type'];
   $tenant = normalize_tenant(node_load($tenant_id));
 
+  module_load_include('inc', 'zimbra_multi_tenancy', 'zimbra_multi_tenancy.zimbra');
   $server = normalize_server(node_load($server_id));
   $api = zimbra_admin_api_by_server($server_id);
   $zimbra_domains = zimbra_list_all_domain($api);
@@ -149,8 +151,6 @@ function zimbra_pull_data_callback($form, &$form_state) {
               $user_roles[] = variable_get('zimbra_domain_role_id', 0);
             }
 
-            // $user_uid = auto_create_user($user_name, $user_pass, $user_mail, $user_roles);
-
             $node = new stdClass();
             $node->type = 'domain';
             $node->title = $domain->name;
@@ -166,7 +166,6 @@ function zimbra_pull_data_callback($form, &$form_state) {
             $node->field_domain_zimbra_id[LANGUAGE_NONE][0]['value'] = $zimbra_id;
             $node->field_domain_mailbox_max_size[LANGUAGE_NONE][0]['value'] = 0;
             $node->field_domain_number_of_mailboxes[LANGUAGE_NONE][0]['value'] = 0;
-            // $node->field_domain_user[LANGUAGE_NONE][0]['uid'] = $user_uid;
             if ($tenant && $tenant->user) {
               $node->uid = $tenant->user->uid;
             }
@@ -193,7 +192,7 @@ function zimbra_pull_data_callback($form, &$form_state) {
               $display_name = $group_name;
               foreach ($attrs as $attr) {
                 if ($attr->n === 'displayName') {
-                  $display_name = $attr->_;
+                  $display_name = isset($attr->_) ? $attr->_ : '';
                 }
               }
 
@@ -201,7 +200,6 @@ function zimbra_pull_data_callback($form, &$form_state) {
               if (variable_get('zimbra_group_role_id', 0) != 0){
                 $user_roles[] = variable_get('zimbra_group_role_id', 0);
               }
-              // $user_uid = auto_create_user($user_name, $user_pass, $user_mail, $user_roles);
 
               $node = new stdClass();
               $node->type = 'group';
@@ -215,7 +213,6 @@ function zimbra_pull_data_callback($form, &$form_state) {
               $node->field_group_user_password[LANGUAGE_NONE][0]['value'] = '';
               $node->field_node_domain[LANGUAGE_NONE][0]['nid'] = $domain->nid;
               $node->field_group_zimbra_id[LANGUAGE_NONE][0]['value'] = $zimbra_id;
-              // $node->field_group_user[LANGUAGE_NONE][0]['uid'] = $user_uid;
               foreach ($members as $key => $member) {
                 $node->field_group_members[LANGUAGE_NONE][$key]['value'] = $member;
               }
@@ -251,13 +248,13 @@ function zimbra_pull_data_callback($form, &$form_state) {
                 $mail_quota = 0;
                 foreach ($attrs as $attr) {
                   if ($attr->n === 'displayName') {
-                    $display_name = $attr->_;
+                    $display_name = isset($attr->_) ? $attr->_ : '';
                   }
                   if ($attr->n === 'zimbraAccountStatus') {
-                    $account_status = $attr->_;
+                    $account_status = isset($attr->_) ? $attr->_ : '';
                   }
                   if ($attr->n === 'zimbraMailQuota') {
-                    $mail_quota = (int) $attr->_;
+                    $mail_quota = isset($attr->_) ? (int) $attr->_ : 0;
                   }
                 }
 
@@ -327,7 +324,9 @@ function zimbra_pull_data_callback($form, &$form_state) {
 /**
  * Zimbra server hook form
  */
-function zimbra_server_hook_form(&$form, &$form_state) {
+function zimbra_server_attach_form(&$form, &$form_state) {
+  form_load_include($form_state, 'inc', 'zimbra_multi_tenancy', 'zimbra_multi_tenancy.forms');
+
   $form['field_server_service_location'][LANGUAGE_NONE][0]['value']['#required'] = 1;
   $form['field_server_service_location']['#suffix'] = '
     <span>E.g: "https://mail.zimbra.com:7071/service/admin/soap" for Soap.</br />
@@ -343,7 +342,7 @@ function zimbra_server_hook_form(&$form, &$form_state) {
       'callback' => 'ajax_server_test_connection_callback',
     ),
   );
-  $form['actions']['submit']['#suffix'] = l(t('Cancel'), 'zimbra/content/list/server');
+  $form['actions']['submit']['#suffix'] = l(t('Cancel'), 'zimbra/server');
   $form['#validate'][] = 'zimbra_server_validate';
 }
 
@@ -358,6 +357,7 @@ function ajax_server_test_connection_callback($form, $form_state) {
   $password = $values['field_server_admin_password'][LANGUAGE_NONE][0]['password_field']['password_field'];
   $password = password_field_decrypt($password);
 
+  module_load_include('inc', 'zimbra_multi_tenancy', 'zimbra_multi_tenancy.zimbra');
   $connected = zimbra_test_connection($location, $client, $user, $password);
   if ($connected) {
     $message = 'Connection to zimbra service success!';
@@ -383,6 +383,7 @@ function zimbra_server_validate($form, &$form_state) {
       $password = $values['field_server_admin_password'][LANGUAGE_NONE][0]['password_field']['password_field'];
       $password = password_field_decrypt($password);
 
+      module_load_include('inc', 'zimbra_multi_tenancy', 'zimbra_multi_tenancy.zimbra');
       $connected = zimbra_test_connection($location, $client, $user, $password);
       if (!$connected) {
         form_set_error('', t('Connection to zimbra service failed!'));
@@ -394,7 +395,9 @@ function zimbra_server_validate($form, &$form_state) {
 /**
  * Zimbra tenant hook form
  */
-function zimbra_ternant_hook_form(&$form, &$form_state) {
+function zimbra_ternant_attach_form(&$form, &$form_state) {
+  form_load_include($form_state, 'inc', 'zimbra_multi_tenancy', 'zimbra_multi_tenancy.forms');
+
   $tenant_access = user_access('administer zimbra');
   if($tenant_access === false) {
     drupal_access_denied();
@@ -425,7 +428,7 @@ function zimbra_ternant_hook_form(&$form, &$form_state) {
 
   $form['field_tenant_user'][LANGUAGE_NONE]['#options']['_none'] = t('New user');
   $form['field_tenant_user']['#access'] = 0;
-  $form['actions']['submit']['#suffix'] = l(t('Cancel'), 'zimbra/content/list/tenant');
+  $form['actions']['submit']['#suffix'] = l(t('Cancel'), 'zimbra/tenant');
   $form['#validate'][] = 'zimbra_tenant_validate';
 }
 
@@ -579,8 +582,10 @@ function zimbra_tenant_validate($form, &$form_state) {
 /**
  * Zimbra domail hook form
  */
-function zimbra_domain_hook_form(&$form, &$form_state) {
+function zimbra_domain_attach_form(&$form, &$form_state) {
   global $user;
+  form_load_include($form_state, 'inc', 'zimbra_multi_tenancy', 'zimbra_multi_tenancy.forms');
+
   //Check permission create, edit domain
   $tenants = user_get_tenant($user->uid);
   if (count($tenants) === 0) {
@@ -657,7 +662,7 @@ function zimbra_domain_hook_form(&$form, &$form_state) {
 
   $form['field_domain_user'][LANGUAGE_NONE]['#options']['_none'] = t('New user');
   $form['field_domain_user']['#access'] = 0;
-  $form['actions']['submit']['#suffix'] = l(t('Cancel'), 'zimbra/content/list/domain');
+  $form['actions']['submit']['#suffix'] = l(t('Cancel'), 'zimbra/domain');
   $form['#validate'][] = 'zimbra_domain_validate';
 }
 
@@ -700,6 +705,7 @@ function zimbra_domain_validate($form, &$form_state) {
       form_set_error('title', t('@domain already exists.', array('@domain' => $form['title']['#title'])));
     }
 
+    module_load_include('inc', 'zimbra_multi_tenancy', 'zimbra_multi_tenancy.zimbra');
     $server_id = (int) $form_state['values']['field_domain_server'][LANGUAGE_NONE][0]['nid'];
     $api = zimbra_admin_api_by_server($server_id);
 
@@ -828,9 +834,9 @@ function zimbra_domain_validate($form, &$form_state) {
 /**
  * Zimbra group hook form
  */
-function zimbra_group_hook_form(&$form, &$form_state) {
-  //drupal_add_library('system', 'drupal.user');
+function zimbra_group_attach_form(&$form, &$form_state) {
   global $user;
+  form_load_include($form_state, 'inc', 'zimbra_multi_tenancy', 'zimbra_multi_tenancy.forms');
   drupal_add_css(drupal_get_path('module', 'zimbra_multi_tenancy') . '/zimbra_multi_tenancy.css');
 
   $domains = user_get_domain($user->uid);
@@ -983,7 +989,7 @@ function zimbra_group_hook_form(&$form, &$form_state) {
 
   $form['field_group_user'][LANGUAGE_NONE]['#options']['_none'] = t('New user');
   $form['field_group_user']['#access'] = 0;
-  $form['actions']['submit']['#suffix'] = l(t('Cancel'), 'zimbra/content/list/group');
+  $form['actions']['submit']['#suffix'] = l(t('Cancel'), 'zimbra/group');
   $form['#validate'][] = 'zimbra_group_validate';
 }
 
@@ -1082,6 +1088,7 @@ function zimbra_group_validate($form, &$form_state){
       }
     }
 
+    module_load_include('inc', 'zimbra_multi_tenancy', 'zimbra_multi_tenancy.zimbra');
     $server_id = server_get_id_from_domain($mailbox_domain);
     $api = zimbra_admin_api_by_server($server_id);
 
@@ -1131,8 +1138,10 @@ function zimbra_group_validate($form, &$form_state){
 /**
  * Zimbra alias hook form
  */
-function zimbra_alias_hook_form(&$form, &$form_state){
+function zimbra_alias_attach_form(&$form, &$form_state){
   global $user;
+  form_load_include($form_state, 'inc', 'zimbra_multi_tenancy', 'zimbra_multi_tenancy.forms');
+
   $mailboxes = user_get_mailbox($user->uid);
   $domains = user_get_domain($user->uid);
 
@@ -1237,7 +1246,7 @@ function zimbra_alias_hook_form(&$form, &$form_state){
     $form['field_alias_mailbox'][LANGUAGE_NONE]['#description'] = t('Please <a href="' . url('node/add/mailbox') . '">add Mailbox</a> before create Alias.');
   }
 
-  $form['actions']['submit']['#suffix'] = l(t('Cancel'), 'zimbra/content/list/alias');
+  $form['actions']['submit']['#suffix'] = l(t('Cancel'), 'zimbra/alias');
   $form['#validate'][] = 'zimbra_alias_validate';
 }
 
@@ -1280,6 +1289,7 @@ function zimbra_alias_validate($form, &$form_state) {
       $mail_domain = node_load($mailbox_domain);
       $alias_address = $mailbox_name . '@' . $mail_domain->title;
 
+      module_load_include('inc', 'zimbra_multi_tenancy', 'zimbra_multi_tenancy.zimbra');
       $server_id = server_get_id_from_domain($mailbox_domain);
       $api = zimbra_admin_api_by_server($server_id);
 
@@ -1335,8 +1345,10 @@ function zimbra_alias_validate($form, &$form_state) {
 /**
  * Zimbra mailbox hook form
  */
-function zimbra_mailbox_hook_form(&$form, &$form_state){
+function zimbra_mailbox_attach_form(&$form, &$form_state){
   global $user;
+  form_load_include($form_state, 'inc', 'zimbra_multi_tenancy', 'zimbra_multi_tenancy.forms');
+
   $domains = user_get_domain($user->uid);
   if (count($domains) === 0) {
     drupal_set_message(t('Please <a href="' . url('node/add/domain') . '">add Domain</a> before create Mailbox.'), 'error');
@@ -1427,7 +1439,7 @@ function zimbra_mailbox_hook_form(&$form, &$form_state){
   }
   $form['field_node_group'][LANGUAGE_NONE]['#options'] = $mailbox_groups;
 
-  $form['actions']['submit']['#suffix'] = l(t('Cancel'), 'zimbra/content/list/mailbox');
+  $form['actions']['submit']['#suffix'] = l(t('Cancel'), 'zimbra/mailbox');
   $form['#validate'][] = 'zimbra_mailbox_validate';
 }
 
@@ -1488,6 +1500,7 @@ function zimbra_mailbox_validate($form, &$form_state) {
         $mail_fullname = trim($form_state['values']['field_mailbox_fullname'][LANGUAGE_NONE][0]['value']);
         $mailbox_status = $form_state['values']['field_mailbox_status'][LANGUAGE_NONE][0]['value'];
 
+        module_load_include('inc', 'zimbra_multi_tenancy', 'zimbra_multi_tenancy.zimbra');
         $server_id = server_get_id_from_domain($domain_id);
         $api = zimbra_admin_api_by_server($server_id);
 
@@ -1597,10 +1610,12 @@ function zimbra_mailbox_validate($form, &$form_state) {
 }
 
 /**
- * Zimbra import account form
+ * Zimbra import mailbox form
  */
-function import_account_form($form, &$form_state){
+function import_mailbox_form($form, &$form_state){
   global $user;
+  form_load_include($form_state, 'inc', 'zimbra_multi_tenancy', 'zimbra_multi_tenancy.forms');
+
   $form['import_account'] = array(
     '#type' => 'fieldset',
     '#title' => t('Imports mailbox(es) from csv file'),
@@ -1627,16 +1642,16 @@ function import_account_form($form, &$form_state){
   $form['import_account']['button_import'] = array(
     '#type' => 'submit',
     '#value' => t('Import'),
-    '#suffix' => l(t('Cancel'), 'zimbra/content/list/mailbox'),
-    '#submit' => array('zimbra_import_account_form_callback'),
+    '#suffix' => l(t('Cancel'), 'zimbra/mailbox'),
+    '#submit' => array('zimbra_import_mailbox_form_callback'),
   );
   return $form;
 }
 
 /**
- * Zimbra import account submit callback
+ * Zimbra import mailbox submit callback
  */
-function zimbra_import_account_form_callback($form, &$form_state) {
+function zimbra_import_mailbox_form_callback($form, &$form_state) {
   $destination = 'public://zimbra/';
   if (file_prepare_directory($destination, FILE_CREATE_DIRECTORY)) {
     $file = file_save_upload(
@@ -1653,6 +1668,7 @@ function zimbra_import_account_form_callback($form, &$form_state) {
         'maintenance',
       );
 
+      module_load_include('inc', 'zimbra_multi_tenancy', 'zimbra_multi_tenancy.zimbra');
       $domain_nid = (int) $form_state['values']['domain'];
       $domain = normalize_domain(node_load($domain_nid));
       $server_id = server_get_id_from_domain($domain_nid);
@@ -1680,12 +1696,12 @@ function zimbra_import_account_form_callback($form, &$form_state) {
            $field = 'active';
           }
 
-          $column = _zimbra_account_mapping_columns($columns[$i]);
+          $column = _zimbra_mailbox_mapping_columns($columns[$i]);
           if ($column) {
             $record[$column] = $field;
           }
         }
-        $node = _zimbra_prepare_account_node($record, $domain_nid);
+        $node = _zimbra_prepare_mailbox_node($record, $domain_nid);
 
         $mail_address = $node->title .'@' .$domain->title;
         $account = zimbra_get_account($api, $mail_address);
@@ -1716,9 +1732,9 @@ function zimbra_import_account_form_callback($form, &$form_state) {
 }
 
 /**
- * Zimbra prepare account node
+ * Zimbra prepare mailbox node
  */
-function _zimbra_prepare_account_node($record, $domain_id = 0) {
+function _zimbra_prepare_mailbox_node($record, $domain_id = 0) {
   $node = new stdClass();
   $node->type = 'mailbox';
   $node->promote = 0;
@@ -1745,9 +1761,9 @@ function _zimbra_prepare_account_node($record, $domain_id = 0) {
 }
 
 /**
- * Zimbra account mapping columns
+ * Zimbra mailbox mapping columns
  */
-function _zimbra_account_mapping_columns($column) {
+function _zimbra_mailbox_mapping_columns($column) {
   $columns = array(
     'username' => 'title',
     'fullname' => 'field_mailbox_fullname',
@@ -1756,4 +1772,20 @@ function _zimbra_account_mapping_columns($column) {
     'quota' => 'field_mailbox_size',
   );
   return isset($columns[$column]) ? $columns[$column] : NULL;
+}
+
+function _zimbra_preprocess_form_items(&$form, &$form_state) {
+  $form['options']['status']['#default_value'] = 1;
+  $form['options']['promote']['#default_value'] = 0;
+  $form['actions']['delete']['#access'] = 0;
+  $form['comment_settings']['comment']['#default_value'] = COMMENT_NODE_CLOSED;
+
+  $form['author']['#access'] = 0;
+  $form['options']['#access'] = 0;
+  $form['path']['#access'] = 0;
+  $form['menu']['#access'] = 0;
+  $form['comment_settings']['#access'] = 0;
+  $form['revision_information']['#access'] = 0;
+  $form['actions']['preview']['#access'] = 0;
+  $form['#attached']['js'][] = drupal_get_path('module', 'zimbra_multi_tenancy') . '/zimbra_multi_tenancy.js';
 }
