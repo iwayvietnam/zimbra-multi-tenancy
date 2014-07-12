@@ -8,5 +8,4 @@ dependencies[] = user_reference
 dependencies[] = number
 dependencies[] = field_hidden
 dependencies[] = password_field
-
-;configure = admin/structure/domain/settings
+dependencies[] = views
