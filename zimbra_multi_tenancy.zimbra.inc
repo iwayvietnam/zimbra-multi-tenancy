@@ -15,7 +15,7 @@ function zimbra_test_connection(
   $user = '',
   $password = ''
 ) {
-  $authenticated = false;
+  $authenticated = FALSE;
   $api = zimbra_admin_api($location, $client);
   try {
     $result = $api->auth($user, $password);
@@ -72,7 +72,12 @@ function zimbra_admin_api_by_server($server_id) {
  * @return Zimbra Admin API
  */
 function zimbra_admin_api($location = 'https://localhost:7071/service/admin/soap', $client = 'soap') {
-  static $api = null;
+  module_load_include('inc', 'zimbra_multi_tenancy', 'includes/soap_message');
+  module_load_include('inc', 'zimbra_multi_tenancy', 'includes/soap_client');
+  module_load_include('inc', 'zimbra_multi_tenancy', 'includes/wsdl_client');
+  module_load_include('inc', 'zimbra_multi_tenancy', 'includes/zimbra_admin_api');
+
+  static $api = NULL;
   if (!($api instanceof zimbra_admin_api)) {
     $debug = (bool) variable_get('zimbra_enable_debug', 0);
     $api = new zimbra_admin_api($location, $client, $debug);
@@ -89,7 +94,7 @@ function zimbra_admin_api($location = 'https://localhost:7071/service/admin/soap
  * @return mix
  */
 function zimbra_authentication(zimbra_admin_api $api, $user = '', $password = '') {
-  static $authenticated = false;
+  static $authenticated = FALSE;
   $authToken = isset($_SESSION['authToken']) ? $_SESSION['authToken'] : '';
   if (!empty($authToken)) {
     try {
@@ -151,7 +156,7 @@ function zimbra_list_all_domain(zimbra_admin_api $api) {
  * @return mix
  */
 function zimbra_get_domain(zimbra_admin_api $api, $domain) {
-  $cache = &drupal_static(__FUNCTION__, null);
+  $cache = &drupal_static(__FUNCTION__, NULL);
   if (isset($cache[$domain])) {
     return $cache[$domain];
   }
@@ -162,7 +167,7 @@ function zimbra_get_domain(zimbra_admin_api $api, $domain) {
   }
   catch (Exception $ex) {
     watchdog('zimbra', $ex->__toString());
-    return null;
+    return NULL;
   }
 }
 
@@ -181,7 +186,7 @@ function zimbra_create_domain(zimbra_admin_api $api, $domain, array $attrs = arr
   }
   catch (Exception $ex) {
     watchdog('zimbra', $ex->__toString());
-    return null;
+    return NULL;
   }
 }
 
@@ -200,7 +205,7 @@ function zimbra_modify_domain(zimbra_admin_api $api, $id, array $attrs = array()
   }
   catch (Exception $ex) {
     watchdog('zimbra', $ex->__toString());
-    return null;
+    return NULL;
   }
 }
 
@@ -217,7 +222,7 @@ function zimbra_delete_domain(zimbra_admin_api $api, $zimbra_id) {
   }
   catch (Exception $ex) {
     watchdog('zimbra', $ex->__toString());
-    return false;
+    return FALSE;
   }
 }
 
@@ -259,7 +264,7 @@ function zimbra_list_al_dl(zimbra_admin_api $api, $domain = '') {
  */
 function zimbra_get_dl(zimbra_admin_api $api, $dl)
 {
-  $cache = &drupal_static(__FUNCTION__, null);
+  $cache = &drupal_static(__FUNCTION__, NULL);
   if (isset($cache[$dl])) {
     return $cache[$dl];
   }
@@ -270,7 +275,7 @@ function zimbra_get_dl(zimbra_admin_api $api, $dl)
   }
   catch (Exception $ex) {
     watchdog('zimbra', $ex->__toString());
-    return null;
+    return NULL;
   }
 }
 
@@ -318,7 +323,7 @@ function zimbra_create_dl(zimbra_admin_api $api, $dl, array $attrs = array()) {
   }
   catch (Exception $ex) {
     watchdog('zimbra', $ex->__toString());
-    return null;
+    return NULL;
   }
 }
 
@@ -337,7 +342,7 @@ function zimbra_modify_dl(zimbra_admin_api $api, $zimbra_id, array $attrs = arra
   }
   catch (Exception $ex) {
     watchdog('zimbra', $ex->__toString());
-    return null;
+    return NULL;
   }
 }
 
@@ -356,7 +361,7 @@ function zimbra_rename_dl(zimbra_admin_api $api, $zimbra_id, $newName) {
   }
   catch (Exception $ex) {
     watchdog('zimbra', $ex->__toString());
-    return null;
+    return NULL;
   }
 }
 
@@ -374,7 +379,7 @@ function zimbra_add_dl_members(zimbra_admin_api $api, $zimbra_id, array $members
   }
   catch (Exception $ex) {
     watchdog('zimbra', $ex->__toString());
-    return null;
+    return NULL;
   }
 }
 
@@ -392,7 +397,7 @@ function zimbra_remove_dl_members(zimbra_admin_api $api, $id, array $members) {
   }
   catch (Exception $ex) {
     watchdog('zimbra', $ex->__toString());
-    return null;
+    return NULL;
   }
 }
 
@@ -409,7 +414,7 @@ function zimbra_delete_dl(zimbra_admin_api $api, $zimbra_id) {
   }
   catch (Exception $ex) {
     watchdog('zimbra', $ex->__toString());
-    return false;
+    return FALSE;
   }
 }
 
@@ -422,7 +427,7 @@ function zimbra_delete_dl(zimbra_admin_api $api, $zimbra_id) {
  * @return mix
  */
 function zimbra_list_all_account(zimbra_admin_api $api, $domain = '', $server = '') {
-  $cache = &drupal_static(__FUNCTION__, null);
+  $cache = &drupal_static(__FUNCTION__, NULL);
   $cache_key = md5($domain.'-'.$server);
   if (isset($cache[$cache_key])) {
     return $cache[$cache_key];
@@ -493,7 +498,7 @@ function zimbra_get_all_account(zimbra_admin_api $api, $domain = '', $limit = 0,
       'zimbraIsExternalVirtualAccount',
     );
     $result = $api->searchDirectory(
-      '', $domain, false, false, false, $attrs, array('accounts'), 0, null, true, $limit, $offset
+      '', $domain, FALSE, FALSE, FALSE, $attrs, array('accounts'), 0, NULL, TRUE, $limit, $offset
     );
     $pager = array(
       'num' => isset($result->num) ? (int) $result->num : 0,
@@ -524,7 +529,7 @@ function zimbra_get_all_account(zimbra_admin_api $api, $domain = '', $limit = 0,
  * @return mix
  */
 function zimbra_get_account(zimbra_admin_api $api, $account) {
-  $cache = &drupal_static(__FUNCTION__, null);
+  $cache = &drupal_static(__FUNCTION__, NULL);
   if (isset($cache[$account])) {
     return $cache[$account];
   }
@@ -537,7 +542,7 @@ function zimbra_get_account(zimbra_admin_api $api, $account) {
   }
   catch (Exception $ex) {
     watchdog('zimbra', $ex->__toString());
-    return null;
+    return NULL;
   }
 }
 
@@ -642,7 +647,7 @@ function zimbra_list_all_alias(zimbra_admin_api $api, $domain = '') {
       'zimbraIsAdminAccount',
       'zimbraIsSystemResource'
     );
-    $result = $api->searchDirectory('', $domain, false, false, false, $attrs, array('aliases'));
+    $result = $api->searchDirectory('', $domain, FALSE, FALSE, FALSE, $attrs, array('aliases'));
     if(isset($result->alias)) {
       $aliases = is_array($result->alias) ? $result->alias : array($result->alias);
       foreach ($aliases as $alias) {
@@ -683,7 +688,7 @@ function zimbra_add_account_alias(zimbra_admin_api $api, $id, $alias) {
   }
   catch (Exception $ex) {
     watchdog('zimbra', $ex->__toString());
-    return false;
+    return FALSE;
   }
 }
 
@@ -701,7 +706,7 @@ function zimbra_remove_account_alias(zimbra_admin_api $api, $alias, $id = '') {
   }
   catch (Exception $ex) {
     watchdog('zimbra', $ex->__toString());
-    return false;
+    return FALSE;
   }
 }
 
@@ -730,7 +735,7 @@ function zimbra_set_password(zimbra_admin_api $api, $id, $password) {
  * @return mix
  */
 function zimbra_list_all_cos(zimbra_admin_api $api) {
-  $cache = &drupal_static(__FUNCTION__, null);
+  $cache = &drupal_static(__FUNCTION__, NULL);
   if (isset($cache[__FUNCTION__])) {
     return $cache[__FUNCTION__];
   }
@@ -776,7 +781,7 @@ function zimbra_check_password(zimbra_admin_api $api, $id, $password) {
  * @return mix
  */
 function zimbra_get_version_info(zimbra_admin_api $api) {
-  $cache = &drupal_static(__FUNCTION__, null);
+  $cache = &drupal_static(__FUNCTION__, NULL);
   if (isset($cache[__FUNCTION__])) {
     return $cache[__FUNCTION__];
   }
@@ -789,6 +794,6 @@ function zimbra_get_version_info(zimbra_admin_api $api) {
   }
   catch (Exception $ex) {
     watchdog('zimbra', $ex->__toString());
-    return null;
+    return NULL;
   }
 }
