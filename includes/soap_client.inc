@@ -134,10 +134,20 @@ class soap_client {
     if ($this->_debug) {
       watchdog('zimbra '.$name, htmlentities($this->last_request()), array(), WATCHDOG_DEBUG);
     }
+    $context = stream_context_create(array(
+      'http' => array(
+        'method'           => 'POST',
+        'header'           => implode("\r\n", $this->_headers),
+        'protocol_version' => 1.1,
+        'max_redirects'    => 3,
+        'timeout'          => 30.0,
+      ),
+    ));
     $response = drupal_http_request($this->_location, array(
       'headers' => $this->_headers,
       'method' => 'POST',
       'data' => (string) $this->_soap_message,
+      'context' => $context,
     ));
     $this->_response_header = $response->headers;
     $this->_response = $response->data;
