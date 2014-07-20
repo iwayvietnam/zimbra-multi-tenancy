@@ -262,10 +262,10 @@ function zimbra_pull_data_callback($form, &$form_state) {
                     $mail_quota = (int) $attr->_;
                   }
                   if ($attr->n === 'telephoneNumber') {
-                    $telephone = (int) $attr->_;
+                    $telephone = $attr->_;
                   }
                   if ($attr->n === 'company') {
-                    $category = (int) $attr->_;
+                    $company = $attr->_;
                   }
                 }
 
@@ -280,7 +280,8 @@ function zimbra_pull_data_callback($form, &$form_state) {
                 $node->field_mailbox_fullname[LANGUAGE_NONE][0]['value'] = $display_name;
                 $node->field_mailbox_password[LANGUAGE_NONE][0]['value'] = '';
                 $node->field_mailbox_telephone[LANGUAGE_NONE][0]['value'] = $telephone;
-                $node->field_mailbox_category[LANGUAGE_NONE][0]['value'] = $category;
+                $node->field_mailbox_code[LANGUAGE_NONE][0]['value'] = $company;
+                //$node->field_mailbox_category[LANGUAGE_NONE][0]['value'] = $company;
                 $node->field_mailbox_status[LANGUAGE_NONE][0]['value'] = $account_status;
                 $node->field_node_domain[LANGUAGE_NONE][0]['nid'] = $domain->nid;
                 $node->field_node_group[LANGUAGE_NONE][0]['nid'] = 0;
@@ -1521,6 +1522,7 @@ function zimbra_mailbox_validate($form, &$form_state) {
         $group_node = node_load($group_id);
 
         $mail_address = $mailbox_name .'@' .$mail_domain->title;
+        $code = trim($form_state['values']['field_mailbox_code'][LANGUAGE_NONE][0]['value']);
         $mail_fullname = trim($form_state['values']['field_mailbox_fullname'][LANGUAGE_NONE][0]['value']);
         $telephone = trim($form_state['values']['field_mailbox_telephone'][LANGUAGE_NONE][0]['value']);
         $category = trim($form_state['values']['field_mailbox_category'][LANGUAGE_NONE][0]['value']);
@@ -1542,7 +1544,8 @@ function zimbra_mailbox_validate($form, &$form_state) {
               'sn' => $mail_fullname,
               'telephoneNumber' => $telephone,
               'ou' => !empty($group_fullname) ? $group_fullname : '',
-              'company' => $category,
+              'company' => $code,
+              // 'company' => $category,
               'zimbraMailQuota' => $mailbox_maxsize * 1024 * 1024,
               'zimbraAccountStatus' => $mailbox_status,
             );
@@ -1566,7 +1569,8 @@ function zimbra_mailbox_validate($form, &$form_state) {
             'sn' => $mail_fullname,
             'telephoneNumber' => $telephone,
             'ou' => !empty($group_fullname) ? $group_fullname : '',
-            'company' => $category,
+            'company' => $code,
+            // 'company' => $category,
             'zimbraMailQuota' => $mailbox_maxsize * 1024 * 1024,
             'zimbraAccountStatus' => $mailbox_status,
           );
@@ -1751,7 +1755,8 @@ function zimbra_import_account_form_callback($form, &$form_state) {
                 'sn' => $node->field_mailbox_fullname[LANGUAGE_NONE][0]['value'],
                 'telephoneNumber' => $node->field_mailbox_telephone[LANGUAGE_NONE][0]['value'],
                 'ou' => !empty($group->fullname) ? $group->fullname : $node->group,
-                'company' => $node->field_mailbox_category[LANGUAGE_NONE][0]['value'],
+                'company' => $node->field_mailbox_code[LANGUAGE_NONE][0]['value'],
+                // 'company' => $node->field_mailbox_category[LANGUAGE_NONE][0]['value'],
                 'zimbraMailQuota' => $quota,
                 'zimbraAccountStatus' => $node->field_mailbox_status[LANGUAGE_NONE][0]['value'],
               );
