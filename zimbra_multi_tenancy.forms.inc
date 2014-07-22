@@ -127,6 +127,7 @@ function zimbra_pull_data_form($form, &$form_state) {
  * Zimbra pull data submit callback
  */
 function zimbra_pull_data_callback($form, &$form_state) {
+  set_time_limit(600);
   $values = $form_state['values'];
   $server_id = (int) $values['server_id'];
   $tenant_id = (int) $values['tenant'];
