@@ -194,7 +194,7 @@ function zimbra_pull_data_callback($form, &$form_state) {
               $display_name = $group_name;
               foreach ($attrs as $attr) {
                 if ($attr->n === 'displayName') {
-                  $display_name = $attr->_;
+                  $display_name = isset($attr->_) ? $attr->_ : '';
                 }
               }
 
@@ -254,19 +254,19 @@ function zimbra_pull_data_callback($form, &$form_state) {
                 $company = '';
                 foreach ($attrs as $attr) {
                   if ($attr->n === 'displayName') {
-                    $display_name = $attr->_;
+                    $display_name = isset($attr->_) ? $attr->_ : '';
                   }
                   if ($attr->n === 'zimbraAccountStatus') {
-                    $account_status = $attr->_;
+                    $account_status = isset($attr->_) ? $attr->_ : '';
                   }
                   if ($attr->n === 'zimbraMailQuota') {
-                    $mail_quota = (int) $attr->_;
+                    $mail_quota = isset($attr->_) ? (int) $attr->_ : '';
                   }
                   if ($attr->n === 'telephoneNumber') {
-                    $telephone = $attr->_;
+                    $telephone = isset($attr->_) ? $attr->_ : '';
                   }
                   if ($attr->n === 'company') {
-                    $company = $attr->_;
+                    $company = isset($attr->_) ? $attr->_ : '';
                   }
                 }
 
