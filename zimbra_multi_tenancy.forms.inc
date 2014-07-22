@@ -251,7 +251,7 @@ function zimbra_pull_data_callback($form, &$form_state) {
                 $account_status = 'active';
                 $mail_quota = 0;
                 $telephone = '';
-                $category = '';
+                $company = '';
                 foreach ($attrs as $attr) {
                   if ($attr->n === 'displayName') {
                     $display_name = $attr->_;
