@@ -116,6 +116,16 @@ function zimbra_multi_tenancy_node_delete($node) {
           zimbra_delete_dl($api, $group->zimbra_id);
         }
       }
+      $members = $group->members;
+      foreach ($members as $member) {
+        $account = zimbra_get_account($api, $member);
+        if ($account) {
+          $attrs = array(
+            'ou' => '',
+          );
+          zimbra_modify_account($api, $account->id, $attrs);
+        }
+      }
       break;
     case 'alias':
       $alias = normalize_alias($node);
