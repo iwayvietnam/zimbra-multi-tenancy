@@ -1,0 +1,168 @@
+<?php
+
+/**
+ * Implements hook_element_info().
+ */
+function zmt_server_ui_element_info() {
+  $types = array();
+
+  $types['zmt_server_select'] = array(
+    '#input' => TRUE,
+    '#multiple' => FALSE,
+    '#process' => array(
+      'zmt_server_select_expand',
+      'form_process_select',
+      'ajax_process_form',
+    ),
+    '#theme' => 'select',
+    '#theme_wrappers' => array('form_element'),
+    '#options' => array(),
+  );
+
+  return $types;
+}
+
+/**
+ * Implements hook_menu().
+ */ 
+function zmt_server_ui_menu() {
+  $items = array();
+  $items['zmt/server/%zmt_server'] = array(
+    'title callback' => 'entity_label',
+    'title arguments' => array('zmt_server', 2),
+    'page callback' => 'zmt_server_view',
+    'page arguments' => array(2),
+    'access callback' => 'entity_access',
+    'access arguments' => array('view', 'zmt_server', 2),
+  );
+  $items['zmt/server/add'] = array(
+    'title' => 'Add Zimbra Server',
+    'page callback' => 'zmt_server_add_page',
+    'access callback' => 'zmt_server_add_access',
+    'type' => MENU_LOCAL_ACTION,
+    'file' => 'zmt_server.admin.inc',
+  );
+  $items['zmt/server/%zmt_server/edit'] = array(
+    'title' => 'Edit Zimbra Server',
+    'page callback' => 'zmt_server_edit_page',
+    'page arguments' => array(2),
+    'access callback' => 'zmt_server_edit_access',
+    'access arguments' => array(2),
+    'type' => MENU_CALLBACK,
+    'file' => 'zmt_server.admin.inc',
+  );
+  $items['zmt/server/%zmt_server/delete'] = array(
+    'title' => 'Delete Zimbra Server',
+    'page callback' => 'zmt_server_delete_page',
+    'page arguments' => array(2),
+    'access callback' => 'zmt_server_delete_access',
+    'access arguments' => array(2),
+    'type' => MENU_CALLBACK,
+    'file' => 'zmt_server.admin.inc',
+  );
+  $items['zmt/server'] = array(
+    'title' => 'Zimbra Servers',
+    'page callback' => 'zmt_server_list_all',
+    'access callback' => 'zmt_server_list_access',
+    'file' => 'zmt_server.admin.inc',
+  );
+  return $items;
+}
+
+/**
+ * Server view callback.
+ */
+function zmt_server_view($server) {
+  drupal_set_title(entity_label('zmt_server', $server));
+  return entity_view('zmt_server', array(entity_id('zmt_server', $server) => $server), 'full');
+}
+
+/**
+ * Access callback: determines if the user can create country.
+ */
+function zmt_server_list_access($account = NULL) {
+  return zmt_server_access('list', NULL, $account);
+}
+
+/**
+ * Access callback: determines if the user can create country.
+ */
+function zmt_server_add_access($account = NULL) {
+  return zmt_server_access('create', NULL, $account);
+}
+
+/**
+ * Access callback: determines if the user can edit country.
+ */
+function zmt_server_edit_access($server, $account = NULL) {
+  return zmt_server_access('edit', $server, $account);
+}
+
+/**
+ * Access callback: determines if the user can delete country.
+ */
+function zmt_server_delete_access($server, $account = NULL) {
+  return zmt_server_access('delete', $server, $account);
+}
+
+/**
+ * Our process callback to expand the server FAPI element.
+ */
+function zmt_server_select_expand($element) {
+  if (empty($element['#options'])) {
+    $options = array('' => t('- None -'));
+    $servers = zmt_server_load_all();
+    foreach ($servers as $server) {
+      $options[$server->id] = $server->name;
+    }
+    $element['#options'] = $options;
+  }
+  if (empty($element['#title'])) {
+    $element['#title'] = t('Zimbra Server');
+  }
+  if (isset($element['#ajax']) && !isset($element['#ajax']['event'])) {
+    $element['#ajax']['event'] = 'change';
+  }
+  return $element;
+}
+
+/**
+ * zmt filter by server form.
+ */
+function zmt_filter_by_server_form($form, &$form_state) {
+  $server_id = isset($_SESSION['zmt_filter_server_id']) ? (int) $_SESSION['zmt_filter_server_id'] : 0;
+  $form['server_id'] = array(
+    '#type' => 'zmt_server_select',
+    '#default_value' => $server_id,
+    '#theme_wrappers' => array(),
+  );
+
+  $form['actions']['apply'] = array(
+    '#type' => 'submit',
+    '#value' => t('Apply'),
+    '#submit' => array('zmt_filter_by_server_apply_callback'),
+    '#prefix' => '&nbsp;',
+  );
+  $form['actions']['reset'] = array(
+    '#type' => 'submit',
+    '#value' => t('Reset'),
+    '#submit' => array('zmt_filter_by_server_reset_callback'),
+  );
+  return $form;
+}
+
+/**
+ * zmt server filter apply callback.
+ */
+function zmt_filter_by_server_apply_callback($form, &$form_state) {
+  $_SESSION['zmt_filter_server_id'] = (int) $form_state['values']['server_id'];
+  $form_state['redirect'] = current_path();
+}
+
+/**
+ * zmt server filter reset callback.
+ */
+function zmt_filter_by_server_reset_callback($form, &$form_state){
+  unset($_SESSION['zmt_filter_server_id']);
+  $form_state['redirect'] = current_path();
+}

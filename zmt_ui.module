@@ -1,0 +1,477 @@
+<?php
+
+/**
+ * Implements hook_menu().
+ */ 
+function zmt_menu() {
+  $items = array();
+
+  $items['admin/config/system/zmt'] = array(
+    'title' => t('Zimbra multi-tenancy settings'),
+    'description' => 'Zimbra multi-tenancy settings.',
+    'page callback' => 'zmt_setting_form_page',
+    'access arguments' => array('administer zimbra'),
+    'file' => 'zmt.admin.inc',
+  );
+
+  $items['zmt/server/pull'] = array(
+    'title' => 'Pull data',
+    'page callback' => 'zmt_server_pull_data_page',
+    'access callback' => 'zmt_server_add_access',
+    'type' => MENU_LOCAL_ACTION,
+    'file' => 'zmt.admin.inc',
+  );
+
+  return $items;
+}
+
+/**
+ * Implements hook_zmt_cos_update().
+ */
+function zmt_ui_zmt_cos_update(Entity $cos) {
+  module_load_include('inc', 'zmt', 'includes/zmt.zimbra');
+  $cos_servers = zmt_cos_server_load_multiple_by_cos(array($cos->id));
+  foreach ($cos_servers as $cos_server) {
+    $attrs = array(
+      'description' => $cos->description,
+      'zimbraMailQuota' => (int) $cos->mail_quota * 1024 * 1024,
+      'zimbraAttachmentsBlocked' => (bool) $cos->attachments_blocked,
+      'zimbraPasswordMinLength' => $cos->password_min_length,
+      'zimbraPasswordMaxLength' => $cos->password_max_length,
+      'zimbraPasswordMinUpperCaseChars' => $cos->password_min_upper,
+      'zimbraPasswordMinLowerCaseChars' => $cos->password_min_lower,
+      'zimbraPasswordMinNumericChars' => $cos->password_min_numeric,
+    );
+
+    $api = zimbra_admin_api_by_server($cos_server->server_id);
+    $zimbra_cos = zimbra_get_cos($api, $cos->name);
+    if (!$zimbra_cos) {
+      $zimbra_cos = zimbra_create_cos($api, $cos->name, $attrs);
+    }
+    else {
+      $zimbra_id = $cos_server->zimbra_id;
+      if (!empty($zimbra_id)) {
+        $zimbra_cos = zimbra_modify_cos($api, $zimbra_id, $attrs);
+      }
+    }
+    $cos_server->zimbra_id = isset($zimbra_cos->id) ? $zimbra_cos->id : '';
+    zmt_cos_server_save($cos_server, FALSE);
+  }
+}
+
+/**
+ * Implements hook_zmt_cos_server_presave().
+ */
+function zmt_ui_zmt_cos_server_presave($cos_server) {
+  module_load_include('inc', 'zmt', 'includes/zmt.zimbra');
+
+  $wrapper = entity_metadata_wrapper('zmt_cos_server', $cos_server);
+  $cos = $wrapper->cos_id->value();
+
+  $api = zimbra_admin_api_by_server($cos_server->server_id);
+  $zimbra_cos = zimbra_get_cos($api, $cos->name);
+  if (!$zimbra_cos) {
+    $attrs = array(
+      'description' => $cos->description,
+      'zimbraMailQuota' => (int) $cos->mail_quota * 1024 * 1024,
+      'zimbraAttachmentsBlocked' => (bool) $cos->attachments_blocked,
+      'zimbraPasswordMinLength' => $cos->password_min_length,
+      'zimbraPasswordMaxLength' => $cos->password_max_length,
+      'zimbraPasswordMinUpperCaseChars' => $cos->password_min_upper,
+      'zimbraPasswordMinLowerCaseChars' => $cos->password_min_lower,
+      'zimbraPasswordMinNumericChars' => $cos->password_min_numeric,
+    );
+    $zimbra_cos = zimbra_create_cos($api, $cos->name, $attrs);
+  }
+  else {
+    $zimbra_cos = zimbra_modify_cos($api, $zimbra_cos->id, $attrs);
+  }
+  $cos_server->zimbra_id = isset($zimbra_cos->id) ? $zimbra_cos->id : '';
+}
+
+/**
+ * Implements hook_zmt_cos_server_delete().
+ */
+function zmt_ui_zmt_cos_server_delete($cs) {
+  $wrapper = entity_metadata_wrapper('zmt_cos_server', $cs);
+  $server = $wrapper->server_id->value();
+  $zimbra_id = $cs->zimbra_id;
+  if (!empty($zimbra_id) && $server && (int) $server->delete_cos > 0) {
+    module_load_include('inc', 'zmt', 'includes/zmt.zimbra');
+    $api = zimbra_admin_api_by_server($cs->server_id);
+    zimbra_delete_cos($api, $zimbra_id);
+  }
+}
+
+/**
+ * Implements hook_zmt_domain_presave().
+ */
+function zmt_ui_zmt_domain_presave($domain) {
+  module_load_include('inc', 'zmt', 'includes/zmt.zimbra');
+  $api = zimbra_admin_api_by_server($domain->server_id);
+  $zimbra_domain = zimbra_get_domain($api, $domain->name);
+  if (!$zimbra_domain) {
+    $zimbra_cos_id = '';
+    $cos = zmt_cos_load($domain->cos_id);
+    if ($cos) {
+      $cs = zmt_cos_server_load_single($cos->id, $domain->server_id);
+      if ($cs) {
+        $zimbra_cos_id = $cs->zimbra_id;
+      }
+    }
+
+    $attrs = array();
+    if (!empty($zimbra_cos_id)) {
+      $attrs['zimbraDomainDefaultCOSId'] = $zimbra_cos_id;
+    }
+
+    $zimbra_domain = zimbra_create_domain($api, $domain->name, $attrs);
+    $domain->zimbra_id = isset($zimbra_domain->id) ? $zimbra_domain->id : '';
+  }
+}
+
+/**
+ * Implements hook_zmt_domain_delete().
+ */
+function zmt_ui_zmt_domain_delete($domain) {
+  $wrapper = entity_metadata_wrapper('zmt_domain', $domain);
+  $server = $wrapper->server_id->value();
+  if ($server && (int) $server->delete_domain > 0 && !empty($domain->zimbra_id)) {
+    module_load_include('inc', 'zmt', 'includes/zmt.zimbra');
+    $api = zimbra_admin_api_by_server($domain->server_id);
+    zimbra_delete_domain($api, $domain->zimbra_id);
+  }
+}
+
+/**
+ * Implements hook_zmt_account_presave().
+ */
+function zmt_ui_zmt_account_presave($account) {
+  module_load_include('inc', 'zmt', 'includes/zmt.zimbra');
+  $wrapper = entity_metadata_wrapper('zmt_account', $account);
+  $domain = $wrapper->domain_id->value();
+  $cos = zmt_cos_load($domain->cos_id);
+  $api = zimbra_admin_api_by_server($domain->server_id);
+
+  $quota = 0;
+  $zimbra_cos_id = '';
+  if ($cos) {
+    $quota = (int) $cos->mail_quota * 1024 * 1024;
+    $cs = zmt_cos_server_load_single($cos->id, $domain->server_id);
+    if ($cs) {
+      $zimbra_cos_id = $cs->zimbra_id;
+    }
+  }
+
+  $attrs = array(
+    'displayName' => $account->full_name,
+    'sn' => $account->full_name,
+    'zimbraAccountStatus' => $account->status,
+    'title' => $account->title,
+    'telephoneNumber' => $account->telephone,
+    'company' => $account->code,
+    'mobile' => $account->mobile,
+  );
+  if ($quota) {
+    $attrs['zimbraMailQuota'] = $quota;
+  }
+  if (!empty($zimbra_cos_id)) {
+    $attrs['zimbraCOSId'] = $zimbra_cos_id;
+  }
+
+  $mail_address = $account->name . '@' . $domain->name;
+  if (!isset($account->id) || (int) $account->id == 0) {
+    $zimbra_account = zimbra_get_account($api, $mail_address);
+    if (!$zimbra_account) {
+      $zimbra_account = zimbra_create_account($api, $mail_address, $account->password, $attrs);
+    }
+    $account->zimbra_id = isset($zimbra_account->id) ? $zimbra_account->id : '';
+  }
+  else {
+    $zimbra_id = $account->zimbra_id;
+    $zimbra_account = zimbra_get_account($api, $mail_address);
+    if (empty($zimbra_id)) {
+      if (!$zimbra_account) {
+        $zimbra_account = zimbra_create_account($api, $mail_address, $account->password, $attrs);
+      }
+      $account->zimbra_id = isset($zimbra_account->id) ? $zimbra_account->id : '';
+    }
+    else {
+      zimbra_modify_account($api, $zimbra_id, $attrs);
+
+      $old_account = zmt_account_load($account->id);
+      if ($old_account) {
+        $old_address = $old_account->name . '@' . $domain->name;
+        if ($old_address !== $mail_address && !$zimbra_account) {
+          zimbra_rename_account($api, $zimbra_id, $mail_address);
+        }
+      }
+    }
+
+    // Change account password
+    if (!empty($account->password)) {
+      $result = zimbra_set_password($api, $zimbra_id, $account->password);
+      if (isset($result->message)) {
+        $message = isset($result->message[0]->_content) ? $result->message[0]->_content : '';
+        drupal_set_message($message);
+      }
+    }
+  }
+}
+
+/**
+ * Implements hook_zmt_account_delete().
+ */
+function zmt_ui_zmt_account_delete($account) {
+  $wrapper = entity_metadata_wrapper('zmt_account', $account);
+  $domain = $wrapper->domain_id->value();
+  $server = $wrapper->domain_id->server_id->value();
+  if ($server && (int) $server->delete_account > 0 && !empty($account->zimbra_id)) {
+    module_load_include('inc', 'zmt', 'includes/zmt.zimbra');
+    $api = zimbra_admin_api_by_server($domain->server_id);
+    zimbra_delete_account($api, $account->zimbra_id);
+  }
+}
+
+/**
+ * Implements hook_zmt_alias_presave().
+ */
+function zmt_ui_zmt_alias_presave($alias) {
+  module_load_include('inc', 'zmt', 'includes/zmt.zimbra');
+  $wrapper = entity_metadata_wrapper('zmt_alias', $alias);
+  $domain  = $wrapper->domain_id->value();
+  $account = $wrapper->account_id->value();
+
+  $api = zimbra_admin_api_by_server($domain->server_id);
+  $zimbra_id = $account->zimbra_id;
+
+  $alias_address = $alias->name . '@' . $domain->name;
+  if (!isset($alias->id) || (int) $alias->id == 0) {
+    zimbra_add_account_alias($api, $zimbra_id, $alias_address);
+  }
+  else {
+    $old_alias = zmt_alias_load($alias->id);
+    $old_alias_address = $old_alias->name . '@' . $domain->name;
+    if ($zimbra_id != $alias->zimbra_target_id || $old_alias_address != $alias_address) {
+      zimbra_remove_account_alias($api, $old_alias_address, $alias->zimbra_target_id);
+      zimbra_add_account_alias($api, $zimbra_id, $alias_address);
+    }
+  }
+  $alias->zimbra_target_id = $zimbra_id;
+}
+
+/**
+ * Implements hook_zmt_alias_delete().
+ */
+function zmt_ui_zmt_alias_delete($alias) {
+  $wrapper = entity_metadata_wrapper('zmt_alias', $alias);
+  $domain = $wrapper->domain_id->value();
+  $server = $wrapper->domain_id->server_id->value();
+  if ($server && (int) $server->delete_account > 0 && !empty($alias->zimbra_target_id)) {
+    module_load_include('inc', 'zmt', 'includes/zmt.zimbra');
+    $api = zimbra_admin_api_by_server($domain->server_id);
+    zimbra_remove_account_alias($api, $alias->name . '@' . $domain->name, $alias->zimbra_target_id);
+  }
+}
+
+/**
+ * Implements hook_zmt_group_presave().
+ */
+function zmt_ui_zmt_group_presave($group) {
+  module_load_include('inc', 'zmt', 'includes/zmt.zimbra');
+  $wrapper = entity_metadata_wrapper('zmt_group', $group);
+  $domain  = $wrapper->domain_id->value();
+
+  $api = zimbra_admin_api_by_server($domain->server_id);
+
+  $mail_address = $group->name . '@' . $domain->name;
+  $zimbra_dl = zimbra_get_dl($api, $mail_address);
+  if (!$zimbra_dl) {
+    $zimbra_dl = zimbra_create_dl($api, $mail_address, array(
+      'displayName' => $group->full_name,
+      'description' => $group->full_name,
+    ));
+  }
+  else {
+    zimbra_modify_dl($api, $zimbra_dl->id, array(
+      'displayName' => $group->full_name,
+      'description' => $group->full_name,
+    ));
+  }
+  $group->zimbra_id = isset($zimbra_dl->id) ? $zimbra_dl->id : '';
+}
+
+/**
+ * Implements hook_zmt_group_delete().
+ */
+function zmt_ui_zmt_group_delete($group) {
+  $wrapper = entity_metadata_wrapper('zmt_group', $group);
+  $domain  = $wrapper->domain_id->value();
+  $server  = $wrapper->domain_id->server_id->value();
+  if ($server && (int) $server->delete_dl > 0 && !empty($group->zimbra_id)) {
+    module_load_include('inc', 'zmt', 'includes/zmt.zimbra');
+    $api = zimbra_admin_api_by_server($domain->server_id);
+    zimbra_delete_dl($api, $group->zimbra_id);
+  }
+}
+
+/**
+ * Implements batch_update_group_members().
+ */
+function zmt_ui_batch_update_group_members($group, array $members = array()) {
+  $wrapper = entity_metadata_wrapper('zmt_group', $group);
+  $domain  = $wrapper->domain_id->value();
+  if ($domain) {
+    module_load_include('inc', 'zmt', 'includes/zmt.zimbra');
+    $api = zimbra_admin_api_by_server($domain->server_id);
+    $dl = zimbra_get_dl($api, $group->name . '@' . $domain->name);
+    $dl_members = zimbra_get_dl_members($api, $group->name . '@' . $domain->name);
+    $remove_members = array();
+    foreach ($dl_members as $dl_member) {
+      if (!in_array($dl_member, $members)) {
+        $remove_members[] = $dl_member;
+      }
+    }
+    if (!empty($remove_members)) {
+      zimbra_remove_dl_members($api, $dl->id, $remove_members);
+    }
+
+    $add_members = array();
+    foreach ($members as $member) {
+      if (!in_array($member, $dl_members)) {
+        $add_members[] = $member;
+        $account = zimbra_get_account($api, $member);
+        if ($account) {
+          $attrs = array(
+            'ou' => $group->full_name,
+          );
+          zimbra_modify_account($api, $account->id, $attrs);
+        }
+      }
+    }
+    if (!empty($add_members)) {
+      zimbra_add_dl_members($api, $dl->id, $add_members);
+    }
+  }
+}
+
+/**
+ * Implements hook_zmt_group_member_presave().
+ */
+function zmt_ui_zmt_group_member_presave($member) {
+  $wrapper = entity_metadata_wrapper('zmt_group_member', $member);
+  $group   = $wrapper->group_id->value();
+  $domain  = $wrapper->group_id->domain_id->value();
+
+  if ($group && $domain) {
+    module_load_include('inc', 'zmt', 'includes/zmt.zimbra');
+    $api = zimbra_admin_api_by_server($domain->server_id);
+    $dl = zimbra_get_dl($api, $group->name . '@' . $domain->name);
+    $members = isset($dl->dlm) ? $dl->dlm : array();
+    if (!is_array($members)) {
+      $members = array($members);
+    }
+    if (!in_array($member->name, $members)) {
+      zimbra_add_dl_members($api, $dl->id, array($member->name));
+      $account = zimbra_get_account($api, $member->name);
+      if ($account) {
+        $attrs = array(
+          'ou' => $group->full_name,
+        );
+        zimbra_modify_account($api, $account->id, $attrs);
+	  }
+    }
+  }
+}
+
+/**
+ * Implements hook_zmt_group_member_delete().
+ */
+function zmt_ui_zmt_group_member_delete($member) {
+  $wrapper = entity_metadata_wrapper('zmt_group_member', $member);
+  $group = $wrapper->group_id->value();
+  $domain = $wrapper->group_id->domain_id->value();
+
+  if ($group && $domain) {
+    module_load_include('inc', 'zmt', 'includes/zmt.zimbra');
+    $api = zimbra_admin_api_by_server($domain->server_id);
+    $dl = zimbra_get_dl($api, $group->name . '@' . $domain->name);
+    $members = isset($dl->dlm) ? $dl->dlm : array();
+    if (!is_array($members)) {
+      $members = array($members);
+    }
+    if (in_array($member->name, $members)) {
+      zimbra_remove_dl_members($api, $dl->id, array($member->name));
+      $account = zimbra_get_account($api, $member->name);
+      if ($account) {
+        $attrs = array(
+          'ou' => '',
+        );
+        zimbra_modify_account($api, $account->id, $attrs);
+	  }
+    }
+  }
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter() for the server edit form.
+ */
+function zmt_ui_form_zmt_server_edit_form_alter(&$form, &$form_state) {
+  $form['name']['#weight'] = -1;
+  $form['test_connection'] = array(
+    '#type' => 'submit',
+    '#value' => t('Test connection'),
+    '#weight' => 0,
+    '#ajax' => array(
+      'callback' => 'ajax_zmt_server_test_connection',
+    ),
+  );
+  $form['#validate'][] = 'zmt_ui_test_server_connection_validate';
+}
+
+/**
+ * Zimbra server ajax test connection callback.
+ */
+function ajax_zmt_server_test_connection($form, $form_state) {
+  module_load_include('inc', 'zmt', 'includes/zmt.zimbra');
+
+  $values = $form_state['values'];
+  $server = $form_state['#server'];
+  $location = $values['service_location'];
+  $user = $values['admin_user'];
+  $password = $values['admin_password'];
+  if (empty($password)) {
+    $password = zmt_password_decrypt($server->admin_password);
+  }
+  $connected = zimbra_test_connection($location, $user, $password);
+  if ($connected) {
+    $message = 'Connection to zimbra service success!';
+  } else {
+    $message = 'Connection to zimbra service failed!';
+  }
+
+  $commands = array();
+  $commands[] = ajax_command_alert($message);
+  return array('#type' => 'ajax', '#commands' => $commands);
+}
+
+/**
+ * Form validation handler for zmt_server_edit_form().
+ *
+ * @see zmt_server_edit_form()
+ */
+function zmt_ui_test_server_connection_validate($form, &$form_state) {
+  module_load_include('inc', 'zmt', 'includes/zmt.zimbra');
+  $values = $form_state['values'];
+  $server = $form_state['#server'];
+  $location = $values['service_location'];
+  $user = $values['admin_user'];
+  $password = $values['admin_password'];
+  if (empty($password)) {
+    $password = zmt_password_decrypt($server->admin_password);
+  }
+  $connected = zimbra_test_connection($location, $user, $password);
+  if (!$connected) {
+    form_set_error('', t('Connection to zimbra server failed!'));
+  }
+}

@@ -1,0 +1,5 @@
+name = ZMT Alias UI
+description = Administrative user interface to Alias.
+package = Zimbra Multi Tenancy
+core = 7.x
+dependencies[] = zmt_alias

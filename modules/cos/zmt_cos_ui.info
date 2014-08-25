@@ -1,0 +1,6 @@
+name = ZMT COS UI
+description = Administrative user interface to Class of Service.
+package = Zimbra Multi Tenancy
+core = 7.x
+dependencies[] = zmt_cos
+dependencies[] = zmt_server_ui

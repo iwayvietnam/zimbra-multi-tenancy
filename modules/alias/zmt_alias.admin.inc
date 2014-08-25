@@ -1,0 +1,285 @@
+<?php
+
+/**
+ * List all zimbra aliases page callback.
+ */
+function zmt_alias_list_all() {
+  global $user;
+
+  drupal_set_title('Aliases');
+  $header = array();
+  $header[] = array('data' => t('No.'));
+  $header[] = array('data' => t('Name'), 'field' => 'a.name');
+  $header[] = array('data' => t('Target account'), 'field' => 'a.account');
+  $header[] = array('data' => t('Operations'));
+
+  $query = db_select('zmt_alias', 'a')->extend('TableSort');
+  $query->leftJoin('zmt_domain', 'd', 'd.id = a.domain_id');
+  $query->leftJoin('zmt_account', 'ac', 'ac.id = a.account_id');
+  $query->addField('d', 'name', 'domain');
+  $query->addField('ac', 'name', 'account');
+
+  $domain_ids = array();
+  if (!(user_access('administer zmt'))) {
+    if (user_access('administer any zmt_alias')) {
+      $domains = zmt_domain_load_multiple_by_user($user);
+      $domain_ids = array_keys($domains);
+      if (empty($domain_ids)) {
+        $domain_ids = array(0);
+      }
+
+      $domain_id = isset($_SESSION['zmt_filter_domain_id']) ? (int) $_SESSION['zmt_filter_domain_id'] : 0;
+      if ($domain_id) {
+        $query->condition('a.domain_id', $domain_id);
+      }
+      else {
+        $query->condition('a.domain_id', $domain_ids);
+        $query->addTag('alias_query_filter');
+      }
+    }
+    else {
+      $query->condition('a.uid', $user->uid);
+    }
+  }
+  else {
+    $domain_id = isset($_SESSION['zmt_filter_domain_id']) ? (int) $_SESSION['zmt_filter_domain_id'] : 0;
+    if ($domain_id) {
+      $query->condition('a.domain_id', $domain_id);
+    }
+  }
+
+  $item_per_page = (int) variable_get('zimbra_item_per_page', 0);
+  if ($item_per_page) {
+    $query->extend('PagerDefault')->limit($item_per_page);
+  }
+  $result = $query
+    ->fields('a')
+    ->orderByHeader($header)
+    ->execute();
+
+  $destination = drupal_get_destination();
+  $rows = array();
+  foreach ($result as $key => $alias) {
+    $row = array();
+    $row[] = $key + 1 + (pager_find_page() * $item_per_page);
+    $alias_name = $alias->name . '@' . $alias->domain;
+    $row[] = l($alias_name, 'zmt/alias/' . $alias->id . '/edit', array('query' => $destination));
+    $row[] = array(
+      'data' => $alias->account . '@' . $alias->domain,
+      'id' => $alias->account,
+    );
+
+    $operations = l(t('edit'), 'zmt/alias/' . $alias->id . '/edit', array('query' => $destination));
+    $operations .= '&nbsp;&nbsp;&nbsp;' . l(t('delete'), 'zmt/alias/' . $alias->id . '/delete', array('query' => $destination));
+    $row[] = $operations;
+    $rows[] = $row;
+  }
+  if (empty($rows)) {
+    $rows[] = array(
+      array(
+        'data' => t('There are no aliases available.') . ' ' . l(t('Add one now'), 'zmt/alias/add') . '.',
+        'colspan' => count($header)
+      ),
+    );
+  }
+
+  $build = array();
+  if (user_access('administer zmt')) {
+    $build['alias_filter'] = drupal_get_form('zmt_filter_by_domain_form');
+  }
+  elseif (user_access('administer any zmt_account')) {
+    if (count($domain_ids) > 1) {
+      $build['alias_filter'] = drupal_get_form('zmt_filter_by_domain_form');
+    }
+  }
+  $build['alias_table']  = array(
+    '#theme' => 'table',
+    '#header' => $header,
+    '#rows' => $rows,
+  );
+  $build['alias_pager'] = array('#theme' => 'pager');
+
+  return $build;
+}
+
+/**
+ * Add new zimbra alias page callback.
+ */
+function zmt_alias_add_page() {
+  drupal_set_title('Add Alias');
+  $alias = zmt_alias_new();
+  return drupal_get_form('zmt_alias_edit_form', $alias);
+}
+
+/**
+ * Edit exists zimbra alias page callback.
+ */
+function zmt_alias_edit_page($alias) {
+  drupal_set_title('Edit Alias');
+  return drupal_get_form('zmt_alias_edit_form', $alias);
+}
+
+/**
+ * Zimbra alias edit form.
+ */
+function zmt_alias_edit_form($form, &$form_state, $alias){
+  global $user;
+
+  $form_state['#alias'] = $alias;
+
+  $form['name'] = array(
+    '#title' => t('Name'),
+    '#type' => 'textfield',
+    '#default_value' => $alias->name,
+    '#required' => TRUE,
+  );
+
+  $options = array();
+  if (isset($alias->id) && (int) $alias->id > 0) {
+    $domain = zmt_domain_load($alias->domain_id);
+    if ($domain) {
+      $options[$domain->id] = $domain->name;
+    }
+  }
+  else {
+    if (!(user_access('administer zmt'))) {
+      $domains = zmt_domain_load_multiple_by_user($user);
+    }
+    else {
+      $domains = zmt_domain_load_all();
+    }
+    if (count($domains) !== 1) {
+      $options = array('' => t('- None -'));
+    }
+    else {
+      $domain = reset($domains);
+      $alias->domain_id = $domain->id;
+    }
+    foreach ($domains as $domain) {
+      $options[$domain->id] = $domain->name;
+    }
+  }
+  $form['domain_id'] = array(
+    '#type' => 'select',
+    '#title' => t('Domain'),
+    '#options' => $options,
+    '#default_value' => $alias->domain_id,
+    '#required' => TRUE,
+    '#ajax' => array(
+      'callback' => 'ajax_alias_domain_select_callback',
+      'wrapper' => 'dropdown-account-replace',
+    ),
+  );
+
+  $domain_id = isset($form_state['values']['domain_id']) ? (int) $form_state['values']['domain_id'] : (int) $alias->domain_id;
+  $accounts = zmt_account_load_multiple_by_domain($domain_id);
+  $options = array('' => t('- None -'));
+  foreach ($accounts as $account) {
+    $options[$account->id] = $account->name;
+  }
+  $form['account_id'] = array(
+    '#type' => 'select',
+    '#title' => t('Account'),
+    '#options' => $options,
+    '#default_value' => $alias->account_id,
+    '#required' => TRUE,
+    '#prefix' => '<div id="dropdown-account-replace">',
+    '#suffix' => '</div>',
+  );
+
+  $form['actions']['submit'] = array(
+    '#type' => 'submit',
+    '#value' => t('Save'),
+    '#submit' => array('zmt_alias_edit_form_submit'),
+    '#suffix' => l(t('Cancel'), 'zmt/alias'),
+  );
+
+  $form['#validate'][] = 'zmt_alias_edit_form_validate';
+
+  return $form;
+}
+
+/**
+ * Alias ajax domain selection callback.
+ */
+function ajax_alias_domain_select_callback($form, $form_state) {
+  return $form['account_id'];
+}
+
+/**
+ * Zimbra alias edit form validate callback.
+ */
+function zmt_alias_edit_form_validate($form, &$form_state) {
+  $values = $form_state['values'];
+  $alias = $form_state['#alias'];
+
+  $domain_id = (int) $values['domain_id'];
+  $name = trim($values['name']) ;
+  $id = isset($alias->id) ? (int) $alias->id : 0;
+
+  $results = module_invoke_all('mailbox_exists', $domain_id, $name, $id);
+  foreach ($results as $result) {
+    if ($result === TRUE) {
+      form_set_error('name', t('The mailbox name already exists in selected domain.'));
+      break;
+    }
+  }
+}
+
+/**
+ * Zimbra alias edit form submit callback.
+ */
+function zmt_alias_edit_form_submit($form, &$form_state) {
+  $alias = $form_state['#alias'];
+  $values = $form_state['values'];
+
+  $alias->name = check_plain($values['name']);
+  $alias->domain_id = (int) $values['domain_id'];
+  $alias->account_id = (int) $values['account_id'];
+  zmt_alias_save($alias);
+
+  $form_state['redirect'] = 'zmt/alias';
+}
+
+/**
+ * Delete exists zimbra alias page callback.
+ */
+function zmt_alias_delete_page($alias) {
+  drupal_set_title('Delete Alias');
+  return drupal_get_form('zmt_alias_delete_form', $alias);
+}
+
+/**
+ * Form callback: confirmation form for deleting a alias.
+ *
+ * @param $alias
+ *   The alias object to be deleted.
+ *
+ * @see confirm_form()
+ */
+function zmt_alias_delete_form($form, &$form_state, $alias) {
+  $form_state['#alias'] = $alias;
+
+  $form['#submit'][] = 'zmt_alias_delete_form_submit';
+
+  $form = confirm_form($form,
+    t('Are you sure you want to delete alias %name?', array('%name' => $alias->name)),
+    '',
+    '<p>' . t('Deleting this alias cannot be undone.') . '</p>',
+    t('Delete'),
+    t('Cancel'),
+    'confirm'
+  );
+
+  return $form;
+}
+
+/**
+ * Submit callback for zmt_alias_delete_form().
+ */
+function zmt_alias_delete_form_submit($form, &$form_state) {
+  $alias = $form_state['#alias'];
+  zmt_alias_delete($alias->id);
+  drupal_set_message(t('%name has been deleted.', array('%name' => $alias->name)));
+  watchdog('zmt_alias', 'Deleted alias %name.', array('%name' => $alias->name), WATCHDOG_NOTICE);
+}

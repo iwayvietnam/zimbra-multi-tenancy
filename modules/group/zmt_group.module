@@ -1,0 +1,871 @@
+<?php
+
+/**
+ * Group member is account.
+ */
+define('GROUP_MEMBER_ACCOUNT', 0);
+
+/**
+ * Group member is alias.
+ */
+define('GROUP_MEMBER_ALIAS', 1);
+
+/**
+ * Group member is distribution list.
+ */
+define('GROUP_MEMBER_DL', 2);
+
+/**
+ * Implements hook_entity_info().
+ */
+function zmt_group_entity_info() {
+  $entity = array(
+    'zmt_group' => array(
+      'label' => t('Group'),
+      'entity class' => 'Entity',
+      'controller class' => 'EntityAPIControllerExportable',
+      'base table' => 'zmt_group',
+      'fieldable' => FALSE,
+      'entity keys' => array(
+        'id' => 'id',
+        'label' => 'name',
+      ),
+      'view modes' => array(
+        'full' => array(
+          'label' => t('Group'),
+          'custom settings' => FALSE,
+        ),
+      ),
+      'label callback' => 'zmt_group_label',
+      'uri callback' => 'zmt_group_uri',
+      'module' => 'zmt_group',
+      'access callback' => 'zmt_group_access',
+    ),
+    'zmt_group_member' => array(
+      'label' => t('Group member'),
+      'entity class' => 'Entity',
+      'controller class' => 'EntityAPIControllerExportable',
+      'base table' => 'zmt_group_member',
+      'fieldable' => FALSE,
+      'entity keys' => array(
+        'id' => 'id',
+        'label' => 'name',
+      ),
+      'module' => 'zmt_group',
+      'access callback' => 'zmt_group_access',
+    ),
+  );
+
+  return $entity;
+}
+
+/**
+ * Implements hook_entity_property_info_alter().
+ */
+function zmt_group_entity_property_info_alter(&$info) {
+  $properties = &$info['zmt_group']['properties'];
+  $properties['domain_id'] = array(
+    'type' => 'zmt_domain',
+    'label' => t('Domain'),
+    'description' => t('The account\'s domain.'),
+    'getter callback' => 'zmt_group_get_properties',
+    'schema field' => 'domain_id',
+  );
+  $properties['members'] = array(
+    'type' => 'list<zmt_group_member>',
+    'label' => t('Members'),
+    'description' => t('The account\'s members.'),
+    'getter callback' => 'zmt_group_get_properties',
+  );
+  $properties['uid'] = array(
+    'type' => 'user',
+    'label' => t('Creator'),
+    'description' => t('The account\'s creator.'),
+    'getter callback' => 'zmt_group_get_properties',
+    'schema field' => 'uid',
+  );
+
+  $properties = &$info['zmt_group_member']['properties'];
+  $properties['group_id'] = array(
+    'type' => 'zmt_group',
+    'label' => t('Group'),
+    'description' => t('The member\'s group.'),
+    'getter callback' => 'zmt_group_member_get_properties',
+    'schema field' => 'group_id',
+  );
+}
+
+/**
+ * Entity metadata callback to load group's properties.
+ */
+function zmt_group_get_properties($group, array $options, $name) {
+  switch ($name) {
+    case 'domain_id':
+      return zmt_domain_load($group->domain_id);
+    case 'members':
+      $group_id = isset($group->id) ? (int) $group->id : 0;
+      return zmt_group_member_load_multiple_by_group(array($group_id));
+    case 'uid':
+      return user_load($group->uid);
+  }
+}
+
+/**
+ * Entity metadata callback to load group's properties.
+ */
+function zmt_group_member_get_properties($member, array $options, $name) {
+  switch ($name) {
+    case 'group_id':
+      return zmt_group_load($member->group_id);
+  }
+}
+
+/**
+ * Implements hook_permission().
+ */ 
+function zmt_group_permission() {
+  return zmt_access_permissions('zmt_group', 'Group');
+}
+
+/**
+ * Implements hook_zmt_domain_delete().
+ */ 
+function zmt_group_zmt_domain_delete($domain){
+  $id = $domain ? $domain->id : 0;
+  zmt_group_delete_multiple_by_domain(array($id));
+}
+
+/**
+ * Implements hook_zmt_account_delete().
+ */ 
+function zmt_group_zmt_account_delete($account){
+  db_delete('zmt_group_member')
+    ->condition('member_id', $account->id)
+    ->condition('type', GROUP_MEMBER_ACCOUNT)
+    ->execute();
+}
+
+/**
+ * Implements hook_zmt_alias_delete().
+ */ 
+function zmt_group_zmt_alias_delete($alias){
+  db_delete('zmt_group_member')
+    ->condition('member_id', $alias->id)
+    ->condition('type', GROUP_MEMBER_ALIAS)
+    ->execute();
+}
+
+/**
+ * Implements hook_mailbox_exists().
+ */ 
+function zmt_group_mailbox_exists($domain_id, $name, $id) {
+  return zmt_group_exists($domain_id, $name, $id);
+}
+
+/**
+ * Implements hook_domain_load_by_user().
+ */ 
+function zmt_group_domain_load_by_user() {
+  global $user;
+  $domain_id = db_select('zmt_group', 'g')
+    ->fields('g', array('domain_id'))
+    ->condition('g.group_uid', $user->uid)
+    ->execute()
+    ->fetchField();
+  return (int) $domain_id;
+}
+
+/**
+ * Implements hook_query_TAG_alter().
+ */ 
+function zmt_group_query_account_query_filter_alter(QueryAlterableInterface $query) {
+  global $user;
+  if (in_array('Zmt Group', $user->roles)) {
+    $sub_query = db_select('zmt_group_member', 'm');
+    $sub_query->leftJoin('zmt_group', 'g', 'g.id = m.group_id');
+    $sub_query->fields('m', array('member_id'))
+      ->condition('m.type', GROUP_MEMBER_ACCOUNT)
+      ->condition('g.group_uid', $user->uid);
+    $query->condition('a.id', $sub_query, 'IN');
+  }
+}
+
+/**
+ * Implements hook_query_TAG_alter().
+ */ 
+function zmt_group_query_account_entity_filter_alter(QueryAlterableInterface $query) {
+  global $user;
+  if (in_array('Zmt Group', $user->roles)) {
+    $sub_query = db_select('zmt_group_member', 'm');
+    $sub_query->leftJoin('zmt_group', 'g', 'g.id = m.group_id');
+    $sub_query->fields('m', array('member_id'))
+      ->condition('m.type', GROUP_MEMBER_ACCOUNT)
+      ->condition('g.group_uid', $user->uid);
+    $query->condition('zmt_account.id', $sub_query, 'IN');
+  }
+}
+
+/**
+ * Implements hook_query_TAG_alter().
+ */ 
+function zmt_group_query_alias_query_filter_alter(QueryAlterableInterface $query) {
+  global $user;
+  if (in_array('Zmt Group', $user->roles)) {
+    $sub_query = db_select('zmt_group_member', 'm');
+    $sub_query->leftJoin('zmt_group', 'g', 'g.id = m.group_id');
+    $sub_query->fields('m', array('member_id'))
+      ->condition('m.type', GROUP_MEMBER_ALIAS)
+      ->condition('g.group_uid', $user->uid);
+    $query->condition('a.id', $sub_query, 'IN');
+  }
+}
+
+/**
+ * Implements hook_zmt_account_edit_access().
+ */
+function zmt_group_zmt_account_edit_access($account) {
+  global $user;
+  if (in_array('Zmt Group', $user->roles)) {
+    $query = db_select('zmt_group_member', 'm');
+    $query->leftJoin('zmt_group', 'g', 'g.id = m.group_id');
+    $query->fields('m', array('member_id'))
+      ->condition('m.type', GROUP_MEMBER_ACCOUNT)
+      ->condition('g.group_uid', $user->uid);
+    $result = $query->execute();
+    $member_ids = array();
+    foreach ($result as $data) {
+      $member_ids[] = $data->member_id;
+    }
+    return in_array($account->id, $member_ids);
+  }
+  return TRUE;
+}
+
+/**
+ * Implements hook_zmt_alias_edit_access().
+ */
+function zmt_group_zmt_alias_edit_access($alias) {
+  global $user;
+  if (in_array('Zmt Group', $user->roles)) {
+    $query = db_select('zmt_group_member', 'm');
+    $query->leftJoin('zmt_group', 'g', 'g.id = m.group_id');
+    $query->fields('m', array('member_id'))
+      ->condition('m.type', GROUP_MEMBER_ALIAS)
+      ->condition('g.group_uid', $user->uid);
+    $result = $query->execute();
+    $member_ids = array();
+    foreach ($result as $data) {
+      $member_ids[] = $data->member_id;
+    }
+    return in_array($alias->id, $member_ids);
+  }
+  return TRUE;
+}
+
+/**
+ * Implements hook_zmt_account_insert().
+ */
+function zmt_group_zmt_account_insert($account) {
+  global $user;
+  $group = zmt_group_load_by_user($user);
+  if ($group) {
+    $domain = zmt_domain_load($account->domain_id);
+    $member = zmt_group_member_new($account->name . '@' . $domain->name);
+    $member->group_id = $group->id;
+    $member->member_id = $account->id;
+    $member->type = GROUP_MEMBER_ACCOUNT;
+    zmt_group_member_save($member);
+  }
+}
+
+/**
+ * Implements hook_zmt_account_update().
+ */
+function zmt_group_zmt_account_update($account) {
+  global $user;
+  $group = zmt_group_load_by_user($user);
+  if ($group) {
+    $query = new EntityFieldQuery();
+    $result = $query->entityCondition('entity_type', 'zmt_group_member')
+      ->propertyCondition('group_id', $group->id)
+      ->propertyCondition('member_id', $account->id)
+      ->propertyCondition('type', GROUP_MEMBER_ACCOUNT)
+      ->execute();
+    $ids = isset($result['zmt_group_member']) ? array_keys($result['zmt_group_member']) : array();
+    $member = zmt_group_member_load(reset($ids));
+    if ($member) {
+      $domain = zmt_domain_load($account->domain_id);
+      $account_name = $account->name . '@' . $domain->name;
+      if ($member->name !== $account_name) {
+        $member->name = $account_name;
+        zmt_group_member_save($member);
+      }
+    }
+  }
+}
+
+/**
+ * Implements hook_zmt_alias_insert().
+ */
+function zmt_group_zmt_alias_insert($alias) {
+  global $user;
+  $group = zmt_group_load_by_user($user);
+  if ($group) {
+    $domain = zmt_domain_load($alias->domain_id);
+    $member = zmt_group_member_new($alias->name . '@' . $domain->name);
+    $member->group_id = $group->id;
+    $member->member_id = $alias->id;
+    $member->type = GROUP_MEMBER_ALIAS;
+    zmt_group_member_save($member);
+  }
+}
+
+/**
+ * Implements hook_zmt_alias_update().
+ */
+function zmt_group_zmt_alias_update($alias) {
+  global $user;
+  $group = zmt_group_load_by_user($user);
+  if ($group) {
+    $query = new EntityFieldQuery();
+    $result = $query->entityCondition('entity_type', 'zmt_group_member')
+      ->propertyCondition('group_id', $group->id)
+      ->propertyCondition('member_id', $alias->id)
+      ->propertyCondition('type', GROUP_MEMBER_ALIAS)
+      ->execute();
+    $ids = isset($result['zmt_group_member']) ? array_keys($result['zmt_group_member']) : array();
+    $member = zmt_group_member_load(reset($ids));
+    if ($member) {
+      $domain = zmt_domain_load($alias->domain_id);
+      $alias_name = $alias->name . '@' . $domain->name;
+      if ($member->name !== $alias_name) {
+        $member->name = $alias_name;
+        zmt_group_member_save($member);
+      }
+    }
+  }
+}
+
+/**
+ * Implements hook_user_delete().
+ */
+function zmt_group_user_delete($account) {
+  db_update('zmt_group')
+    ->fields(array(
+      'group_uid' => 0,
+    ))
+    ->condition('group_uid', $account->uid)
+    ->execute();
+}
+
+/**
+ * Implements hook_update_account_group().
+ */
+function zmt_group_update_account_group($domain_id, $account) {
+  $domain = zmt_domain_load($domain_id);
+  $group = zmt_group_load_by_name($domain_id, $account->group);
+  if ($group) {
+    $members = zmt_group_member_load_multiple_by_group(array($group->id));
+    $available_members = array();
+    foreach ($members as $member) {
+      $available_members[] = $member->name;
+    }
+    $member_name = $account->name . '@' . $domain->name;
+    if (!in_array($member_name, $available_members)) {
+      $group_member = zmt_group_member_new($member_name);
+      $group_member->group_id = $group->id;
+      $group_member->member_id = $account->id;
+      $group_member->type = GROUP_MEMBER_ACCOUNT;
+      zmt_group_member_save($group_member);
+    }
+  }
+}
+
+/**
+ * Access callback for Account.
+ */
+function zmt_group_access($op, $group, $account = NULL, $entity_type = NULL) {
+  global $user;
+  if (NULL === $account) {
+    $account = $user;
+  }
+  if (user_access('administer zmt', $account) || user_access('administer any zmt_group', $account)) {
+    return TRUE;
+  }
+  if ($op === 'list' || $op === 'create') {
+    return user_access('administer own zmt_group', $account);
+  }
+  else {
+    $is_own = isset($group->uid) && $group->uid == $account->uid;
+    return user_access('administer own zmt_group', $account) && $is_own;
+  }
+}
+
+/**
+ * Zmt group entity uri callback.
+ */
+function zmt_group_uri($group) {
+  return array(
+    'path' => 'zmt/group/' . $group->id,
+  );
+}
+
+/**
+ * Zmt group entity label callback.
+ */
+function zmt_group_label($group, $entity_type) {
+  return t('Group') . ' ' . $group->name;
+}
+
+/**
+ * Loads a group by ID.
+ */
+function zmt_group_load($id) {
+  if (empty($id)) {
+    return FALSE;
+  }
+
+  $groups = zmt_group_load_multiple(array($id), array());
+  return $groups ? reset($groups) : FALSE;
+}
+
+/**
+ * Loads multiple group by ID or based on a set of matching conditions.
+ *
+ * @see entity_load()
+ *
+ * @param $ids
+ *   An array of group IDs.
+ * @param $conditions
+ *   An array of conditions on the {zmt_group} table in the form
+ *     'field' => $value.
+ * @param $reset
+ *   Whether to reset the internal group loading cache.
+ *
+ * @return
+ *   An array of group objects indexed by id.
+ */
+function zmt_group_load_multiple(array $ids = array(), array $conditions = array(), $reset = FALSE) {
+  if (empty($ids) && empty($conditions)) {
+    return array();
+  }
+
+  return entity_load('zmt_group', $ids, $conditions, $reset);
+}
+
+/**
+ * Loads multiple group by domain.
+ *
+ * @param $domain
+ *   The domain to load group for, or its id.
+ * @return
+ *   An array of group objects indexed by id.
+ *
+ * @see zmt_group_load_multiple()
+ */
+function zmt_group_load_multiple_by_domain($domain, $exclude = 0) {
+  $cache = &drupal_static(__FUNCTION__, array());
+  $domain_id = is_object($domain) ? $domain->id : $domain;
+  if (!isset($cache[$domain_id])) {
+    $query = new EntityFieldQuery();
+    $result = $query->entityCondition('entity_type', 'zmt_group')
+      ->propertyCondition('domain_id', $domain_id)
+      ->propertyCondition('id', $exclude, '!=')
+      ->execute();
+    $ids = isset($result['zmt_group']) ? array_keys($result['zmt_group']) : array();
+    $cache[$domain_id] = zmt_group_load_multiple($ids);
+  }
+  return $cache[$domain_id];
+}
+
+/**
+ * Counts group by domain.
+ *
+ * @param $domain
+ *   The domain to load group for, or its id.
+ * @return
+ *   Total number of group objects.
+ */
+function zmt_group_count_by_domain($domain) {
+  $cache = &drupal_static(__FUNCTION__, array());
+  $domain_id = is_object($domain) ? $domain->id : $domain;
+  if (!isset($cache[$domain_id])) {
+    $query = new EntityFieldQuery();
+    $query->entityCondition('entity_type', 'zmt_group')
+      ->propertyCondition('domain_id', $domain_id);
+    $cache[$domain_id] = $query->count()->execute();
+  }
+  return $cache[$domain_id];
+}
+
+/**
+ * Loads group by user.
+ *
+ * @param $user
+ *   The user to load group for, or its id.
+ * @return
+ *   A group object.
+ *
+ * @see zmt_group_load_multiple()
+ */
+function zmt_group_load_by_user($user) {
+  $cache = &drupal_static(__FUNCTION__, array());
+  $uid = is_object($user) ? $user->uid : $user;
+  if (!isset($cache[$uid])) {
+    $query = new EntityFieldQuery();
+    $result = $query->entityCondition('entity_type', 'zmt_group')
+      ->propertyCondition('group_uid', $uid)
+      ->execute();
+    $ids = isset($result['zmt_group']) ? array_keys($result['zmt_group']) : array();
+    $groups = zmt_group_load_multiple($ids);
+    $cache[$uid] = $groups ? reset($groups) : FALSE;
+  }
+  return $cache[$uid];
+}
+
+/**
+ * Load an group by name.
+ *
+ * @param $domain
+ *   The domain to load group for, or its id.
+ * @param $name
+ *   The group name.
+ * @return
+ *   An group object or FALSE.
+ */
+function zmt_group_load_by_name($domain, $name) {
+  $cache = &drupal_static(__FUNCTION__, array());
+  $domain_id = is_object($domain) ? $domain->id : $domain;
+  $cache_key = md5($domain_id . '-' . $name);
+  if (!isset($cache[$cache_key])) {
+    $query = new EntityFieldQuery();
+    $result = $query->entityCondition('entity_type', 'zmt_group')
+      ->propertyCondition('domain_id', $domain_id)
+      ->propertyCondition('name', $name)
+      ->execute();
+
+    $ids = isset($result['zmt_group']) ? array_keys($result['zmt_group']) : array();
+    $groups = zmt_group_load_multiple($ids);
+    $cache[$cache_key] = $groups ? reset($groups) : FALSE;
+  }
+  return $cache[$cache_key];
+}
+
+/**
+ * Checks group exists by domain.
+ *
+ * @param $domain
+ *   The domain to load group for, or its id.
+ * @param $name
+ *   The group name.
+ * @param $id
+ *   The group id.
+ * @return
+ *   TRUE or FALSE.
+ */
+function zmt_group_exists($domain, $name, $id = 0) {
+  $cache = &drupal_static(__FUNCTION__, array());
+  $domain_id = is_object($domain) ? $domain->id : $domain;
+  $cache_key = md5($domain_id . '-' . $name . '-' . $id);
+  if (!isset($cache[$cache_key])) {
+    $query = new EntityFieldQuery();
+    $result = $query->entityCondition('entity_type', 'zmt_group')
+      ->propertyCondition('domain_id', $domain_id)
+      ->propertyCondition('name', $name)
+      ->propertyCondition('id', $id, '!=')
+      ->count()
+      ->execute();
+    $cache[$cache_key] = (int) $result > 0;
+  }
+  return $cache[$cache_key];
+}
+
+/**
+ * Returns an initialized group object.
+ *
+ * @param $name
+ *   The machine-readable name of the group.
+ *
+ * @return
+ *   A group object with all default fields initialized.
+ */
+function zmt_group_new($name = '') {
+  global $user;
+  $values = array(
+    'domain_id' => 0,
+    'name' => $name,
+    'full_name' => '',
+    'zimbra_id' => '',
+    'group_uid' => 0,
+    'uid' => $user->uid,
+    'created' => REQUEST_TIME,
+    'changed' => REQUEST_TIME,
+  );
+  return entity_get_controller('zmt_group')->create($values);
+}
+
+/**
+ * Saves a group.
+ *
+ * @param $group
+ *   The full group object to save.
+ *
+ * @return
+ *   SAVED_NEW or SAVED_UPDATED depending on the operation performed.
+ */
+function zmt_group_save($group, $by_entity = TRUE) {
+  $group->changed = REQUEST_TIME;
+  if ($by_entity === TRUE) {
+    return entity_get_controller('zmt_group')->save($group);
+  }
+  else{
+    $fields = array(
+      'domain_id' => $group->domain_id,
+      'name' => $group->name,
+      'full_name' => $group->full_name,
+      'zimbra_id' => $group->zimbra_id,
+      'group_uid' => $group->group_uid,
+      'uid' => $group->uid,
+      'created' => $group->created,
+      'changed' => $group->changed,
+    );
+    if (!isset($group->id) || (int) $group->id == 0) {
+      $group->id = db_insert('zmt_group')->fields($fields)->execute();
+      return SAVED_NEW;
+    }
+    else {
+      db_update('zmt_group')
+        ->fields($fields)
+        ->condition('id', $group->id)
+        ->execute();
+      entity_get_controller('zmt_group')->resetCache(array($group->id));
+      return SAVED_UPDATED;
+    }
+  }
+}
+
+/**
+ * Deletes a domain by ID.
+ *
+ * @param $id
+ *   The ID of the domain to delete.
+ */
+function zmt_group_delete($id) {
+  return zmt_group_delete_multiple(array($id));
+}
+
+/**
+ * Deletes multiple domain by ID.
+ *
+ * @param $ids
+ *   An array of domain IDs to delete.
+ */
+function zmt_group_delete_multiple(array $ids = array()) {
+  zmt_group_member_delete_multiple_by_group($ids);
+  entity_get_controller('zmt_group')->delete($ids);
+}
+
+/**
+ * Deletes multiple domain by domains.
+ *
+ * @param $ids
+ *   An array of domain IDs to delete.
+ */
+function zmt_group_delete_multiple_by_domain(array $ids = array()) {
+  $query = new EntityFieldQuery();
+  $result = $query->entityCondition('entity_type', 'zmt_group')
+    ->propertyCondition('domain_id', $ids)
+    ->execute();
+   $group_ids = isset($result['zmt_group']) ? array_keys($result['zmt_group']) : array();
+   zmt_group_delete_multiple($group_ids);
+}
+
+
+/**
+ * Loads a group member by ID.
+ */
+function zmt_group_member_load($id) {
+  if (empty($id)) {
+    return FALSE;
+  }
+
+  $members = zmt_group_member_load_multiple(array($id), array());
+  return $members ? reset($members) : FALSE;
+}
+
+/**
+ * Loads multiple group member by ID or based on a set of matching conditions.
+ *
+ * @see entity_load()
+ *
+ * @param $ids
+ *   An array of group member IDs.
+ * @param $conditions
+ *   An array of conditions on the {zmt_group_member} table in the form
+ *     'field' => $value.
+ * @param $reset
+ *   Whether to reset the internal group member loading cache.
+ *
+ * @return
+ *   An array of group member objects indexed by id.
+ */
+function zmt_group_member_load_multiple($ids = array(), array $conditions = array(), $reset = FALSE) {
+  if (empty($ids) && empty($conditions)) {
+    return array();
+  }
+
+  return entity_load('zmt_group_member', $ids, $conditions, $reset);
+}
+
+/**
+ * Loads multiple group member by group ids.
+ *
+ * @see entity_load()
+ *
+ * @param $group_ids
+ *   An array of group IDs.
+ *
+ * @return
+ *   An array of group member objects indexed by id.
+ */
+function zmt_group_member_load_multiple_by_group(array $group_ids = array()) {
+  if (!empty($group_ids)) {
+    $query = new EntityFieldQuery();
+    $result = $query->entityCondition('entity_type', 'zmt_group_member')
+      ->propertyCondition('group_id', $group_ids)
+      ->execute();
+    $ids = isset($result['zmt_group_member']) ? array_keys($result['zmt_group_member']) : array();
+    return zmt_group_member_load_multiple($ids);
+  }
+  return array();
+}
+
+/**
+ * Loads multiple group member by group user.
+ *
+ * @see entity_load()
+ *
+ * @param $uid
+ *   A user ID.
+ *
+ * @return
+ *   An array of group member objects indexed by id.
+ */
+function zmt_group_member_load_multiple_by_group_user($uid) {
+  $cache = &drupal_static(__FUNCTION__, array());
+  if (!isset($cache[$uid])) {
+    $query = db_select('zmt_group_member', 'm');
+    $query->leftJoin('zmt_group', 'g', 'g.id = m.group_id');
+    $query->condition('g.group_uid', $uid);
+    $result = $query->fields('m')->execute();
+
+    $members = array();
+    foreach ($result as $member) {
+      $members[$member->id] = $member;
+    }
+    $cache[$uid] = $members;
+  }
+  return $cache[$uid];
+}
+
+/**
+ * Returns an initialized group member object.
+ *
+ * @param $name
+ *   The name of member.
+ *
+ * @return
+ *   A group member object with all default fields initialized.
+ */
+function zmt_group_member_new($name = '') {
+  global $user;
+  $values = array(
+    'name' => $name,
+    'group_id' => 0,
+    'member_id' => 0,
+    'type' => GROUP_MEMBER_ACCOUNT,
+    'uid' => $user->uid,
+    'created' => REQUEST_TIME,
+  );
+  return entity_get_controller('zmt_group_member')->create($values);
+}
+
+/**
+ * Saves a group member.
+ *
+ * @param $member
+ *   The full group member object to save.
+ *
+ * @return
+ *   SAVED_NEW or SAVED_UPDATED depending on the operation performed.
+ */
+function zmt_group_member_save($member, $by_entity = TRUE) {
+  if ($by_entity === TRUE) {
+    return entity_get_controller('zmt_group_member')->save($member);
+  }
+  else {
+    $fields = array(
+      'name' => $member->name,
+      'group_id' => $member->group_id,
+      'member_id' => $member->member_id,
+      'type' => $member->type,
+      'uid' => $member->uid,
+      'created' => $member->created,
+    );
+    if (!isset($member->id) || (int) $member->id == 0) {
+      $member->id = db_insert('zmt_group_member')->fields($fields)->execute();
+      return SAVED_NEW;
+    }
+    else {
+      db_update('zmt_group_member')
+        ->fields($fields)
+        ->condition('id', $member->id)
+        ->execute();
+      entity_get_controller('zmt_group_member')->resetCache(array($member->id));
+      return SAVED_UPDATED;
+    }
+  }
+}
+
+/**
+ * Deletes a group member by ID.
+ *
+ * @param $id
+ *   The ID of the group member to delete.
+ */
+function zmt_group_member_delete($id, $by_entity = TRUE) {
+  return zmt_group_member_delete_multiple(array($id), $by_entity);
+}
+
+/**
+ * Deletes multiple group member by ID.
+ *
+ * @param $ids
+ *   An array of group member IDs to delete.
+ */
+function zmt_group_member_delete_multiple(array $ids = array(), $by_entity = TRUE) {
+  if ($by_entity === TRUE) {
+    entity_get_controller('zmt_group_member')->delete($ids);
+  }
+  else {
+    db_delete('zmt_group_member')->condition('id', $ids)->execute();
+    entity_get_controller('zmt_group_member')->resetCache($ids);
+  }
+}
+
+/**
+ * Deletes multiple group member by by group.
+ *
+ * @param $group_ids
+ *   An array of group IDs.
+ */
+function zmt_group_member_delete_multiple_by_group(array $group_ids = array()) {
+  if (!empty($group_ids)) {
+    $query = new EntityFieldQuery();
+    $result = $query->entityCondition('entity_type', 'zmt_group_member')
+      ->propertyCondition('group_id', $group_ids)
+      ->execute();
+    $ids = isset($result['zmt_group_member']) ? array_keys($result['zmt_group_member']) : array();
+    zmt_group_member_delete_multiple($ids);
+  }
+}

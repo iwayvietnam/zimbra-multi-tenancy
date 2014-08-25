@@ -1,0 +1,5 @@
+name = ZMT Group UI
+description = Administrative user interface to Group.
+package = Zimbra Multi Tenancy
+core = 7.x
+dependencies[] = zmt_group

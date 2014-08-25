@@ -1,0 +1,133 @@
+<?php
+
+/**
+ * Implements hook_element_info().
+ */
+function zmt_cos_ui_element_info() {
+  $types = array();
+
+  $types['zmt_cos_select'] = array(
+    '#input' => TRUE,
+    '#multiple' => FALSE,
+    '#process' => array(
+      'zmt_cos_select_expand',
+      'form_process_select',
+      'ajax_process_form',
+    ),
+    '#theme' => 'select',
+    '#theme_wrappers' => array('form_element'),
+    '#server' => NULL,
+    '#options' => array(),
+  );
+
+  return $types;
+}
+
+/**
+ * Implements hook_menu().
+ */ 
+function zmt_cos_ui_menu() {
+  $items = array();
+  $items['zmt/cos/%zmt_cos'] = array(
+    'title callback' => 'entity_label',
+    'title arguments' => array('zmt_cos', 2),
+    'page callback' => 'zmt_cos_view',
+    'page arguments' => array(2),
+    'access callback' => 'entity_access',
+    'access arguments' => array('view', 'zmt_cos', 2),
+  );
+  $items['zmt/cos/add'] = array(
+    'title' => 'Add Class of Service',
+    'page callback' => 'zmt_cos_add_page',
+    'access callback' => 'zmt_cos_add_access',
+    'type' => MENU_LOCAL_ACTION,
+    'file' => 'zmt_cos.admin.inc',
+  );
+  $items['zmt/cos/%zmt_cos/edit'] = array(
+    'title' => 'Edit Class of Service',
+    'page callback' => 'zmt_cos_edit_page',
+    'page arguments' => array(2),
+    'access callback' => 'zmt_cos_edit_access',
+    'access arguments' => array(2),
+    'type' => MENU_CALLBACK,
+    'file' => 'zmt_cos.admin.inc',
+  );
+  $items['zmt/cos/%zmt_cos/delete'] = array(
+    'title' => 'Delete Class of Service',
+    'page callback' => 'zmt_cos_delete_page',
+    'page arguments' => array(2),
+    'access callback' => 'zmt_cos_delete_access',
+    'access arguments' => array(2),
+    'type' => MENU_CALLBACK,
+    'file' => 'zmt_cos.admin.inc',
+  );
+  $items['zmt/cos'] = array(
+    'title' => 'Class of Services',
+    'page callback' => 'zmt_cos_list_all',
+    'access callback' => 'zmt_cos_list_access',
+    'file' => 'zmt_cos.admin.inc',
+  );
+  return $items;
+}
+
+/**
+ * Server view callback.
+ */
+function zmt_cos_view($cos) {
+  drupal_set_title(entity_label('zmt_cos', $cos));
+  return entity_view('zmt_cos', array(entity_id('zmt_cos', $cos) => $cos), 'full');
+}
+
+/**
+ * Access callback: determines if the user can create country.
+ */
+function zmt_cos_list_access($account = NULL) {
+  return zmt_cos_access('list', NULL, $account);
+}
+
+/**
+ * Access callback: determines if the user can create country.
+ */
+function zmt_cos_add_access($account = NULL) {
+  return zmt_cos_access('create', NULL, $account);
+}
+
+/**
+ * Access callback: determines if the user can edit country.
+ */
+function zmt_cos_edit_access($cos, $account = NULL) {
+  return zmt_cos_access('edit', $cos, $account);
+}
+
+/**
+ * Access callback: determines if the user can delete country.
+ */
+function zmt_cos_delete_access($cos, $account = NULL) {
+  return zmt_cos_access('delete', $cos, $account);
+}
+
+/**
+ * Our process callback to expand the COS FAPI element.
+ */
+function zmt_cos_select_expand($element) {
+  if (empty($element['#options'])) {
+    $options = array('' => t('- None -'));
+    if ($element['#server'] !== NULL) {
+      $services = zmt_cos_load_multiple_by_server($element['#server']);
+    }
+    else {
+      $services = zmt_cos_load_all();
+    }
+    foreach ($services as $service) {
+      $options[$service->id] = $service->name;
+    }
+    $element['#options'] = $options;
+  }
+  if (empty($element['#title'])) {
+    $element['#title'] = t('Class of Service');
+  }
+  if (isset($element['#ajax']) && !isset($element['#ajax']['event'])) {
+    $element['#ajax']['event'] = 'change';
+  }
+  return $element;
+}

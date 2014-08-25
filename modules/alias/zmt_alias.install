@@ -1,0 +1,106 @@
+<?php
+
+/**
+ * Implements hook_install().
+ */ 
+function zmt_alias_install() {
+  $zimbra_rid  = (int) variable_get('zmt_zimbra_role_id',  0);
+  $tenant_rid = (int) variable_get('zmt_tenant_role_id', 0);
+  $domain_rid = (int) variable_get('zmt_domain_role_id', 0);
+  $group_rid  = (int) variable_get('zmt_group_role_id',  0);
+  $zmt_perm = array(
+    'administer any zmt_alias' => 1,
+  );
+  if ($zimbra_rid > 0 ) {
+    user_role_change_permissions($zimbra_rid, $zmt_perm);
+  }
+  if ($tenant_rid > 0 ) {
+    user_role_change_permissions($tenant_rid, $zmt_perm);
+  }
+  if ($domain_rid > 0 ) {
+    user_role_change_permissions($domain_rid, $zmt_perm);
+  }
+  if ($group_rid > 0 ) {
+    user_role_change_permissions($group_rid, $zmt_perm);
+  }
+}
+
+/**
+ * Implements hook_schema().
+ */
+function zmt_alias_schema() {
+  return array(
+    'zmt_alias' => array(
+      'description' => 'The base table for zimbra alias.',
+      'fields' => array(
+        'id' => array(
+          'description' => 'The primary identifier for a alias, used internally only.',
+          'type' => 'serial',
+          'unsigned' => TRUE,
+          'not null' => TRUE,
+        ),
+        'domain_id' => array(
+          'description' => 'The {zmt_domain}.id of this alias.',
+          'type' => 'int',
+          'not null' => TRUE,
+          'default' => 0,
+        ),
+        'name' => array(
+          'description' => 'The name of this alias.',
+          'type' => 'varchar',
+          'length' => 255,
+          'not null' => TRUE,
+          'default' => '',
+        ),
+        'account_id' => array(
+          'description' => 'The target account of this alias.',
+          'type' => 'int',
+          'not null' => TRUE,
+          'default' => 0,
+        ),
+        'zimbra_target_id' => array(
+          'description' => 'The zimbra target id of this alias.',
+          'type' => 'varchar',
+          'length' => 255,
+          'not null' => TRUE,
+          'default' => '',
+        ),
+        'uid' => array(
+          'description' => 'The {users}.uid that created this alias.',
+          'type' => 'int',
+          'not null' => TRUE,
+          'default' => 0,
+        ),
+        'created' => array(
+          'description' => 'The Unix timestamp when the alias was created.',
+          'type' => 'int',
+          'not null' => TRUE,
+          'default' => 0,
+        ),
+        'changed' => array(
+          'description' => 'The Unix timestamp when the alias was most recently saved.',
+          'type' => 'int',
+          'not null' => TRUE,
+          'default' => 0,
+        ),
+      ),
+      'primary key' => array('id'),
+      'unique keys' => array(
+        'name' => array('domain_id', 'name'),
+      ),
+      'indexes' => array(
+        'zmt_domain_id' => array('domain_id'),
+      ),
+      'foreign keys' => array(
+        'zmt_alias_domain' => array(
+          'table' => 'zmt_domain',
+          'columns'=> array('id' => 'domain_id'),
+        ),
+        'zmt_alias_creator' => array(
+          'table' => 'users',
+          'columns' => array('uid' => 'uid'),
+        ),
+      ),
+    ),
+  );
+}

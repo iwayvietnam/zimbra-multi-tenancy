@@ -1,0 +1,149 @@
+<?php
+
+/**
+ * Implements hook_install().
+ */ 
+function zmt_account_install() {
+  $zimbra_rid = (int) variable_get('zmt_zimbra_role_id',  0);
+  $tenant_rid = (int) variable_get('zmt_tenant_role_id', 0);
+  $domain_rid = (int) variable_get('zmt_domain_role_id', 0);
+  $group_rid  = (int) variable_get('zmt_group_role_id',  0);
+  $zmt_perm = array(
+    'administer any zmt_account' => 1,
+  );
+  if ($zimbra_rid > 0 ) {
+    user_role_change_permissions($zimbra_rid, $zmt_perm);
+  }
+  if ($tenant_rid > 0 ) {
+    user_role_change_permissions($tenant_rid, $zmt_perm);
+  }
+  if ($domain_rid > 0 ) {
+    user_role_change_permissions($domain_rid, $zmt_perm);
+  }
+  if ($group_rid > 0 ) {
+    user_role_change_permissions($group_rid, $zmt_perm);
+  }
+}
+
+/**
+ * Implements hook_schema().
+ */
+function zmt_account_schema() {
+  return array(
+    'zmt_account' => array(
+      'description' => 'The base table for zimbra account.',
+      'fields' => array(
+        'id' => array(
+          'description' => 'The primary identifier for a account, used internally only.',
+          'type' => 'serial',
+          'unsigned' => TRUE,
+          'not null' => TRUE,
+        ),
+        'domain_id' => array(
+          'description' => 'The {zmt_domain}.id of this account.',
+          'type' => 'int',
+          'not null' => TRUE,
+          'default' => 0,
+        ),
+        'name' => array(
+          'description' => 'The name of this account, always treated as non-markup plain text.',
+          'type' => 'varchar',
+          'length' => 255,
+          'not null' => TRUE,
+          'default' => '',
+        ),
+        'code' => array(
+          'description' => 'The code of this account.',
+          'type' => 'varchar',
+          'length' => 255,
+          'not null' => TRUE,
+          'default' => '',
+        ),
+        'title' => array(
+          'description' => 'The title of this account.',
+          'type' => 'varchar',
+          'length' => 255,
+          'not null' => TRUE,
+          'default' => '',
+        ),
+        'full_name' => array(
+          'description' => 'The full name of this account.',
+          'type' => 'varchar',
+          'length' => 255,
+          'not null' => TRUE,
+          'default' => '',
+        ),
+        'status' => array(
+          'description' => 'The status of this account.',
+          'type' => 'varchar',
+          'length' => 32,
+          'not null' => TRUE,
+          'default' => '',
+        ),
+        'telephone' => array(
+          'description' => 'The telephone of this account.',
+          'type' => 'varchar',
+          'length' => 255,
+          'not null' => TRUE,
+          'default' => '',
+        ),
+        'mobile' => array(
+          'description' => 'The mobile of this account.',
+          'type' => 'varchar',
+          'length' => 255,
+          'not null' => TRUE,
+          'default' => '',
+        ),
+        'category' => array(
+          'description' => 'The category of this account.',
+          'type' => 'varchar',
+          'length' => 255,
+          'not null' => TRUE,
+          'default' => '',
+        ),
+        'zimbra_id' => array(
+          'description' => 'The zimbra identify of this account.',
+          'type' => 'varchar',
+          'length' => 255,
+          'not null' => TRUE,
+          'default' => '',
+        ),
+        'uid' => array(
+          'description' => 'The {users}.uid that created this account.',
+          'type' => 'int',
+          'not null' => TRUE,
+          'default' => 0,
+        ),
+        'created' => array(
+          'description' => 'The Unix timestamp when the account was created.',
+          'type' => 'int',
+          'not null' => TRUE,
+          'default' => 0,
+        ),
+        'changed' => array(
+          'description' => 'The Unix timestamp when the account was most recently saved.',
+          'type' => 'int',
+          'not null' => TRUE,
+          'default' => 0,
+        ),
+      ),
+      'primary key' => array('id'),
+      'unique keys' => array(
+        'name' => array('domain_id', 'name'),
+      ),
+      'indexes' => array(
+        'zmt_domain_id' => array('domain_id'),
+      ),
+      'foreign keys' => array(
+        'zmt_account_domain' => array(
+          'table' => 'zmt_domain',
+          'columns'=> array('domain_id' => 'id'),
+        ),
+        'zmt_account_creator' => array(
+          'table' => 'users',
+          'columns' => array('uid' => 'uid'),
+        ),
+      ),
+    ),
+  );
+}

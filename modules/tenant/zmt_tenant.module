@@ -1,0 +1,442 @@
+<?php
+
+/**
+ * Implements hook_entity_info().
+ */
+function zmt_tenant_entity_info() {
+  $entity = array(
+    'zmt_tenant' => array(
+      'label' => t('Tenant'),
+      'entity class' => 'Entity',
+      'controller class' => 'EntityAPIControllerExportable',
+      'base table' => 'zmt_tenant',
+      'fieldable' => FALSE,
+      'entity keys' => array(
+        'id' => 'id',
+      ),
+      'view modes' => array(
+        'full' => array(
+          'label' => t('Tenant'),
+          'custom settings' => FALSE,
+        ),
+      ),
+      'label callback' => 'zmt_tenant_label',
+      'uri callback' => 'zmt_tenant_uri',
+      'module' => 'zmt_tenant',
+      'access callback' => 'zmt_tenant_access',
+    ),
+  );
+
+  return $entity;
+}
+
+/**
+ * Implements hook_entity_property_info_alter().
+ */
+function zmt_tenant_entity_property_info_alter(&$info) {
+  // Add related tenant to the user object.
+  $properties = &$info['zmt_tenant']['properties'];
+  $properties['server_id'] = array(
+    'type' => 'zmt_server',
+    'label' => t('Server'),
+    'description' => t('The tenant\'s server.'),
+    'getter callback' => 'zmt_tenant_get_properties',
+    'schema field' => 'server_id',
+  );
+  $properties['cos_id'] = array(
+    'type' => 'zmt_cos',
+    'label' => t('Service'),
+    'description' => t('The tenant\'s class of service.'),
+    'getter callback' => 'zmt_tenant_get_properties',
+    'schema field' => 'cos_id',
+  );
+  $properties['tenant_uid'] = array(
+    'type' => 'user',
+    'label' => t('User'),
+    'description' => t('The user representation of this tenant\'s .'),
+    'getter callback' => 'zmt_tenant_get_properties',
+    'schema field' => 'tenant_uid',
+  );
+  $properties['uid'] = array(
+    'type' => 'user',
+    'label' => t('Creator'),
+    'description' => t('The tenant\'s creator.'),
+    'getter callback' => 'zmt_tenant_get_properties',
+    'schema field' => 'uid',
+  );
+}
+
+/**
+ * Entity metadata callback to load tenant's properties.
+ */
+function zmt_tenant_get_properties($tenant, array $options, $name) {
+  switch ($name) {
+    case 'server_id':
+      return zmt_server_load($tenant->server_id);
+    case 'cos_id':
+      return zmt_cos_load($tenant->cos_id);
+    case 'tenant_uid':
+      return user_load($tenant->tenant_uid);
+    case 'uid':
+      return user_load($tenant->uid);
+  }
+}
+
+/**
+ * Implements hook_permission().
+ */ 
+function zmt_tenant_permission() {
+  return zmt_access_permissions('zmt_tenant', 'Tenant');
+}
+
+/**
+ * Implements hook_user_load().
+ */
+function zmt_tenant_user_load(array $users) {
+  $result = db_select('zmt_tenant', 't')
+    ->fields('t', array('id', 'tenant_uid'))
+    ->condition('t.tenant_uid', array_keys($users))
+    ->execute();
+  foreach ($result as $tenant) {
+    $users[$tenant->tenant_uid]->tenant = $tenant;
+  }
+}
+
+/**
+ * Implements hook_zmt_tenant_load().
+ */
+function zmt_tenant_zmt_tenant_load(array $tenants) {
+  $tenant_uids = array();
+  foreach ($tenants as $tenant) {
+    $tenant_uids[] = (int) $tenant->tenant_uid;
+  }
+  if (!empty($tenant_uids)) {
+    $users = user_load_multiple($tenant_uids);
+    foreach ($tenants as $tenant) {
+      if (isset($users[$tenant->tenant_uid])) {
+        $user = $users[$tenant->tenant_uid];
+        $tenant->name = $user->name;
+        $tenant->mail = $user->mail;
+        $tenant->status = $user->status;
+      }
+    }
+  }
+}
+
+/**
+ * Access callback for tenant.
+ */
+function zmt_tenant_access($op, $tenant, $tenant = NULL, $entity_type = NULL) {
+  global $user;
+  if (NULL === $tenant) {
+    $tenant = $user;
+  }
+  if (user_access('administer zmt', $tenant) || user_access('administer any zmt_tenant', $tenant)) {
+    return TRUE;
+  }
+  if ($op === 'list' || $op === 'create') {
+    return user_access('administer own zmt_tenant', $tenant);
+  }
+  else {
+    $is_own = isset($tenant->uid) && $tenant->uid == $tenant->uid;
+    return user_access('administer own zmt_tenant', $tenant) && $is_own;
+  }
+}
+
+/**
+ * Implements hook_user_delete().
+ */
+function zmt_tenant_user_delete($user) {
+  db_delete('zmt_tenant')->condition('tenant_uid', $user->uid)->execute();
+}
+
+/**
+ * Zmt tenant entity uri callback.
+ */
+function zmt_tenant_uri($tenant) {
+  return array(
+    'path' => 'zmt/tenant/' . $tenant->id,
+  );
+}
+
+/**
+ * Zmt tenant entity label callback.
+ */
+function zmt_tenant_label($tenant, $entity_type) {
+  if (isset($tenant->name)) {
+    return t('Tenant') . ' ' . $tenant->name;
+  }
+  else {
+    return t('Tenant');
+  }
+}
+
+/**
+ * Loads a tenant by ID.
+ */
+function zmt_tenant_load($id) {
+  if (empty($id)) {
+    return FALSE;
+  }
+
+  $tenants = zmt_tenant_load_multiple(array($id), array());
+  return $tenants ? reset($tenants) : FALSE;
+}
+
+/**
+ * Loads multiple tenant by ID or based on a set of matching conditions.
+ *
+ * @see entity_load()
+ *
+ * @param $ids
+ *   An array of tenant IDs.
+ * @param $conditions
+ *   An array of conditions on the {zmt_tenant} table in the form
+ *     'field' => $value.
+ * @param $reset
+ *   Whether to reset the internal tenant loading cache.
+ *
+ * @return
+ *   An array of tenant objects indexed by id.
+ */
+function zmt_tenant_load_multiple($ids = array(), array $conditions = array(), $reset = FALSE) {
+  if (empty($ids) && empty($conditions)) {
+    return array();
+  }
+
+  return entity_load('zmt_tenant', $ids, $conditions, $reset);
+}
+
+/**
+ * Loads all servers.
+ *
+ * @see zmt_tenant_load_multiple()
+ */
+function zmt_tenant_load_all(){
+  $query = new EntityFieldQuery();
+  $result = $query->entityCondition('entity_type', 'zmt_tenant')->execute();
+  $ids = isset($result['zmt_tenant']) ? array_keys($result['zmt_tenant']) : array();
+  return zmt_tenant_load_multiple($ids);
+}
+
+/**
+ * Loads multiple tenant by server.
+ *
+ * @param $server
+ *   The server to load tenant for, or its id.
+ * @return
+ *   An array of tenant objects indexed by id.
+ *
+ * @see zmt_tenant_load_multiple()
+ */
+function zmt_tenant_load_multiple_by_server($server) {
+  $cache = &drupal_static(__FUNCTION__, array());
+  $server_id = is_object($server) ? $server->id : $server;
+  if (!isset($cache[$server_id])) {
+    $query = new EntityFieldQuery();
+    $result = $query->entityCondition('entity_type', 'zmt_tenant')
+      ->propertyCondition('server_id', $server_id)
+      ->execute();
+    $ids = isset($result['zmt_tenant']) ? array_keys($result['zmt_tenant']) : array();
+    $cache[$server_id] = zmt_tenant_load_multiple($ids);
+  }
+  return $cache[$server_id];
+}
+
+/**
+ * Loads multiple tenant by cos.
+ *
+ * @param $cos
+ *   The cos to load tenant for, or its id.
+ * @return
+ *   A single tenant entity.
+ *
+ * @see zmt_tenant_load_multiple()
+ */
+function zmt_tenant_load_multiple_by_cos($cos) {
+  $cache = &drupal_static(__FUNCTION__, array());
+  $cos_id = is_object($cos) ? $cos->id : $cos;
+  if (!isset($cache[$cos_id])) {
+    $query = new EntityFieldQuery();
+    $result = $query->entityCondition('entity_type', 'zmt_tenant')
+      ->propertyCondition('cos_id', $cos_id)
+      ->execute();
+    $ids = isset($result['zmt_tenant']) ? array_keys($result['zmt_tenant']) : array();
+    $cache[$cos_id] = zmt_tenant_load_multiple($ids);
+  }
+  return $cache[$cos_id];
+}
+
+/**
+ * Loads tenant by tenant.
+ *
+ * @param $user
+ *   The user tenant to load tenant for, or its uid.
+ * @return
+ *   A single tenant entity.
+ *
+ * @see zmt_tenant_load_multiple()
+ */
+function zmt_tenant_load_by_user($user) {
+  $cache = &drupal_static(__FUNCTION__, array());
+  $uid = is_object($user) ? $user->uid : $user;
+  if (!isset($cache[$uid])) {
+    $query = new EntityFieldQuery();
+    $result = $query->entityCondition('entity_type', 'zmt_tenant')
+      ->propertyCondition('tenant_uid', $uid)
+      ->execute();
+    $ids = isset($result['zmt_tenant']) ? array_keys($result['zmt_tenant']) : array();
+
+    $tenants = zmt_tenant_load_multiple($ids);
+    $cache[$uid] = $tenants ? reset($tenants) : FALSE;
+  }
+  return $cache[$uid];
+}
+
+/**
+ * Checks user is tenant.
+ *
+ * @param user
+ *   The user tenant.
+ * @return
+ *   True if user is tenant.
+ */
+function zmt_tenant_user_is_tenant($user) {
+  $cache = &drupal_static(__FUNCTION__, array());
+  $uid = is_object($user) ? $user->uid : $user;
+  if (!isset($cache[$uid])) {
+    $query = db_select('zmt_tenant', 't')
+      ->fields('t', array('id'))
+      ->condition('t.tenant_uid', $uid)
+      ->countQuery();
+    $num_rows = $query->execute()->fetchField();;
+
+    $cache[$uid] = (int) $num_rows > 0;
+  }
+  return $cache[$uid];
+}
+
+/**
+ * Get server of ternant.
+ *
+ * @param $id
+ *   The ternant ID.
+ * @return
+ *   Server entity object.
+ */
+function zmt_ternant_get_server($id) {
+  $tenant = zmt_tenant_load($id);
+  $server_id = $tenant ? $tenant->server_id : 0;
+  return zmt_server_load($server_id);
+}
+
+/**
+ * Gets remain number of tenants.
+ *
+ * @param $id
+ *   The ternant ID.
+ * @return
+ *   Remain number of accouns.
+ */
+function zmt_tenant_account_number_remain($id, $exclude_tenant_id = 0) {
+  $tenant_remain = 0;
+  $tenant = zmt_tenant_load($id);
+  if ($tenant) {
+    $wrapper = entity_metadata_wrapper('zmt_tenant', $tenant);
+    $total_max_number = (int) $wrapper->cos_id->account_max_number->value();
+
+    $total_tenant = 0;
+    $query = db_select('zmt_tenant', 't');
+    $result = $query->fields('t', array('id'))
+      ->condition('t.id', (int) $id)
+      ->addTag('tenant_sum_tenant')
+      ->addMetaData('tenant_id', $exclude_tenant_id)
+      ->range(0, 1)
+      ->execute();
+    foreach ($result as $tenant) {
+      $total_tenant = isset($tenant->total_tenant) ? $tenant->total_tenant : 0;
+    }
+    $tenant_remain = $total_max_number - $total_tenant;
+  }
+  return $tenant_remain;
+}
+
+/**
+ * Returns an initialized tenant object.
+ *
+ * @param $tenant_uid
+ *   The machine-readable tenant uid of the tenant.
+ *
+ * @return
+ *   A tenant object with all default fields initialized.
+ */
+function zmt_tenant_new($tenant_uid = 0) {
+  global $user;
+  $values = array(
+    'server_id' => 0,
+    'cos_id' => 0,
+    'tenant_uid' => $tenant_uid,
+    'uid' => $user->uid,
+    'created' => REQUEST_TIME,
+    'changed' => REQUEST_TIME,
+  );
+  return entity_get_controller('zmt_tenant')->create($values);
+}
+
+/**
+ * Saves a tenant.
+ *
+ * @param $tenant
+ *   The full tenant object to save.
+ *
+ * @return
+ *   SAVED_NEW or SAVED_UPDATED depending on the operation performed.
+ */
+function zmt_tenant_save($tenant, $by_entity = TRUE) {
+  $tenant->changed = REQUEST_TIME;
+  if ($by_entity === TRUE) {
+    return entity_get_controller('zmt_tenant')->save($tenant);
+  }
+  else {
+    $fields = array(
+      'server_id' => $tenant->server_id,
+      'cos_id' => $tenant->cos_id,
+      'tenant_uid' => $tenant->tenant_uid,
+      'uid' => $tenant->uid,
+      'created' => $tenant->created,
+      'changed' => $tenant->changed,
+    );
+    if (!isset($tenant->id) || (int) $tenant->id == 0) {
+      $tenant->id = db_insert('zmt_tenant')->fields($fields)->execute();
+      return SAVED_NEW;
+    }
+    else {
+      db_update('zmt_tenant')
+        ->fields($fields)
+        ->condition('id', $tenant->id)
+        ->execute();
+      entity_get_controller('zmt_tenant')->resetCache(array($tenant->id));
+      return SAVED_UPDATED;
+    }
+  }
+}
+
+/**
+ * Deletes a tenant by ID.
+ *
+ * @param $id
+ *   The ID of the tenant to delete.
+ */
+function zmt_tenant_delete($id) {
+  zmt_tenant_delete_multiple(array($id));
+}
+
+/**
+ * Deletes multiple tenants by ID.
+ *
+ * @param $ids
+ *   An array of tenant IDs to delete.
+ */
+function zmt_tenant_delete_multiple(array $ids = array()) {
+  entity_get_controller('zmt_tenant')->delete($ids);
+}

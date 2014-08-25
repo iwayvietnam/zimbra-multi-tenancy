@@ -1,0 +1,529 @@
+<?php
+
+/**
+ * Implements hook_entity_info().
+ */
+function zmt_cos_entity_info() {
+  $entity = array(
+    'zmt_cos' => array(
+      'label' => t('Class of Service'),
+      'entity class' => 'Entity',
+      'controller class' => 'EntityAPIControllerExportable',
+      'base table' => 'zmt_cos',
+      'fieldable' => FALSE,
+      'entity keys' => array(
+        'id' => 'id',
+        'label' => 'name',
+      ),
+      'view modes' => array(
+        'full' => array(
+          'label' => t('Class of Service'),
+          'custom settings' => FALSE,
+        ),
+      ),
+      'label callback' => 'zmt_cos_label',
+      'uri callback' => 'zmt_cos_uri',
+      'module' => 'zmt_cos',
+      'access callback' => 'zmt_cos_access',
+    ),
+    'zmt_cos_server' => array(
+      'label' => t('Class of Service in Server'),
+      'entity class' => 'Entity',
+      'controller class' => 'EntityAPIControllerExportable',
+      'base table' => 'zmt_cos_server',
+      'fieldable' => FALSE,
+      'entity keys' => array(
+        'id' => 'id',
+      ),
+      'module' => 'zmt_cos',
+      'access callback' => 'zmt_cos_access',
+    ),
+  );
+
+  return $entity;
+}
+
+/**
+ * Implements hook_entity_property_info_alter().
+ */
+function zmt_cos_entity_property_info_alter(&$info) {
+  // Add related cos to the user object.
+  $properties = &$info['zmt_cos']['properties'];
+  $properties['uid'] = array(
+    'type' => 'user',
+    'label' => t('Creator'),
+    'description' => t('The service\'s creator.'),
+    'getter callback' => 'zmt_cos_get_properties',
+    'schema field' => 'uid',
+  );
+
+  $properties = &$info['zmt_cos_server']['properties'];
+  $properties['cos_id'] = array(
+    'type' => 'zmt_cos',
+    'label' => t('COS'),
+    'description' => t('The service\'s COS.'),
+    'getter callback' => 'zmt_cos_server_get_properties',
+    'schema field' => 'cos_id',
+  );
+  $properties['server_id'] = array(
+    'type' => 'zmt_server',
+    'label' => t('Server'),
+    'description' => t('The service\'s server.'),
+    'getter callback' => 'zmt_cos_server_get_properties',
+    'schema field' => 'server_id',
+  );
+}
+
+/**
+ * Entity metadata callback to load properties for the given server.
+ */
+function zmt_cos_get_properties($cos, array $options, $name) {
+  switch ($name) {
+    case 'uid':
+      return user_load($cos->uid);
+  }
+}
+
+/**
+ * Entity metadata callback to load properties for the given server.
+ */
+function zmt_cos_server_get_properties($cos_server, array $options, $name) {
+  switch ($name) {
+    case 'cos_id':
+      return zmt_cos_load($cos_server->cos_id);
+    case 'server_id':
+      return zmt_server_load($cos_server->server_id);
+  }
+}
+
+/**
+ * Implements hook_permission().
+ */ 
+function zmt_cos_permission() {
+  return zmt_access_permissions('zmt_cos', 'Class of Service');
+}
+
+/**
+ * Implements hook_zmt_server_delete().
+ */ 
+function zmt_cos_zmt_server_delete($server){
+  $id = $server ? $server->id : 0;
+  zmt_cos_server_delete_multiple_by_server(array($id));
+}
+
+/**
+ * Access callback for Zimbra Server.
+ */
+function zmt_cos_access($op, $cos, $account = NULL, $entity_type = NULL) {
+  global $user;
+  if (NULL === $account) {
+    $account = $user;
+  }
+  if (user_access('administer zmt', $account) || user_access('administer any zmt_cos', $account)) {
+    return TRUE;
+  }
+  if ($op === 'list' || $op === 'create') {
+    return user_access('administer own zmt_cos', $account);
+  }
+  else {
+    $is_own = isset($cos->uid) && $cos->uid == $account->uid;
+    return user_access('administer own zmt_cos', $account) && $is_own;
+  }
+}
+
+/**
+ * Zmt cos entity uri callback.
+ */
+function zmt_cos_uri($cos) {
+  return array(
+    'path' => 'zmt/cos/' . $cos->id,
+  );
+}
+
+/**
+ * Zmt cos entity label callback.
+ */
+function zmt_cos_label($cos, $entity_type) {
+  return t('Class of Service') . ' ' . $cos->name;
+}
+
+/**
+ * Loads a cos by ID.
+ */
+function zmt_cos_load($id) {
+  if (empty($id)) {
+    return FALSE;
+  }
+
+  $services = zmt_cos_load_multiple(array($id), array());
+  return $services ? reset($services) : FALSE;
+}
+
+/**
+ * Loads multiple cos by ID or based on a set of matching conditions.
+ *
+ * @see entity_load()
+ *
+ * @param $ids
+ *   An array of cos IDs.
+ * @param $conditions
+ *   An array of conditions on the {zmt_cos} table in the form
+ *     'field' => $value.
+ * @param $reset
+ *   Whether to reset the internal cos loading cache.
+ *
+ * @return
+ *   An array of cos objects indexed by id.
+ */
+function zmt_cos_load_multiple(array $ids = array(), array $conditions = array(), $reset = FALSE) {
+  if (empty($ids) && empty($conditions)) {
+    return array();
+  }
+
+  return entity_load('zmt_cos', $ids, $conditions, $reset);
+}
+
+/**
+ * Loads all Class of Services.
+ *
+ * @see zmt_cos_load_multiple()
+ */
+function zmt_cos_load_all(){
+  $query = new EntityFieldQuery();
+  $result = $query->entityCondition('entity_type', 'zmt_cos')->execute();
+  $ids = isset($result['zmt_cos']) ? array_keys($result['zmt_cos']) : array();
+  return zmt_cos_load_multiple($ids);
+}
+
+/**
+ * Loads multiple COS by server.
+ *
+ * @param $server
+ *   The user server to load tenant for, or its server_id.
+ * @return
+ *   An array of cos objects indexed by id.
+ *
+ * @see zmt_cos_load_multiple()
+ */
+function zmt_cos_load_multiple_by_server($server) {
+  $cache = &drupal_static(__FUNCTION__, array());
+  $server_id = is_object($server) ? $server->id : $server;
+  if (!isset($cache[$server_id])) {
+    $query = db_select('zmt_cos', 'c');
+    $query->leftJoin('zmt_cos_server', 'cs', 'cs.cos_id = c.id');
+    $result = $query
+      ->fields('c', array('id'))
+      ->condition('cs.server_id', $server_id)
+      ->execute();
+    $ids = array();
+    foreach ($result as $data) {
+      $ids[] = $data->id;
+    }
+    $cache[$server_id] = zmt_cos_load_multiple($ids);
+  }
+  return $cache[$server_id];
+}
+
+/**
+ * Returns an initialized cos object.
+ *
+ * @param $name
+ *   The machine-readable name of the cos.
+ *
+ * @return
+ *   A cos object with all default fields initialized.
+ */
+function zmt_cos_new($name = '') {
+  global $user;
+  $values = array(
+    'server_id' => 0,
+    'name' => $name,
+    'description' => '',
+    'account_max_number' => 0,
+    'mail_quota' => 0,
+    'attachments_blocked' => 0,
+    'password_min_length' => 0,
+    'password_max_length' => 0,
+    'password_min_upper' => 0,
+    'password_min_lower' => 0,
+    'password_min_numeric' => 0,
+    'uid' => $user->uid,
+    'created' => REQUEST_TIME,
+    'changed' => REQUEST_TIME,
+  );
+  return entity_get_controller('zmt_cos')->create($values);
+}
+
+/**
+ * Saves a cos.
+ *
+ * @param $cos
+ *   The full cos object to save.
+ *
+ * @return
+ *   SAVED_NEW or SAVED_UPDATED depending on the operation performed.
+ */
+function zmt_cos_save($cos, $by_entity = TRUE) {
+  $cos->changed = REQUEST_TIME;
+  if ($by_entity === TRUE) {
+    return entity_get_controller('zmt_cos')->save($cos);
+  }
+  else {
+    $fields = array(
+      'server_id' => $cos->server_id,
+      'name' => $cos->name,
+      'account_max_number' => $cos->account_max_number,
+      'mail_quota' => $cos->mail_quota,
+      'attachments_blocked' => $cos->attachments_blocked,
+      'password_min_length' => $cos->password_min_length,
+      'password_max_length' => $cos->password_max_length,
+      'password_min_upper' => $cos->password_min_upper,
+      'password_min_lower' => $cos->password_min_lower,
+      'password_min_numeric' => $cos->password_min_numeric,
+      'uid' => $cos->uid,
+      'created' => $cos->created,
+      'changed' => $cos->changed,
+    );
+    if (!isset($cos->id) || (int) $cos->id == 0) {
+      $cos->id = db_insert('zmt_cos')->fields($fields)->execute();
+      return SAVED_NEW;
+    }
+    else {
+      db_update('zmt_cos')
+        ->fields($fields)
+        ->condition('id', $cos->id)
+        ->execute();
+      entity_get_controller('zmt_cos')->resetCache(array($cos->id));
+      return SAVED_UPDATED;
+    }
+  }
+}
+
+/**
+ * Deletes a cos by ID.
+ *
+ * @param $id
+ *   The ID of the cos to delete.
+ */
+function zmt_cos_delete($id) {
+  return zmt_cos_delete_multiple(array($id));
+}
+
+/**
+ * Deletes multiple cos by ID.
+ *
+ * @param $ids
+ *   An array of cos IDs to delete.
+ */
+function zmt_cos_delete_multiple(array $ids = array()) {
+  zmt_cos_server_delete_multiple_by_cos($ids);
+  entity_get_controller('zmt_cos')->delete($ids);
+}
+
+/**
+ * Loads a cos server by ID.
+ */
+function zmt_cos_server_load($id) {
+  if (empty($id)) {
+    return FALSE;
+  }
+
+  $cs = zmt_cos_server_load_multiple(array($id), array());
+  return $cs ? reset($cs) : FALSE;
+}
+
+/**
+ * Loads multiple cos server by ID or based on a set of matching conditions.
+ *
+ * @see entity_load()
+ *
+ * @param $ids
+ *   An array of cos server IDs.
+ * @param $conditions
+ *   An array of conditions on the {zmt_cos_server} table in the form
+ *     'field' => $value.
+ * @param $reset
+ *   Whether to reset the internal cos server loading cache.
+ *
+ * @return
+ *   An array of cos server objects indexed by id.
+ */
+function zmt_cos_server_load_multiple($ids = array(), array $conditions = array(), $reset = FALSE) {
+  if (empty($ids) && empty($conditions)) {
+    return array();
+  }
+
+  return entity_load('zmt_cos_server', $ids, $conditions, $reset);
+}
+
+/**
+ * Loads multiple cos server by cos ids.
+ *
+ * @see entity_load()
+ *
+ * @param $cos_ids
+ *   An array of cos IDs.
+ *
+ * @return
+ *   An array of cos server objects indexed by id.
+ */
+function zmt_cos_server_load_multiple_by_cos(array $cos_ids = array()) {
+  if (empty($cos_ids)) {
+    return array();
+  }
+  $query = new EntityFieldQuery();
+  $result = $query->entityCondition('entity_type', 'zmt_cos_server')
+    ->propertyCondition('cos_id', $cos_ids)
+    ->execute();
+  $ids = isset($result['zmt_cos_server']) ? array_keys($result['zmt_cos_server']) : array();
+  return zmt_cos_server_load_multiple($ids);
+}
+
+/**
+ * Loads multiple cos server by server ids.
+ *
+ * @see entity_load()
+ *
+ * @param $server_ids
+ *   An array of cos IDs.
+ *
+ * @return
+ *   An array of cos server objects indexed by id.
+ */
+function zmt_cos_server_load_multiple_by_server(array $server_ids = array()) {
+  if (empty($server_ids)) {
+    return array();
+  }
+  $query = new EntityFieldQuery();
+  $result = $query->entityCondition('entity_type', 'zmt_cos_server')
+    ->propertyCondition('server_id', $server_ids)
+    ->execute();
+  $ids = isset($result['zmt_cos_server']) ? array_keys($result['zmt_cos_server']) : array();
+  return zmt_cos_server_load_multiple($ids);
+}
+
+/**
+ * Loads a cos server by id of cos and server.
+ */
+function zmt_cos_server_load_single($cos_id, $server_id) {
+  $query = new EntityFieldQuery();
+  $result = $query->entityCondition('entity_type', 'zmt_cos_server')
+    ->propertyCondition('cos_id', $cos_id)
+    ->propertyCondition('server_id', $server_id)
+    ->execute();
+  $ids = isset($result['zmt_cos_server']) ? array_keys($result['zmt_cos_server']) : array();
+  $cs = zmt_cos_server_load_multiple($ids);
+  return $cs ? reset($cs) : FALSE;
+}
+
+/**
+ * Returns an initialized cos server object.
+ *
+ * @param $zimbra_id
+ *   The zimbra id of Class of Service.
+ *
+ * @return
+ *   A cos server object with all default fields initialized.
+ */
+function zmt_cos_server_new($zimbra_id = '') {
+  global $user;
+  $values = array(
+    'server_id' => 0,
+    'cos_id' => 0,
+    'zimbra_id' => $zimbra_id,
+    'uid' => $user->uid,
+    'created' => REQUEST_TIME,
+  );
+  return entity_get_controller('zmt_cos_server')->create($values);
+}
+
+/**
+ * Saves a cos server.
+ *
+ * @param $cs
+ *   The full cos server object to save.
+ *
+ * @return
+ *   SAVED_NEW or SAVED_UPDATED depending on the operation performed.
+ */
+function zmt_cos_server_save($cs, $by_entity = TRUE) {
+  if ($by_entity === TRUE) {
+    return entity_get_controller('zmt_cos_server')->save($cs);
+  }
+  else {
+    $fields = array(
+      'server_id' => $cs->server_id,
+      'cos_id' => $cs->cos_id,
+      'zimbra_id' => $cs->zimbra_id,
+      'uid' => $cs->uid,
+      'created' => $cs->created,
+    );
+    if (!isset($cs->id) || (int) $cs->id == 0) {
+      $cs->id = db_insert('zmt_cos_server')->fields($fields)->execute();
+      return SAVED_NEW;
+    }
+    else {
+      db_update('zmt_cos_server')
+        ->fields($fields)
+        ->condition('id', $cs->id)
+        ->execute();
+      entity_get_controller('zmt_cos_server')->resetCache(array($cs->id));
+      return SAVED_UPDATED;
+    }
+  }
+}
+
+/**
+ * Deletes a cos server by ID.
+ *
+ * @param $id
+ *   The ID of the cos server to delete.
+ */
+function zmt_cos_server_delete($id) {
+  return zmt_cos_server_delete_multiple(array($id));
+}
+
+/**
+ * Deletes multiple cos server by ID.
+ *
+ * @param $ids
+ *   An array of cos server IDs to delete.
+ */
+function zmt_cos_server_delete_multiple(array $ids = array()) {
+  $services = zmt_cos_server_load_multiple($ids);
+  entity_get_controller('zmt_cos_server')->delete($ids);
+}
+
+/**
+ * Deletes multiple cos server by by cos.
+ *
+ * @param $cos_ids
+ *   An array of cos IDs.
+ */
+function zmt_cos_server_delete_multiple_by_cos(array $cos_ids = array()) {
+  if (!empty($cos_ids)) {
+    $query = new EntityFieldQuery();
+    $result = $query->entityCondition('entity_type', 'zmt_cos_server')
+      ->propertyCondition('cos_id', $cos_ids)
+      ->execute();
+    $ids = isset($result['zmt_cos_server']) ? array_keys($result['zmt_cos_server']) : array();
+    zmt_cos_server_delete_multiple($ids);
+  }
+}
+
+/**
+ * Deletes multiple cos server by by server.
+ *
+ * @param $server_ids
+ *   An array of server IDs.
+ */
+function zmt_cos_server_delete_multiple_by_server(array $server_ids = array()) {
+  if (!empty($server_ids)) {
+    $query = new EntityFieldQuery();
+    $result = $query->entityCondition('entity_type', 'zmt_cos_server')
+      ->propertyCondition('server_id', $server_ids)
+      ->execute();
+    $ids = isset($result['zmt_cos_server']) ? array_keys($result['zmt_cos_server']) : array();
+    zmt_cos_server_delete_multiple($ids);
+  }
+}
