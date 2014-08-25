@@ -1,0 +1,126 @@
+<?php
+
+/**
+ * Implements hook_install().
+ */ 
+function zmt_domain_install() {
+  $zimbra_rid = (int) variable_get('zmt_zimbra_role_id', 0);
+  $tenant_rid = (int) variable_get('zmt_tenant_role_id', 0);
+  $zmt_perm = array(
+    'administer any zmt_domain' => 1,
+  );
+  if ($zimbra_rid > 0 ) {
+    user_role_change_permissions($zimbra_rid, $zmt_perm);
+  }
+  if ($tenant_rid > 0 ) {
+    user_role_change_permissions($tenant_rid, $zmt_perm);
+  }
+}
+
+/**
+ * Implements hook_schema().
+ */
+function zmt_domain_schema() {
+  return array(
+    'zmt_domain' => array(
+      'description' => 'The base table for zimbra domain.',
+      'fields' => array(
+        'id' => array(
+          'description' => 'The primary identifier for a domain, used internally only.',
+          'type' => 'serial',
+          'unsigned' => TRUE,
+          'not null' => TRUE,
+        ),
+        'server_id' => array(
+          'description' => 'The {zmt_server}.id of this domain.',
+          'type' => 'int',
+          'not null' => TRUE,
+          'default' => 0,
+        ),
+        'cos_id' => array(
+          'description' => 'The {zmt_cos}.id of this domain.',
+          'type' => 'int',
+          'not null' => TRUE,
+          'default' => 0,
+        ),
+        'tenant_id' => array(
+          'description' => 'The {zmt_tenant}.id of this domain.',
+          'type' => 'int',
+          'not null' => TRUE,
+          'default' => 0,
+        ),
+        'name' => array(
+          'description' => 'The name of this domain, always treated as non-markup plain text.',
+          'type' => 'varchar',
+          'length' => 255,
+          'not null' => TRUE,
+          'default' => '',
+        ),
+        'account_max_number' => array(
+          'description' => 'The max account of this domain.',
+          'type' => 'int',
+          'not null' => TRUE,
+          'default' => 0,
+        ),
+        'zimbra_id' => array(
+          'description' => 'The zimbra identify of this cos.',
+          'type' => 'varchar',
+          'length' => 255,
+          'not null' => TRUE,
+          'default' => '',
+        ),
+        'domain_uid' => array(
+          'description' => 'The {users}.uid representation of this domain.',
+          'type' => 'int',
+          'not null' => TRUE,
+          'default' => 0,
+        ),
+        'uid' => array(
+          'description' => 'The {users}.uid that created this domain.',
+          'type' => 'int',
+          'not null' => TRUE,
+          'default' => 0,
+        ),
+        'created' => array(
+          'description' => 'The Unix timestamp when the domain was created.',
+          'type' => 'int',
+          'not null' => TRUE,
+          'default' => 0,
+        ),
+        'changed' => array(
+          'description' => 'The Unix timestamp when the domain was most recently saved.',
+          'type' => 'int',
+          'not null' => TRUE,
+          'default' => 0,
+        ),
+      ),
+      'primary key' => array('id'),
+      'unique keys' => array(
+        'name' => array('name'),
+      ),
+      'indexes' => array(
+        'zmt_server_id' => array('server_id'),
+        'zmt_cos_id' => array('cos_id'),
+        'zmt_tenant_id' => array('tenant_id'),
+      ),
+      'foreign keys' => array(
+        'zmt_domain_server' => array(
+          'table' => 'zmt_server',
+          'columns'=> array('server_id' => 'id'),
+        ),
+        'zmt_domain_cos' => array(
+          'table' => 'zmt_cos',
+          'columns'=> array('cos_id' => 'id'),
+        ),
+        'zmt_domain_tenant' => array(
+          'table' => 'zmt_tenant',
+          'columns'=> array('tenant_id' => 'id'),
+        ),
+        'zmt_domain_creator' => array(
+          'table' => 'users',
+          'columns' => array('uid' => 'uid'),
+        ),
+      ),
+    ),
+  );
+}

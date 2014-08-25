@@ -1,0 +1,195 @@
+<?php
+
+/**
+ * Implements hook_install().
+ */ 
+function zmt_group_install() {
+  $zimbra_rid = (int) variable_get('zmt_zimbra_role_id', 0);
+  $tenant_rid = (int) variable_get('zmt_tenant_role_id', 0);
+  $domain_rid = (int) variable_get('zmt_domain_role_id', 0);
+  $zmt_perm = array(
+    'administer any zmt_group' => 1,
+  );
+  if ($zimbra_rid > 0 ) {
+    user_role_change_permissions($zimbra_rid, $zmt_perm);
+  }
+  if ($tenant_rid > 0 ) {
+    user_role_change_permissions($tenant_rid, $zmt_perm);
+  }
+  if ($domain_rid > 0 ) {
+    user_role_change_permissions($domain_rid, $zmt_perm);
+  }
+}
+
+/**
+ * Implements hook_schema().
+ */
+function zmt_group_schema() {
+  $schema = _zmt_add_zmt_group_schema()
+          + _zmt_add_zmt_group_member_schema();
+
+  return $schema;
+}
+
+/**
+ * Define zimbra distribution list schema.
+ */
+function _zmt_add_zmt_group_schema() {
+  return array(
+    'zmt_group' => array(
+      'description' => 'The base table for zimbra group (distribution list).',
+      'fields' => array(
+        'id' => array(
+          'description' => 'The primary identifier for a group, used internally only.',
+          'type' => 'serial',
+          'unsigned' => TRUE,
+          'not null' => TRUE,
+        ),
+        'domain_id' => array(
+          'description' => 'The {zmt_domain}.id of this group.',
+          'type' => 'int',
+          'not null' => TRUE,
+          'default' => 0,
+        ),
+        'name' => array(
+          'description' => 'The name of this group, always treated as non-markup plain text.',
+          'type' => 'varchar',
+          'length' => 255,
+          'not null' => TRUE,
+          'default' => '',
+        ),
+        'full_name' => array(
+          'description' => 'The full name of this group.',
+          'type' => 'varchar',
+          'length' => 255,
+          'not null' => TRUE,
+          'default' => '',
+        ),
+        'zimbra_id' => array(
+          'description' => 'The zimbra identify of this group.',
+          'type' => 'varchar',
+          'length' => 255,
+          'not null' => TRUE,
+          'default' => '',
+        ),
+        'group_uid' => array(
+          'description' => 'The {users}.uid representation of this group.',
+          'type' => 'int',
+          'not null' => TRUE,
+          'default' => 0,
+        ),
+        'uid' => array(
+          'description' => 'The {users}.uid that created this group.',
+          'type' => 'int',
+          'not null' => TRUE,
+          'default' => 0,
+        ),
+        'created' => array(
+          'description' => 'The Unix timestamp when the group was created.',
+          'type' => 'int',
+          'not null' => TRUE,
+          'default' => 0,
+        ),
+        'changed' => array(
+          'description' => 'The Unix timestamp when the group was most recently saved.',
+          'type' => 'int',
+          'not null' => TRUE,
+          'default' => 0,
+        ),
+      ),
+      'primary key' => array('id'),
+      'unique keys' => array(
+        'zmt_group_name' => array('domain_id', 'name'),
+      ),
+      'indexes' => array(
+        'zmt_domain_id' => array('domain_id'),
+      ),
+      'foreign keys' => array(
+        'zmt_domain_dl' => array(
+          'table' => 'zmt_domain',
+          'columns'=> array('domain_id' => 'domain_id'),
+        ),
+        'zmt_group_creator' => array(
+          'table' => 'users',
+          'columns' => array('uid' => 'uid'),
+        ),
+      ),
+    ),
+  );
+}
+
+/**
+ * Define zimbra distribution list member schema.
+ */
+function _zmt_add_zmt_group_member_schema() {
+  return array(
+    'zmt_group_member' => array(
+      'description' => 'The base table for zimbra group (distribution list) members.',
+      'fields' => array(
+        'id' => array(
+          'description' => 'The primary identifier for a group member, used internally only.',
+          'type' => 'serial',
+          'unsigned' => TRUE,
+          'not null' => TRUE,
+        ),
+        'name' => array(
+          'description' => 'The name of this group member.',
+          'type' => 'varchar',
+          'length' => 255,
+          'not null' => TRUE,
+          'default' => '',
+        ),
+        'group_id' => array(
+          'description' => 'The {zmt_group}.id of this group member.',
+          'type' => 'int',
+          'not null' => TRUE,
+          'default' => 0,
+        ),
+        'member_id' => array(
+          'description' => 'The member id of this group member.',
+          'type' => 'int',
+          'not null' => TRUE,
+          'default' => 0,
+        ),
+        'type' => array(
+          'description' => 'The member type of this group member.',
+          'type' => 'int',
+          'size' => 'tiny',
+          'not null' => TRUE,
+          'default' => 0,
+        ),
+        'uid' => array(
+          'description' => 'The {users}.uid that created this group member.',
+          'type' => 'int',
+          'not null' => TRUE,
+          'default' => 0,
+        ),
+        'created' => array(
+          'description' => 'The Unix timestamp when the group member was created.',
+          'type' => 'int',
+          'not null' => TRUE,
+          'default' => 0,
+        ),
+      ),
+      'primary key' => array('id'),
+      'unique keys' => array(
+        'group_name' => array('group_id', 'name'),
+        'group_member' => array('group_id', 'type', 'member_id'),
+      ),
+      'indexes' => array(
+        'zmt_group_id' => array('group_id'),
+        'member_type' => array('type'),
+      ),
+      'foreign keys' => array(
+        'zmt_group_member' => array(
+          'table' => 'zmt_group',
+          'columns'=> array('id' => 'group_id'),
+        ),
+        'zmt_group_member_creator' => array(
+          'table' => 'users',
+          'columns' => array('uid' => 'uid'),
+        ),
+      ),
+    ),
+  );
+}

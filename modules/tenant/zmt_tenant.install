@@ -1,0 +1,91 @@
+<?php
+
+/**
+ * Implements hook_install().
+ */ 
+function zmt_tenant_install() {
+  $zimbra_rid = (int) variable_get('zmt_zimbra_role_id', 0);
+  if ($zimbra_rid > 0 ) {
+    $zmt_perm = array(
+      'administer any zmt_tenant' => 1,
+    );
+    user_role_change_permissions($zimbra_rid, $zmt_perm);
+  }
+}
+
+/**
+ * Implements hook_schema().
+ */
+function zmt_tenant_schema() {
+  return array(
+    'zmt_tenant' => array(
+      'description' => 'The base table for tenant.',
+      'fields' => array(
+        'id' => array(
+          'description' => 'The primary identifier for a tenant, used internally only.',
+          'type' => 'serial',
+          'unsigned' => TRUE,
+          'not null' => TRUE,
+        ),
+        'tenant_uid' => array(
+          'description' => 'The {users}.uid representation of this tenant.',
+          'type' => 'int',
+          'not null' => TRUE,
+          'default' => 0,
+        ),
+        'server_id' => array(
+          'description' => 'The {zmt_server}.id of this tenant.',
+          'type' => 'int',
+          'not null' => TRUE,
+          'default' => 0,
+        ),
+        'cos_id' => array(
+          'description' => 'The {zmt_cos}.id of this tenant.',
+          'type' => 'int',
+          'not null' => TRUE,
+          'default' => 0,
+        ),
+        'uid' => array(
+          'description' => 'The {users}.uid that created this tenant.',
+          'type' => 'int',
+          'not null' => TRUE,
+          'default' => 0,
+        ),
+        'created' => array(
+          'description' => 'The Unix timestamp when the tenant was created.',
+          'type' => 'int',
+          'not null' => TRUE,
+          'default' => 0,
+        ),
+        'changed' => array(
+          'description' => 'The Unix timestamp when the tenant was most recently saved.',
+          'type' => 'int',
+          'not null' => TRUE,
+          'default' => 0,
+        ),
+      ),
+      'primary key' => array('id'),
+      'unique keys' => array(
+        'tenant_uid' => array('tenant_uid'),
+      ),
+      'indexes' => array(
+        'zmt_server_id' => array('server_id'),
+        'zmt_cos_id' => array('cos_id'),
+      ),
+      'foreign keys' => array(
+        'zmt_tenant_server' => array(
+          'table' => 'zmt_server',
+          'columns'=> array('id' => 'server_id'),
+        ),
+        'zmt_tenant_cos' => array(
+          'table' => 'zmt_cos',
+          'columns'=> array('id' => 'cos_id'),
+        ),
+        'zmt_tenant_creator' => array(
+          'table' => 'users',
+          'columns' => array('uid' => 'uid'),
+        ),
+      ),
+    ),
+  );
+}

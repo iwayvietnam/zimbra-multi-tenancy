@@ -1,0 +1,185 @@
+<?php
+
+/**
+ * Implements hook_install().
+ */
+function zmt_cos_install() {
+  $zimbra_rid = (int) variable_get('zmt_zimbra_role_id', 0);
+  if ($zimbra_rid > 0 ) {
+    $zmt_perm = array(
+      'administer any zmt_cos' => 1,
+    );
+    user_role_change_permissions($zimbra_rid, $zmt_perm);
+  }
+}
+
+/**
+ * Implements hook_schema().
+ */
+function zmt_cos_schema() {
+  return array(
+    'zmt_cos' => array(
+      'description' => 'The base table for zimbra class of service.',
+      'fields' => array(
+        'id' => array(
+          'description' => 'The primary identifier for a cos, used internally only.',
+          'type' => 'serial',
+          'unsigned' => TRUE,
+          'not null' => TRUE,
+        ),
+        'name' => array(
+          'description' => 'The name of this cos, always treated as non-markup plain text.',
+          'type' => 'varchar',
+          'length' => 255,
+          'not null' => TRUE,
+          'default' => '',
+        ),
+        'description' => array(
+          'description' => 'The description of this cos.',
+          'type' => 'text',
+        ),
+        'account_max_number' => array(
+          'description' => 'The max account of this cos.',
+          'type' => 'int',
+          'not null' => TRUE,
+          'default' => 0,
+        ),
+        'mail_quota' => array(
+          'description' => 'The mail quota of this cos.',
+          'type' => 'int',
+          'not null' => TRUE,
+          'default' => 0,
+        ),
+        'attachments_blocked' => array(
+          'description' => 'The attachments is block.',
+          'type' => 'int',
+          'size' => 'tiny',
+          'not null' => TRUE,
+          'default' => 0,
+        ),
+        'password_min_length' => array(
+          'description' => 'The password min length of this cos.',
+          'type' => 'int',
+          'not null' => TRUE,
+          'default' => 0,
+        ),
+        'password_max_length' => array(
+          'description' => 'The password max length of this cos.',
+          'type' => 'int',
+          'not null' => TRUE,
+          'default' => 0,
+        ),
+        'password_min_upper' => array(
+          'description' => 'The password min upper case chars of this cos.',
+          'type' => 'int',
+          'not null' => TRUE,
+          'default' => 0,
+        ),
+        'password_min_lower' => array(
+          'description' => 'The password min lower case chars of this cos.',
+          'type' => 'int',
+          'not null' => TRUE,
+          'default' => 0,
+        ),
+        'password_min_numeric' => array(
+          'description' => 'The password min numeric chars of this cos.',
+          'type' => 'int',
+          'not null' => TRUE,
+          'default' => 0,
+        ),
+        'uid' => array(
+          'description' => 'The {users}.uid that created this cos.',
+          'type' => 'int',
+          'not null' => TRUE,
+          'default' => 0,
+        ),
+        'created' => array(
+          'description' => 'The Unix timestamp when the cos was created.',
+          'type' => 'int',
+          'not null' => TRUE,
+          'default' => 0,
+        ),
+        'changed' => array(
+          'description' => 'The Unix timestamp when the cos was most recently saved.',
+          'type' => 'int',
+          'not null' => TRUE,
+          'default' => 0,
+        ),
+      ),
+      'primary key' => array('id'),
+      'indexes' => array(
+        'zmt_cos_uid' => array('uid'),
+      ),
+      'foreign keys' => array(
+        'zmt_cos_creator' => array(
+          'table' => 'users',
+          'columns' => array('uid' => 'uid'),
+        ),
+      ),
+    ),
+    'zmt_cos_server' => array(
+      'description' => 'The base table for zimbra cos server.',
+      'fields' => array(
+        'id' => array(
+          'description' => 'The primary identifier, used internally only.',
+          'type' => 'serial',
+          'unsigned' => TRUE,
+          'not null' => TRUE,
+        ),
+        'server_id' => array(
+          'description' => 'The {zmt_server}.id of zimbra server.',
+          'type' => 'int',
+          'not null' => TRUE,
+          'default' => 0,
+        ),
+        'cos_id' => array(
+          'description' => 'The {zmt_server}.id of class of service.',
+          'type' => 'int',
+          'not null' => TRUE,
+          'default' => 0,
+        ),
+        'zimbra_id' => array(
+          'description' => 'The zimbra identify for class of service.',
+          'type' => 'varchar',
+          'length' => 255,
+          'not null' => TRUE,
+          'default' => '',
+        ),
+        'uid' => array(
+          'description' => 'The {users}.uid that created this cos.',
+          'type' => 'int',
+          'not null' => TRUE,
+          'default' => 0,
+        ),
+        'created' => array(
+          'description' => 'The Unix timestamp when the cos was created.',
+          'type' => 'int',
+          'not null' => TRUE,
+          'default' => 0,
+        ),
+      ),
+      'primary key' => array('id'),
+      'unique keys' => array(
+        'cos_server' => array('server_id', 'cos_id'),
+      ),
+      'indexes' => array(
+        'zmt_server_id' => array('server_id'),
+        'zmt_cos_id' => array('cos_id'),
+      ),
+      'foreign keys' => array(
+        'zmt_server' => array(
+          'table' => 'zmt_server',
+          'columns'=> array('id' => 'server_id'),
+        ),
+        'zmt_cos' => array(
+          'table' => 'zmt_cos',
+          'columns'=> array('id' => 'cos_id'),
+        ),
+        'zmt_cos_server_creator' => array(
+          'table' => 'users',
+          'columns' => array('uid' => 'uid'),
+        ),
+      ),
+    ),
+  );
+}

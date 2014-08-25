@@ -1,0 +1,393 @@
+<?php
+
+/**
+ * Implements hook_entity_info().
+ */
+function zmt_alias_entity_info() {
+  $entity = array(
+    'zmt_alias' => array(
+      'label' => t('Alias'),
+      'entity class' => 'Entity',
+      'controller class' => 'EntityAPIControllerExportable',
+      'base table' => 'zmt_alias',
+      'fieldable' => FALSE,
+      'entity keys' => array(
+        'id' => 'id',
+        'label' => 'name',
+      ),
+      'view modes' => array(
+        'full' => array(
+          'label' => t('Alias'),
+          'custom settings' => FALSE,
+        ),
+      ),
+      'label callback' => 'zmt_alias_label',
+      'uri callback' => 'zmt_alias_uri',
+      'module' => 'zmt_alias',
+      'access callback' => 'zmt_alias_access',
+    ),
+  );
+
+  return $entity;
+}
+
+/**
+ * Implements hook_entity_property_info_alter().
+ */
+function zmt_alias_entity_property_info_alter(&$info) {
+  $properties = &$info['zmt_alias']['properties'];
+  $properties['domain_id'] = array(
+    'type' => 'zmt_domain',
+    'label' => t('Domain'),
+    'description' => t('The alias\'s domain.'),
+    'getter callback' => 'zmt_alias_get_properties',
+    'schema field' => 'domain_id',
+  );
+  $properties['account_id'] = array(
+    'type' => 'zmt_account',
+    'label' => t('Domain'),
+    'description' => t('The alias\'s target account.'),
+    'getter callback' => 'zmt_alias_get_properties',
+    'schema field' => 'account_id',
+  );
+  $properties['uid'] = array(
+    'type' => 'user',
+    'label' => t('Creator'),
+    'description' => t('The alias\'s creator.'),
+    'getter callback' => 'zmt_alias_get_properties',
+    'schema field' => 'uid',
+  );
+}
+
+/**
+ * Entity metadata callback to load alias's properties.
+ */
+function zmt_alias_get_properties($alias, array $options, $name) {
+  switch ($name) {
+    case 'domain_id':
+      return zmt_domain_load($alias->domain_id);
+    case 'account_id':
+      return zmt_account_load($alias->account_id);
+    case 'uid':
+      return user_load($alias->uid);
+  }
+}
+
+/**
+ * Implements hook_permission().
+ */ 
+function zmt_alias_permission() {
+  return zmt_access_permissions('zmt_alias', 'Alias');
+}
+
+/**
+ * Implements hook_zmt_domain_delete().
+ */ 
+function zmt_alias_zmt_domain_delete($domain){
+  $id = $domain ? $domain->id : 0;
+  zmt_alias_delete_multiple_by_domain(array($id));
+}
+
+/**
+ * Implements hook_zmt_account_delete().
+ */ 
+function zmt_alias_zmt_account_delete($account){
+  $id = $account ? $account->id : 0;
+  zmt_alias_delete_multiple_by_account(array($id));
+}
+
+/**
+ * Implements hook_mailbox_exists().
+ */ 
+function zmt_alias_mailbox_exists($domain_id, $name, $id) {
+  return zmt_alias_exists($domain_id, $name, $id);
+}
+
+/**
+ * Access callback for Account.
+ */
+function zmt_alias_access($op, $alias, $account = NULL, $entity_type = NULL) {
+  global $user;
+  if (NULL === $account) {
+    $account = $user;
+  }
+  if (user_access('administer zmt', $account) || user_access('administer any zmt_alias', $account)) {
+    return TRUE;
+  }
+  if ($op === 'list' || $op === 'create') {
+    return user_access('administer own zmt_alias', $account);
+  }
+  else {
+    $is_own = isset($alias->uid) && $alias->uid == $account->uid;
+    return user_access('administer own zmt_alias', $account) && $is_own;
+  }
+}
+
+/**
+ * Zmt alias entity uri callback.
+ */
+function zmt_alias_uri($alias) {
+  return array(
+    'path' => 'zmt/alias/' . $alias->id,
+  );
+}
+
+/**
+ * Zmt alias entity label callback.
+ */
+function zmt_alias_label($alias, $entity_type) {
+  return t('Alias') . ' ' . $alias->name;
+}
+
+/**
+ * Loads a alias by ID.
+ */
+function zmt_alias_load($id) {
+  if (empty($id)) {
+    return FALSE;
+  }
+
+  $alias = zmt_alias_load_multiple(array($id), array());
+  return $alias ? reset($alias) : FALSE;
+}
+
+/**
+ * Loads multiple alias by ID or based on a set of matching conditions.
+ *
+ * @see entity_load()
+ *
+ * @param $ids
+ *   An array of alias IDs.
+ * @param $conditions
+ *   An array of conditions on the {zmt_alias} table in the form
+ *     'field' => $value.
+ * @param $reset
+ *   Whether to reset the internal alias loading cache.
+ *
+ * @return
+ *   An array of alias objects indexed by id.
+ */
+function zmt_alias_load_multiple(array $ids = array(), array $conditions = array(), $reset = FALSE) {
+  if (empty($ids) && empty($conditions)) {
+    return array();
+  }
+
+  return entity_load('zmt_alias', $ids, $conditions, $reset);
+}
+
+/**
+ * Loads multiple alias by domain.
+ *
+ * @param $domain
+ *   The domain to load alias for, or its id.
+ * @return
+ *   An array of alias objects indexed by id.
+ *
+ * @see zmt_alias_load_multiple()
+ */
+function zmt_alias_load_multiple_by_domain($domain) {
+  $cache = &drupal_static(__FUNCTION__, array());
+  $domain_id = is_object($domain) ? $domain->id : $domain;
+  if (!isset($cache[$domain_id])) {
+    $query = new EntityFieldQuery();
+    $result = $query->entityCondition('entity_type', 'zmt_alias')
+      ->propertyCondition('domain_id', $domain_id)
+      ->execute();
+    $ids = isset($result['zmt_alias']) ? array_keys($result['zmt_alias']) : array();
+    $cache[$domain_id] = zmt_alias_load_multiple($ids);
+  }
+  return $cache[$domain_id];
+}
+
+/**
+ * Load an alias by name.
+ *
+ * @param $domain
+ *   The domain to load alias for, or its id.
+ * @param $name
+ *   The alias name.
+ * @return
+ *   An alias object or FALSE.
+ */
+function zmt_alias_load_by_name($domain, $name) {
+  $cache = &drupal_static(__FUNCTION__, array());
+  $domain_id = is_object($domain) ? $domain->id : $domain;
+  $cache_key = md5($domain_id . '-' . $name);
+  if (!isset($cache[$cache_key])) {
+    $query = new EntityFieldQuery();
+    $result = $query->entityCondition('entity_type', 'zmt_alias')
+      ->propertyCondition('domain_id', $domain_id)
+      ->propertyCondition('name', $name)
+      ->execute();
+
+    $ids = isset($result['zmt_alias']) ? array_keys($result['zmt_alias']) : array();
+    $aliases = zmt_alias_load_multiple($ids);
+    $cache[$cache_key] = $aliases ? reset($aliases) : FALSE;
+  }
+  return $cache[$cache_key];
+}
+
+/**
+ * Counts alias by domain.
+ *
+ * @param $domain
+ *   The domain to load alias for, or its id.
+ * @return
+ *   Total number of alias objects.
+ */
+function zmt_alias_count_by_domain($domain) {
+  $cache = &drupal_static(__FUNCTION__, array());
+  $domain_id = is_object($domain) ? $domain->id : $domain;
+  if (!isset($cache[$domain_id])) {
+    $query = new EntityFieldQuery();
+    $query->entityCondition('entity_type', 'zmt_alias')
+      ->propertyCondition('domain_id', $domain_id);
+    $cache[$domain_id] = $query->count()->execute();
+  }
+  return $cache[$domain_id];
+}
+
+/**
+ * Checks alias exists by domain.
+ *
+ * @param $domain
+ *   The domain to load alias for, or its id.
+ * @param $name
+ *   The alias name.
+ * @param $id
+ *   The alias id.
+ * @return
+ *   TRUE or FALSE.
+ */
+function zmt_alias_exists($domain, $name, $id = 0) {
+  $cache = &drupal_static(__FUNCTION__, array());
+  $domain_id = is_object($domain) ? $domain->id : $domain;
+  $cache_key = md5($domain_id . '-' . $name . '-' . $id);
+  if (!isset($cache[$cache_key])) {
+    $query = new EntityFieldQuery();
+    $result = $query->entityCondition('entity_type', 'zmt_alias')
+      ->propertyCondition('domain_id', $domain_id)
+      ->propertyCondition('name', $name)
+      ->propertyCondition('id', $id, '!=')
+      ->count()
+      ->execute();
+    $cache[$cache_key] = (int) $result > 0;
+  }
+  return $cache[$cache_key];
+}
+
+/**
+ * Returns an initialized alias object.
+ *
+ * @param $name
+ *   The machine-readable name of the alias.
+ *
+ * @return
+ *   A alias object with all default fields initialized.
+ */
+function zmt_alias_new($name = '') {
+  global $user;
+  $values = array(
+    'domain_id' => 0,
+    'name' => $name,
+    'account_id' => 0,
+    'zimbra_target_id' => '',
+    'uid' => $user->uid,
+    'created' => REQUEST_TIME,
+    'changed' => REQUEST_TIME,
+  );
+  return entity_get_controller('zmt_alias')->create($values);
+}
+
+/**
+ * Saves a alias.
+ *
+ * @param $alias
+ *   The full alias object to save.
+ *
+ * @return
+ *   SAVED_NEW or SAVED_UPDATED depending on the operation performed.
+ */
+function zmt_alias_save($alias, $by_entity = TRUE) {
+  $alias->changed = REQUEST_TIME;
+  if ($by_entity === TRUE) {
+    return entity_get_controller('zmt_alias')->save($alias);
+  }
+  else {
+    $fields = array(
+      'domain_id' => $alias->domain_id,
+      'name' => $alias->name,
+      'account_id' => $alias->account_id,
+      'zimbra_target_id' => $alias->zimbra_target_id,
+      'uid' => $alias->uid,
+      'created' => $alias->created,
+      'changed' => $alias->changed,
+    );
+    if (!isset($alias->id) || (int) $alias->id == 0) {
+      $alias->id = db_insert('zmt_alias')->fields($fields)->execute();
+      return SAVED_NEW;
+    }
+    else {
+      db_update('zmt_alias')
+        ->fields($fields)
+        ->condition('id', $alias->id)
+        ->execute();
+      entity_get_controller('zmt_alias')->resetCache(array($alias->id));
+      return SAVED_UPDATED;
+    }
+  }
+}
+
+/**
+ * Deletes a alias by ID.
+ *
+ * @param $id
+ *   The ID of the alias to delete.
+ */
+function zmt_alias_delete($id) {
+  return zmt_alias_delete_multiple(array($id));
+}
+
+/**
+ * Deletes multiple alias by ID.
+ *
+ * @param $ids
+ *   An array of alias IDs to delete.
+ */
+function zmt_alias_delete_multiple(array $ids = array()) {
+  entity_get_controller('zmt_alias')->delete($ids);
+}
+
+/**
+ * Deletes multiple alias by domains.
+ *
+ * @param $ids
+ *   An array of domain IDs.
+ */
+function zmt_alias_delete_multiple_by_domain(array $ids = array()) {
+  if (!empty($ids)) {
+    $query = new EntityFieldQuery();
+    $result = $query->entityCondition('entity_type', 'zmt_alias')
+      ->propertyCondition('domain_id', $ids)
+      ->execute();
+     $ids = isset($result['zmt_alias']) ? array_keys($result['zmt_alias']) : array();
+     zmt_alias_delete_multiple($ids);
+  }
+}
+
+/**
+ * Deletes multiple alias by accounts.
+ *
+ * @param $ids
+ *   An array of account IDs.
+ */
+function zmt_alias_delete_multiple_by_account(array $ids = array()) {
+  if (!empty($ids)) {
+    $query = new EntityFieldQuery();
+    $result = $query->entityCondition('entity_type', 'zmt_alias')
+      ->propertyCondition('account_id', $ids)
+      ->execute();
+     $alias_ids = isset($result['zmt_alias']) ? array_keys($result['zmt_alias']) : array();
+     zmt_alias_delete_multiple($alias_ids);
+  }
+}

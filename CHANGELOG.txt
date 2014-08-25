@@ -1,0 +1,11 @@
+/**
+ * @file
+ * Changelog file for Zimbra as a service 7.x-1.x.
+ */
+
+Documentation has moved online. Important changes are noted below.
+
+
+===============
+Version history
+===============

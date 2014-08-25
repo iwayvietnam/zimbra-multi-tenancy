@@ -1,0 +1,102 @@
+<?php
+
+/**
+ * Implements hook_menu().
+ */ 
+function zmt_alias_ui_menu() {
+  $items = array();
+  $items['zmt/alias/%zmt_alias'] = array(
+    'title callback' => 'entity_label',
+    'title arguments' => array('zmt_alias', 2),
+    'page callback' => 'zmt_alias_view',
+    'page arguments' => array(2),
+    'access callback' => 'entity_access',
+    'access arguments' => array('view', 'zmt_alias', 2),
+  );
+  $items['zmt/alias/add'] = array(
+    'title' => 'Add Alias',
+    'page callback' => 'zmt_alias_add_page',
+    'access callback' => 'zmt_alias_add_access',
+    'type' => MENU_LOCAL_ACTION,
+    'file' => 'zmt_alias.admin.inc',
+  );
+  $items['zmt/alias/%zmt_alias/edit'] = array(
+    'title' => 'Edit Alias',
+    'page callback' => 'zmt_alias_edit_page',
+    'page arguments' => array(2),
+    'access callback' => 'zmt_alias_edit_access',
+    'access arguments' => array(2),
+    'type' => MENU_CALLBACK,
+    'file' => 'zmt_alias.admin.inc',
+  );
+  $items['zmt/alias/%zmt_alias/delete'] = array(
+    'title' => 'Delete Alias',
+    'page callback' => 'zmt_alias_delete_page',
+    'page arguments' => array(2),
+    'access callback' => 'zmt_alias_delete_access',
+    'access arguments' => array(2),
+    'type' => MENU_CALLBACK,
+    'file' => 'zmt_alias.admin.inc',
+  );
+  $items['zmt/alias'] = array(
+    'title' => 'Aliases',
+    'page callback' => 'zmt_alias_list_all',
+    'access callback' => 'zmt_alias_list_access',
+    'file' => 'zmt_alias.admin.inc',
+  );
+  return $items;
+}
+
+/**
+ * Server view callback.
+ */
+function zmt_alias_view($alias) {
+  drupal_set_title(entity_label('zmt_alias', $alias));
+  return entity_view('zmt_alias', array(entity_id('zmt_alias', $alias) => $alias), 'full');
+}
+
+/**
+ * Access callback: determines if the user can create country.
+ */
+function zmt_alias_list_access($account = NULL) {
+  return zmt_alias_access('list', NULL, $account);
+}
+
+/**
+ * Access callback: determines if the user can create country.
+ */
+function zmt_alias_add_access($account = NULL) {
+  return zmt_alias_access('create', NULL, $account);
+}
+
+/**
+ * Access callback: determines if the user can edit country.
+ */
+function zmt_alias_edit_access($alias, $account = NULL) {
+  global $user;
+  if (NULL === $account) {
+    $account = $user;
+  }
+  if (user_access('administer zmt', $account)) {
+    return TRUE;
+  }
+  if (user_access('administer any zmt_alias', $account)) {
+    $domains = zmt_domain_load_multiple_by_user($user);
+    $domain_ids = array_keys($domains);
+    $access = in_array($alias->domain_id, $domain_ids);
+    foreach (module_implements('zmt_alias_edit_access') as $module) {
+      $access = $access && (bool) module_invoke($module, 'zmt_alias_edit_access', $alias);
+    }
+    return $access;
+  }
+  if (user_access('administer own zmt_alias', $account)) {
+    return $alias->uid == $account->uid;
+  }
+}
+
+/**
+ * Access callback: determines if the user can delete country.
+ */
+function zmt_alias_delete_access($alias, $account = NULL) {
+  return zmt_alias_edit_access($alias, $account);
+}

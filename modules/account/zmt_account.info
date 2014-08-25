@@ -1,0 +1,8 @@
+name = ZMT Account
+description = Defines the Zimbra Account entity and associated features.
+package = Zimbra Multi Tenancy
+core = 7.x
+dependencies[] = zmt_domain
+
+; Module includes
+files[] = includes/zmt_account.controller.inc
