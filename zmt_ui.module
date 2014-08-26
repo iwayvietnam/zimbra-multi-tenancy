@@ -331,6 +331,15 @@ function zmt_ui_batch_update_group_members($group, array $members = array()) {
       if (!in_array($dl_member, $members)) {
         $remove_members[] = $dl_member;
       }
+      else {
+        $account = zimbra_get_account($api, $dl_member);
+        if ($account) {
+          $attrs = array(
+            'ou' => $group->full_name,
+          );
+          zimbra_modify_account($api, $account->id, $attrs);
+        }
+      }
     }
     if (!empty($remove_members)) {
       zimbra_remove_dl_members($api, $dl->id, $remove_members);
