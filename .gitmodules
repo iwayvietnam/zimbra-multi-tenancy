@@ -1,3 +1,0 @@
-[submodule "vendor/zap"]
-	path = vendor/zap
-	url = https://github.com/iwayvietnam/zimbra-api-php
