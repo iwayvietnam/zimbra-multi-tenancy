@@ -582,7 +582,7 @@ function zimbra_create_dl(ZimbraAdminApi $api, $name, array $attrs = array()) {
     foreach ($attrs as $key => $value) {
       $a[] = new KeyValuePair($key, $value);
     }
-    $result = $api->createDistributionList($name, $a);
+    $result = $api->createDistributionList($name, NULL, $a);
     return isset($result->dl[0]) ? $result->dl[0] : $result;
   }
   catch (Exception $ex) {
