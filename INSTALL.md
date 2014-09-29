@@ -1,27 +1,19 @@
 
-## System Requirements
-* LAMP Stack
-* Zimbra Mail Server
-* Drupal >= 7.22
+## Recommended System Requirements
+* LAMP Stack (latest version of Apache/MySQL/PHP)
+* Zimbra Mail Server (latest verion of Zimbra 7.x or Zimbra 8.x)
+* Drupal System (version >= 7.31)
 * [References module](https://drupal.org/project/references)
 * [Field Hidden module](https://drupal.org/project/field_hidden)
-* [Zimbra API](https://github.com/iwayvietnam/zimbra-api-php) (libraries) in PHP
-
 
 ## Installation
-* Add 'zimbra-multi-tenancy' module to Drupal's module folder
-* Change the user and group ownership of 'zimbra-multi-tenancy' folder to 'apache'
-* Go to the module folder ('sites/all/modules/zimbra-multi-tenancy')
-* Switch to the branch 'UsingWebServiceAPI'
-* Add [Zimbra API](https://github.com/iwayvietnam/zimbra-api-php) module to Drupal's module folder
-* Go to the module folder ('sites/all/modules/zimbra-api-php')
-* Copy all content in 'zimbra-api-php' folder to the 'sites/all/modules/zimbra-multi-tenancy/vendor/zap' folder
-* Change the user and group ownership of 'zimbra-multi-tenancy/vendor' folder to 'apache'
-* Enable 'zimbra-multi-tenancy' module
-* Click on the 'Zimbra multi tenancy' item
+* Add 'zimbra-multi-tenancy' module to Drupal's module management folder
+* Change owners of 'zimbra-multi-tenancy' folder to 'apache'
+* Install required additional modules
+* Enable the 'zimbra-multi-tenancy' module on Drupal admin page
+* Access the 'Zimbra multi tenancy' item on Drupal admin page
 * Enjoy
 
-
 ## Authors
-* Lê Anh Quyến (leanhquyen@gmail.com)
-* Integrated with Zimbra API (libraries) in PHP by Nguyen Van Nguyen - nguyennv1981@gmail.com
+* Nguyễn Văn Nguyên (nguyennv@iwayvietnam.com)
+* Lê Anh Quyến (quyenla@iwayvietnam.com)
