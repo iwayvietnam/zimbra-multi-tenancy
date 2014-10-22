@@ -69,4 +69,4 @@ Copyright (C) 2013 [iWay Vietnam] (http://www.iwayvietnam.com/)
 **Many other functionalities would be added later.**
 
 ##Credits
-Special thanks to: iWay Development team and [Community Space] (http://khonggiancongdong.org/)
+Special thanks to: iWay Development team

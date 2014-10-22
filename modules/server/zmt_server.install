@@ -1,0 +1,128 @@
+<?php
+
+/**
+ * Implements hook_install().
+ */ 
+function zmt_server_install() {
+  $zimbra_rid = (int) variable_get('zmt_zimbra_role_id', 0);
+  if ($zimbra_rid > 0 ) {
+    $zmt_perms = array(
+      'administer any zmt_server' => 1,
+    );
+    user_role_change_permissions($zimbra_rid, $zmt_perms);
+  }
+}
+
+/**
+ * Implements hook_schema().
+ */
+function zmt_server_schema() {
+  return array(
+    'zmt_server' => array(
+      'description' => 'The base table for zimbra server.',
+      'fields' => array(
+        'id' => array(
+          'description' => 'The primary identifier for a server, used internally only.',
+          'type' => 'serial',
+          'unsigned' => TRUE,
+          'not null' => TRUE,
+        ),
+        'name' => array(
+          'description' => 'The name of this server, always treated as non-markup plain text.',
+          'type' => 'varchar',
+          'length' => 255,
+          'not null' => TRUE,
+          'default' => '',
+        ),
+        'service_location' => array(
+          'description' => 'The service location of this server.',
+          'type' => 'varchar',
+          'length' => 255,
+          'not null' => TRUE,
+          'default' => '',
+        ),
+        'admin_user' => array(
+          'description' => 'The admin user of this server.',
+          'type' => 'varchar',
+          'length' => 255,
+          'not null' => TRUE,
+          'default' => '',
+        ),
+        'admin_password' => array(
+          'description' => 'The admin password of this server.',
+          'type' => 'varchar',
+          'length' => 255,
+          'not null' => TRUE,
+          'default' => '',
+        ),
+        'exclude_mailbox' => array(
+          'description' => 'The exclude mailbox of this server.',
+          'type' => 'text',
+        ),
+        'delete_cos' => array(
+          'description' => 'Allow delete cos on zimbra server.',
+          'type' => 'int',
+          'size' => 'tiny',
+          'not null' => TRUE,
+          'default' => 0,
+        ),
+        'delete_domain' => array(
+          'description' => 'Allow delete domain on zimbra server.',
+          'type' => 'int',
+          'size' => 'tiny',
+          'not null' => TRUE,
+          'default' => 0,
+        ),
+        'delete_dl' => array(
+          'description' => 'Allow delete dl on zimbra server.',
+          'type' => 'int',
+          'size' => 'tiny',
+          'not null' => TRUE,
+          'default' => 0,
+        ),
+        'delete_account' => array(
+          'description' => 'Allow delete account on zimbra server.',
+          'type' => 'int',
+          'size' => 'tiny',
+          'not null' => TRUE,
+          'default' => 0,
+        ),
+        'delete_alias' => array(
+          'description' => 'Allow delete alias on zimbra server.',
+          'type' => 'int',
+          'size' => 'tiny',
+          'not null' => TRUE,
+          'default' => 0,
+        ),
+        'uid' => array(
+          'description' => 'The {users}.uid that created this server.',
+          'type' => 'int',
+          'not null' => TRUE,
+          'default' => 0,
+        ),
+        'created' => array(
+          'description' => 'The Unix timestamp when the tenant was created.',
+          'type' => 'int',
+          'not null' => TRUE,
+          'default' => 0,
+        ),
+        'changed' => array(
+          'description' => 'The Unix timestamp when the tenant was most recently saved.',
+          'type' => 'int',
+          'not null' => TRUE,
+          'default' => 0,
+        ),
+      ),
+      'primary key' => array('id'),
+      'indexes' => array(
+        'zmt_server_uid' => array('uid'),
+      ),
+      'foreign keys' => array(
+        'zmt_server_creator' => array(
+          'table' => 'users',
+          'columns' => array('uid' => 'uid'),
+        ),
+      ),
+    ),
+  );
+}

@@ -1,0 +1,20 @@
+
+REQUIREMENTS
+____________
+
+- Drupal 7.x;
+- Entity module;
+- Zimbra mail server
+
+
+INSTALLATION
+____________
+
+Add this module to the modules folder (sites/all/modules), enable it and configure to meet your needs.
+
+
+AUTHOR
+______
+
+- Nguyen Van Nguyen
+Email: nguyennv1981@gmail.com

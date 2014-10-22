@@ -1,0 +1,104 @@
+<?php
+
+/**
+ * Implements hook_permission().
+ */ 
+function zmt_permission() {
+  return array(
+    'administer zmt' => array(
+      'title' => t('Administer zimbra multi tenancy'), 
+      'description' => t('Allows users to configure and manage zimbra multi tenancy.'),
+      'restrict access' => TRUE,
+    ),
+  );
+}
+
+/**
+ * Return permission names for a given entity type.
+ */
+function zmt_access_permissions($entity_type, $entity_name) {
+  $permissions = array();
+
+  $permissions['administer any ' . $entity_type . ''] = array(
+    'title' => t('Administer any @entity_name', array('@entity_name' => $entity_name)),
+    'description' => t('Allows users to perform any action on @entity_name.', array('@entity_name' => $entity_name)),
+    'restrict access' => TRUE,
+  );
+
+  $permissions['administer own ' . $entity_type . ''] = array(
+    'title' => t('Administer own @entity_name', array('@entity_name' => $entity_name)),
+    'description' => t('Allows users to perform own action on @entity_name.', array('@entity_name' => $entity_name)),
+    'restrict access' => TRUE,
+  );
+  return $permissions;
+}
+
+/**
+ * Encrypt a password string.
+ */
+function zmt_password_encrypt($text) {
+  $key = md5(drupal_get_hash_salt());
+  if (extension_loaded('mcrypt')) {
+    $iv  = mcrypt_create_iv(mcrypt_get_iv_size(MCRYPT_RIJNDAEL_256, MCRYPT_MODE_ECB), MCRYPT_RAND);
+    return trim(base64_encode(mcrypt_encrypt(MCRYPT_RIJNDAEL_256, $key, $text, MCRYPT_MODE_ECB, $iv)));
+  }
+  else {
+    $text_length = strlen($text);
+    $key_length = strlen($key);
+    $processed_text = '';
+    for ($i = 0; $i < $text_length; $i++) {
+      $char = substr($text, $i, 1);
+      $keychar = substr($key, ($i % $key_length) - 1, 1);
+      $char = chr(ord($char) + ord($keychar));
+      $processed_text .= $char;
+    }
+    return $processed_text;
+  }
+}
+
+/**
+ * Decrypt a password string.
+ */
+function zmt_password_decrypt($text) {
+  $key    = md5(drupal_get_hash_salt());
+  if (extension_loaded('mcrypt')) {
+    $ivsize = mcrypt_get_iv_size(MCRYPT_RIJNDAEL_256, MCRYPT_MODE_ECB);
+    $iv     = mcrypt_create_iv($ivsize, MCRYPT_RAND);
+    return trim(mcrypt_decrypt(MCRYPT_RIJNDAEL_256, $key, base64_decode($text), MCRYPT_MODE_ECB, $iv));
+  }
+  else {
+    $text_length = strlen($text);
+    $key_length = strlen($key);
+    $processed_text = '';
+    for ($i = 0; $i < $text_length; $i++) {
+      $char = substr($text, $i, 1);
+      $keychar = substr($key, ($i % $key_length) - 1, 1);
+      $char = chr(ord($char) - ord($keychar));
+      $processed_text .= $char;
+    }
+    return $processed_text;
+  }
+}
+
+/**
+ * Check request is ajax.
+ */
+function zmt_is_ajax_request() {
+  $requested_with = isset($_SERVER['HTTP_X_REQUESTED_WITH']) ? $_SERVER['HTTP_X_REQUESTED_WITH'] : '';
+  $is_ajax_request = strtolower($requested_with) === 'xmlhttprequest';
+  if (!$is_ajax_request) {
+    $current_path = current_path();
+    $is_ajax_request = strtolower($current_path) === 'system/ajax';
+  }
+  return $is_ajax_request;
+}
+
+/**
+ * Check subject is matches with patterns.
+ */
+function zmt_is_matches(array $patterns = array(), $subject = ''){
+  $is_match = FALSE;
+  $pattern = implode('|', $patterns);
+  $is_match = preg_match('/'.$pattern.'/msS', $subject);
+  return $is_match;
+}

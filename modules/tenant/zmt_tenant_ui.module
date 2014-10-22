@@ -1,0 +1,152 @@
+<?php
+
+/**
+ * Implements hook_element_info().
+ */
+function zmt_tenant_ui_element_info() {
+  $types = array();
+
+  $types['zmt_tenant_select'] = array(
+    '#input' => TRUE,
+    '#multiple' => FALSE,
+    '#process' => array(
+      'zmt_tenant_select_expand',
+      'form_process_select',
+      'ajax_process_form',
+    ),
+    '#theme' => 'select',
+    '#theme_wrappers' => array('form_element'),
+    '#server' => NULL,
+    '#options' => array(),
+  );
+
+  return $types;
+}
+
+/**
+ * Implements hook_menu().
+ */ 
+function zmt_tenant_ui_menu() {
+  $items = array();
+  $items['zmt/tenant/%zmt_tenant'] = array(
+    'title callback' => 'entity_label',
+    'title arguments' => array('zmt_tenant', 2),
+    'page callback' => 'zmt_tenant_view',
+    'page arguments' => array(2),
+    'access callback' => 'entity_access',
+    'access arguments' => array('view', 'zmt_tenant', 2),
+  );
+  $items['zmt/tenant/add'] = array(
+    'title' => 'Add Tenant',
+    'page callback' => 'zmt_tenant_add_page',
+    'access callback' => 'zmt_tenant_add_access',
+    'type' => MENU_LOCAL_ACTION,
+    'file' => 'zmt_tenant.admin.inc',
+  );
+  $items['zmt/tenant/%zmt_tenant/edit'] = array(
+    'title' => 'Edit Tenant',
+    'page callback' => 'zmt_tenant_edit_page',
+    'page arguments' => array(2),
+    'access callback' => 'zmt_tenant_edit_access',
+    'access arguments' => array(2),
+    'type' => MENU_CALLBACK,
+    'file' => 'zmt_tenant.admin.inc',
+  );
+  $items['zmt/tenant/%zmt_tenant/delete'] = array(
+    'title' => 'Delete Tenant',
+    'page callback' => 'zmt_tenant_delete_page',
+    'page arguments' => array(2),
+    'access callback' => 'zmt_tenant_delete_access',
+    'access arguments' => array(2),
+    'type' => MENU_CALLBACK,
+    'file' => 'zmt_tenant.admin.inc',
+  );
+  $items['zmt/tenant'] = array(
+    'title' => 'Tenants',
+    'page callback' => 'zmt_tenant_list_all',
+    'access callback' => 'zmt_tenant_list_access',
+    'file' => 'zmt_tenant.admin.inc',
+  );
+  return $items;
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter() for the user edit form.
+ */
+function zmt_tenant_ui_form_user_profile_form_alter(&$form, &$form_state) {
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter() for the registration form.
+ */
+function zmt_tenant_ui_form_user_register_form_alter(&$form, &$form_state) {
+  $user_access = user_access('administer zmt')
+    || user_access('administer any zmt_tenant')
+    || user_access('administer own zmt_tenant');
+  if ($user_access) {
+    module_load_include('inc', 'zmt_tenant', 'zmt_tenant.admin');
+    zmt_tenant_attach_form($form, $form_state);
+  }
+}
+
+/**
+ * Server view callback.
+ */
+function zmt_tenant_view($tenant) {
+  drupal_set_title(entity_label('zmt_tenant', $tenant));
+  return entity_view('zmt_tenant', array(entity_id('zmt_tenant', $tenant) => $tenant), 'full');
+}
+
+/**
+ * Access callback: determines if the user can create country.
+ */
+function zmt_tenant_list_access($account = NULL) {
+  return zmt_tenant_access('list', NULL, $account);
+}
+
+/**
+ * Access callback: determines if the user can create country.
+ */
+function zmt_tenant_add_access($account = NULL) {
+  return zmt_tenant_access('create', NULL, $account);
+}
+
+/**
+ * Access callback: determines if the user can edit country.
+ */
+function zmt_tenant_edit_access($tenant, $account = NULL) {
+  return zmt_tenant_access('edit', $tenant, $account);
+}
+
+/**
+ * Access callback: determines if the user can delete country.
+ */
+function zmt_tenant_delete_access($tenant, $account = NULL) {
+  return zmt_tenant_access('delete', $tenant, $account);
+}
+
+/**
+ * Our process callback to expand the COS FAPI element.
+ */
+function zmt_tenant_select_expand($element) {
+  if (empty($element['#options'])) {
+    $options = array('' => t('- None -'));
+    if ($element['#server'] !== NULL) {
+      $tenants = zmt_tenant_load_multiple_by_server($element['#server']);
+    }
+    else {
+      $tenants = zmt_tenant_load_all();
+    }
+    foreach ($tenants as $tenant) {
+      $options[$tenant->id] = $tenant->name;
+    }
+    $element['#options'] = $options;
+  }
+  if (empty($element['#title'])) {
+    $element['#title'] = t('Tenant');
+  }
+  if (isset($element['#ajax']) && !isset($element['#ajax']['event'])) {
+    $element['#ajax']['event'] = 'change';
+  }
+  return $element;
+}

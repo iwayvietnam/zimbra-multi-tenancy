@@ -1,0 +1,436 @@
+<?php
+
+/**
+ * Implements hook_entity_info().
+ */
+function zmt_account_entity_info() {
+  $entity = array(
+    'zmt_account' => array(
+      'label' => t('Account'),
+      'entity class' => 'Entity',
+      'controller class' => 'EntityAPIControllerExportable',
+      'base table' => 'zmt_account',
+      'fieldable' => FALSE,
+      'entity keys' => array(
+        'id' => 'id',
+        'label' => 'name',
+      ),
+      'view modes' => array(
+        'full' => array(
+          'label' => t('Account'),
+          'custom settings' => FALSE,
+        ),
+      ),
+      'label callback' => 'zmt_account_label',
+      'uri callback' => 'zmt_account_uri',
+      'module' => 'zmt_account',
+      'access callback' => 'zmt_account_access',
+    ),
+  );
+
+  return $entity;
+}
+
+/**
+ * Implements hook_entity_property_info_alter().
+ */
+function zmt_account_entity_property_info_alter(&$info) {
+  $properties = &$info['zmt_account']['properties'];
+  $properties['domain_id'] = array(
+    'type' => 'zmt_domain',
+    'label' => t('Domain'),
+    'description' => t('The account\'s domain.'),
+    'getter callback' => 'zmt_account_get_properties',
+    'schema field' => 'domain_id',
+  );
+  $properties['status'] = array(
+    'type' => 'text',
+    'label' => t('Status'),
+    'description' => t('The account\'s status.'),
+    'getter callback' => 'zmt_account_get_properties',
+    'schema field' => 'status',
+  );
+  $properties['uid'] = array(
+    'type' => 'user',
+    'label' => t('Creator'),
+    'description' => t('The account\'s creator.'),
+    'getter callback' => 'zmt_account_get_properties',
+    'schema field' => 'uid',
+  );
+}
+
+/**
+ * Entity metadata callback to load account's properties.
+ */
+function zmt_account_get_properties($account, array $options, $name) {
+  switch ($name) {
+    case 'domain_id':
+      return zmt_domain_load($account->domain_id);
+    case 'status':
+      $statuses = zmt_account_statuses();
+      return isset($statuses[$account->status]) ? $statuses[$account->status] : '';
+    case 'uid':
+      return user_load($account->uid);
+  }
+}
+
+/**
+ * Implements hook_permission().
+ */ 
+function zmt_account_permission() {
+  return zmt_access_permissions('zmt_account', 'Account');
+}
+
+/**
+ * Implements hook_query_TAG_alter().
+ */ 
+function zmt_account_query_ou_count_account_alter(QueryAlterableInterface $query) {
+  $sub_query = db_select('zmt_account', 'a');
+  $sub_query->leftJoin('users', 'u', 'u.uid = a.uid');
+  $sub_query->addField('u', 'uid', 'uid');
+  $sub_query->addExpression('COUNT(a.id)', 'total_account');
+  $sub_query->groupBy('u.uid');
+
+  $query->leftJoin($sub_query, 'a', 'a.uid = ou.ou_uid');
+  $query->addExpression('IFNULL(a.total_account, 0)', 'total_account');
+}
+
+/**
+ * Implements hook_query_TAG_alter().
+ */ 
+function zmt_account_query_domain_count_account_alter(QueryAlterableInterface $query) {
+  $sub_query = db_select('zmt_account', 'a')
+    ->fields('a', array('domain_id'))
+    ->groupBy('a.domain_id');
+  $sub_query->addExpression('COUNT(a.id)', 'total_account');
+  $query->leftJoin($sub_query, 'a', 'a.domain_id = d.id');
+  $query->addExpression('IFNULL(a.total_account, 0)', 'total_account');
+}
+
+/**
+ * Implements hook_query_TAG_alter().
+ */ 
+function zmt_account_query_tenant_count_account_alter(QueryAlterableInterface $query) {
+  $sub_query = db_select('zmt_account', 'a');
+  $sub_query->leftJoin('zmt_domain', 'd', 'd.id = a.domain_id');
+  $sub_query->addField('d', 'tenant_id', 'tenant_id');
+  $sub_query->addExpression('COUNT(a.id)', 'total_account');
+  $sub_query->groupBy('d.tenant_id');
+
+  $query->leftJoin($sub_query, 'a', 'a.tenant_id = t.id');
+  $query->addExpression('IFNULL(a.total_account, 0)', 'total_account');
+}
+
+/**
+ * Implements hook_zmt_domain_delete().
+ */ 
+function zmt_account_zmt_domain_delete($domain){
+  $id = $domain ? $domain->id : 0;
+  zmt_account_delete_multiple_by_domain(array($id));
+}
+
+/**
+ * Implements hook_mailbox_exists().
+ */ 
+function zmt_account_mailbox_exists($domain_id, $name, $id) {
+  return zmt_account_exists($domain_id, $name, $id);
+}
+
+/**
+ * Access callback for Account.
+ */
+function zmt_account_access($op, $acc, $account = NULL, $entity_type = NULL) {
+  global $user;
+  if (NULL === $account) {
+    $account = $user;
+  }
+  if (user_access('administer zmt', $account) || user_access('administer any zmt_account', $account)) {
+    return TRUE;
+  }
+  if ($op === 'list' || $op === 'create') {
+    return user_access('administer own zmt_account', $account);
+  }
+  else {
+    $is_own = isset($acc->uid) && $acc->uid == $account->uid;
+    return user_access('administer own zmt_account', $account) && $is_own;
+  }
+}
+
+/**
+ * Zmt account entity uri callback.
+ */
+function zmt_account_uri($account) {
+  return array(
+    'path' => 'zmt/account/' . $account->id,
+  );
+}
+
+/**
+ * Zmt account entity label callback.
+ */
+function zmt_account_label($account, $entity_type) {
+  return t('Account ') . ' ' . $account->name;
+}
+
+/**
+ * Loads a account by ID.
+ */
+function zmt_account_load($id) {
+  if (empty($id)) {
+    return FALSE;
+  }
+
+  $accounts = zmt_account_load_multiple(array($id), array());
+  return $accounts ? reset($accounts) : FALSE;
+}
+
+/**
+ * Loads multiple account by ID or based on a set of matching conditions.
+ *
+ * @see entity_load()
+ *
+ * @param $ids
+ *   An array of account IDs.
+ * @param $conditions
+ *   An array of conditions on the {zmt_account} table in the form
+ *     'field' => $value.
+ * @param $reset
+ *   Whether to reset the internal account loading cache.
+ *
+ * @return
+ *   An array of account objects indexed by id.
+ */
+function zmt_account_load_multiple(array $ids = array(), array $conditions = array(), $reset = FALSE) {
+  if (empty($ids) && empty($conditions)) {
+    return array();
+  }
+
+  return entity_load('zmt_account', $ids, $conditions, $reset);
+}
+
+/**
+ * Loads multiple account by domain.
+ *
+ * @param $domain
+ *   The domain to load account for, or its id.
+ * @return
+ *   An array of account objects indexed by id.
+ *
+ * @see zmt_account_load_multiple()
+ */
+function zmt_account_load_multiple_by_domain($domain) {
+  $cache = &drupal_static(__FUNCTION__, array());
+  $domain_id = is_object($domain) ? $domain->id : $domain;
+  if (!isset($cache[$domain_id])) {
+    $efq = new EntityFieldQuery();
+    if (!(user_access('administer zmt'))) {
+      $efq->addTag('account_entity_filter');
+    }
+    $result = $efq->entityCondition('entity_type', 'zmt_account')
+      ->propertyCondition('domain_id', $domain_id)
+      ->execute();
+    $ids = isset($result['zmt_account']) ? array_keys($result['zmt_account']) : array();
+    $cache[$domain_id] = zmt_account_load_multiple($ids);
+  }
+  return $cache[$domain_id];
+}
+
+/**
+ * Load an account by name.
+ *
+ * @param $domain
+ *   The domain to load account for, or its id.
+ * @param $name
+ *   The account name.
+ * @return
+ *   An account object or FALSE.
+ */
+function zmt_account_load_by_name($domain, $name) {
+  $cache = &drupal_static(__FUNCTION__, array());
+  $domain_id = is_object($domain) ? $domain->id : $domain;
+  $cache_key = md5($domain_id . '-' . $name);
+  if (!isset($cache[$cache_key])) {
+    $query = new EntityFieldQuery();
+    $result = $query->entityCondition('entity_type', 'zmt_account')
+      ->propertyCondition('domain_id', $domain_id)
+      ->propertyCondition('name', $name)
+      ->execute();
+
+    $ids = isset($result['zmt_account']) ? array_keys($result['zmt_account']) : array();
+    $accounts = zmt_account_load_multiple($ids);
+    $cache[$cache_key] = $accounts ? reset($accounts) : FALSE;
+  }
+  return $cache[$cache_key];
+}
+
+/**
+ * Counts account by domain.
+ *
+ * @param $domain
+ *   The domain to load account for, or its id.
+ * @return
+ *   Total number of account objects.
+ */
+function zmt_account_count_by_domain($domain) {
+  $cache = &drupal_static(__FUNCTION__, array());
+  $domain_id = is_object($domain) ? $domain->id : $domain;
+  if (!isset($cache[$domain_id])) {
+    $query = new EntityFieldQuery();
+    $query->entityCondition('entity_type', 'zmt_account')
+      ->propertyCondition('domain_id', $domain_id);
+    $cache[$domain_id] = $query->count()->execute();
+  }
+  return $cache[$domain_id];
+}
+
+/**
+ * Checks account exists by domain.
+ *
+ * @param $domain
+ *   The domain to load account for, or its id.
+ * @param $name
+ *   The account name.
+ * @param $id
+ *   The account id.
+ * @return
+ *   TRUE or FALSE.
+ */
+function zmt_account_exists($domain, $name, $id = 0) {
+  $cache = &drupal_static(__FUNCTION__, array());
+  $domain_id = is_object($domain) ? $domain->id : $domain;
+  $cache_key = md5($domain_id . '-' . $name . '-' . $id);
+  if (!isset($cache[$cache_key])) {
+    $query = new EntityFieldQuery();
+    $result = $query->entityCondition('entity_type', 'zmt_account')
+      ->propertyCondition('domain_id', $domain_id)
+      ->propertyCondition('name', $name)
+      ->propertyCondition('id', $id, '!=')
+      ->count()
+      ->execute();
+    $cache[$cache_key] = (int) $result > 0;
+  }
+  return $cache[$cache_key];
+}
+
+/**
+ * Returns an initialized account object.
+ *
+ * @param $name
+ *   The machine-readable name of the account.
+ *
+ * @return
+ *   A account object with all default fields initialized.
+ */
+function zmt_account_new($name = '') {
+  global $user;
+  $values = array(
+    'domain_id' => 0,
+    'name' => $name,
+    'password' => '',
+    'full_name' => '',
+    'title' => '',
+    'telephone' => '',
+    'mobile' => '',
+    'company' => '',
+    'status' => '',
+    'zimbra_id' => '',
+    'uid' => $user->uid,
+    'created' => REQUEST_TIME,
+    'changed' => REQUEST_TIME,
+  );
+  return entity_get_controller('zmt_account')->create($values);
+}
+
+/**
+ * Saves a account.
+ *
+ * @param $account
+ *   The full account object to save.
+ *
+ * @return
+ *   SAVED_NEW or SAVED_UPDATED depending on the operation performed.
+ */
+function zmt_account_save($account, $by_entity = TRUE) {
+  $account->changed = REQUEST_TIME;
+  if ($by_entity === TRUE) {
+    return entity_get_controller('zmt_account')->save($account);
+  }
+  else {
+    $fields = array(
+      'domain_id' => $account->domain_id,
+      'name' => $account->name,
+      'full_name' => $account->full_name,
+      'title' => $account->title,
+      'telephone' => $account->telephone,
+      'mobile' => $account->mobile,
+      'company' => $account->company,
+      'status' => $account->status,
+      'zimbra_id' => $account->zimbra_id,
+      'uid' => $account->uid,
+      'created' => $account->created,
+      'changed' => $account->changed,
+    );
+    if (!isset($account->id) || (int) $account->id == 0) {
+      $account->id = db_insert('zmt_account')->fields($fields)->execute();
+      return SAVED_NEW;
+    }
+    else {
+      db_update('zmt_account')
+        ->fields($fields)
+        ->condition('id', $account->id)
+        ->execute();
+      entity_get_controller('zmt_account')->resetCache(array($account->id));
+      return SAVED_UPDATED;
+    }
+  }
+}
+
+/**
+ * Deletes a account by ID.
+ *
+ * @param $id
+ *   The ID of the account to delete.
+ */
+function zmt_account_delete($id) {
+  return zmt_account_delete_multiple(array($id));
+}
+
+/**
+ * Deletes multiple account by ID.
+ *
+ * @param $ids
+ *   An array of account IDs to delete.
+ */
+function zmt_account_delete_multiple(array $ids = array()) {
+  entity_get_controller('zmt_account')->delete($ids);
+}
+
+/**
+ * Deletes multiple account by domains.
+ *
+ * @param $ids
+ *   An array of domain IDs.
+ */
+function zmt_account_delete_multiple_by_domain(array $ids = array()) {
+  if (!empty($ids)) {
+    $query = new EntityFieldQuery();
+    $result = $query->entityCondition('entity_type', 'zmt_account')
+      ->propertyCondition('domain_id', $ids)
+      ->execute();
+     $account_ids = isset($result['zmt_account']) ? array_keys($result['zmt_account']) : array();
+     zmt_account_delete_multiple($account_ids);
+  }
+}
+
+/**
+ * Define zimbra account statuses.
+ */
+function zmt_account_statuses() {
+  return array(
+    'active' => t('Active'),
+    'closed' => t('Closed'),
+    'locked' => t('Locked'),
+    'pending' => t('Pending'),
+    'maintenance' => t('Maintenance'),
+  );
+}

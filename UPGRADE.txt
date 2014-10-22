@@ -1,3 +1,1 @@
-//Tạo thêm Role: Admin tenant
-
-// Tích hợp với Zimbra API PHP
+; $Id: UPGRADE.txt,v 1.0 2014/08/25 07:32:18 miglius Exp $

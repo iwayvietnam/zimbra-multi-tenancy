@@ -1,4 +1,4 @@
-; $Id: README.txt,v 1.0 2013/03/02 07:32:18 miglius Exp $
+; $Id: README.txt,v 1.0 2014/08/25 07:32:18 miglius Exp $
 
 Implements Zimbra multi-tenacy of Zimbra mail.
 
@@ -32,7 +32,7 @@ ________
   * Update an existing alias
   * Delete an existing alias
 
-6. Integrated with Zimbra API (libraries) in PHP.
+6. Provide commands for Zimbra implementation in zimbra_queuedcommand table.
 
 
 REQUIREMENTS
@@ -40,22 +40,17 @@ ____________
 
 - Drupal 7.x;
 - Zimbra server
-- References module (https://drupal.org/project/references)
-- Field Hidden module (https://drupal.org/project/field_hidden)
-- Zimbra API (libraries) in PHP (https://github.com/iwayvietnam/zimbra-api-php)
+- Entity module (https://drupal.org/project/entity)
 
 INSTALLATION
 ____________
 
-Add this module to the modules folder (sites/all/modules).
-Download Zimbra API (libraries) in PHP and put all content in extracted folder to vendor/zap folder in this module.
-Enable it.
-Go to Configuration->System->Zimbra settings ('admin/config/system/zimbra-tenancy') and configure to meet your needs.
+Add this module to the modules folder (sites/all/modules), enable it and configure to meet your needs.
+
 
 AUTHOR
 ______
 
-- Lê Anh Quyến
-Email: leanhquyen@gmail.com
+- Nguyễn Văn Nguyên
+Email: nguyennv1981@gmail.com
 
-Integrated with Zimbra API (libraries) in PHP by Nguyen Van Nguyen - nguyennv1981@gmail.com
