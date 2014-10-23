@@ -50,12 +50,6 @@ function zmt_domain_schema() {
           'not null' => TRUE,
           'default' => '',
         ),
-        'max_account_number' => array(
-          'description' => 'The max account number of this domain.',
-          'type' => 'int',
-          'not null' => TRUE,
-          'default' => 0,
-        ),
         'zimbra_id' => array(
           'description' => 'The zimbra identify of this cos.',
           'type' => 'varchar',
