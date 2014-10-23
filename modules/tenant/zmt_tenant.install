@@ -101,7 +101,7 @@ function zmt_tenant_schema() {
           'default' => 0,
         ),
         'max_account_number' => array(
-          'description' => 'The max account of this mapping.',
+          'description' => 'The max account number of this mapping.',
           'type' => 'int',
           'not null' => TRUE,
           'default' => 0,
