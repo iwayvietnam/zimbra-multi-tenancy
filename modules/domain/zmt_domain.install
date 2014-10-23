@@ -37,12 +37,6 @@ function zmt_domain_schema() {
           'not null' => TRUE,
           'default' => 0,
         ),
-        'cos_id' => array(
-          'description' => 'The {zmt_cos}.id of this domain.',
-          'type' => 'int',
-          'not null' => TRUE,
-          'default' => 0,
-        ),
         'tenant_id' => array(
           'description' => 'The {zmt_tenant}.id of this domain.',
           'type' => 'int',
@@ -56,8 +50,8 @@ function zmt_domain_schema() {
           'not null' => TRUE,
           'default' => '',
         ),
-        'account_max_number' => array(
-          'description' => 'The max account of this domain.',
+        'max_account_number' => array(
+          'description' => 'The max account number of this domain.',
           'type' => 'int',
           'not null' => TRUE,
           'default' => 0,
@@ -117,6 +111,70 @@ function zmt_domain_schema() {
           'columns'=> array('tenant_id' => 'id'),
         ),
         'zmt_domain_creator' => array(
+          'table' => 'users',
+          'columns' => array('uid' => 'uid'),
+        ),
+      ),
+    ),
+    'zmt_domain_cos' => array(
+      'description' => 'The base table for domain cos mapping.',
+      'fields' => array(
+        'id' => array(
+          'description' => 'The primary identifier, used internally only.',
+          'type' => 'serial',
+          'unsigned' => TRUE,
+          'not null' => TRUE,
+        ),
+        'domain_id' => array(
+          'description' => 'The {zmt_domain}.id of domain.',
+          'type' => 'int',
+          'not null' => TRUE,
+          'default' => 0,
+        ),
+        'cos_id' => array(
+          'description' => 'The {zmt_cos}.id of class of service.',
+          'type' => 'int',
+          'not null' => TRUE,
+          'default' => 0,
+        ),
+        'max_account_number' => array(
+          'description' => 'The max account number of this mapping.',
+          'type' => 'int',
+          'not null' => TRUE,
+          'default' => 0,
+        ),
+        'uid' => array(
+          'description' => 'The {users}.uid that created this mapping.',
+          'type' => 'int',
+          'not null' => TRUE,
+          'default' => 0,
+        ),
+        'created' => array(
+          'description' => 'The Unix timestamp when the mapping was created.',
+          'type' => 'int',
+          'not null' => TRUE,
+          'default' => 0,
+        ),
+      ),
+      'primary key' => array('id'),
+      'unique keys' => array(
+        'domain_cos_unique' => array('domain_id', 'cos_id'),
+      ),
+      'indexes' => array(
+        'zmt_domain_id_mapping' => array('domain_id'),
+        'zmt_cos_id_mapping' => array('cos_id'),
+        'zmt_domain_cos_created' => array('created'),
+      ),
+      'foreign keys' => array(
+        'zmt_domain_mapping' => array(
+          'table' => 'zmt_domain',
+          'columns'=> array('domain_id' => 'id'),
+        ),
+        'zmt_cos_mapping' => array(
+          'table' => 'zmt_cos',
+          'columns'=> array('cos_id' => 'id'),
+        ),
+        'zmt_domain_cos_creator' => array(
           'table' => 'users',
           'columns' => array('uid' => 'uid'),
         ),
