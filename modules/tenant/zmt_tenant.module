@@ -73,8 +73,6 @@ function zmt_tenant_get_properties($tenant, array $options, $name) {
   switch ($name) {
     case 'server_id':
       return zmt_server_load($tenant->server_id);
-    case 'cos_id':
-      return zmt_cos_load($tenant->cos_id);
     case 'tenant_uid':
       return user_load($tenant->tenant_uid);
     case 'uid':
@@ -90,6 +88,19 @@ function zmt_tenant_permission() {
 }
 
 /**
+ * Implements hook_query_TAG_alter().
+ */ 
+function zmt_tenant_query_zmt_tenant_load_multiple_alter(QueryAlterableInterface $query) {
+  $query->join('bayo_server', 's', 's.id = base.server_id');
+  $query->join('users', 'u', 'u.uid = base.tenant_uid');
+
+  $query->addField('s', 'name', 'server');
+  $query->addField('u', 'name', 'name');
+  $query->addField('u', 'mail', 'mail');
+  $query->addField('u', 'status', 'status');
+}
+
+/**
  * Implements hook_user_load().
  */
 function zmt_tenant_user_load(array $users) {
@@ -99,27 +110,6 @@ function zmt_tenant_user_load(array $users) {
     ->execute();
   foreach ($result as $tenant) {
     $users[$tenant->tenant_uid]->tenant = $tenant;
-  }
-}
-
-/**
- * Implements hook_zmt_tenant_load().
- */
-function zmt_tenant_zmt_tenant_load(array $tenants) {
-  $tenant_uids = array();
-  foreach ($tenants as $tenant) {
-    $tenant_uids[] = (int) $tenant->tenant_uid;
-  }
-  if (!empty($tenant_uids)) {
-    $users = user_load_multiple($tenant_uids);
-    foreach ($tenants as $tenant) {
-      if (isset($users[$tenant->tenant_uid])) {
-        $user = $users[$tenant->tenant_uid];
-        $tenant->name = $user->name;
-        $tenant->mail = $user->mail;
-        $tenant->status = $user->status;
-      }
-    }
   }
 }
 
@@ -148,6 +138,14 @@ function zmt_tenant_access($op, $tenant, $tenant = NULL, $entity_type = NULL) {
  */
 function zmt_tenant_user_delete($user) {
   db_delete('zmt_tenant')->condition('tenant_uid', $user->uid)->execute();
+}
+
+/**
+ * Implements hook_zmt_cos_delete().
+ */ 
+function zmt_tenant_zmt_cos_delete($cos){
+  $id = $cos ? $cos->id : 0;
+  zmt_tenant_cos_delete_multiple_by_cos(array($id));
 }
 
 /**
@@ -212,11 +210,19 @@ function zmt_tenant_load_multiple($ids = array(), array $conditions = array(), $
  *
  * @see zmt_tenant_load_multiple()
  */
-function zmt_tenant_load_all(){
-  $query = new EntityFieldQuery();
-  $result = $query->entityCondition('entity_type', 'zmt_tenant')->execute();
-  $ids = isset($result['zmt_tenant']) ? array_keys($result['zmt_tenant']) : array();
-  return zmt_tenant_load_multiple($ids);
+function zmt_tenant_load_all($limit = 0, $offset = 0){
+  $cache = &drupal_static(__FUNCTION__, array());
+  $cache_key = $limit + $offset;
+  if (!isset($cache[$cache_key])) {
+    $efq = new EntityFieldQuery();
+    if ((int) $limit > 0) {
+      $efq->range($offset, $limit);
+    }
+    $result = $efq->entityCondition('entity_type', 'zmt_tenant')->execute();
+    $ids = isset($result['zmt_tenant']) ? array_keys($result['zmt_tenant']) : array();
+    $cache[$cache_key] = zmt_tenant_load_multiple($ids);
+  }
+  return $cache[$cache_key];
 }
 
 /**
@@ -229,42 +235,22 @@ function zmt_tenant_load_all(){
  *
  * @see zmt_tenant_load_multiple()
  */
-function zmt_tenant_load_multiple_by_server($server) {
+function zmt_tenant_load_multiple_by_server($server, $limit = 0, $offset = 0) {
   $cache = &drupal_static(__FUNCTION__, array());
-  $server_id = is_object($server) ? $server->id : $server;
-  if (!isset($cache[$server_id])) {
-    $query = new EntityFieldQuery();
-    $result = $query->entityCondition('entity_type', 'zmt_tenant')
+  $server_id = is_object($server) ? (int) $server->id : (int) $server;
+  $cache_key = $server_id + $limit + $offset;
+  if (!isset($cache[$cache_key])) {
+    $efq = new EntityFieldQuery();
+    if ((int) $limit > 0) {
+      $efq->range($offset, $limit);
+    }
+    $result = $efq->entityCondition('entity_type', 'zmt_tenant')
       ->propertyCondition('server_id', $server_id)
       ->execute();
     $ids = isset($result['zmt_tenant']) ? array_keys($result['zmt_tenant']) : array();
-    $cache[$server_id] = zmt_tenant_load_multiple($ids);
+    $cache[$cache_key] = zmt_tenant_load_multiple($ids);
   }
-  return $cache[$server_id];
-}
-
-/**
- * Loads multiple tenant by cos.
- *
- * @param $cos
- *   The cos to load tenant for, or its id.
- * @return
- *   A single tenant entity.
- *
- * @see zmt_tenant_load_multiple()
- */
-function zmt_tenant_load_multiple_by_cos($cos) {
-  $cache = &drupal_static(__FUNCTION__, array());
-  $cos_id = is_object($cos) ? $cos->id : $cos;
-  if (!isset($cache[$cos_id])) {
-    $query = new EntityFieldQuery();
-    $result = $query->entityCondition('entity_type', 'zmt_tenant')
-      ->propertyCondition('cos_id', $cos_id)
-      ->execute();
-    $ids = isset($result['zmt_tenant']) ? array_keys($result['zmt_tenant']) : array();
-    $cache[$cos_id] = zmt_tenant_load_multiple($ids);
-  }
-  return $cache[$cos_id];
+  return $cache[$cache_key];
 }
 
 /**
@@ -272,17 +258,18 @@ function zmt_tenant_load_multiple_by_cos($cos) {
  *
  * @param $user
  *   The user tenant to load tenant for, or its uid.
+ * 
  * @return
  *   A single tenant entity.
  *
  * @see zmt_tenant_load_multiple()
  */
 function zmt_tenant_load_by_user($user) {
-  $cache = &drupal_static(__FUNCTION__, array());
-  $uid = is_object($user) ? $user->uid : $user;
+  $cache = &drupal_static(__FUNCTION__, NULL);
+  $uid = is_object($user) ? $user->uid : (int) $user;
   if (!isset($cache[$uid])) {
-    $query = new EntityFieldQuery();
-    $result = $query->entityCondition('entity_type', 'zmt_tenant')
+    $efq = new EntityFieldQuery();
+    $result = $efq->entityCondition('entity_type', 'zmt_tenant')
       ->propertyCondition('tenant_uid', $uid)
       ->execute();
     $ids = isset($result['zmt_tenant']) ? array_keys($result['zmt_tenant']) : array();
@@ -298,12 +285,13 @@ function zmt_tenant_load_by_user($user) {
  *
  * @param user
  *   The user tenant.
+ * 
  * @return
  *   True if user is tenant.
  */
 function zmt_tenant_user_is_tenant($user) {
-  $cache = &drupal_static(__FUNCTION__, array());
-  $uid = is_object($user) ? $user->uid : $user;
+  $cache = &drupal_static(__FUNCTION__);
+  $uid = is_object($user) ? $user->uid : (int) $user;
   if (!isset($cache[$uid])) {
     $query = db_select('zmt_tenant', 't')
       ->fields('t', array('id'))
@@ -321,6 +309,7 @@ function zmt_tenant_user_is_tenant($user) {
  *
  * @param $id
  *   The ternant ID.
+ * 
  * @return
  *   Server entity object.
  */
@@ -335,30 +324,31 @@ function zmt_ternant_get_server($id) {
  *
  * @param $id
  *   The ternant ID.
+ * @param $cos_id
+ *   The cos ID.
+ * 
  * @return
  *   Remain number of accouns.
  */
-function zmt_tenant_account_number_remain($id, $exclude_tenant_id = 0) {
-  $tenant_remain = 0;
-  $tenant = zmt_tenant_load($id);
-  if ($tenant) {
-    $wrapper = entity_metadata_wrapper('zmt_tenant', $tenant);
-    $total_max_number = (int) $wrapper->cos_id->account_max_number->value();
+function zmt_tenant_account_number_remain($id, $cos_id, $exclude_domain_id = 0) {
+  $query = db_select('zmt_tenant', 't')
+    ->fields('t', array('id'))
+    ->condition('t.id', (int) $id)
+    ->addTag('tenant_sum_account')
+    ->addMetaData('cos_id', $cos_id)
+    ->addMetaData('domain_id', $exclude_domain_id);
+  $query->join('zmt_tenant_cos', 'tc', 'tc.tenant_id = t.id');
+  $query->condition('tc.cos_id', (int) $cos_id);
+  $query->addField('tc', 'max_account_number', 'max_account_number');
+  $result = $query->range(0, 1)->execute();
 
-    $total_tenant = 0;
-    $query = db_select('zmt_tenant', 't');
-    $result = $query->fields('t', array('id'))
-      ->condition('t.id', (int) $id)
-      ->addTag('tenant_sum_tenant')
-      ->addMetaData('tenant_id', $exclude_tenant_id)
-      ->range(0, 1)
-      ->execute();
-    foreach ($result as $tenant) {
-      $total_tenant = isset($tenant->total_tenant) ? $tenant->total_tenant : 0;
-    }
-    $tenant_remain = $total_max_number - $total_tenant;
+  $account_remain = 0;
+  $total_account = 0;
+  foreach ($result as $tenant) {
+    $account_remain += isset($tenant->max_account_number) ? (int) $tenant->max_account_number : 0;
+    $total_account += isset($tenant->total_account) ? (int) $tenant->total_account : 0;
   }
-  return $tenant_remain;
+  return $total_max_number - $total_account;
 }
 
 /**
@@ -374,7 +364,6 @@ function zmt_tenant_new($tenant_uid = 0) {
   global $user;
   $values = array(
     'server_id' => 0,
-    'cos_id' => 0,
     'tenant_uid' => $tenant_uid,
     'uid' => $user->uid,
     'created' => REQUEST_TIME,
@@ -400,7 +389,6 @@ function zmt_tenant_save($tenant, $by_entity = TRUE) {
   else {
     $fields = array(
       'server_id' => $tenant->server_id,
-      'cos_id' => $tenant->cos_id,
       'tenant_uid' => $tenant->tenant_uid,
       'uid' => $tenant->uid,
       'created' => $tenant->created,
@@ -438,5 +426,216 @@ function zmt_tenant_delete($id) {
  *   An array of tenant IDs to delete.
  */
 function zmt_tenant_delete_multiple(array $ids = array()) {
+  zmt_tenant_cos_delete_multiple_by_tenant($ids);
   entity_get_controller('zmt_tenant')->delete($ids);
+}
+
+/**
+ * Loads a tenant cos by ID.
+ */
+function zmt_tenant_cos_load($id) {
+  if (empty($id)) {
+    return FALSE;
+  }
+
+  $entities = zmt_tenant_cos_load_multiple(array($id), array());
+  return $entities ? reset($entities) : FALSE;
+}
+
+/**
+ * Loads multiple tenant cos by ID or based on a set of matching conditions.
+ *
+ * @see entity_load()
+ *
+ * @param $ids
+ *   An array of tenant cos IDs.
+ * @param $conditions
+ *   An array of conditions on the {zmt_tenant_cos} table in the form
+ *     'field' => $value.
+ * @param $reset
+ *   Whether to reset the internal tenant cos loading cache.
+ *
+ * @return
+ *   An array of tenant cos objects indexed by id.
+ */
+function zmt_tenant_cos_load_multiple($ids = array(), array $conditions = array(), $reset = FALSE) {
+  if (empty($ids) && empty($conditions)) {
+    return array();
+  }
+
+  return entity_load('zmt_tenant_cos', $ids, $conditions, $reset);
+}
+
+/**
+ * Loads multiple tenant cos mapping by cos ids.
+ *
+ * @see entity_load()
+ *
+ * @param $cos_ids
+ *   An array of cos IDs.
+ *
+ * @return
+ *   An array of mapping objects indexed by id.
+ */
+function zmt_tenant_cos_load_multiple_by_cos(array $cos_ids = array()) {
+  if (empty($cos_ids)) {
+    return array();
+  }
+  $efq = new EntityFieldQuery();
+  $result = $efq->entityCondition('entity_type', 'zmt_tenant_cos')
+    ->propertyCondition('cos_id', $cos_ids)
+    ->execute();
+  $ids = isset($result['zmt_tenant_cos']) ? array_keys($result['zmt_tenant_cos']) : array();
+  return zmt_tenant_cos_load_multiple($ids);
+}
+
+/**
+ * Loads multiple tenant cos mapping by tenant ids.
+ *
+ * @see entity_load()
+ *
+ * @param $tenant_ids
+ *   An array of tenant IDs.
+ *
+ * @return
+ *   An array of mapping objects indexed by id.
+ */
+function zmt_tenant_cos_load_multiple_by_tenant(array $tenant_ids = array()) {
+  if (empty($tenant_ids)) {
+    return array();
+  }
+  $efq = new EntityFieldQuery();
+  $result = $efq->entityCondition('entity_type', 'zmt_tenant_cos')
+    ->propertyCondition('tenant_id', $tenant_ids)
+    ->execute();
+  $ids = isset($result['zmt_tenant_cos']) ? array_keys($result['zmt_tenant_cos']) : array();
+  return zmt_tenant_cos_load_multiple($ids);
+}
+
+/**
+ * Loads a tenant cos by id of cos and tenant.
+ */
+function zmt_tenant_cos_load_single($tenant_id, $cos_id) {
+  $efq = new EntityFieldQuery();
+  $result = $efq->entityCondition('entity_type', 'zmt_tenant_cos')
+    ->propertyCondition('tenant_id', $tenant_id)
+    ->propertyCondition('cos_id', $cos_id)
+    ->execute();
+  $ids = isset($result['zmt_tenant_cos']) ? array_keys($result['zmt_tenant_cos']) : array();
+  $entities = zmt_tenant_cos_load_multiple($ids);
+  return $entities ? reset($entities) : FALSE;
+}
+
+/**
+ * Returns an initialized tenant cos mapping object.
+ *
+ * @param $tenant_id
+ *   The tenant id.
+ * @param $cos_id
+ *   The cos id.
+ *
+ * @return
+ *   A tenant cos object with all default fields initialized.
+ */
+function zmt_tenant_cos_new($tenant_id = 0, $cos_id = 0) {
+  global $user;
+  $values = array(
+    'tenant_id' => (int) $tenant_id,
+    'cos_id' => (int) $cos_id,
+    'max_account_number' => 0,
+    'uid' => $user->uid,
+    'created' => REQUEST_TIME,
+  );
+  return entity_get_controller('zmt_tenant_cos')->create($values);
+}
+
+/**
+ * Saves a tenant cos mapping.
+ *
+ * @param $cs
+ *   The full tenant cos object to save.
+ *
+ * @return
+ *   SAVED_NEW or SAVED_UPDATED depending on the operation performed.
+ */
+function zmt_tenant_cos_save($mapping, $by_entity = TRUE) {
+  if ($by_entity === TRUE) {
+    return entity_get_controller('zmt_tenant_cos')->save($cs);
+  }
+  else {
+    $fields = array(
+      'tenant_id' => $mapping->tenant_id,
+      'cos_id' => $mapping->cos_id,
+      'max_account_number' => (int) $mapping->max_account_number,
+      'uid' => $mapping->uid,
+      'created' => $mapping->created,
+    );
+    if (!isset($mapping->id) || (int) $mapping->id == 0) {
+      $mapping->id = db_insert('zmt_tenant_cos')->fields($fields)->execute();
+      return SAVED_NEW;
+    }
+    else {
+      db_update('zmt_tenant_cos')
+        ->fields($fields)
+        ->condition('id', $mapping->id)
+        ->execute();
+      entity_get_controller('zmt_tenant_cos')->resetCache(array($mapping->id));
+      return SAVED_UPDATED;
+    }
+  }
+}
+
+/**
+ * Deletes a tenant cos by ID.
+ *
+ * @param $id
+ *   The ID of the tenant cos to delete.
+ */
+function zmt_tenant_cos_delete($id) {
+  return zmt_tenant_cos_delete_multiple(array($id));
+}
+
+/**
+ * Deletes multiple tenant cos by ID.
+ *
+ * @param $ids
+ *   An array of tenant cos IDs to delete.
+ */
+function zmt_tenant_cos_delete_multiple(array $ids = array()) {
+  $services = zmt_tenant_cos_load_multiple($ids);
+  entity_get_controller('zmt_tenant_cos')->delete($ids);
+}
+
+/**
+ * Deletes multiple tenant cos by by cos.
+ *
+ * @param $cos_ids
+ *   An array of cos IDs.
+ */
+function zmt_tenant_cos_delete_multiple_by_cos(array $cos_ids = array()) {
+  if (!empty($cos_ids)) {
+    $efq = new EntityFieldQuery();
+    $result = $efq->entityCondition('entity_type', 'zmt_tenant_cos')
+      ->propertyCondition('cos_id', $cos_ids)
+      ->execute();
+    $ids = isset($result['zmt_tenant_cos']) ? array_keys($result['zmt_tenant_cos']) : array();
+    zmt_tenant_cos_delete_multiple($ids);
+  }
+}
+
+/**
+ * Deletes multiple tenant cos by by tenant.
+ *
+ * @param $tenant_ids
+ *   An array of tenant IDs.
+ */
+function zmt_tenant_cos_delete_multiple_by_tenant(array $tenant_ids = array()) {
+  if (!empty($server_ids)) {
+    $efq = new EntityFieldQuery();
+    $result = $efq->entityCondition('entity_type', 'zmt_tenant_cos')
+      ->propertyCondition('tenant_id', $tenant_ids)
+      ->execute();
+    $ids = isset($result['zmt_tenant_cos']) ? array_keys($result['zmt_tenant_cos']) : array();
+    zmt_tenant_cos_delete_multiple($ids);
+  }
 }
