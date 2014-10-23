@@ -352,7 +352,7 @@ function zmt_tenant_account_number_remain($id, $cos_id, $exclude_domain_id = 0) 
     }
     $number_remain = $total_max_number - $total_account;
   }
-  return $number_remain;
+  return (int) $number_remain;
 }
 
 /**
