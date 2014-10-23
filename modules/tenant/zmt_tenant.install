@@ -95,7 +95,7 @@ function zmt_tenant_schema() {
           'default' => 0,
         ),
         'cos_id' => array(
-          'description' => 'The {zmt_server}.id of class of service.',
+          'description' => 'The {zmt_cos}.id of class of service.',
           'type' => 'int',
           'not null' => TRUE,
           'default' => 0,
