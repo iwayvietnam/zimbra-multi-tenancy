@@ -39,12 +39,6 @@ function zmt_tenant_schema() {
           'not null' => TRUE,
           'default' => 0,
         ),
-        'cos_id' => array(
-          'description' => 'The {zmt_cos}.id of this tenant.',
-          'type' => 'int',
-          'not null' => TRUE,
-          'default' => 0,
-        ),
         'uid' => array(
           'description' => 'The {users}.uid that created this tenant.',
           'type' => 'int',
@@ -66,22 +60,84 @@ function zmt_tenant_schema() {
       ),
       'primary key' => array('id'),
       'unique keys' => array(
-        'tenant_uid' => array('tenant_uid'),
+        'zmt_tenant_uid' => array('tenant_uid'),
       ),
       'indexes' => array(
-        'zmt_server_id' => array('server_id'),
-        'zmt_cos_id' => array('cos_id'),
+        'zmt_tenant_server_id' => array('server_id'),
+        'zmt_tenant_creator_uid' => array('uid'),
+        'zmt_tenant_created' => array('created'),
+        'zmt_tenant_changed' => array('changed'),
       ),
       'foreign keys' => array(
         'zmt_tenant_server' => array(
           'table' => 'zmt_server',
-          'columns'=> array('id' => 'server_id'),
-        ),
-        'zmt_tenant_cos' => array(
-          'table' => 'zmt_cos',
-          'columns'=> array('id' => 'cos_id'),
+          'columns'=> array('server_id' => 'id'),
         ),
         'zmt_tenant_creator' => array(
+          'table' => 'users',
+          'columns' => array('uid' => 'uid'),
+        ),
+      ),
+    ),
+    'zmt_tenant_cos' => array(
+      'description' => 'The base table for tenant cos mapping.',
+      'fields' => array(
+        'id' => array(
+          'description' => 'The primary identifier, used internally only.',
+          'type' => 'serial',
+          'unsigned' => TRUE,
+          'not null' => TRUE,
+        ),
+        'tenant_id' => array(
+          'description' => 'The {zmt_tenant}.id of tenant.',
+          'type' => 'int',
+          'not null' => TRUE,
+          'default' => 0,
+        ),
+        'cos_id' => array(
+          'description' => 'The {zmt_server}.id of class of service.',
+          'type' => 'int',
+          'not null' => TRUE,
+          'default' => 0,
+        ),
+        'max_account_number' => array(
+          'description' => 'The max account of this mapping.',
+          'type' => 'int',
+          'not null' => TRUE,
+          'default' => 0,
+        ),
+        'uid' => array(
+          'description' => 'The {users}.uid that created this mapping.',
+          'type' => 'int',
+          'not null' => TRUE,
+          'default' => 0,
+        ),
+        'created' => array(
+          'description' => 'The Unix timestamp when the mapping was created.',
+          'type' => 'int',
+          'not null' => TRUE,
+          'default' => 0,
+        ),
+      ),
+      'primary key' => array('id'),
+      'unique keys' => array(
+        'tenant_cos_unique' => array('tenant_id', 'cos_id'),
+      ),
+      'indexes' => array(
+        'zmt_tenant_id_mapping' => array('tenant_id'),
+        'zmt_cos_id_mapping' => array('cos_id'),
+        'zmt_tenant_cos_created' => array('created'),
+      ),
+      'foreign keys' => array(
+        'zmt_tenant_mapping' => array(
+          'table' => 'zmt_tenant',
+          'columns'=> array('tenant_id' => 'id'),
+        ),
+        'zmt_cos_mapping' => array(
+          'table' => 'zmt_cos',
+          'columns'=> array('cos_id' => 'id'),
+        ),
+        'zmt_tenant_cos_creator' => array(
           'table' => 'users',
           'columns' => array('uid' => 'uid'),
         ),
