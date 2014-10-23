@@ -117,6 +117,14 @@ function zmt_cos_label($cos, $entity_type) {
 }
 
 /**
+ * Implements hook_query_TAG_alter().
+ */ 
+function zmt_cos_query_zmt_cos_load_multiple_alter(QueryAlterableInterface $query) {
+  $query->join('bayo_server', 's', 's.id = base.server_id');
+  $query->addField('s', 'name', 'server');
+}
+
+/**
  * Loads a cos by ID.
  */
 function zmt_cos_load($id) {
