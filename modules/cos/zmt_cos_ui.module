@@ -36,31 +36,6 @@ function zmt_cos_ui_menu() {
     'access callback' => 'entity_access',
     'access arguments' => array('view', 'zmt_cos', 2),
   );
-  $items['zmt/cos/add'] = array(
-    'title' => 'Add Class of Service',
-    'page callback' => 'zmt_cos_add_page',
-    'access callback' => 'zmt_cos_add_access',
-    'type' => MENU_LOCAL_ACTION,
-    'file' => 'zmt_cos.admin.inc',
-  );
-  $items['zmt/cos/%zmt_cos/edit'] = array(
-    'title' => 'Edit Class of Service',
-    'page callback' => 'zmt_cos_edit_page',
-    'page arguments' => array(2),
-    'access callback' => 'zmt_cos_edit_access',
-    'access arguments' => array(2),
-    'type' => MENU_CALLBACK,
-    'file' => 'zmt_cos.admin.inc',
-  );
-  $items['zmt/cos/%zmt_cos/delete'] = array(
-    'title' => 'Delete Class of Service',
-    'page callback' => 'zmt_cos_delete_page',
-    'page arguments' => array(2),
-    'access callback' => 'zmt_cos_delete_access',
-    'access arguments' => array(2),
-    'type' => MENU_CALLBACK,
-    'file' => 'zmt_cos.admin.inc',
-  );
   $items['zmt/cos'] = array(
     'title' => 'Class of Services',
     'page callback' => 'zmt_cos_list_all',
