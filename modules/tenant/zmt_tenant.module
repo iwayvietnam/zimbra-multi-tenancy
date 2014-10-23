@@ -331,24 +331,28 @@ function zmt_ternant_get_server($id) {
  *   Remain number of accouns.
  */
 function zmt_tenant_account_number_remain($id, $cos_id, $exclude_domain_id = 0) {
-  $query = db_select('zmt_tenant', 't')
-    ->fields('t', array('id'))
-    ->condition('t.id', (int) $id)
-    ->addTag('tenant_sum_account')
-    ->addMetaData('cos_id', $cos_id)
-    ->addMetaData('domain_id', $exclude_domain_id);
-  $query->join('zmt_tenant_cos', 'tc', 'tc.tenant_id = t.id');
-  $query->condition('tc.cos_id', (int) $cos_id);
-  $query->addField('tc', 'max_account_number', 'max_account_number');
-  $result = $query->range(0, 1)->execute();
+  static $number_remain = NULL;
+  if (NULL === $number_remain) {
+    $query = db_select('zmt_tenant', 't')
+      ->fields('t', array('id'))
+      ->condition('t.id', (int) $id)
+      ->addTag('tenant_sum_account')
+      ->addMetaData('cos_id', $cos_id)
+      ->addMetaData('domain_id', $exclude_domain_id);
+    $query->join('zmt_tenant_cos', 'tc', 'tc.tenant_id = t.id');
+    $query->condition('tc.cos_id', (int) $cos_id);
+    $query->addField('tc', 'max_account_number', 'max_account_number');
+    $result = $query->range(0, 1)->execute();
 
-  $account_remain = 0;
-  $total_account = 0;
-  foreach ($result as $tenant) {
-    $account_remain += isset($tenant->max_account_number) ? (int) $tenant->max_account_number : 0;
-    $total_account += isset($tenant->total_account) ? (int) $tenant->total_account : 0;
+    $account_remain = 0;
+    $total_account = 0;
+    foreach ($result as $tenant) {
+      $account_remain += isset($tenant->max_account_number) ? (int) $tenant->max_account_number : 0;
+      $total_account += isset($tenant->total_account) ? (int) $tenant->total_account : 0;
+    }
+    $number_remain = $total_max_number - $total_account;
   }
-  return $total_max_number - $total_account;
+  return $number_remain;
 }
 
 /**
