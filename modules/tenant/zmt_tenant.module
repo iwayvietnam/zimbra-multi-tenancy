@@ -634,7 +634,7 @@ function zmt_tenant_cos_delete_multiple_by_cos(array $cos_ids = array()) {
  *   An array of tenant IDs.
  */
 function zmt_tenant_cos_delete_multiple_by_tenant(array $tenant_ids = array()) {
-  if (!empty($server_ids)) {
+  if (!empty($tenant_ids)) {
     $efq = new EntityFieldQuery();
     $result = $efq->entityCondition('entity_type', 'zmt_tenant_cos')
       ->propertyCondition('tenant_id', $tenant_ids)
