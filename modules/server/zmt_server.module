@@ -145,8 +145,8 @@ function zmt_server_load_multiple($ids = array(), array $conditions = array(), $
  * @see zmt_server_load_multiple()
  */
 function zmt_server_load_all(){
-  $query = new EntityFieldQuery();
-  $result = $query->entityCondition('entity_type', 'zmt_server')->execute();
+  $efq = new EntityFieldQuery();
+  $result = $efq->entityCondition('entity_type', 'zmt_server')->execute();
   $ids = isset($result['zmt_server']) ? array_keys($result['zmt_server']) : array();
   return zmt_server_load_multiple($ids);
 }
@@ -168,7 +168,6 @@ function zmt_server_new($name = '') {
     'admin_user' => '',
     'admin_password' => '',
     'exclude_mailbox' => '',
-    'delete_cos' => 0,
     'delete_domain' => 0,
     'delete_dl' => 0,
     'delete_account' => 0,
@@ -201,8 +200,7 @@ function zmt_server_save($server, $by_entity = TRUE) {
       'admin_user' => $server->admin_user,
       'admin_password' => $server->admin_password,
       'exclude_mailbox' => $server->exclude_mailbox,
-      'delete_cos' => $server->delete_cos,
-      'delete_server' => $server->delete_server,
+      'delete_domain' => $server->delete_domain,
       'delete_dl' => $server->delete_dl,
       'delete_account' => $server->delete_account,
       'delete_alias' => $server->delete_alias,

@@ -88,20 +88,6 @@ function zmt_ui_zmt_cos_server_presave($cos_server) {
 }
 
 /**
- * Implements hook_zmt_cos_server_delete().
- */
-function zmt_ui_zmt_cos_server_delete($cs) {
-  $wrapper = entity_metadata_wrapper('zmt_cos_server', $cs);
-  $server = $wrapper->server_id->value();
-  $zimbra_id = $cs->zimbra_id;
-  if (!empty($zimbra_id) && $server && (int) $server->delete_cos > 0) {
-    module_load_include('inc', 'zmt', 'includes/zmt.zimbra');
-    $api = zimbra_admin_api_by_server($cs->server_id);
-    zimbra_delete_cos($api, $zimbra_id);
-  }
-}
-
-/**
  * Implements hook_zmt_domain_presave().
  */
 function zmt_ui_zmt_domain_presave($domain) {

@@ -123,11 +123,6 @@ function zmt_server_edit_form($form, &$form_state, $server){
     '#type' => 'textarea',
     '#default_value' => $server->exclude_mailbox,
   );
-  $form['delete_cos'] = array(
-    '#title' => t('Allow delete COS on this server'),
-    '#type' => 'checkbox',
-    '#default_value' => $server->delete_cos,
-  );
   $form['delete_domain'] = array(
     '#title' => t('Allow delete domain on this server'),
     '#type' => 'checkbox',
@@ -174,7 +169,6 @@ function zmt_server_edit_form_submit($form, &$form_state) {
     $server->admin_password = zmt_password_encrypt($values['admin_password']);
   }
   $server->exclude_mailbox = $values['exclude_mailbox'];
-  $server->delete_cos = (int) $values['delete_cos'];
   $server->delete_domain = (int) $values['delete_domain'];
   $server->delete_dl = (int) $values['delete_dl'];
   $server->delete_account = (int) $values['delete_account'];

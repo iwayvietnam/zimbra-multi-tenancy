@@ -59,13 +59,6 @@ function zmt_server_schema() {
           'description' => 'The exclude mailbox of this server.',
           'type' => 'text',
         ),
-        'delete_cos' => array(
-          'description' => 'Allow delete cos on zimbra server.',
-          'type' => 'int',
-          'size' => 'tiny',
-          'not null' => TRUE,
-          'default' => 0,
-        ),
         'delete_domain' => array(
           'description' => 'Allow delete domain on zimbra server.',
           'type' => 'int',
