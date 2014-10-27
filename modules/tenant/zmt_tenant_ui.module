@@ -71,25 +71,6 @@ function zmt_tenant_ui_menu() {
 }
 
 /**
- * Implements hook_form_FORM_ID_alter() for the user edit form.
- */
-function zmt_tenant_ui_form_user_profile_form_alter(&$form, &$form_state) {
-}
-
-/**
- * Implements hook_form_FORM_ID_alter() for the registration form.
- */
-function zmt_tenant_ui_form_user_register_form_alter(&$form, &$form_state) {
-  $user_access = user_access('administer zmt')
-    || user_access('administer any zmt_tenant')
-    || user_access('administer own zmt_tenant');
-  if ($user_access) {
-    module_load_include('inc', 'zmt_tenant', 'zmt_tenant.admin');
-    zmt_tenant_attach_form($form, $form_state);
-  }
-}
-
-/**
  * Server view callback.
  */
 function zmt_tenant_view($tenant) {
