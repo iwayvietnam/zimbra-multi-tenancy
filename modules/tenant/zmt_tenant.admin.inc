@@ -18,13 +18,11 @@ function zmt_tenant_list_all() {
     $header[] = array('data' => t('Total accounts'), 'field' => 'a.total_account');
   }
   $header[] = array('data' => t('Server'), 'field' => 's.name');
-  $header[] = array('data' => t('COS'), 'field' => 'c.name');
-
   $header[] = array('data' => t('Operations'));
+
   $query = db_select('zmt_tenant', 't')->extend('PagerDefault')->extend('TableSort');
   $query->leftJoin('users', 'u', 'u.uid = t.tenant_uid');
   $query->leftJoin('zmt_server', 's', 's.id = t.server_id');
-  $query->leftJoin('zmt_cos', 'c', 'c.id = t.cos_id');
 
   $query->addTag('tenant_count_account')
     ->addTag('tenant_count_domain');
@@ -32,7 +30,6 @@ function zmt_tenant_list_all() {
   $query->addField('u', 'name', 'name');
   $query->addField('u', 'status', 'status');
   $query->addField('s', 'name', 'server');
-  $query->addField('c', 'name', 'cos');
 
   if (!(user_access('administer zmt') || user_access('administer any zmt_tenant'))) {
     $query->condition('t.uid', $user->uid);
@@ -77,10 +74,6 @@ function zmt_tenant_list_all() {
     $row[] = array(
       'data' => $tenant->server,
       'id' => $tenant->server,
-    );
-    $row[] = array(
-      'data' => $tenant->cos,
-      'id' => $tenant->cos,
     );
 
     $operations = l(t('edit'), 'zmt/tenant/' . $tenant->id . '/edit', array('query' => $destination));
@@ -166,26 +159,71 @@ function zmt_tenant_edit_form($form, &$form_state, $tenant){
     '#options' => array(t('Blocked'), t('Active')),
     '#default_value' => ($account && (int) $account->uid > 0) ? $account->status : 1,
   );
+  if (empty($tenant->server_id)) {
+    $form['server_id'] = array(
+      '#type' => 'zmt_server_select',
+      '#default_value' => $tenant->server_id,
+      '#required' => TRUE,
+      '#ajax' => array(
+        'callback' => 'ajax_tenant_server_select_callback',
+        'wrapper' => 'zmt-cos-wrap',
+      ),
+    );
+  }
+  else {
+    $form['server_id'] = array(
+      '#type' => 'select',
+      '#options' => array($tenant->server_id => $tenant->server),
+      '#default_value' => $tenant->server_id,
+    );
+  }
 
-  $form['server_id'] = array(
-    '#type' => 'zmt_server_select',
-    '#default_value' => $tenant->server_id,
-    '#required' => TRUE,
-    '#ajax' => array(
-      'callback' => 'ajax_tenant_server_select_callback',
-      'wrapper' => 'zmt-cos-dropdown-wrap',
-    ),
-  );
-
-  $server_id = isset($form_state['values']['server_id']) ? $form_state['values']['server_id'] : $tenant->server_id;
-  $form['cos_id'] = array(
-    '#type' => 'zmt_cos_select',
-    '#server' => $server_id,
-    '#default_value' => $tenant->cos_id,
-    '#required' => TRUE,
-    '#prefix' => '<div id="zmt-cos-dropdown-wrap">',
+  $server_id = isset($form_state['values']['server_id']) ? (int) $form_state['values']['server_id'] : (int) $tenant->server_id;
+  $form['cos'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Class of Service'),
+    '#prefix' => '<div id="zmt-cos-wrap">',
     '#suffix' => '</div>',
   );
+  if ($server_id) {
+    $options = array();
+    $services = zmt_cos_load_multiple_by_server($server_id);
+    foreach ($services as $service) {
+      $options[$service->id] = $service->name;
+    }
+    $mappings = zmt_tenant_cos_load_multiple_by_tenant(array($id));
+    $default_value = array();
+    $max_accounts = array();
+    foreach ($mappings as $tenant_cos) {
+      $default_value[] = $tenant_cos->cos_id;
+      $max_accounts[$tenant_cos->cos_id] = (int) $tenant_cos->max_account;
+    }
+    $form['cos']['cos_ids'] = array(
+      '#type' => 'checkboxes',
+      '#options' => $options,
+      '#default_value' => $default_value,
+      '#ajax' => array(
+        'callback' => 'ajax_tenant_cos_select_callback',
+        'wrapper' => 'zmt-cos-wrap',
+      ),
+    );
+    $cos_ids = !empty($form_state['values']['cos_ids']) ? $form_state['values']['cos_ids'] : $default_value;
+    $ids = array();
+    foreach ($cos_ids as $cos_id) {
+      if($cos_id) {
+        $ids[] = $cos_id;
+      }
+    }
+    $services = zmt_cos_load_multiple($ids);
+    foreach ($services as $cos) {
+      $max_account = isset($max_accounts[$cos->id]) ? $max_accounts[$cos->id] : (int) $cos->max_account;
+      $form['cos']['max_account_' . $cos->id] = array(
+        '#type' => 'textfield',
+        '#title' => t('Max account number for @cos', array('@cos' => $cos->name)),
+        '#default_value' => $max_account,
+      );
+    }
+  }
 
   $form['actions']['submit'] = array(
     '#type' => 'submit',
@@ -202,7 +240,11 @@ function zmt_tenant_edit_form($form, &$form_state, $tenant){
  * Tenant ajax server selection callback.
  */
 function ajax_tenant_server_select_callback($form, $form_state){
-  return $form['cos_id'];
+  return $form['cos'];
+}
+
+function ajax_tenant_cos_select_callback($form, $form_state) {
+  return $form['cos'];
 }
 
 /**
@@ -278,8 +320,32 @@ function zmt_tenant_edit_form_submit($form, &$form_state) {
 
   $tenant->tenant_uid = $account->uid;
   $tenant->server_id = (int) $values['server_id'];
-  $tenant->cos_id = (int) $values['cos_id'];
   zmt_tenant_save($tenant);
+
+  $mappings = zmt_tenant_cos_load_multiple_by_tenant(array($tenant->id));
+  $available_ids = array();
+  $selected_ids = array_values($values['cos_ids']);
+
+  foreach ($mappings as $tenant_cos) {
+    $cos_id = (int) $tenant_cos->cos_id;
+    $available_ids[] = $cos_id;
+    if (!in_array($cos_id, $selected_ids)) {
+      zmt_tenant_cos_delete($tenant_cos->id);
+    }
+  }
+  foreach ($selected_ids as $cos_id) {
+    if ((int) $cos_id > 0 && !in_array($cos_id, $available_ids)) {
+      $tenant_cos = zmt_tenant_cos_new();
+      $tenant_cos->tenant_id = $tenant->id;
+      $tenant_cos->cos_id = $cos_id;
+    }
+    else {
+      $tenant_cos = zmt_tenant_cos_load_single($tenant->id, $cos_id);
+    }
+    $max_account = isset($values['max_account_' . $cos_id]) ? (int) $values['max_account_' . $cos_id] : 0;
+    $tenant_cos->max_account = $max_account;
+    zmt_tenant_cos_save($tenant_cos);
+  }
 
   $form_state['redirect'] = 'zmt/tenant';
 }
@@ -328,78 +394,4 @@ function zmt_tenant_delete_form_submit($form, &$form_state) {
   zmt_tenant_delete($tenant->id);
   drupal_set_message(t('%name has been deleted.', array('%name' => $user->name)));
   watchdog('zmt_tenant', 'Deleted zimbra tenant %name.', array('%name' => $user->name), WATCHDOG_NOTICE);
-}
-
-/**
- * Tenant attach form to user.
- */
-function zmt_tenant_attach_form(&$form, &$form_state) {
-  form_load_include($form_state, 'inc', 'zmt_tenant', 'zmt_tenant.admin');
-  $tenant_rid = (int) variable_get('zmt_tenant_role_id', 0);
-  $form['account']['roles']['#ajax'] = array(
-    'callback' => 'ajax_account_role_callback',
-    'wrapper' => 'zmt-tenant-wrap',
-  );
-
-  $none = array('' => t('- None -'));
-
-  $form['tenant'] = array(
-    '#type' => 'fieldset',
-    '#title' => t('Tenant'),
-    '#tree' => TRUE,
-    '#prefix' => '<div id="zmt-tenant-wrap">',
-    '#suffix' => '</div>',
-  );
-  $roles = isset($form_state['values']['roles']) ? array_values($form_state['values']['roles']) : array();
-  if ($tenant_rid && in_array((string) $tenant_rid, $roles, TRUE)) {
-    $form['tenant']['server_id'] = array(
-      '#type' => 'zmt_server_select',
-      '#required' => TRUE,
-      '#ajax' => array(
-        'callback' => 'ajax_tenant_server_callback',
-        'wrapper' => 'zmt-cos-dropdown-wrap',
-      ),
-    );
-
-    $server_id = isset($form_state['values']['tenant']['server_id']) ? $form_state['values']['tenant']['server_id'] : 0;
-    $form['tenant']['cos_id'] = array(
-      '#type' => 'zmt_cos_select',
-      '#server' => $server_id,
-      '#required' => TRUE,
-      '#prefix' => '<div id="zmt-cos-dropdown-wrap">',
-      '#suffix' => '</div>',
-    );
-  }
-  $form['#submit'][] = 'zmt_tenant_form_submit_callback';
-}
-
-/**
- * Tenant ajax account role selection callback.
- */
-function ajax_account_role_callback($form, $form_state) {
-  return $form['tenant'];
-}
-
-/**
- * Tenant ajax server selection callback.
- */
-function ajax_tenant_server_callback($form, $form_state){
-  return $form['tenant']['cos_id'];
-}
-
-/**
- * Submit callback for zmt_tenant_attach_form().
- */
-function zmt_tenant_form_submit_callback($form, &$form_state) {
-  $values = $form_state['values'];
-  $server_id = isset($values['tenant']['server_id']) ? (int) $values['tenant']['server_id'] : 0;
-  $cos_id = isset($values['tenant']['cos_id']) ? (int) $values['tenant']['cos_id'] : 0;
-
-  if ($server_id && $cos_id) {
-    $tenant = zmt_tenant_new();
-    $tenant->tenant_uid = $values['uid'];
-    $tenant->server_id = isset($values['tenant']['server_id']) ? (int) $values['tenant']['server_id'] : 0;
-    $tenant->cos_id = isset($values['tenant']['cos_id']) ? (int) $values['tenant']['cos_id'] : 0;
-    zmt_tenant_save($tenant);
-  }
 }
