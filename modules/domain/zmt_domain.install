@@ -90,7 +90,6 @@ function zmt_domain_schema() {
       'indexes' => array(
         'zmt_server_id' => array('server_id'),
         'zmt_tenant_id' => array('tenant_id'),
-        'zmt_domain_uid' => array('uid'),
         'zmt_domain_created' => array('created'),
         'zmt_domain_changed' => array('changed'),
       ),
