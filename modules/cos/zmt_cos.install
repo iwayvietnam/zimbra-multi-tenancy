@@ -92,6 +92,10 @@ function zmt_cos_schema() {
         'zmt_cos_changed' => array('changed'),
       ),
       'foreign keys' => array(
+        'zmt_cos_server' => array(
+          'table' => 'zmt_server',
+          'columns'=> array('server_id' => 'id'),
+        ),
         'zmt_cos_creator' => array(
           'table' => 'users',
           'columns' => array('uid' => 'uid'),
