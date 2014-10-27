@@ -25,6 +25,18 @@ function zmt_tenant_entity_info() {
       'module' => 'zmt_tenant',
       'access callback' => 'zmt_tenant_access',
     ),
+    'zmt_tenant_cos' => array(
+      'label' => t('Class of Service for Tenant'),
+      'entity class' => 'Entity',
+      'controller class' => 'EntityAPIControllerExportable',
+      'base table' => 'zmt_tenant_cos',
+      'fieldable' => FALSE,
+      'entity keys' => array(
+        'id' => 'id',
+      ),
+      'module' => 'zmt_cos',
+      'access callback' => 'zmt_tenant_access',
+    ),
   );
 
   return $entity;
@@ -91,13 +103,24 @@ function zmt_tenant_permission() {
  * Implements hook_query_TAG_alter().
  */ 
 function zmt_tenant_query_zmt_tenant_load_multiple_alter(QueryAlterableInterface $query) {
-  $query->join('bayo_server', 's', 's.id = base.server_id');
+  $query->join('zmt_server', 's', 's.id = base.server_id');
   $query->join('users', 'u', 'u.uid = base.tenant_uid');
 
   $query->addField('s', 'name', 'server');
   $query->addField('u', 'name', 'name');
   $query->addField('u', 'mail', 'mail');
   $query->addField('u', 'status', 'status');
+}
+
+/**
+ * Implements hook_query_TAG_alter().
+ */ 
+function zmt_tenant_query_zmt_tenant_cos_load_multiple_alter(QueryAlterableInterface $query) {
+  $query->join('zmt_cos', 'c', 'c.id = base.cos_id');
+  $query->join('zmt_tenant', 't', 't.id = base.tenant_id');
+  $query->join('users', 'u', 'u.uid = t.tenant_uid');
+  $query->addField('c', 'name', 'cos');
+  $query->addField('u', 'name', 'tenant');
 }
 
 /**
@@ -481,14 +504,17 @@ function zmt_tenant_cos_load_multiple($ids = array(), array $conditions = array(
  * @return
  *   An array of mapping objects indexed by id.
  */
-function zmt_tenant_cos_load_multiple_by_cos(array $cos_ids = array()) {
+function zmt_tenant_cos_load_multiple_by_cos(array $cos_ids = array(), $tenant_id = NULL) {
   if (empty($cos_ids)) {
     return array();
   }
   $efq = new EntityFieldQuery();
-  $result = $efq->entityCondition('entity_type', 'zmt_tenant_cos')
-    ->propertyCondition('cos_id', $cos_ids)
-    ->execute();
+  $efq->entityCondition('entity_type', 'zmt_tenant_cos')
+    ->propertyCondition('cos_id', $cos_ids);
+  if (NULL !== $tenant_id) {
+    $efq->propertyCondition('tenant_id', $tenant_id);
+  }
+  $result = $efq->execute();
   $ids = isset($result['zmt_tenant_cos']) ? array_keys($result['zmt_tenant_cos']) : array();
   return zmt_tenant_cos_load_multiple($ids);
 }
@@ -504,14 +530,17 @@ function zmt_tenant_cos_load_multiple_by_cos(array $cos_ids = array()) {
  * @return
  *   An array of mapping objects indexed by id.
  */
-function zmt_tenant_cos_load_multiple_by_tenant(array $tenant_ids = array()) {
+function zmt_tenant_cos_load_multiple_by_tenant(array $tenant_ids = array(), $cos_id = NULL) {
   if (empty($tenant_ids)) {
     return array();
   }
   $efq = new EntityFieldQuery();
-  $result = $efq->entityCondition('entity_type', 'zmt_tenant_cos')
-    ->propertyCondition('tenant_id', $tenant_ids)
-    ->execute();
+  $efq->entityCondition('entity_type', 'zmt_tenant_cos')
+    ->propertyCondition('tenant_id', $tenant_ids);
+  if (NULL !== $cos_id) {
+    $efq->propertyCondition('cos_id', $cos_id);
+  }
+  $result = $efq->execute();
   $ids = isset($result['zmt_tenant_cos']) ? array_keys($result['zmt_tenant_cos']) : array();
   return zmt_tenant_cos_load_multiple($ids);
 }
@@ -564,7 +593,7 @@ function zmt_tenant_cos_new($tenant_id = 0, $cos_id = 0) {
  */
 function zmt_tenant_cos_save($mapping, $by_entity = TRUE) {
   if ($by_entity === TRUE) {
-    return entity_get_controller('zmt_tenant_cos')->save($cs);
+    return entity_get_controller('zmt_tenant_cos')->save($mapping);
   }
   else {
     $fields = array(
