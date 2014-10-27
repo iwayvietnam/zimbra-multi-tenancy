@@ -21,6 +21,10 @@ function zmt_cos_list_all() {
   if (!(user_access('administer zmt') || user_access('administer any zmt_cos'))) {
     $query->condition('c.uid', $user->uid);
   }
+  $server_id = isset($_SESSION['zmt_filter_server_id']) ? (int) $_SESSION['zmt_filter_server_id'] : 0;
+  if ($server_id) {
+    $query->condition('c.server_id', $server_id);
+  }
 
   $item_per_page = variable_get('zimbra_item_per_page', 20);
   $result = $query
@@ -60,6 +64,9 @@ function zmt_cos_list_all() {
     );
   }
 
+  if (user_access('administer zmt')) {
+    $build['cos_filter'] = drupal_get_form('zmt_filter_by_server_form');
+  }
   $build['cos_table']  = array(
     '#theme' => 'table',
     '#header' => $header,
