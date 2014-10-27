@@ -505,18 +505,23 @@ function zmt_tenant_cos_load_multiple($ids = array(), array $conditions = array(
  *   An array of mapping objects indexed by id.
  */
 function zmt_tenant_cos_load_multiple_by_cos(array $cos_ids = array(), $tenant_id = NULL) {
-  if (empty($cos_ids)) {
-    return array();
+  if (!empty($cos_ids)) {
+    $cache = &drupal_static(__FUNCTION__, array());
+    $cache_key = md5(implode(',', $cos_ids) . $tenant_id);
+    if (!isset($cache[$cache_key])) {
+      $efq = new EntityFieldQuery();
+      $efq->entityCondition('entity_type', 'zmt_tenant_cos')
+        ->propertyCondition('cos_id', $cos_ids);
+      if (NULL !== $tenant_id) {
+        $efq->propertyCondition('tenant_id', $tenant_id);
+      }
+      $result = $efq->execute();
+      $ids = isset($result['zmt_tenant_cos']) ? array_keys($result['zmt_tenant_cos']) : array();
+      $cache[$cache_key] = zmt_tenant_cos_load_multiple($ids);
+    }
+    return $cache[$cache_key];
   }
-  $efq = new EntityFieldQuery();
-  $efq->entityCondition('entity_type', 'zmt_tenant_cos')
-    ->propertyCondition('cos_id', $cos_ids);
-  if (NULL !== $tenant_id) {
-    $efq->propertyCondition('tenant_id', $tenant_id);
-  }
-  $result = $efq->execute();
-  $ids = isset($result['zmt_tenant_cos']) ? array_keys($result['zmt_tenant_cos']) : array();
-  return zmt_tenant_cos_load_multiple($ids);
+  return array();
 }
 
 /**
@@ -531,18 +536,23 @@ function zmt_tenant_cos_load_multiple_by_cos(array $cos_ids = array(), $tenant_i
  *   An array of mapping objects indexed by id.
  */
 function zmt_tenant_cos_load_multiple_by_tenant(array $tenant_ids = array(), $cos_id = NULL) {
-  if (empty($tenant_ids)) {
-    return array();
+  if (!empty($tenant_ids)) {
+    $cache = &drupal_static(__FUNCTION__, array());
+    $cache_key = md5(implode(',', $tenant_ids) . $cos_id);
+    if (!isset($cache[$cache_key])) {
+      $efq = new EntityFieldQuery();
+      $efq->entityCondition('entity_type', 'zmt_tenant_cos')
+        ->propertyCondition('tenant_id', $tenant_ids);
+      if (NULL !== $cos_id) {
+        $efq->propertyCondition('cos_id', $cos_id);
+      }
+      $result = $efq->execute();
+      $ids = isset($result['zmt_tenant_cos']) ? array_keys($result['zmt_tenant_cos']) : array();
+      $cache[$cache_key] = zmt_tenant_cos_load_multiple($ids);
+    }
+    return $cache[$cache_key];
   }
-  $efq = new EntityFieldQuery();
-  $efq->entityCondition('entity_type', 'zmt_tenant_cos')
-    ->propertyCondition('tenant_id', $tenant_ids);
-  if (NULL !== $cos_id) {
-    $efq->propertyCondition('cos_id', $cos_id);
-  }
-  $result = $efq->execute();
-  $ids = isset($result['zmt_tenant_cos']) ? array_keys($result['zmt_tenant_cos']) : array();
-  return zmt_tenant_cos_load_multiple($ids);
+  return array();
 }
 
 /**
