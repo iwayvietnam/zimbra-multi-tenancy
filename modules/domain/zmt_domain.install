@@ -84,21 +84,20 @@ function zmt_domain_schema() {
       ),
       'primary key' => array('id'),
       'unique keys' => array(
-        'name' => array('name'),
+        'zmt_domain_name' => array('name'),
+        'zmt_domain_uid' => array('domain_uid'),
       ),
       'indexes' => array(
         'zmt_server_id' => array('server_id'),
-        'zmt_cos_id' => array('cos_id'),
         'zmt_tenant_id' => array('tenant_id'),
+        'zmt_domain_uid' => array('uid'),
+        'zmt_domain_created' => array('created'),
+        'zmt_domain_changed' => array('changed'),
       ),
       'foreign keys' => array(
         'zmt_domain_server' => array(
           'table' => 'zmt_server',
           'columns'=> array('server_id' => 'id'),
-        ),
-        'zmt_domain_cos' => array(
-          'table' => 'zmt_cos',
-          'columns'=> array('cos_id' => 'id'),
         ),
         'zmt_domain_tenant' => array(
           'table' => 'zmt_tenant',
