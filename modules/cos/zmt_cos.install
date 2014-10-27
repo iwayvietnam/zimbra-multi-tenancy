@@ -50,6 +50,12 @@ function zmt_cos_schema() {
           'not null' => TRUE,
           'default' => 0,
         ),
+        'max_account' => array(
+          'description' => 'The default max account number of this cos.',
+          'type' => 'int',
+          'not null' => TRUE,
+          'default' => 0,
+        ),
         'zimbra_id' => array(
           'description' => 'The zimbra identify for class of service.',
           'type' => 'varchar',
