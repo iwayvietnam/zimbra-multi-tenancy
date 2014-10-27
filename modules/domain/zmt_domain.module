@@ -26,6 +26,18 @@ function zmt_domain_entity_info() {
       'module' => 'zmt_domain',
       'access callback' => 'zmt_domain_access',
     ),
+    'zmt_domain_cos' => array(
+      'label' => t('Class of Service for Domain'),
+      'entity class' => 'Entity',
+      'controller class' => 'EntityAPIControllerExportable',
+      'base table' => 'zmt_domain_cos',
+      'fieldable' => FALSE,
+      'entity keys' => array(
+        'id' => 'id',
+      ),
+      'module' => 'zmt_domain',
+      'access callback' => 'zmt_tenant_access',
+    ),
   );
 
   return $entity;
@@ -99,11 +111,31 @@ function zmt_domain_permission() {
 }
 
 /**
+ * Implements hook_user_delete().
+ */
+function zmt_domain_user_delete($account) {
+  db_update('zmt_domain')
+    ->fields(array(
+      'domain_uid' => 0,
+    ))
+    ->condition('domain_uid', $account->uid)
+    ->execute();
+}
+
+/**
  * Implements hook_zmt_server_delete().
  */ 
 function zmt_domain_zmt_server_delete($server){
   $id = $server ? $server->id : 0;
   zmt_domain_delete_multiple_by_server(array($id));
+}
+
+/**
+ * Implements hook_zmt_cos_delete().
+ */ 
+function zmt_domain_zmt_cos_delete($cos){
+  $id = $cos ? $cos->id : 0;
+  zmt_domain_cos_delete_multiple_by_cos(array($id));
 }
 
 /**
@@ -123,25 +155,44 @@ function zmt_domain_query_tenant_count_domain_alter(QueryAlterableInterface $que
  */ 
 function zmt_domain_query_tenant_sum_account_alter(QueryAlterableInterface $query) {
   $domain_id = (int) $query->getMetaData('domain_id');
+  $cos_id = (int) $query->getMetaData('cos_id');
   $sub_query = db_select('zmt_domain', 'd')
     ->fields('d', array('tenant_id'))
     ->condition('d.id', $domain_id, '!=')
     ->groupBy('d.tenant_id');
-  $sub_query->addExpression('SUM(d.account_max_number)', 'total_account');
-  $query->leftJoin($sub_query, 'd', 'd.tenant_id = t.id');
-  $query->addExpression('IFNULL(d.total_account, 0)', 'total_account');
+  // $sub_query->addExpression('SUM(d.max_account)', 'total_account');
+  // $query->leftJoin($sub_query, 'd', 'd.tenant_id = t.id');
+  // $query->addExpression('IFNULL(d.total_account, 0)', 'total_account');
 }
 
 /**
- * Implements hook_user_delete().
- */
-function zmt_domain_user_delete($account) {
-  db_update('zmt_domain')
-    ->fields(array(
-      'domain_uid' => 0,
-    ))
-    ->condition('domain_uid', $account->uid)
-    ->execute();
+ * Implements hook_query_TAG_alter().
+ */ 
+function zmt_domain_query_zmt_domain_load_multiple_alter(QueryAlterableInterface $query) {
+  $query->join('bayo_server', 's', 's.id = base.server_id');
+  $query->join('bayo_tenant', 't', 't.id = base.tenant_id');
+  $query->join('users', 'tu', 'tu.uid = t.tenant_uid');
+  $query->join('users', 'du', 'du.uid = base.domain_uid');
+
+  $query->addField('s', 'name', 'server');
+  $query->addField('s', 'service_location', 'service_location');
+  $query->addField('s', 'admin_user', 'admin_user');
+  $query->addField('s', 'admin_password', 'admin_password');
+  $query->addField('s', 'delete_domain', 'delete_domain');
+
+  $query->addField('tu', 'name', 'tenant');
+  $query->addField('du', 'mail', 'mail');
+  $query->addField('du', 'status', 'status');
+}
+
+/**
+ * Implements hook_query_TAG_alter().
+ */ 
+function zmt_domain_query_zmt_domain_cos_load_multiple_alter(QueryAlterableInterface $query) {
+  $query->join('zmt_cos', 'c', 'c.id = base.cos_id');
+  $query->join('zmt_domain', 'd', 'd.id = base.domain_id');
+  $query->addField('c', 'name', 'cos');
+  $query->addField('d', 'name', 'domain');
 }
 
 /**
@@ -178,6 +229,19 @@ function zmt_domain_uri($domain) {
  */
 function zmt_domain_label($domain, $entity_type) {
   return t('Domain') . ' ' . $domain->name;
+}
+
+/**
+ * Implements hook_user_load().
+ */
+function zmt_domain_user_load(array $users) {
+  $result = db_select('zmt_domain', 'd')
+    ->fields('d', array('id', 'name'))
+    ->condition('d.domain_uid', array_keys($users))
+    ->execute();
+  foreach ($result as $domain) {
+    $users[$domain->domain_uid]->domain = $domain;
+  }
 }
 
 /**
@@ -229,18 +293,21 @@ function zmt_domain_load_multiple(array $ids = array(), array $conditions = arra
  *
  * @see zmt_domain_load_multiple()
  */
-function zmt_domain_load_all($filter_by_user = FALSE) {
+function zmt_domain_load_all($filter_by_user = FALSE, $limit = 0, $offset = 0) {
   global $user;
   $cache = &drupal_static(__FUNCTION__, array());
-  $cache_key = $filter_by_user === TRUE ? md5('true') : md5('false');
+  $cache_key = md5(var_export($filter_by_user, TRUE) . $limit . $limit);
   if (!isset($cache[$cache_key])) {
     $query = new EntityFieldQuery();
     $query->entityCondition('entity_type', 'zmt_domain');
-    if ($filter_by_user) {
+    if ($filter_by_user === TRUE) {
       if (!(user_access('administer zmt')
         || user_access('administer any zmt_domain'))) {
         $query->condition('d.uid', $user->uid);
       }
+    }
+    if ((int) $limit > 0) {
+      $efq->range($offset, $limit);
     }
     $result = $query->execute();
     $ids = isset($result['zmt_domain']) ? array_keys($result['zmt_domain']) : array();
@@ -259,16 +326,19 @@ function zmt_domain_load_all($filter_by_user = FALSE) {
  *
  * @see zmt_domain_load_multiple()
  */
-function zmt_domain_load_multiple_by_server($server, $filter_by_user = FALSE) {
+function zmt_domain_load_multiple_by_server($server, $filter_by_user = FALSE, $limit = 0, $offset = 0) {
   global $user;
   $cache = &drupal_static(__FUNCTION__, array());
   $server_id = is_object($server) ? $server->id : $server;
-  $cache_key = $filter_by_user === TRUE ? md5($server_id . '-' . 'true') : md5($server_id . '-' . 'false');
+  $cache_key = md5($server_id . var_export($filter_by_user, TRUE) . $limit . $limit);
   if (!isset($cache[$cache_key])) {
     $query = db_select('zmt_domain', 'd');
     $query->leftJoin('zmt_tenant', 't', 't.id = d.tenant_id');
     $query->leftJoin('users', 'u', 'u.uid = t.tenant_uid');
     $query->condition('d.server_id', $server_id);
+    if ((int) $limit > 0) {
+      $query->range($offset, $limit);
+    }
     if ($filter_by_user) {
       if (!(user_access('administer zmt', $user))) {
         if (user_access('administer any zmt_domain', $user)) {
@@ -293,17 +363,6 @@ function zmt_domain_load_multiple_by_server($server, $filter_by_user = FALSE) {
       $ids = module_invoke_all('domain_load_by_user');
     }
 
-    // $query = new EntityFieldQuery();
-    // $query->entityCondition('entity_type', 'zmt_domain')
-    //   ->propertyCondition('server_id', $server_id);
-    // if ($filter_by_user) {
-    //   if (!(user_access('administer zmt')
-    //     || user_access('administer any zmt_domain'))) {
-    //     $query->condition('d.uid', $user->uid);
-    //   }
-    // }
-    // $result = $query->execute();
-    // $ids = isset($result['zmt_domain']) ? array_keys($result['zmt_domain']) : array();
     $cache[$cache_key] = zmt_domain_load_multiple($ids);
   }
   return $cache[$cache_key];
@@ -319,18 +378,22 @@ function zmt_domain_load_multiple_by_server($server, $filter_by_user = FALSE) {
  *
  * @see zmt_domain_load_multiple()
  */
-function zmt_domain_load_multiple_by_tenant($tenant) {
+function zmt_domain_load_multiple_by_tenant($tenant, $limit = 0, $offset = 0) {
   $cache = &drupal_static(__FUNCTION__, array());
-  $tenant_id = is_object($tenant) ? $tenant->id : $tenant;
-  if (!isset($cache[$tenant_id])) {
+  $tenant_id = is_object($tenant) ? (int) $tenant->id : (int) $tenant;
+  $cache_key = $tenant_id + $limit + $offset;
+  if (!isset($cache[$cache_key])) {
     $query = new EntityFieldQuery();
+    if ((int) $limit > 0) {
+      $efq->range($offset, $limit);
+    }
     $result = $query->entityCondition('entity_type', 'zmt_domain')
       ->propertyCondition('tenant_id', $tenant_id)
       ->execute();
     $ids = isset($result['zmt_domain']) ? array_keys($result['zmt_domain']) : array();
-    $cache[$tenant_id] = zmt_domain_load_multiple($ids);
+    $cache[$cache_key] = zmt_domain_load_multiple($ids);
   }
-  return $cache[$tenant_id];
+  return $cache[$cache_key];
 }
 
 /**
@@ -343,26 +406,31 @@ function zmt_domain_load_multiple_by_tenant($tenant) {
  *
  * @see zmt_domain_load_multiple()
  */
-function zmt_domain_load_multiple_by_user($domain_user = NULL) {
+function zmt_domain_load_multiple_by_user($domain_user = NULL, $limit = 0, $offset = 0) {
   global $user;
   if (NULL === $domain_user) {
     $domain_user = $user;
   }
+  $uid = (int) $domain_user->uid;
   $cache = &drupal_static(__FUNCTION__, array());
-  if (!isset($cache[$domain_user->uid])) {
+  $cache_key = $uid + $limit + $offset;
+  if (!isset($cache[$cache_key])) {
     $query = db_select('zmt_domain', 'd');
     $query->leftJoin('zmt_tenant', 't', 't.id = d.tenant_id');
     $query->leftJoin('users', 'u', 'u.uid = t.tenant_uid');
     if (!(user_access('administer zmt', $domain_user))) {
       if (user_access('administer any zmt_domain', $domain_user)) {
-        $query->condition('u.uid', $domain_user->uid);
+        $query->condition('u.uid', $uid);
       }
       elseif (user_access('administer own zmt_domain', $domain_user)) {
-        $query->condition('d.uid', $domain_user->uid);
+        $query->condition('d.uid', $uid);
       }
       else {
-        $query->condition('d.domain_uid', $domain_user->uid);
+        $query->condition('d.domain_uid', $uid);
       }
+    }
+    if ((int) $limit > 0) {
+      $query->range($offset, $limit);
     }
     $result = $query->fields('d', array('id'))->execute();
 
@@ -373,9 +441,9 @@ function zmt_domain_load_multiple_by_user($domain_user = NULL) {
     if (empty($ids)) {
       $ids = module_invoke_all('domain_load_by_user');
     }
-    $cache[$user->uid] = zmt_domain_load_multiple($ids);
+    $cache[$cache_key] = zmt_domain_load_multiple($ids);
   }
-  return $cache[$user->uid];
+  return $cache[$cache_key];
 }
 
 /**
@@ -422,17 +490,19 @@ function zmt_domain_get_server($id) {
  *   Total number of accouns.
  */
 function zmt_domain_count_accounts($id) {
-  $total_account = 0;
-  $query = db_select('zmt_domain', 'd');
-  $result = $query->fields('d', array('id'))
-    ->condition('d.id', (int) $id)
-    ->range(0, 1)
-    ->addTag('domain_count_account')
-    ->execute();
-  foreach ($result as $domain) {
-    $total_account = isset($domain->total_account) ? $domain->total_account : 0;
+  static $total_account = NULL;
+  if (NULL === $total_account) {
+    $query = db_select('zmt_domain', 'd');
+    $result = $query->fields('d', array('id'))
+      ->condition('d.id', (int) $id)
+      ->range(0, 1)
+      ->addTag('domain_count_account')
+      ->execute();
+    foreach ($result as $domain) {
+      $total_account = isset($domain->total_account) ? (int) $domain->total_account : 0;
+    }
   }
-  return $total_account;
+  return (int) $total_account;
 }
 
 /**
@@ -443,13 +513,13 @@ function zmt_domain_count_accounts($id) {
  * @return
  *   Remain number of accouns.
  */
-function zmt_domain_account_number_remain($id){
+function zmt_domain_account_number_remain($id, $cos_id){
   $account_remain = 0;
   $domain = zmt_domain_load($id);
   if ($domain) {
-    $account_max_number = (int) $domain->account_max_number;
+    $max_account = isset($domain->max_account) ? (int) $domain->max_account : 0;
     $total_account = zmt_domain_count_accounts($id);
-    $account_remain = $account_max_number - $total_account;
+    $account_remain = $max_account - $total_account;
   }
   return $account_remain;
 }
@@ -465,7 +535,7 @@ function zmt_domain_account_number_remain($id){
  *   TRUE or FALSE.
  */
 function zmt_domain_exists($name, $id = 0) {
-  $cache = &drupal_static(__FUNCTION__, array());
+  $cache = &drupal_static(__FUNCTION__);
   $cache_key = md5($name . '-' . $id);
   if (!isset($cache[$cache_key])) {
     $query = new EntityFieldQuery();
@@ -492,10 +562,8 @@ function zmt_domain_new($name = '') {
   global $user;
   $values = array(
     'server_id' => 0,
-    'cos_id' => 0,
     'tenant_id' => 0,
     'name' => $name,
-    'account_max_number' => 0,
     'zimbra_id' => '',
     'domain_uid' => 0,
     'uid' => $user->uid,
@@ -522,10 +590,8 @@ function zmt_domain_save($domain, $by_entity = TRUE) {
   else {
     $fields = array(
       'server_id' => $domain->server_id,
-      'cos_id' => $domain->cos_id,
       'tenant_id' => $domain->tenant_id,
       'name' => $domain->name,
-      'account_max_number' => $domain->account_max_number,
       'zimbra_id' => $domain->zimbra_id,
       'domain_uid' => $domain->domain_uid,
       'uid' => $domain->uid,
@@ -537,7 +603,6 @@ function zmt_domain_save($domain, $by_entity = TRUE) {
       return SAVED_NEW;
     }
     else {
-      unset($fields['id']);
       db_update('zmt_domain')
         ->fields($fields)
         ->condition('id', $domain->id)
@@ -565,6 +630,7 @@ function zmt_domain_delete($id) {
  *   An array of domain IDs to delete.
  */
 function zmt_domain_delete_multiple(array $ids = array()) {
+  zmt_domain_cos_delete_multiple_by_domain($ids);
   entity_get_controller('zmt_domain')->delete($ids);
 }
 
@@ -581,4 +647,229 @@ function zmt_domain_delete_multiple_by_server(array $ids = array()) {
     ->execute();
   $domain_ids = isset($result['zmt_domain']) ? array_keys($result['zmt_domain']) : array();
   zmt_domain_delete_multiple($domain_ids);
+}
+
+/**
+ * Loads a domain cos by ID.
+ */
+function zmt_domain_cos_load($id) {
+  if (empty($id)) {
+    return FALSE;
+  }
+
+  $entities = zmt_domain_cos_load_multiple(array($id), array());
+  return $entities ? reset($entities) : FALSE;
+}
+
+/**
+ * Loads multiple domain cos by ID or based on a set of matching conditions.
+ *
+ * @see entity_load()
+ *
+ * @param $ids
+ *   An array of domain cos IDs.
+ * @param $conditions
+ *   An array of conditions on the {zmt_domain_cos} table in the form
+ *     'field' => $value.
+ * @param $reset
+ *   Whether to reset the internal domain cos loading cache.
+ *
+ * @return
+ *   An array of domain cos objects indexed by id.
+ */
+function zmt_domain_cos_load_multiple($ids = array(), array $conditions = array(), $reset = FALSE) {
+  if (empty($ids) && empty($conditions)) {
+    return array();
+  }
+  return entity_load('zmt_domain_cos', $ids, $conditions, $reset);
+}
+
+/**
+ * Loads multiple domain cos mapping by cos ids.
+ *
+ * @see entity_load()
+ *
+ * @param $cos_ids
+ *   An array of cos IDs.
+ *
+ * @return
+ *   An array of mapping objects indexed by id.
+ */
+function zmt_domain_cos_load_multiple_by_cos(array $cos_ids = array(), $domain_id = NULL) {
+  if (empty($cos_ids)) {
+    $cache = &drupal_static(__FUNCTION__, array());
+    $cache_key = md5(implode(',', $cos_ids) . $domain_id);
+    if (!isset($cache[$cache_key])) {
+      $efq = new EntityFieldQuery();
+      $efq->entityCondition('entity_type', 'zmt_domain_cos')
+        ->propertyCondition('cos_id', $cos_ids);
+      if (NULL !== $domain_id) {
+        $efq->propertyCondition('domain_id', $domain_id);
+      }
+      $result = $efq->execute();
+      $ids = isset($result['zmt_domain_cos']) ? array_keys($result['zmt_domain_cos']) : array();
+      $cache[$cache_key] = zmt_domain_cos_load_multiple($ids);
+    }
+    return $cache[$cache_key];
+  }
+  return array();
+}
+
+/**
+ * Loads multiple domain cos mapping by domain ids.
+ *
+ * @see entity_load()
+ *
+ * @param $domain_ids
+ *   An array of domain IDs.
+ *
+ * @return
+ *   An array of mapping objects indexed by id.
+ */
+function zmt_domain_cos_load_multiple_by_domain(array $domain_ids = array(), $cos_id = NULL) {
+  if (!empty($domain_ids)) {
+    $cache = &drupal_static(__FUNCTION__, array());
+    $cache_key = md5(implode(',', $domain_ids) . $cos_id);
+    if (!isset($cache[$cache_key])) {
+      $efq = new EntityFieldQuery();
+      $efq->entityCondition('entity_type', 'zmt_domain_cos')
+        ->propertyCondition('domain_id', $domain_ids);
+      if (NULL !== $cos_id) {
+        $efq->propertyCondition('cos_id', $cos_id);
+      }
+      $result = $efq->execute();
+      $ids = isset($result['zmt_domain_cos']) ? array_keys($result['zmt_domain_cos']) : array();
+      $cache[$cache_key] = zmt_domain_cos_load_multiple($ids);
+    }
+    return $cache[$cache_key];
+  }
+  return array();
+}
+
+/**
+ * Loads a domain cos by id of cos and domain.
+ */
+function zmt_domain_cos_load_single($domain_id, $cos_id) {
+  $efq = new EntityFieldQuery();
+  $result = $efq->entityCondition('entity_type', 'zmt_domain_cos')
+    ->propertyCondition('domain_id', $domain_id)
+    ->propertyCondition('cos_id', $cos_id)
+    ->execute();
+  $ids = isset($result['zmt_domain_cos']) ? array_keys($result['zmt_domain_cos']) : array();
+  $entities = zmt_domain_cos_load_multiple($ids);
+  return $entities ? reset($entities) : FALSE;
+}
+
+/**
+ * Returns an initialized domain cos mapping object.
+ *
+ * @param $domain_id
+ *   The domain id.
+ * @param $cos_id
+ *   The cos id.
+ *
+ * @return
+ *   A domain cos object with all default fields initialized.
+ */
+function zmt_domain_cos_new($domain_id = 0, $cos_id = 0) {
+  global $user;
+  $values = array(
+    'domain_id' => (int) $domain_id,
+    'cos_id' => (int) $cos_id,
+    'max_account' => 0,
+    'uid' => $user->uid,
+    'created' => REQUEST_TIME,
+  );
+  return entity_get_controller('zmt_domain_cos')->create($values);
+}
+
+/**
+ * Saves a domain cos mapping.
+ *
+ * @param $cs
+ *   The full domain cos object to save.
+ *
+ * @return
+ *   SAVED_NEW or SAVED_UPDATED depending on the operation performed.
+ */
+function zmt_domain_cos_save($mapping, $by_entity = TRUE) {
+  if ($by_entity === TRUE) {
+    return entity_get_controller('zmt_domain_cos')->save($cs);
+  }
+  else {
+    $fields = array(
+      'domain_id' => $mapping->domain_id,
+      'cos_id' => $mapping->cos_id,
+      'max_account' => (int) $mapping->max_account,
+      'uid' => $mapping->uid,
+      'created' => $mapping->created,
+    );
+    if (!isset($mapping->id) || (int) $mapping->id == 0) {
+      $mapping->id = db_insert('zmt_domain_cos')->fields($fields)->execute();
+      return SAVED_NEW;
+    }
+    else {
+      db_update('zmt_domain_cos')
+        ->fields($fields)
+        ->condition('id', $mapping->id)
+        ->execute();
+      entity_get_controller('zmt_domain_cos')->resetCache(array($mapping->id));
+      return SAVED_UPDATED;
+    }
+  }
+}
+
+/**
+ * Deletes a domain cos by ID.
+ *
+ * @param $id
+ *   The ID of the domain cos to delete.
+ */
+function zmt_domain_cos_delete($id) {
+  return zmt_domain_cos_delete_multiple(array($id));
+}
+
+/**
+ * Deletes multiple domain cos by ID.
+ *
+ * @param $ids
+ *   An array of domain cos IDs to delete.
+ */
+function zmt_domain_cos_delete_multiple(array $ids = array()) {
+  $services = zmt_domain_cos_load_multiple($ids);
+  entity_get_controller('zmt_domain_cos')->delete($ids);
+}
+
+/**
+ * Deletes multiple domain cos by by cos.
+ *
+ * @param $cos_ids
+ *   An array of cos IDs.
+ */
+function zmt_domain_cos_delete_multiple_by_cos(array $cos_ids = array()) {
+  if (!empty($cos_ids)) {
+    $efq = new EntityFieldQuery();
+    $result = $efq->entityCondition('entity_type', 'zmt_domain_cos')
+      ->propertyCondition('cos_id', $cos_ids)
+      ->execute();
+    $ids = isset($result['zmt_domain_cos']) ? array_keys($result['zmt_domain_cos']) : array();
+    zmt_domain_cos_delete_multiple($ids);
+  }
+}
+
+/**
+ * Deletes multiple domain cos by by domain.
+ *
+ * @param $domain_ids
+ *   An array of domain IDs.
+ */
+function zmt_domain_cos_delete_multiple_by_domain(array $domain_ids = array()) {
+  if (!empty($domain_ids)) {
+    $efq = new EntityFieldQuery();
+    $result = $efq->entityCondition('entity_type', 'zmt_domain_cos')
+      ->propertyCondition('domain_id', $domain_ids)
+      ->execute();
+    $ids = isset($result['zmt_domain_cos']) ? array_keys($result['zmt_domain_cos']) : array();
+    zmt_domain_cos_delete_multiple($ids);
+  }
 }
