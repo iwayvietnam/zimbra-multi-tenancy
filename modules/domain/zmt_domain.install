@@ -131,7 +131,7 @@ function zmt_domain_schema() {
           'not null' => TRUE,
           'default' => 0,
         ),
-        'max_account_number' => array(
+        'max_account' => array(
           'description' => 'The max account number of this mapping.',
           'type' => 'int',
           'not null' => TRUE,
