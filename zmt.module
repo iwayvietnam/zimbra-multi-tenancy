@@ -34,53 +34,6 @@ function zmt_access_permissions($entity_type, $entity_name) {
 }
 
 /**
- * Encrypt a password string.
- */
-function zmt_password_encrypt($text) {
-  $key = md5(drupal_get_hash_salt());
-  if (extension_loaded('mcrypt')) {
-    $iv  = mcrypt_create_iv(mcrypt_get_iv_size(MCRYPT_RIJNDAEL_256, MCRYPT_MODE_ECB), MCRYPT_RAND);
-    return trim(base64_encode(mcrypt_encrypt(MCRYPT_RIJNDAEL_256, $key, $text, MCRYPT_MODE_ECB, $iv)));
-  }
-  else {
-    $text_length = strlen($text);
-    $key_length = strlen($key);
-    $processed_text = '';
-    for ($i = 0; $i < $text_length; $i++) {
-      $char = substr($text, $i, 1);
-      $keychar = substr($key, ($i % $key_length) - 1, 1);
-      $char = chr(ord($char) + ord($keychar));
-      $processed_text .= $char;
-    }
-    return $processed_text;
-  }
-}
-
-/**
- * Decrypt a password string.
- */
-function zmt_password_decrypt($text) {
-  $key    = md5(drupal_get_hash_salt());
-  if (extension_loaded('mcrypt')) {
-    $ivsize = mcrypt_get_iv_size(MCRYPT_RIJNDAEL_256, MCRYPT_MODE_ECB);
-    $iv     = mcrypt_create_iv($ivsize, MCRYPT_RAND);
-    return trim(mcrypt_decrypt(MCRYPT_RIJNDAEL_256, $key, base64_decode($text), MCRYPT_MODE_ECB, $iv));
-  }
-  else {
-    $text_length = strlen($text);
-    $key_length = strlen($key);
-    $processed_text = '';
-    for ($i = 0; $i < $text_length; $i++) {
-      $char = substr($text, $i, 1);
-      $keychar = substr($key, ($i % $key_length) - 1, 1);
-      $char = chr(ord($char) - ord($keychar));
-      $processed_text .= $char;
-    }
-    return $processed_text;
-  }
-}
-
-/**
  * Check request is ajax.
  */
 function zmt_is_ajax_request() {
@@ -101,4 +54,96 @@ function zmt_is_matches(array $patterns = array(), $subject = ''){
   $pattern = implode('|', $patterns);
   $is_match = preg_match('/'.$pattern.'/msS', $subject);
   return $is_match;
+}
+
+/**
+ * Encrypt a string.
+ */
+function zmt_password_encrypt($text) {
+  $key = md5(drupal_get_hash_salt());
+  if (extension_loaded('mcrypt')) {
+    $ivsize = mcrypt_get_iv_size(MCRYPT_RIJNDAEL_256, MCRYPT_MODE_ECB);
+    $iv  = mcrypt_create_iv(mcrypt_get_iv_size(MCRYPT_RIJNDAEL_256, MCRYPT_MODE_ECB), MCRYPT_RAND);
+    return trim(base64_encode(mcrypt_encrypt(MCRYPT_RIJNDAEL_256, $key, $text, MCRYPT_MODE_ECB, $iv)));
+  }
+  if (function_exists('openssl_encrypt')) {
+    return _zmt_openssl_encrypt($text, $key);
+  }
+  else {
+    $text_length = strlen($text);
+    $key_length = strlen($key);
+    $processed_text = '';
+    for ($i = 0; $i < $text_length; $i++) {
+      $char = substr($text, $i, 1);
+      $keychar = substr($key, ($i % $key_length) - 1, 1);
+      $char = chr(ord($char) + ord($keychar));
+      $processed_text .= $char;
+    }
+    return $processed_text;
+  }
+}
+
+/**
+ * Decrypt an encrypted string.
+ */
+function zmt_password_decrypt($data) {
+  $key = md5(drupal_get_hash_salt());
+  if (extension_loaded('mcrypt')) {
+    $iv = mcrypt_create_iv(mcrypt_get_iv_size(MCRYPT_RIJNDAEL_256, MCRYPT_MODE_ECB), MCRYPT_RAND);
+    return trim(mcrypt_decrypt(MCRYPT_RIJNDAEL_256, $key, base64_decode($data), MCRYPT_MODE_ECB, $iv));
+  }
+  elseif (function_exists('openssl_decrypt')) {
+    return _zmt_openssl_decrypt($data, $key);
+  }
+  else {
+    $text_length = strlen($data);
+    $key_length = strlen($key);
+    $processed_text = '';
+    for ($i = 0; $i < $text_length; $i++) {
+      $char = substr($data, $i, 1);
+      $keychar = substr($key, ($i % $key_length) - 1, 1);
+      $char = chr(ord($char) - ord($keychar));
+      $processed_text .= $char;
+    }
+    return $processed_text;
+  }
+}
+
+/**
+ * Encrypt a string by openssl.
+ */
+function _zmt_openssl_encrypt($text, $password){
+  $salt   = openssl_random_pseudo_bytes(8);
+  $salted = '';
+  $dx     = '';
+  while (strlen($salted) < 48) {
+    $dx = md5($dx . $password . $salt, TRUE);
+    $salted .= $dx;
+  }
+  $key = substr($salted, 0, 32);
+  $iv  = substr($salted, 32,16);
+  $data = openssl_encrypt($text, 'aes-256-cbc', $key, TRUE, $iv);
+  return trim(base64_encode('Salted__' . $salt . $data));
+}
+
+/**
+ * Decrypt an encrypted string by openssl.
+ */
+function _zmt_openssl_decrypt($edata, $password) {
+  $data = base64_decode($edata);
+  $salt = substr($data, 8, 8);
+  $ct   = substr($data, 16);
+
+  $rounds = 3;
+  $data00 = $password . $salt;
+  $md5_hash = array();
+  $md5_hash[0] = md5($data00, TRUE);
+  $result = $md5_hash[0];
+  for ($i = 1; $i < $rounds; $i++) {
+    $md5_hash[$i] = md5($md5_hash[$i - 1].$data00, TRUE);
+    $result .= $md5_hash[$i];
+  }
+  $key = substr($result, 0, 32);
+  $iv  = substr($result, 32,16);
+  return openssl_decrypt($ct, 'aes-256-cbc', $key, TRUE, $iv);
 }
