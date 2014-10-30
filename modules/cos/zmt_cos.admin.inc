@@ -148,8 +148,8 @@ function zmt_cos_edit_form_submit($form, &$form_state) {
 
   $cos->name = check_plain($values['name']);
   $cos->description = check_plain($values['description']);
-  $cos->max_account = (int) $values['max_account'];
-  $cos->mail_quota = (int) $values['mail_quota'];
+  $cos->max_account = abs((int) $values['max_account']);
+  $cos->mail_quota = abs((int) $values['mail_quota']);
   zmt_cos_save($cos);
 
   $form_state['redirect'] = 'zmt/cos';

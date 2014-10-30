@@ -343,7 +343,7 @@ function zmt_tenant_edit_form_submit($form, &$form_state) {
       $tenant_cos = zmt_tenant_cos_load_single($tenant->id, $cos_id);
     }
     $max_account = isset($values['max_account_' . $cos_id]) ? (int) $values['max_account_' . $cos_id] : 0;
-    $tenant_cos->max_account = $max_account;
+    $tenant_cos->max_account = abs($max_account);
     zmt_tenant_cos_save($tenant_cos);
   }
 
