@@ -70,16 +70,8 @@ function zmt_password_encrypt($text) {
     return _zmt_openssl_encrypt($text, $key);
   }
   else {
-    $text_length = strlen($text);
-    $key_length = strlen($key);
-    $processed_text = '';
-    for ($i = 0; $i < $text_length; $i++) {
-      $char = substr($text, $i, 1);
-      $keychar = substr($key, ($i % $key_length) - 1, 1);
-      $char = chr(ord($char) + ord($keychar));
-      $processed_text .= $char;
-    }
-    return $processed_text;
+    module_load_include('inc', 'zmt', 'includes/zmt.aes');
+    return AesCtr::encrypt($text, $key, 256);
   }
 }
 
@@ -96,16 +88,8 @@ function zmt_password_decrypt($data) {
     return _zmt_openssl_decrypt($data, $key);
   }
   else {
-    $text_length = strlen($data);
-    $key_length = strlen($key);
-    $processed_text = '';
-    for ($i = 0; $i < $text_length; $i++) {
-      $char = substr($data, $i, 1);
-      $keychar = substr($key, ($i % $key_length) - 1, 1);
-      $char = chr(ord($char) - ord($keychar));
-      $processed_text .= $char;
-    }
-    return $processed_text;
+    module_load_include('inc', 'zmt', 'includes/zmt.aes');
+    return AesCtr::decrypt($data, $key, 256);
   }
 }
 
