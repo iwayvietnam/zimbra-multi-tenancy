@@ -125,11 +125,11 @@ function zmt_tenant_edit_page($tenant) {
  * Tenant edit form.
  */
 function zmt_tenant_edit_form($form, &$form_state, $tenant){
-  $form_state['#tenant'] = $tenant;
+  $form_state['tenant'] = $tenant;
   $account = user_load($tenant->tenant_uid);
-  $form_state['#user'] = ($account && (int) $account->uid > 0) ? $account : drupal_anonymous_user();
-  $langcode = entity_language('user', $form_state['#user']);
-  field_attach_form('user', $form_state['#user'], $form, $form_state, $langcode);
+  $form_state['user'] = ($account && (int) $account->uid > 0) ? $account : drupal_anonymous_user();
+  $langcode = entity_language('user', $form_state['user']);
+  field_attach_form('user', $form_state['user'], $form, $form_state, $langcode);
 
   $id = isset($tenant->id) ? (int) $tenant->id : 0;
 
@@ -253,7 +253,7 @@ function ajax_tenant_cos_select_callback($form, $form_state) {
  * @see zmt_tenant_edit_form()
  */
 function zmt_tenant_edit_form_validate($form, &$form_state) {
-  $account = $form_state['#user'];
+  $account = $form_state['user'];
   $values = &$form_state['values'];
 
   // Validate new or changing username.
@@ -299,8 +299,8 @@ function zmt_tenant_edit_form_validate($form, &$form_state) {
  * Tenant edit form submit callback.
  */
 function zmt_tenant_edit_form_submit($form, &$form_state) {
-  $tenant = $form_state['#tenant'];
-  $account = $form_state['#user'];
+  $tenant = $form_state['tenant'];
+  $account = $form_state['user'];
   $values = &$form_state['values'];
 
   $edit = array(
@@ -367,7 +367,7 @@ function zmt_tenant_delete_page($tenant) {
  * @see confirm_form()
  */
 function zmt_tenant_delete_form($form, &$form_state, $tenant) {
-  $form_state['#tenant'] = $tenant;
+  $form_state['tenant'] = $tenant;
   $user = user_load($tenant->tenant_uid);
 
   $form['#submit'][] = 'zmt_tenant_delete_form_submit';
@@ -388,7 +388,7 @@ function zmt_tenant_delete_form($form, &$form_state, $tenant) {
  * Submit callback for zmt_tenant_delete_form().
  */
 function zmt_tenant_delete_form_submit($form, &$form_state) {
-  $tenant = $form_state['#tenant'];
+  $tenant = $form_state['tenant'];
   $user = user_load($tenant->tenant_uid);
 
   zmt_tenant_delete($tenant->id);

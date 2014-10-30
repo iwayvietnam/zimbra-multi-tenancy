@@ -89,7 +89,7 @@ function zmt_cos_edit_page($cos) {
  * Zimbra cos edit form.
  */
 function zmt_cos_edit_form($form, &$form_state, $cos){
-  $form_state['#cos'] = $cos;
+  $form_state['cos'] = $cos;
   $none = array('' => t('- None -'));
   $cos_id = isset($cos->id) ? (int) $cos->id : 0;
 
@@ -143,7 +143,7 @@ function zmt_cos_edit_form($form, &$form_state, $cos){
  * Zimbra cos edit form submit callback.
  */
 function zmt_cos_edit_form_submit($form, &$form_state) {
-  $cos = $form_state['#cos'];
+  $cos = $form_state['cos'];
   $values = $form_state['values'];
 
   $cos->name = check_plain($values['name']);

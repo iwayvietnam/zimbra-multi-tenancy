@@ -87,7 +87,7 @@ function zmt_server_edit_page($server) {
  * Zimbra server edit form.
  */
 function zmt_server_edit_form($form, &$form_state, $server){
-  $form_state['#server'] = $server;
+  $form_state['server'] = $server;
 
   $form['name'] = array(
     '#title' => t('Server Name'),
@@ -158,7 +158,7 @@ function zmt_server_edit_form($form, &$form_state, $server){
  * Zimbra server edit form submit callback.
  */
 function zmt_server_edit_form_submit($form, &$form_state) {
-  $server = $form_state['#server'];
+  $server = $form_state['server'];
   $values = $form_state['values'];
 
   $server->name = $values['name'];
@@ -195,7 +195,7 @@ function zmt_server_delete_page($server) {
  * @see confirm_form()
  */
 function zmt_server_delete_form($form, &$form_state, $server) {
-  $form_state['#server'] = $server;
+  $form_state['server'] = $server;
 
   $form['#submit'][] = 'zmt_server_delete_form_submit';
 
@@ -215,7 +215,7 @@ function zmt_server_delete_form($form, &$form_state, $server) {
  * Submit callback for zmt_server_delete_form().
  */
 function zmt_server_delete_form_submit($form, &$form_state) {
-  $server = $form_state['#server'];
+  $server = $form_state['server'];
   zmt_server_delete($server->id);
   drupal_set_message(t('%name has been deleted.', array('%name' => $server->name)));
   watchdog('zmt_server', 'Deleted zimbra server %name.', array('%name' => $server->name), WATCHDOG_NOTICE);
