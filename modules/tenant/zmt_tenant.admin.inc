@@ -165,7 +165,7 @@ function zmt_tenant_edit_form($form, &$form_state, $tenant){
       '#default_value' => $tenant->server_id,
       '#required' => TRUE,
       '#ajax' => array(
-        'callback' => 'ajax_tenant_server_select_callback',
+        'callback' => 'zmt_tenant_ajax_server_select_callback',
         'wrapper' => 'zmt-cos-wrap',
       ),
     );
@@ -203,7 +203,7 @@ function zmt_tenant_edit_form($form, &$form_state, $tenant){
       '#options' => $options,
       '#default_value' => $default_value,
       '#ajax' => array(
-        'callback' => 'ajax_tenant_cos_select_callback',
+        'callback' => 'zmt_tenant_ajax_cos_select_callback',
         'wrapper' => 'zmt-cos-wrap',
       ),
     );
@@ -216,12 +216,14 @@ function zmt_tenant_edit_form($form, &$form_state, $tenant){
     }
     $services = zmt_cos_load_multiple($ids);
     foreach ($services as $cos) {
-      $max_account = isset($max_accounts[$cos->id]) ? $max_accounts[$cos->id] : (int) $cos->max_account;
-      $form['cos']['max_account_' . $cos->id] = array(
-        '#type' => 'textfield',
-        '#title' => t('Max account number for @cos', array('@cos' => $cos->name)),
-        '#default_value' => $max_account,
-      );
+      if ($server_id === (int) $cos->server_id) {
+        $max_account = isset($max_accounts[$cos->id]) ? $max_accounts[$cos->id] : (int) $cos->max_account;
+        $form['cos']['max_account_' . $cos->id] = array(
+          '#type' => 'textfield',
+          '#title' => t('Max account number for @cos', array('@cos' => $cos->name)),
+          '#default_value' => $max_account,
+        );
+      }
     }
   }
 
@@ -239,11 +241,11 @@ function zmt_tenant_edit_form($form, &$form_state, $tenant){
 /**
  * Tenant ajax server selection callback.
  */
-function ajax_tenant_server_select_callback($form, $form_state){
+function zmt_tenant_ajax_server_select_callback($form, $form_state){
   return $form['cos'];
 }
 
-function ajax_tenant_cos_select_callback($form, $form_state) {
+function zmt_tenant_ajax_cos_select_callback($form, $form_state) {
   return $form['cos'];
 }
 
