@@ -153,21 +153,6 @@ function zmt_domain_query_tenant_count_domain_alter(QueryAlterableInterface $que
 /**
  * Implements hook_query_TAG_alter().
  */ 
-function zmt_domain_query_tenant_sum_account_alter(QueryAlterableInterface $query) {
-  $domain_id = (int) $query->getMetaData('domain_id');
-  $cos_id = (int) $query->getMetaData('cos_id');
-  $sub_query = db_select('zmt_domain', 'd')
-    ->fields('d', array('tenant_id'))
-    ->condition('d.id', $domain_id, '!=')
-    ->groupBy('d.tenant_id');
-  // $sub_query->addExpression('SUM(d.max_account)', 'total_account');
-  // $query->leftJoin($sub_query, 'd', 'd.tenant_id = t.id');
-  // $query->addExpression('IFNULL(d.total_account, 0)', 'total_account');
-}
-
-/**
- * Implements hook_query_TAG_alter().
- */ 
 function zmt_domain_query_zmt_domain_load_multiple_alter(QueryAlterableInterface $query) {
   $query->join('bayo_server', 's', 's.id = base.server_id');
   $query->join('bayo_tenant', 't', 't.id = base.tenant_id');
