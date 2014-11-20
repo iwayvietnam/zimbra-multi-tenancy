@@ -5,7 +5,7 @@
  */ 
 function zmt_install() {
   zmt_add_role();
-  zmt_add_unique_keys();
+  zmt_add_index_keys();
 }
 
 /**
@@ -30,10 +30,11 @@ function zmt_uninstall() {
 /**
  * Define unique key for zimbra id.
  */ 
-function zmt_add_unique_keys() {
+function zmt_add_index_keys() {
   db_add_unique_key('zmt_domain', 'zmt_domain_zimbra_id', array('zimbra_id'));
   db_add_unique_key('zmt_account', 'zmt_account_zimbra_id', array('zimbra_id'));
   db_add_unique_key('zmt_group', 'zmt_group_zimbra_id', array('zimbra_id'));
+  db_add_index('zmt_alias', 'zmt_alias_zimbra_target_id', array('zimbra_target_id'));
 }
 
 /**
