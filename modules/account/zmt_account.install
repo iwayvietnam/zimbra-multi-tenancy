@@ -123,11 +123,11 @@ function zmt_account_schema() {
       'primary key' => array('id'),
       'unique keys' => array(
         'zmt_account_name' => array('domain_id', 'name'),
-        'zmt_account_created' => array('created'),
-        'zmt_account_changed' => array('changed'),
       ),
       'indexes' => array(
         'zmt_account_domain_id' => array('domain_id'),
+        'zmt_account_created' => array('created'),
+        'zmt_account_changed' => array('changed'),
       ),
       'foreign keys' => array(
         'zmt_account_domain' => array(
