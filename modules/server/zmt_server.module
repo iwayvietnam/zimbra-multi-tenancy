@@ -39,7 +39,7 @@ function zmt_server_entity_info() {
 function zmt_server_entity_property_info_alter(&$info) {
   // Add related tenant to the user object.
   $properties = &$info['zmt_server']['properties'];
-  $properties['uid'] = array(
+  $properties['creator'] = array(
     'type' => 'user',
     'label' => t('Creator'),
     'description' => t('The server\'s creator.'),
@@ -53,7 +53,7 @@ function zmt_server_entity_property_info_alter(&$info) {
  */
 function zmt_server_get_properties($server, array $options, $name) {
   switch ($name) {
-    case 'uid':
+    case 'creator':
       return user_load($server->uid);
   }
 }

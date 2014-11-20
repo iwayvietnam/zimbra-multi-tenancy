@@ -37,19 +37,19 @@ function zmt_cos_entity_info() {
 function zmt_cos_entity_property_info_alter(&$info) {
   // Add related cos to the user object.
   $properties = &$info['zmt_cos']['properties'];
-  $properties['uid'] = array(
-    'type' => 'user',
-    'label' => t('Creator'),
-    'description' => t('The service\'s creator.'),
-    'getter callback' => 'zmt_cos_get_properties',
-    'schema field' => 'uid',
-  );
-  $properties['server_id'] = array(
+  $properties['server'] = array(
     'type' => 'zmt_server',
     'label' => t('Server'),
     'description' => t('The service\'s server.'),
     'getter callback' => 'zmt_cos_get_properties',
     'schema field' => 'server_id',
+  );
+  $properties['creator'] = array(
+    'type' => 'user',
+    'label' => t('Creator'),
+    'description' => t('The service\'s creator.'),
+    'getter callback' => 'zmt_cos_get_properties',
+    'schema field' => 'uid',
   );
 }
 
@@ -58,10 +58,10 @@ function zmt_cos_entity_property_info_alter(&$info) {
  */
 function zmt_cos_get_properties($cos, array $options, $name) {
   switch ($name) {
-    case 'uid':
-      return user_load($cos->uid);
-    case 'server_id':
+    case 'server':
       return zmt_server_load($cos->server_id);
+    case 'creator':
+      return user_load($cos->uid);
   }
 }
 

@@ -48,35 +48,28 @@ function zmt_domain_entity_info() {
  */
 function zmt_domain_entity_property_info_alter(&$info) {
   $properties = &$info['zmt_domain']['properties'];
-  $properties['server_id'] = array(
+  $properties['server'] = array(
     'type' => 'zmt_server',
     'label' => t('Server'),
     'description' => t('The domain\'s server.'),
     'getter callback' => 'zmt_domain_get_properties',
     'schema field' => 'server_id',
   );
-  $properties['cos_id'] = array(
-    'type' => 'zmt_cos',
-    'label' => t('Service'),
-    'description' => t('The domain\'s class of service.'),
-    'getter callback' => 'zmt_domain_get_properties',
-    'schema field' => 'cos_id',
-  );
-  $properties['tenant_id'] = array(
+  $properties['tenant'] = array(
     'type' => 'zmt_tenant',
     'label' => t('Tenant'),
     'description' => t('The domain\'s tenant.'),
     'getter callback' => 'zmt_domain_get_properties',
     'schema field' => 'tenant_id',
   );
-  $properties['domain_uid'] = array(
+  $properties['user'] = array(
     'type' => 'user',
     'label' => t('User'),
     'description' => t('The user representation of this domain\'s .'),
     'getter callback' => 'zmt_domain_get_properties',
     'schema field' => 'domain_uid',
   );
-  $properties['uid'] = array(
+  $properties['creator'] = array(
     'type' => 'user',
     'label' => t('Creator'),
     'description' => t('The domain\'s creator.'),
@@ -90,15 +83,13 @@ function zmt_domain_entity_property_info_alter(&$info) {
  */
 function zmt_domain_get_properties($domain, array $options, $name) {
   switch ($name) {
-    case 'server_id':
+    case 'server':
       return zmt_server_load($domain->server_id);
-    case 'cos_id':
-      return zmt_cos_load($domain->cos_id);
-    case 'tenant_id':
+    case 'tenant':
       return zmt_domain_load($domain->tenant_id);
-    case 'tenant_uid':
+    case 'user':
       return user_load($domain->tenant_uid);
-    case 'uid':
+    case 'creator':
       return user_load($domain->uid);
   }
 }
