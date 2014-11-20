@@ -139,7 +139,7 @@ function zmt_domain_edit_form($form, &$form_state, $domain){
       '#default_value' => $domain->server_id,
       '#required' => TRUE,
       '#ajax' => array(
-        'callback' => 'ajax_domain_server_select_callback',
+        'callback' => 'zmt_domain_ajax_server_select_callback',
         'wrapper' => 'zmt-tenant-wrap',
       ),
     );
@@ -171,7 +171,7 @@ function zmt_domain_edit_form($form, &$form_state, $domain){
     '#default_value' => $domain->tenant_id,
     '#required' => TRUE,
     '#ajax' => array(
-      'callback' => 'ajax_domain_tenant_select_callback',
+      'callback' => 'zmt_domain_ajax_tenant_select_callback',
       'wrapper' => 'zmt-cos-wrap',
     ),
     '#prefix' => '<div id="zmt-tenant-dropdown-wrap">',
@@ -204,7 +204,7 @@ function zmt_domain_edit_form($form, &$form_state, $domain){
       '#options' => $options,
       '#default_value' => $default_value,
       '#ajax' => array(
-        'callback' => 'ajax_domain_cos_select_callback',
+        'callback' => 'zmt_domain_ajax_cos_select_callback',
         'wrapper' => 'zmt-cos-wrap',
       ),
     );
@@ -239,7 +239,7 @@ function zmt_domain_edit_form($form, &$form_state, $domain){
       '#type' => 'checkbox',
       '#title' => t('Create user'),
       '#ajax' => array(
-        'callback' => 'ajax_create_user_checked',
+        'callback' => 'zmt_domain_ajax_create_user_checked',
         'wrapper' => 'zmt-user-wrap',
       ),
     );
@@ -293,22 +293,22 @@ function zmt_domain_edit_form($form, &$form_state, $domain){
 /**
  * Domain ajax create account check callback.
  */
-function ajax_create_user_checked($form, $form_state) {
+function zmt_domain_ajax_create_user_checked($form, $form_state) {
   return $form['domain_user'];
 }
 
 /**
  * Domain ajax server selection callback.
  */
-function ajax_domain_server_select_callback($form, $form_state) {
+function zmt_domain_ajax_server_select_callback($form, $form_state) {
   return $form['tenant'];
 }
 
-function ajax_domain_tenant_select_callback($form, $form_state) {
+function zmt_domain_ajax_tenant_select_callback($form, $form_state) {
   return $form['tenant']['cos'];
 }
 
-function ajax_domain_cos_select_callback($form, $form_state) {
+function zmt_domain_ajax_cos_select_callback($form, $form_state) {
   return $form['tenant']['cos'];
 }
 

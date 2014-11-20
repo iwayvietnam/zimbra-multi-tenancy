@@ -397,11 +397,11 @@ function zmt_group_edit_form($form, &$form_state, $group){
 
   $path = drupal_get_path('module', 'zmt');
   $form['#attached']['js'] = array(
-    $path .'/js/zmt.js',
+    $path . '/js/zmt.js',
   );
   $path = drupal_get_path('module', 'zmt_group');
   $form['#attached']['css'] = array(
-    $path .'/zmt-group.css',
+    $path . '/zmt-group.css',
   );
 
   return $form;
