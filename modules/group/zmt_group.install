@@ -102,12 +102,12 @@ function _zmt_add_zmt_group_schema() {
         'zmt_group_name' => array('domain_id', 'name'),
       ),
       'indexes' => array(
-        'zmt_domain_id' => array('domain_id'),
+        'zmt_group_domain_id' => array('domain_id'),
       ),
       'foreign keys' => array(
         'zmt_domain_dl' => array(
           'table' => 'zmt_domain',
-          'columns'=> array('domain_id' => 'domain_id'),
+          'columns'=> array('domain_id' => 'id'),
         ),
         'zmt_group_creator' => array(
           'table' => 'users',

@@ -122,10 +122,10 @@ function zmt_account_schema() {
       ),
       'primary key' => array('id'),
       'unique keys' => array(
-        'name' => array('domain_id', 'name'),
+        'zmt_account_name' => array('domain_id', 'name'),
       ),
       'indexes' => array(
-        'zmt_domain_id' => array('domain_id'),
+        'zmt_account_domain_id' => array('domain_id'),
       ),
       'foreign keys' => array(
         'zmt_account_domain' => array(
