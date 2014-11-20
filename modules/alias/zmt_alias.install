@@ -99,6 +99,10 @@ function zmt_alias_schema() {
           'table' => 'zmt_domain',
           'columns'=> array('domain_id' => 'id'),
         ),
+        'zmt_alias_account' => array(
+          'table' => 'zmt_account',
+          'columns'=> array('account_id' => 'id'),
+        ),
         'zmt_alias_creator' => array(
           'table' => 'users',
           'columns' => array('uid' => 'uid'),
