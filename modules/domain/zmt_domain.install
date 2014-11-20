@@ -85,11 +85,10 @@ function zmt_domain_schema() {
       'primary key' => array('id'),
       'unique keys' => array(
         'zmt_domain_name' => array('name'),
-        'zmt_domain_uid' => array('domain_uid'),
       ),
       'indexes' => array(
-        'zmt_server_id' => array('server_id'),
-        'zmt_tenant_id' => array('tenant_id'),
+        'zmt_domain_server_id' => array('server_id'),
+        'zmt_domain_tenant_id' => array('tenant_id'),
         'zmt_domain_created' => array('created'),
         'zmt_domain_changed' => array('changed'),
       ),
