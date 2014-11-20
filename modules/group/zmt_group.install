@@ -173,17 +173,17 @@ function _zmt_add_zmt_group_member_schema() {
       ),
       'primary key' => array('id'),
       'unique keys' => array(
-        'group_name' => array('group_id', 'name'),
-        'group_member' => array('group_id', 'type', 'member_id'),
+        'zmt_group_member_name' => array('group_id', 'name'),
+        'zmt_group_member_unique' => array('group_id', 'type', 'member_id'),
       ),
       'indexes' => array(
-        'zmt_group_id' => array('group_id'),
-        'member_type' => array('type'),
+        'zmt_group_member_group_id' => array('group_id'),
+        'zmt_group_member_type' => array('type'),
       ),
       'foreign keys' => array(
-        'zmt_group_member' => array(
+        'zmt_group_member_group' => array(
           'table' => 'zmt_group',
-          'columns'=> array('id' => 'group_id'),
+          'columns'=> array('group_id' => 'id'),
         ),
         'zmt_group_member_creator' => array(
           'table' => 'users',
