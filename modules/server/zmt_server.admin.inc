@@ -161,14 +161,14 @@ function zmt_server_edit_form_submit($form, &$form_state) {
   $server = $form_state['server'];
   $values = $form_state['values'];
 
-  $server->name = $values['name'];
-  $server->service_location = $values['service_location'];
-  $server->admin_user = $values['admin_user'];
+  $server->name = check_plain($values['name']);
+  $server->service_location = check_plain($values['service_location']);
+  $server->admin_user = check_plain($values['admin_user']);
   $password = trim($values['admin_password']);
   if (!empty($password)) {
     $server->admin_password = zmt_password_encrypt($values['admin_password']);
   }
-  $server->exclude_mailbox = $values['exclude_mailbox'];
+  $server->exclude_mailbox = check_plain($values['exclude_mailbox']);
   $server->delete_domain = (int) $values['delete_domain'];
   $server->delete_dl = (int) $values['delete_dl'];
   $server->delete_account = (int) $values['delete_account'];

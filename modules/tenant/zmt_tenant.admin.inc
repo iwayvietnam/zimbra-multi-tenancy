@@ -306,8 +306,8 @@ function zmt_tenant_edit_form_submit($form, &$form_state) {
   $values = &$form_state['values'];
 
   $edit = array(
-    'name' => $values['name'],
-    'mail' => $values['mail'],
+    'name' => check_plain($values['name']),
+    'mail' => check_plain($values['mail']),
     'status' => (int) $values['status'],
     'init' => 'email address',
   );
