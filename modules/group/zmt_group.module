@@ -141,6 +141,21 @@ function zmt_group_query_zmt_group_load_multiple_alter(QueryAlterableInterface $
 }
 
 /**
+ * Implements hook_query_TAG_alter().
+ */ 
+function zmt_group_query_zmt_group_member_load_multiple_alter(QueryAlterableInterface $query) {
+  $query->join('zmt_group', 'g', 'g.id = base.group_id');
+  $query->join('zmt_domain', 'd', 'd.id = g.domain_id');
+  $query->join('zmt_server', 's', 's.id = d.server_id');
+
+  $query->addField('g', 'name', 'group');
+  $query->addField('d', 'name', 'domain');
+  $query->addField('s', 'name', 'server');
+  $query->addField('d', 'id', 'domain_id');
+  $query->addField('s', 'id', 'server_id');
+}
+
+/**
  * Implements hook_zmt_domain_delete().
  */ 
 function zmt_group_zmt_domain_delete($domain){
