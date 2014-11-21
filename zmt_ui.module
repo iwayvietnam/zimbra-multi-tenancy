@@ -26,68 +26,6 @@ function zmt_menu() {
 }
 
 /**
- * Implements hook_zmt_cos_update().
- */
-function zmt_ui_zmt_cos_update(Entity $cos) {
-  module_load_include('inc', 'zmt', 'includes/zmt.zimbra');
-  $cos_servers = zmt_cos_server_load_multiple_by_cos(array($cos->id));
-  foreach ($cos_servers as $cos_server) {
-    $attrs = array(
-      'zimbraMailQuota' => (int) $cos->mail_quota * 1024 * 1024,
-      'zimbraAttachmentsBlocked' => (bool) $cos->attachments_blocked,
-      'zimbraPasswordMinLength' => $cos->password_min_length,
-      'zimbraPasswordMaxLength' => $cos->password_max_length,
-      'zimbraPasswordMinUpperCaseChars' => $cos->password_min_upper,
-      'zimbraPasswordMinLowerCaseChars' => $cos->password_min_lower,
-      'zimbraPasswordMinNumericChars' => $cos->password_min_numeric,
-    );
-
-    $api = zimbra_admin_api_by_server($cos_server->server_id);
-    $zimbra_cos = zimbra_get_cos($api, $cos->name);
-    if (!$zimbra_cos) {
-      $zimbra_cos = zimbra_create_cos($api, $cos->name, $attrs);
-    }
-    else {
-      $zimbra_id = $cos_server->zimbra_id;
-      if (!empty($zimbra_id)) {
-        $zimbra_cos = zimbra_modify_cos($api, $zimbra_id, $attrs);
-      }
-    }
-    $cos_server->zimbra_id = isset($zimbra_cos->id) ? $zimbra_cos->id : '';
-    zmt_cos_server_save($cos_server, FALSE);
-  }
-}
-
-/**
- * Implements hook_zmt_cos_server_presave().
- */
-function zmt_ui_zmt_cos_server_presave($cos_server) {
-  module_load_include('inc', 'zmt', 'includes/zmt.zimbra');
-
-  $wrapper = entity_metadata_wrapper('zmt_cos_server', $cos_server);
-  $cos = $wrapper->cos_id->value();
-
-  $api = zimbra_admin_api_by_server($cos_server->server_id);
-  $zimbra_cos = zimbra_get_cos($api, $cos->name);
-  if (!$zimbra_cos) {
-    $attrs = array(
-      'zimbraMailQuota' => (int) $cos->mail_quota * 1024 * 1024,
-      'zimbraAttachmentsBlocked' => (bool) $cos->attachments_blocked,
-      'zimbraPasswordMinLength' => $cos->password_min_length,
-      'zimbraPasswordMaxLength' => $cos->password_max_length,
-      'zimbraPasswordMinUpperCaseChars' => $cos->password_min_upper,
-      'zimbraPasswordMinLowerCaseChars' => $cos->password_min_lower,
-      'zimbraPasswordMinNumericChars' => $cos->password_min_numeric,
-    );
-    $zimbra_cos = zimbra_create_cos($api, $cos->name, $attrs);
-  }
-  else {
-    $zimbra_cos = zimbra_modify_cos($api, $zimbra_cos->id, $attrs);
-  }
-  $cos_server->zimbra_id = isset($zimbra_cos->id) ? $zimbra_cos->id : '';
-}
-
-/**
  * Implements hook_zmt_domain_presave().
  */
 function zmt_ui_zmt_domain_presave($domain) {
