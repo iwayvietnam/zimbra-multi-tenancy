@@ -98,6 +98,7 @@ function zmt_server_pull_data_form($form, &$form_state) {
     '#title' => t('Data type'),
     '#required' => TRUE,
     '#options' => array(
+      'cos' => t('COS'),
       'domain' => t('Domain'),
       'account' => t('Account'),
       'alias' => t('Alias'),
@@ -162,6 +163,12 @@ function zmt_server_pull_data_callback($form, &$form_state) {
   $types = array_filter($data_types);
   foreach ($types as $type) {
     switch ($type) {
+      case 'cos':
+        $zimbra_coses = zimbra_get_all_cos($api);
+        if (!empty($zimbra_coses)) {
+          _zmt_ui_update_cos_data($zimbra_coses, $server->id);
+        }
+        break;
       case 'domain':
         if (!empty($zimbra_domains)) {
           _zmt_ui_update_domain_data($zimbra_domains, $server->id, $tenant_id);
@@ -186,6 +193,25 @@ function zmt_server_pull_data_callback($form, &$form_state) {
   }
 
   $form_state['redirect'] = 'zmt/server';
+}
+
+function _zmt_ui_update_cos_data(array $zimbra_coses, $server_id = 0) {
+  $count = 0;
+  $mb = 1024 * 1024;
+  foreach ($zimbra_coses as $zimbra_id => $zimbra_cos) {
+    $exists = zmt_cos_exists($zimbra_id);
+    if (!$exists) {
+      $cos = zmt_cos_new($zimbra_cos->name);
+      $cos->server_id = $server_id;
+      $cos->description = $zimbra_cos->description;
+      $cos->mail_quota = (int) $zimbra_cos->zimbraMailQuota / $mb;
+      $cos->zimbra_id = $zimbra_id;
+      zmt_domain_save($domain, FALSE);
+      $count++;
+    }
+  }
+  drupal_set_message($count . ' domains were updated.');
+  return $count;
 }
 
 /**
