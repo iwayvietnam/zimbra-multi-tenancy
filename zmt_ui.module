@@ -33,20 +33,6 @@ function zmt_ui_zmt_domain_presave($domain) {
   $api = zimbra_admin_api_by_server($domain->server_id);
   $zimbra_domain = zimbra_get_domain($api, $domain->name);
   if (!$zimbra_domain) {
-    $zimbra_cos_id = '';
-    $cos = zmt_cos_load($domain->cos_id);
-    if ($cos) {
-      $cs = zmt_cos_server_load_single($cos->id, $domain->server_id);
-      if ($cs) {
-        $zimbra_cos_id = $cs->zimbra_id;
-      }
-    }
-
-    $attrs = array();
-    if (!empty($zimbra_cos_id)) {
-      $attrs['zimbraDomainDefaultCOSId'] = $zimbra_cos_id;
-    }
-
     $zimbra_domain = zimbra_create_domain($api, $domain->name, $attrs);
     $domain->zimbra_id = isset($zimbra_domain->id) ? $zimbra_domain->id : '';
   }
