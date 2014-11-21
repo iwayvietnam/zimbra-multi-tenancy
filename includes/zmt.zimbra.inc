@@ -167,7 +167,7 @@ function zimbra_get_all_cos(ZimbraAdminApi $api) {
       if (isset($result->cos)) {
         $arr_cos = is_array($result->cos) ? $result->cos : array($result->cos);
         foreach ($arr_cos as $cos) {
-          $all_cos[$cos->id] = $cos->name;
+          $all_cos[$cos->id] = $cos;
         }
       }
     }
