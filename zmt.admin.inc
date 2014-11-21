@@ -88,7 +88,7 @@ function zmt_server_pull_data_form($form, &$form_state) {
     '#options' => $options,
     '#required' => TRUE,
     '#ajax' => array(
-      'callback' => 'ajax_pull_data_server_select_callback',
+      'callback' => 'zmt_ajax_server_select_callback',
       'wrapper' => 'dropdown-tenant-replace',
     ),
   );
@@ -121,10 +121,12 @@ function zmt_server_pull_data_form($form, &$form_state) {
     '#suffix' => '</div>',
   );
 
-  $form['pull_data'] = array(
+  $form['actions']['pull'] = array(
     '#type' => 'submit',
     '#value' => t('Pull data'),
-    '#submit' => array('zmt_server_pull_data_callback'),
+    '#ajax' => array(
+      'callback' => 'zmt_ajax_pull_data_callback',
+    ),
     '#suffix' => l(t('Cancel'), 'zmt/server'),
   );
   $form['#attached']['js'] = array(
@@ -137,14 +139,14 @@ function zmt_server_pull_data_form($form, &$form_state) {
 /**
  * ajax pull data server selection callback.
  */
-function ajax_pull_data_server_select_callback($form, $form_state) {
+function zmt_ajax_server_select_callback($form, $form_state) {
   return $form['tenant_id'];
 }
 
 /**
  * Pull data submit callback.
  */
-function zmt_server_pull_data_callback($form, &$form_state) {
+function zmt_ajax_pull_data_callback($form, &$form_state) {
   global $user;
 
   module_load_include('inc', 'zmt', 'includes/zmt.zimbra');
@@ -192,7 +194,12 @@ function zmt_server_pull_data_callback($form, &$form_state) {
     }
   }
 
-  $form_state['redirect'] = 'zmt/server';
+  $commands = array();
+  $commands[] = zmt_ajax_command_redirect('zmt/server');
+  return array(
+    '#type' => 'ajax',
+    '#commands' => $commands,
+  );
 }
 
 function _zmt_ui_update_cos_data(array $zimbra_coses, $server_id = 0) {
