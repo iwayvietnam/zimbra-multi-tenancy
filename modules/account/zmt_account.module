@@ -98,11 +98,12 @@ function zmt_account_query_zmt_account_load_multiple_alter(QueryAlterableInterfa
   $query->join('zmt_domain', 'd', 'd.id = base.domain_id');
   $query->join('zmt_server', 's', 's.id = d.server_id');
 
-  $query->addField('c', 'name', 'cos');
   $query->addField('d', 'name', 'domain');
   $query->addField('s', 'name', 'server');
-  $query->addField('s', 'delete_account');
   $query->addField('s', 'id', 'server_id');
+  $query->addField('s', 'delete_account');
+  $query->addField('c', 'name', 'cos');
+  $query->addField('c', 'zimbra_id', 'cos_zimbra_id');
 }
 
 /**
