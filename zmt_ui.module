@@ -358,7 +358,7 @@ function ajax_zmt_server_test_connection($form, $form_state) {
 function zmt_ui_test_server_connection_validate($form, &$form_state) {
   module_load_include('inc', 'zmt', 'includes/zmt.zimbra');
   $values = $form_state['values'];
-  $server = $form_state['#server'];
+  $server = $form_state['server'];
   $location = $values['service_location'];
   $user = $values['admin_user'];
   $password = $values['admin_password'];
