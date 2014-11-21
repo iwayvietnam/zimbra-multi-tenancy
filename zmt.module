@@ -57,6 +57,30 @@ function zmt_is_matches(array $patterns = array(), $subject = ''){
 }
 
 /**
+ * Force a client-side redirect.
+ */
+function zmt_ajax_command_redirect($url, $delay = 0, $options = array()) {
+  $path = drupal_get_path('module', 'zmt');
+  drupal_add_js($path . '/js/zmt.js');
+  return array(
+    'command' => 'zmt_ajax_redirect',
+    'url'     => url($url, $options),
+    'delay'   => (int) $delay,
+  );
+}
+
+/**
+ * Force a reload of the current page.
+ */
+function zmt_ajax_command_reload() {
+  $path = drupal_get_path('module', 'zmt');
+  drupal_add_js($path . '/js/zmt.js');
+  return array(
+    'command' => 'zmt_ajax_reload',
+  );
+}
+
+/**
  * Encrypt a string.
  */
 function zmt_password_encrypt($text) {

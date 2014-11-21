@@ -1,4 +1,5 @@
 (function($){
+
   Drupal.behaviors.zmt = {
     attach: function(context, settings) {
       $('#zmt-group-edit-form').once('submit', function () {
@@ -36,4 +37,24 @@
 
     }
   };
+
+  $(function() {
+
+    Drupal.ajax.prototype.commands.zmt_ajax_redirect = function(ajax, response, status) {
+      if (response.delay > 0) {
+        setTimeout(function () {
+          window.location.href = response.url;
+        }, response.delay);
+      }
+      else {
+        window.location.href = response.url;
+      }
+    };
+
+    Drupal.ajax.prototype.commands.zmt_ajax_reload = function(ajax, response, status) {
+      window.location = window.location;
+    };
+
+  });
+
 })(jQuery);
