@@ -101,10 +101,8 @@ function zmt_account_query_zmt_account_load_multiple_alter(QueryAlterableInterfa
   $query->addField('c', 'name', 'cos');
   $query->addField('d', 'name', 'domain');
   $query->addField('s', 'name', 'server');
-  $query->addField('s', 'service_location', 'service_location');
-  $query->addField('s', 'admin_user', 'admin_user');
-  $query->addField('s', 'admin_password', 'admin_password');
-  $query->addField('s', 'delete_domain', 'delete_domain');
+  $query->addField('s', 'delete_account');
+  $query->addField('s', 'id', 'server_id');
 }
 
 /**

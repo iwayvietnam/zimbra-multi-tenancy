@@ -148,14 +148,10 @@ function zmt_domain_query_zmt_domain_load_multiple_alter(QueryAlterableInterface
   $query->join('zmt_server', 's', 's.id = base.server_id');
   $query->join('zmt_tenant', 't', 't.id = base.tenant_id');
   $query->join('users', 'tu', 'tu.uid = t.tenant_uid');
-  $query->join('users', 'du', 'du.uid = base.domain_uid');
+  $query->leftJoin('users', 'du', 'du.uid = base.domain_uid');
 
   $query->addField('s', 'name', 'server');
-  $query->addField('s', 'service_location', 'service_location');
-  $query->addField('s', 'admin_user', 'admin_user');
-  $query->addField('s', 'admin_password', 'admin_password');
-  $query->addField('s', 'delete_domain', 'delete_domain');
-
+  $query->addField('s', 'delete_domain');
   $query->addField('tu', 'name', 'tenant');
   $query->addField('du', 'mail', 'mail');
   $query->addField('du', 'status', 'status');
