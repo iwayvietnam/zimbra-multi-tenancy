@@ -85,7 +85,7 @@ function zmt_ajax_command_reload() {
  */
 function zmt_password_encrypt($text) {
   $key = md5(drupal_get_hash_salt());
-  if (extension_loaded('mcrypt')) {
+  if (function_exists('mcrypt_encrypt')) {
     $ivsize = mcrypt_get_iv_size(MCRYPT_RIJNDAEL_256, MCRYPT_MODE_ECB);
     $iv  = mcrypt_create_iv(mcrypt_get_iv_size(MCRYPT_RIJNDAEL_256, MCRYPT_MODE_ECB), MCRYPT_RAND);
     return trim(base64_encode(mcrypt_encrypt(MCRYPT_RIJNDAEL_256, $key, $text, MCRYPT_MODE_ECB, $iv)));
@@ -104,7 +104,7 @@ function zmt_password_encrypt($text) {
  */
 function zmt_password_decrypt($data) {
   $key = md5(drupal_get_hash_salt());
-  if (extension_loaded('mcrypt')) {
+  if (function_exists('mcrypt_decrypt')) {
     $iv = mcrypt_create_iv(mcrypt_get_iv_size(MCRYPT_RIJNDAEL_256, MCRYPT_MODE_ECB), MCRYPT_RAND);
     return trim(mcrypt_decrypt(MCRYPT_RIJNDAEL_256, $key, base64_decode($data), MCRYPT_MODE_ECB, $iv));
   }
