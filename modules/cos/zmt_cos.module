@@ -224,9 +224,9 @@ function zmt_cos_exists($zimbra_id) {
       ->propertyCondition('zimbra_id', $zimbra_id)
       ->count()
       ->execute();
-    $cache[$cache_key] = (int) $result > 0;
+    $cache[$zimbra_id] = (int) $result > 0;
   }
-  return $cache[$cache_key];
+  return $cache[$zimbra_id];
 }
 
 /**
