@@ -11,12 +11,15 @@ function zmt_account_list_all() {
   $header[] = array('data' => t('No.'));
   $header[] = array('data' => t('Name'), 'field' => 'a.name');
   $header[] = array('data' => t('Full name'), 'field' => 'a.full_name');
+  $header[] = array('data' => t('COS'), 'field' => 'c.name');
   $header[] = array('data' => t('Status'), 'field' => 'a.status');
   $header[] = array('data' => t('Operations'));
 
   $query = db_select('zmt_account', 'a')->extend('PagerDefault')->extend('TableSort');
-  $query->leftJoin('zmt_domain', 'd', 'd.id = a.domain_id');
+  $query->join('zmt_domain', 'd', 'd.id = a.domain_id');
+  $query->join('zmt_cos', 'c', 'c.id = a.cos_id');
   $query->addField('d', 'name', 'domain');
+  $query->addField('c', 'name', 'cos');
 
   $domain_ids = array();
   if (!(user_access('administer zmt'))) {
@@ -65,6 +68,10 @@ function zmt_account_list_all() {
     $row[] = array(
       'data' => $account->full_name,
       'id' => $account->full_name,
+    );
+    $row[] = array(
+      'data' => $account->cos,
+      'id' => $account->cos,
     );
     $row[] = array(
       'data' => isset($statuses[$account->status]) ? $statuses[$account->status] : $account->status,
@@ -127,7 +134,8 @@ function zmt_account_edit_page($account) {
 function zmt_account_edit_form($form, &$form_state, $account){
   global $user;
 
-  $form_state['#account'] = $account;
+  $form_state['account'] = $account;
+  $none = array('' => t('- None -'));
 
   $form['name'] = array(
     '#title' => t('Name'),
@@ -151,7 +159,7 @@ function zmt_account_edit_form($form, &$form_state, $account){
       $domains = zmt_domain_load_all();
     }
     if (count($domains) !== 1) {
-      $options = array('' => t('- None -'));
+      $options = $none;
     }
     foreach ($domains as $domain) {
       $options[$domain->id] = $domain->name;
@@ -163,6 +171,28 @@ function zmt_account_edit_form($form, &$form_state, $account){
     '#options' => $options,
     '#default_value' => $account->domain_id,
     '#required' => TRUE,
+    '#ajax' => array(
+      'callback' => 'zmt_account_ajax_domain_select_callback',
+      'wrapper' => 'zmt-cos-wrap',
+    ),
+  );
+
+  $domain_id = isset($form_state['values']['domain_id']) ? (int) $form_state['values']['domain_id'] : (int) $account->domain_id;
+  $options = $none;
+  if ($domain_id) {
+    $mappings = zmt_domain_cos_load_multiple_by_domain(array($domain_id));
+    foreach ($mappings as $map) {
+      $options[$map->cos_id] = $map->cos;
+    }
+  }
+  $form['cos_id'] = array(
+    '#type' => 'select',
+    '#title' => t('COS'),
+    '#options' => $options,
+    '#default_value' => $account->cos_id,
+    '#required' => TRUE,
+    '#prefix' => '<div id="zmt-cos-wrap">',
+    '#suffix' => '</div>',
   );
 
   $form['password'] = array(
@@ -221,9 +251,10 @@ function zmt_account_edit_form($form, &$form_state, $account){
  */
 function zmt_account_edit_form_validate($form, &$form_state) {
   $values = $form_state['values'];
-  $account = $form_state['#account'];
+  $account = $form_state['account'];
 
   $domain_id = (int) $values['domain_id'];
+  $cos_id = (int) $values['cos_id'];
   $name = trim($values['name']);
   $id = isset($account->id) ? (int) $account->id : 0;
 
@@ -236,33 +267,39 @@ function zmt_account_edit_form_validate($form, &$form_state) {
   }
 
   if ($id === 0) {
-    $domain = zmt_domain_load($domain_id);
-    if ($domain) {
-      $account_max_number = (int) $domain->account_max_number;
-      $total_account = zmt_account_count_by_domain($domain_id);
-      if ($total_account >= $account_max_number) {
-        form_set_error('name', t('The domain has reached the maximum number of accounts.'));
-      }
+    $domain_cos = zmt_domain_cos_load_single($domain_id, $cos_id);
+    $max_account = !empty($domain_cos->max_account) ? (int) $domain_cos->max_account : 0;
+    $total_account = zmt_account_count_by_domain($domain_id);
+    if ($max_account && $total_account >= $max_account) {
+      form_set_error('name', t('The domain has reached the maximum number of accounts.'));
     }
   }
+}
+
+/**
+ * Zimbra account ajax domain select callback.
+ */
+function zmt_account_ajax_domain_select_callback($form, $form_state) {
+  return $form['cos_id'];
 }
 
 /**
  * Zimbra account edit form submit callback.
  */
 function zmt_account_edit_form_submit($form, &$form_state) {
-  $account = $form_state['#account'];
+  $account = $form_state['account'];
   $values = $form_state['values'];
 
   $account->domain_id = (int) $values['domain_id'];
-  $account->name = trim($values['name']);
+  $account->cos_id = (int) $values['cos_id'];
+  $account->name = check_plain(trim($values['name']));
   $account->password = trim($values['password']);
   $account->full_name = $values['full_name'];
-  $account->status = $values['status'];
-  $account->title = $values['title'];
-  $account->telephone = $values['telephone'];
-  $account->mobile = $values['mobile'];
-  $account->company = $values['company'];
+  $account->status = check_plain($values['status']);
+  $account->title = check_plain($values['title']);
+  $account->telephone = check_plain($values['telephone']);
+  $account->mobile = check_plain($values['mobile']);
+  $account->company = check_plain($values['company']);
 
   zmt_account_save($account);
 
@@ -283,6 +320,8 @@ function zmt_account_import_page() {
  */
 function zmt_account_import_form($form, &$form_state){
   global $user;
+  $none = array('' => t('- None -'));
+
   $form['file'] = array(
     '#type' => 'file',
     '#title' => t('Csv file'),
@@ -297,7 +336,7 @@ function zmt_account_import_form($form, &$form_state){
     $domains = zmt_domain_load_all();
   }
   if (count($domains) !== 1) {
-    $options = array('' => t('- None -'));
+    $options = $none;
   }
   foreach ($domains as $domain) {
     $options[$domain->id] = $domain->name;
@@ -308,12 +347,35 @@ function zmt_account_import_form($form, &$form_state){
     '#title' => t('Domain'),
     '#options' => $options,
     '#required' => TRUE,
+    '#ajax' => array(
+      'callback' => 'zmt_account_ajax_domain_select_callback',
+      'wrapper' => 'zmt-cos-wrap',
+    ),
   );
 
-  $form['button_import'] = array(
+  $domain_id = isset($form_state['values']['domain_id']) ? (int) $form_state['values']['domain_id'] : 0;
+  $options = $none;
+  if ($domain_id) {
+    $mappings = zmt_domain_cos_load_multiple_by_domain(array($domain_id));
+    foreach ($mappings as $map) {
+      $options[$map->cos_id] = $map->cos;
+    }
+  }
+  $form['cos_id'] = array(
+    '#type' => 'select',
+    '#title' => t('COS'),
+    '#options' => $options,
+    '#required' => TRUE,
+    '#prefix' => '<div id="zmt-cos-wrap">',
+    '#suffix' => '</div>',
+  );
+
+  $form['actions']['import'] = array(
     '#type' => 'submit',
     '#value' => t('Import'),
-    '#submit' => array('zmt_account_import_form_callback'),
+    '#ajax' => array(
+      'callback' => 'zmt_account_ajax_import_form_callback',
+    ),
     '#suffix' => l(t('Cancel'), 'zmt/account'),
   );
   return $form;
@@ -322,7 +384,7 @@ function zmt_account_import_form($form, &$form_state){
 /**
  * Import accounts form callback
  */
-function zmt_account_import_form_callback($form, &$form_state) {
+function zmt_account_ajax_import_form_callback($form, $form_state) {
   $destination = 'public://zmt/';
   if (file_prepare_directory($destination, FILE_CREATE_DIRECTORY)) {
     $file = file_save_upload(
@@ -333,6 +395,7 @@ function zmt_account_import_form_callback($form, &$form_state) {
     if ($file) {
       $statuses = zmt_account_statuses();
       $domain_id = (int) $form_state['values']['domain_id'];
+      $cos_id = (int) $form_state['values']['cos_id'];
 
       $handle = fopen($file->uri, 'r');
       $row = fgetcsv($handle);
@@ -355,6 +418,7 @@ function zmt_account_import_form_callback($form, &$form_state) {
           }
         }
         $account = zmt_account_prepare($record, $domain_id);
+        $account->cos_id = $cos_id;
         $results = module_invoke_all('mailbox_exists', $domain_id, $account->name, 0);
         $exists = FALSE;
         foreach ($results as $result) {
@@ -372,6 +436,12 @@ function zmt_account_import_form_callback($form, &$form_state) {
       drupal_set_message($count . ' accounts were updated.');
     }
   }
+  $commands = array();
+  $commands[] = zmt_ajax_command_redirect('zmt/account');
+  return array(
+    '#type' => 'ajax',
+    '#commands' => $commands,
+  );
 }
 
 /**
@@ -403,7 +473,7 @@ function zmt_account_delete_page($account) {
  * @see confirm_form()
  */
 function zmt_account_delete_form($form, &$form_state, $account) {
-  $form_state['#account'] = $account;
+  $form_state['account'] = $account;
 
   $form['#submit'][] = 'zmt_account_delete_form_submit';
 
@@ -423,7 +493,7 @@ function zmt_account_delete_form($form, &$form_state, $account) {
  * Submit callback for zmt_account_delete_form().
  */
 function zmt_account_delete_form_submit($form, &$form_state) {
-  $account = $form_state['#account'];
+  $account = $form_state['account'];
   zmt_account_delete($account->id);
   drupal_set_message(t('%name has been deleted.', array('%name' => $account->name)));
   watchdog('zmt_account', 'Deleted account %name.', array('%name' => $account->name), WATCHDOG_NOTICE);
