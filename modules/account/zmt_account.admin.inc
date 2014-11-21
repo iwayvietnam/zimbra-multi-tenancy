@@ -17,7 +17,7 @@ function zmt_account_list_all() {
 
   $query = db_select('zmt_account', 'a')->extend('PagerDefault')->extend('TableSort');
   $query->join('zmt_domain', 'd', 'd.id = a.domain_id');
-  $query->join('zmt_cos', 'c', 'c.id = a.cos_id');
+  $query->leftJoin('zmt_cos', 'c', 'c.id = a.cos_id');
   $query->addField('d', 'name', 'domain');
   $query->addField('c', 'name', 'cos');
 

@@ -94,7 +94,7 @@ function zmt_account_permission() {
  * Implements hook_query_TAG_alter().
  */ 
 function zmt_account_query_zmt_account_load_multiple_alter(QueryAlterableInterface $query) {
-  $query->join('zmt_cos', 'c', 'c.id = base.cos_id');
+  $query->leftJoin('zmt_cos', 'c', 'c.id = base.cos_id');
   $query->join('zmt_domain', 'd', 'd.id = base.domain_id');
   $query->join('zmt_server', 's', 's.id = d.server_id');
 
