@@ -146,8 +146,8 @@ function zmt_domain_query_tenant_count_domain_alter(QueryAlterableInterface $que
  */ 
 function zmt_domain_query_zmt_domain_load_multiple_alter(QueryAlterableInterface $query) {
   $query->join('zmt_server', 's', 's.id = base.server_id');
-  $query->join('zmt_tenant', 't', 't.id = base.tenant_id');
-  $query->join('users', 'tu', 'tu.uid = t.tenant_uid');
+  $query->leftJoin('zmt_tenant', 't', 't.id = base.tenant_id');
+  $query->leftJoin('users', 'tu', 'tu.uid = t.tenant_uid');
   $query->leftJoin('users', 'du', 'du.uid = base.domain_uid');
 
   $query->addField('s', 'name', 'server');
