@@ -36,21 +36,21 @@ function zmt_alias_entity_info() {
  */
 function zmt_alias_entity_property_info_alter(&$info) {
   $properties = &$info['zmt_alias']['properties'];
-  $properties['domain_id'] = array(
+  $properties['domain'] = array(
     'type' => 'zmt_domain',
     'label' => t('Domain'),
     'description' => t('The alias\'s domain.'),
     'getter callback' => 'zmt_alias_get_properties',
     'schema field' => 'domain_id',
   );
-  $properties['account_id'] = array(
+  $properties['account'] = array(
     'type' => 'zmt_account',
     'label' => t('Domain'),
     'description' => t('The alias\'s target account.'),
     'getter callback' => 'zmt_alias_get_properties',
     'schema field' => 'account_id',
   );
-  $properties['uid'] = array(
+  $properties['creator'] = array(
     'type' => 'user',
     'label' => t('Creator'),
     'description' => t('The alias\'s creator.'),
@@ -64,11 +64,11 @@ function zmt_alias_entity_property_info_alter(&$info) {
  */
 function zmt_alias_get_properties($alias, array $options, $name) {
   switch ($name) {
-    case 'domain_id':
+    case 'domain':
       return zmt_domain_load($alias->domain_id);
-    case 'account_id':
+    case 'account':
       return zmt_account_load($alias->account_id);
-    case 'uid':
+    case 'creator':
       return user_load($alias->uid);
   }
 }
@@ -78,6 +78,19 @@ function zmt_alias_get_properties($alias, array $options, $name) {
  */ 
 function zmt_alias_permission() {
   return zmt_access_permissions('zmt_alias', 'Alias');
+}
+
+/**
+ * Implements hook_query_TAG_alter().
+ */ 
+function zmt_alias_query_zmt_alias_load_multiple_alter(QueryAlterableInterface $query) {
+  $query->join('zmt_domain', 'd', 'd.id = base.domain_id');
+  $query->join('zmt_server', 's', 's.id = d.server_id');
+
+  $query->addField('d', 'name', 'domain');
+  $query->addField('s', 'name', 'server');
+  $query->addField('s', 'delete_alias');
+  $query->addField('s', 'id', 'server_id');
 }
 
 /**

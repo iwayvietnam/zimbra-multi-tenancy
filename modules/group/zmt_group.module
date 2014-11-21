@@ -64,7 +64,7 @@ function zmt_group_entity_info() {
  */
 function zmt_group_entity_property_info_alter(&$info) {
   $properties = &$info['zmt_group']['properties'];
-  $properties['domain_id'] = array(
+  $properties['domain'] = array(
     'type' => 'zmt_domain',
     'label' => t('Domain'),
     'description' => t('The account\'s domain.'),
@@ -77,7 +77,7 @@ function zmt_group_entity_property_info_alter(&$info) {
     'description' => t('The account\'s members.'),
     'getter callback' => 'zmt_group_get_properties',
   );
-  $properties['uid'] = array(
+  $properties['creator'] = array(
     'type' => 'user',
     'label' => t('Creator'),
     'description' => t('The account\'s creator.'),
@@ -86,7 +86,7 @@ function zmt_group_entity_property_info_alter(&$info) {
   );
 
   $properties = &$info['zmt_group_member']['properties'];
-  $properties['group_id'] = array(
+  $properties['group'] = array(
     'type' => 'zmt_group',
     'label' => t('Group'),
     'description' => t('The member\'s group.'),
@@ -100,12 +100,12 @@ function zmt_group_entity_property_info_alter(&$info) {
  */
 function zmt_group_get_properties($group, array $options, $name) {
   switch ($name) {
-    case 'domain_id':
+    case 'domain':
       return zmt_domain_load($group->domain_id);
     case 'members':
       $group_id = isset($group->id) ? (int) $group->id : 0;
       return zmt_group_member_load_multiple_by_group(array($group_id));
-    case 'uid':
+    case 'creator':
       return user_load($group->uid);
   }
 }
@@ -115,7 +115,7 @@ function zmt_group_get_properties($group, array $options, $name) {
  */
 function zmt_group_member_get_properties($member, array $options, $name) {
   switch ($name) {
-    case 'group_id':
+    case 'group':
       return zmt_group_load($member->group_id);
   }
 }
@@ -125,6 +125,19 @@ function zmt_group_member_get_properties($member, array $options, $name) {
  */ 
 function zmt_group_permission() {
   return zmt_access_permissions('zmt_group', 'Group');
+}
+
+/**
+ * Implements hook_query_TAG_alter().
+ */ 
+function zmt_group_query_zmt_group_load_multiple_alter(QueryAlterableInterface $query) {
+  $query->join('zmt_domain', 'd', 'd.id = base.domain_id');
+  $query->join('zmt_server', 's', 's.id = d.server_id');
+
+  $query->addField('d', 'name', 'domain');
+  $query->addField('s', 'name', 'server');
+  $query->addField('s', 'delete_dl');
+  $query->addField('s', 'id', 'server_id');
 }
 
 /**
