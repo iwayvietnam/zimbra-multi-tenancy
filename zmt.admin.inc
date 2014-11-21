@@ -203,14 +203,23 @@ function _zmt_ui_update_cos_data(array $zimbra_coses, $server_id = 0) {
     if (!$exists) {
       $cos = zmt_cos_new($zimbra_cos->name);
       $cos->server_id = $server_id;
-      $cos->description = $zimbra_cos->description;
-      $cos->mail_quota = (int) $zimbra_cos->zimbraMailQuota / $mb;
+      $attrs = !empty($zimbra_cos->a) ? $zimbra_cos->a : array();
+      if (is_array($attrs)) {
+        foreach ($attrs as $attr) {
+          if ($attr->n === 'description') {
+            $cos->description = $attr->_content;
+          }
+          if ($attr->n === 'zimbraMailQuota') {
+            $cos->mail_quota = (int) $attr->_content / $mb;
+          }
+        }
+      }
       $cos->zimbra_id = $zimbra_id;
-      zmt_domain_save($domain, FALSE);
+      zmt_cos_save($cos, FALSE);
       $count++;
     }
   }
-  drupal_set_message($count . ' domains were updated.');
+  drupal_set_message($count . ' coses were updated.');
   return $count;
 }
 
