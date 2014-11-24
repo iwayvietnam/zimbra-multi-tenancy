@@ -728,7 +728,7 @@ class ZimbraAdminApi implements ZimbraAdminApiInterface {
     );
     $result = $this->_client->doRequest($request);
     $authToken = NULL;
-    if(isset($result->authToken) && !empty($result->authToken)){
+    if (isset($result->authToken) && !empty($result->authToken)){
       if (isset($result->authToken[0]->_content)) {
         $authToken =  $result->authToken[0]->_content;
       }

@@ -82,7 +82,7 @@ abstract class SoapStruct implements SoapStructInterface {
    */
   public function __construct($value = NULL){
     if (NULL !== $value) {
-        $this->_value = trim($value);
+      $this->_value = trim($value);
     }
   }
 
@@ -146,10 +146,10 @@ abstract class SoapStruct implements SoapStructInterface {
     $name = !empty($name) ? $name : $this->className();
     $arr = array();
     if (NULL !== $this->_value) {
-        $arr['_content'] = $this->_value;
+      $arr['_content'] = $this->_value;
     }
     if (!empty($this->_namespace)) {
-        $arr['_jsns'] = $this->_namespace;
+      $arr['_jsns'] = $this->_namespace;
     }
     if (count($this->_properties)) {
       foreach ($this->_properties as $key => $value) {
@@ -531,7 +531,7 @@ class AddAccountAliasRequest extends SoapRequest {
    * @param  string $alias Alias
    * @return self
    */
-   function __construct($id, $alias) {
+  function __construct($id, $alias) {
     parent::__construct();
     $this->id = trim($id);
     $this->alias = trim($alias);
@@ -550,7 +550,7 @@ class AddDistributionListMemberRequest extends SoapRequest {
    * @param  array  $dlm Members
    * @return self
    */
-   function __construct($id, array $dlm) {
+  function __construct($id, array $dlm) {
     parent::__construct();
     $this->id = trim($id);
     if (!empty($dlm)) {
@@ -593,29 +593,23 @@ class AuthRequest extends SoapRequest {
     $persistAuthTokenCookie = NULL
   ) {
     parent::__construct();
-    if(NULL !== $name)
-    {
-        $this->name = trim($name);
+    if (NULL !== $name) {
+      $this->name = trim($name);
     }
-    if(NULL !== $password)
-    {
-        $this->password = trim($password);
+    if (NULL !== $password) {
+      $this->password = trim($password);
     }
-    if(NULL !== $authToken)
-    {
-        $this->authToken = array(array('_content' => trim($authToken)));
+    if (NULL !== $authToken) {
+      $this->authToken = array(array('_content' => trim($authToken)));
     }
-    if($account instanceof AccountSelector)
-    {
-        $this->account = $account;
+    if ($account instanceof AccountSelector) {
+      $this->account = $account;
     }
-    if(NULL !== $virtualHost)
-    {
-        $this->virtualHost = trim($virtualHost);
+    if (NULL !== $virtualHost) {
+      $this->virtualHost = trim($virtualHost);
     }
-    if(NULL !== $persistAuthTokenCookie)
-    {
-        $this->persistAuthTokenCookie = (bool) $persistAuthTokenCookie;
+    if (NULL !== $persistAuthTokenCookie) {
+      $this->persistAuthTokenCookie = (bool) $persistAuthTokenCookie;
     }
   }
 }
@@ -694,7 +688,7 @@ class CreateAccountRequest extends SoapRequest {
    * @param array  $attrs
    * @return self
    */
-   function __construct($name, $password, array $attrs = array()) {
+  function __construct($name, $password, array $attrs = array()) {
     parent::__construct();
     $this->name = trim($name);
     $this->password = trim($password);
@@ -716,7 +710,7 @@ class CreateCosRequest extends SoapRequest {
    * @param array  $attrs
    * @return self
    */
-   function __construct($name, array $attrs = array()) {
+  function __construct($name, array $attrs = array()) {
     parent::__construct();
     $this->name = array(array('_content' => trim($name)));
     if (!empty($attrs)) {
@@ -740,7 +734,7 @@ class CreateDistributionListRequest extends SoapRequest {
    * @param array  $attrs
    * @return self
    */
-   function __construct($name, $dynamic = NULL, array $attrs = array()) {
+  function __construct($name, $dynamic = NULL, array $attrs = array()) {
     parent::__construct();
     $this->name = trim($name);
     if (NULL !== $dynamic) {
@@ -764,7 +758,7 @@ class CreateDomainRequest extends SoapRequest {
    * @param array  $attrs
    * @return self
    */
-   function __construct($name, array $attrs = array()) {
+  function __construct($name, array $attrs = array()) {
     parent::__construct();
     $this->name = trim($name);
     if (!empty($attrs)) {
@@ -806,7 +800,7 @@ class DeleteAccountRequest extends SoapRequest {
    * @param string $id Zimbra ID
    * @return self
    */
-   function __construct($id) {
+  function __construct($id) {
     parent::__construct();
     $this->id = trim($id);
   }
@@ -823,7 +817,7 @@ class DeleteCosRequest extends SoapRequest {
    * @param string $id Zimbra ID
    * @return self
    */
-   function __construct($id) {
+  function __construct($id) {
     parent::__construct();
     $this->id = trim($id);
   }
@@ -840,7 +834,7 @@ class DeleteDistributionListRequest extends SoapRequest {
    * @param string $id Zimbra ID
    * @return self
    */
-   function __construct($id) {
+  function __construct($id) {
     parent::__construct();
     $this->id = trim($id);
   }
@@ -857,7 +851,7 @@ class DeleteDomainRequest extends SoapRequest {
    * @param string $id Zimbra ID
    * @return self
    */
-   function __construct($id) {
+  function __construct($id) {
     parent::__construct();
     $this->id = trim($id);
   }
@@ -969,7 +963,7 @@ class GetAllDistributionListsRequest extends SoapRequest {
    */
   function __construct(DomainSelector $domain = NULL) {
     parent::__construct();
-    if($domain instanceof DomainSelector) {
+    if ($domain instanceof DomainSelector) {
         $this->domain = $domain;
     }
   }
@@ -1014,7 +1008,7 @@ class GetCosRequest extends SoapRequest {
     if ($cos instanceof CosSelector) {
         $this->cos = $cos;
     }
-    if(NULL !== $attrs) {
+    if (NULL !== $attrs) {
         $this->attrs = trim($attrs);
     }
   }
@@ -1084,13 +1078,13 @@ class GetDomainRequest extends SoapRequest {
   function __construct(DomainSelector $domain = NULL, $applyConfig = NULL, $attrs = NULL) {
     parent::__construct();
     if ($domain instanceof DomainSelector) {
-        $this->domain = $domain;
+      $this->domain = $domain;
     }
     if (NULL !== $applyConfig) {
-        $this->applyConfig = (bool) $applyConfig;
+      $this->applyConfig = (bool) $applyConfig;
     }
     if (NULL !== $attrs) {
-        $this->attrs = trim($attrs);
+      $this->attrs = trim($attrs);
     }
   }
 }
@@ -1112,10 +1106,10 @@ class GetDomainInfoRequest extends SoapRequest {
   function __construct(DomainSelector $domain = NULL, $applyConfig = NULL) {
     parent::__construct();
     if ($domain instanceof DomainSelector) {
-        $this->domain = $domain;
+      $this->domain = $domain;
     }
     if (NULL !== $applyConfig) {
-        $this->applyConfig = (bool) $applyConfig;
+      $this->applyConfig = (bool) $applyConfig;
     }
   }
 }
@@ -1157,13 +1151,13 @@ class GetLDAPEntriesRequest extends SoapRequest {
       $this->sortBy = trim($sortBy);
     }
     if (NULL !== $sortAscending) {
-        $this->sortAscending = (bool) $sortAscending;
+      $this->sortAscending = (bool) $sortAscending;
     }
     if (NULL !== $limit) {
         $this->limit = (int) $limit;
     }
     if (NULL !== $offset) {
-        $this->offset = (int) $offset;
+      $this->offset = (int) $offset;
     }
   }
 }
@@ -1487,10 +1481,10 @@ class SearchDirectoryRequest extends SoapRequest {
     if (NULL !== $sortBy) {
       $this->sortBy = trim($sortBy);
     }
-    if(NULL !== $sortAscending) {
+    if (NULL !== $sortAscending) {
       $this->sortAscending = (bool) $sortAscending;
     }
-    if(NULL !== $countOnly) {
+    if (NULL !== $countOnly) {
       $this->countOnly = (bool) $countOnly;
     }
     if (NULL !== $attrs) {
@@ -1551,7 +1545,7 @@ class SoapResponse {
       return $this->_response->$name;
     }
     else {
-        throw new RuntimeException('Property ' . $name . ' is not defined.');
+      throw new RuntimeException('Property ' . $name . ' is not defined.');
     }
   }
 
@@ -1830,10 +1824,10 @@ class HttpSoapClient {
    */
   public function doRequest(SoapRequest $request) {
     $this->_soapMessage = new SoapMessage;
-    if(!empty($this->_authToken)) {
+    if (!empty($this->_authToken)) {
       $this->_soapMessage->addHeader('authToken', $this->_authToken);
     }
-    if(!empty($this->_sessionId)) {
+    if (!empty($this->_sessionId)) {
       $this->_soapMessage->addHeader('sessionId', $this->_sessionId);
     }
     $this->_soapMessage->addHeader('format', 'js');
