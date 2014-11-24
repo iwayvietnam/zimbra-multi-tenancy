@@ -858,6 +858,31 @@ function zimbra_get_account(ZimbraAdminApi $api, $name) {
 }
 
 /**
+ * Count number of accounts by cos in a domain.
+ *
+ * @param  ZimbraAdminApi $api
+ *   Zimbra admin api.
+ * @param  string $domain
+ *   Domain name.
+ * @return mix
+ */
+function zimbra_count_account(ZimbraAdminApi $api, $domain = NULL) {
+  $cache = &drupal_static(__FUNCTION__, array());
+  $cache_key = md5($api->location() . $type . $domain);
+  if (!isset($cache[$cache_key])) {
+    try {
+      $result = $api->countAccount(new DomainSelector('name', $domain));
+      $cache[$cache_key] = isset($result->cos) ? $result->cos : array($result);
+    }
+    catch (Exception $ex) {
+      watchdog('zimbra', $ex->__toString());
+      return NULL;
+    }
+  }
+  return $cache[$cache_key];
+}
+
+/**
  * Create Zimbra account
  *
  * @param  ZimbraAdminApi $api
