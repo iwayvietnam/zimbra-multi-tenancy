@@ -115,6 +115,20 @@ interface ZimbraAdminApiInterface {
   function countAccount(DomainSelector $domain = NULL);
 
   /**
+   * Count number of objects.
+   * Returns number of objects of requested type. 
+   * Note: For account/alias/dl, if a domain is specified, only entries on the specified domain are counted.
+   *       If no domain is specified, entries on all domains are counted.
+   *
+   * @param  string $type 
+   *   Object type.
+   * @param  DomainSelector $domain 
+   *   Specify the domain.
+   * @return SoapResponse
+   */
+  function countObjects($type, DomainSelector $domain = NULL);
+
+  /**
    * Create account.
    * Notes:
    *   1. accounts without passwords can't be logged into.
@@ -779,6 +793,26 @@ class ZimbraAdminApi implements ZimbraAdminApiInterface {
    */
   public function countAccount(DomainSelector $domain = NULL) {
     $request = new CountAccountRequest(
+      $domain
+    );
+    return $this->_client->doRequest($request);
+  }
+
+  /**
+   * Count number of objects.
+   * Returns number of objects of requested type. 
+   * Note: For account/alias/dl, if a domain is specified, only entries on the specified domain are counted.
+   *       If no domain is specified, entries on all domains are counted.
+   *
+   * @param  string $type 
+   *   Object type.
+   * @param  DomainSelector $domain 
+   *   Specify the domain.
+   * @return SoapResponse
+   */
+  public function countObjects($type, DomainSelector $domain = NULL) {
+    $request = new CountObjectsRequest(
+      $type,
       $domain
     );
     return $this->_client->doRequest($request);

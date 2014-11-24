@@ -638,6 +638,48 @@ class CountAccountRequest extends SoapRequest {
 }
 
 /**
+ * CountObjects request class
+ * Count number of objects.
+ */
+class CountObjectsRequest extends SoapRequest {
+
+  /**
+   * Object types
+   *
+   * @var array
+   */
+  private static $_types = array(
+    'userAccount',
+    'account',
+    'alias',
+    'dl',
+    'domain',
+    'cos',
+    'server',
+    'calresource',
+    'accountOnUCService',
+    'cosOnUCService',
+    'domainOnUCService',
+    'internalUserAccount',
+    'internalArchivingAccount'
+  );
+
+  /**
+   * Constructor method for CountObjectsRequest
+   * @param string $type Object type
+   * @param DomainSelector $domain Domain
+   * @return self
+   */
+  function __construct($type, DomainSelector $domain = NULL) {
+    parent::__construct();
+    $this->type = in_array($type, self::$_types) ? $type : 'account';
+    if ($domain instanceof DomainSelector) {
+      $this->domain = $domain;
+    }
+  }
+}
+
+/**
  * CreateAccount request class
  * Create account.
  */
@@ -1527,7 +1569,7 @@ class SoapResponse {
    *
    * @param  object $response
    *   Http response object
-   * @throws RuntimeException|UnexpectedValueException
+   * @throws RuntimeException', 'UnexpectedValueException
    */
   private function _processResponse($response) {
     $object = isset($response->data) ? json_decode($response->data) : NULL;
@@ -1606,7 +1648,7 @@ class SoapMessage {
   /**
    * Add header.
    *
-   * @param  string|array $name
+   * @param  string', 'array $name
    * @param  string $value
    * @return self
    */
@@ -1626,7 +1668,7 @@ class SoapMessage {
    * Get soap header.
    *
    * @param  string $name
-   * @return string|array
+   * @return string', 'array
    */
   public function header($name = NULL) {
     if (NULL === $name) {

@@ -150,6 +150,32 @@ function zimbra_authentication(ZimbraAdminApi $api, $user, $password = '') {
   return $cache[$cache_key];
 }
 
+/**
+ * Count number of objects.
+ *
+ * @param  ZimbraAdminApi $api
+ *   Zimbra admin api.
+ * @param  string $type
+ *   Object type.
+ * @param  string $domain
+ *   Domain name.
+ * @return mix
+ */
+function zimbra_count_objects(ZimbraAdminApi $api, $type, $domain = NULL) {
+  $cache = &drupal_static(__FUNCTION__, NULL);
+  $cache_key = md5($api->location() . $type . $domain);
+  if (!isset($cache[$cache_key])) {
+    try {
+      $result = $api->countObjects($type, new DomainSelector('name', $domain));
+      $cache[$cache_key] = isset($result->num) ? (int) $result->num : (int) $result;
+    }
+    catch (Exception $ex) {
+      watchdog('zimbra', $ex->__toString());
+      return NULL;
+    }
+  }
+  return $cache[$cache_key];
+}
 
 /**
  * Gets all classes of service
