@@ -1563,7 +1563,7 @@ class SoapResponse {
    *
    * @param  object $response
    *   Http response object
-   * @throws RuntimeException', 'UnexpectedValueException
+   * @throws RuntimeException|UnexpectedValueException
    */
   private function _processResponse($response) {
     $object = isset($response->data) ? json_decode($response->data) : NULL;
@@ -1642,7 +1642,7 @@ class SoapMessage {
   /**
    * Add header.
    *
-   * @param  string', 'array $name
+   * @param  string|array $name
    * @param  string $value
    * @return self
    */
@@ -1662,7 +1662,7 @@ class SoapMessage {
    * Get soap header.
    *
    * @param  string $name
-   * @return string', 'array
+   * @return string|array
    */
   public function header($name = NULL) {
     if (NULL === $name) {
