@@ -391,9 +391,6 @@ function zmt_group_edit_form($form, &$form_state, $group){
   );
 
   $form['#validate'][] = 'zmt_group_edit_form_validate';
-  if (isset($form['create_user'])) {
-    hide($form['create_user']);
-  }
 
   $path = drupal_get_path('module', 'zmt');
   $form['#attached']['js'] = array(
