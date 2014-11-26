@@ -185,7 +185,7 @@ function zmt_tenant_uri($tenant) {
  */
 function zmt_tenant_label($tenant, $entity_type) {
   if (isset($tenant->name)) {
-    return t('Tenant') . ' ' . $tenant->name;
+    return t('Tenant @name', array('@name' => $tenant->name));
   }
   else {
     return t('Tenant');

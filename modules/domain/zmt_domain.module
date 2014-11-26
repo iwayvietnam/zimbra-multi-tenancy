@@ -200,7 +200,7 @@ function zmt_domain_uri($domain) {
  * Zmt domain entity label callback.
  */
 function zmt_domain_label($domain, $entity_type) {
-  return t('Domain') . ' ' . $domain->name;
+  return t('Domain @name', array('@name' => $domain->name));
 }
 
 /**

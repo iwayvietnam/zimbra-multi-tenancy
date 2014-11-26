@@ -152,7 +152,7 @@ function zmt_alias_uri($alias) {
  * Zmt alias entity label callback.
  */
 function zmt_alias_label($alias, $entity_type) {
-  return t('Alias') . ' ' . $alias->name;
+  return t('Alias @name', array('@name' => $alias->name));
 }
 
 /**

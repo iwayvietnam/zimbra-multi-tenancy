@@ -98,7 +98,7 @@ function zmt_server_uri($server) {
  * Zmt server entity label callback.
  */
 function zmt_server_label($server, $entity_type) {
-  return t('Zimbra server') . ' ' . $server->name;
+  return t('Zimbra server @name', array('@name' => $server->name));
 }
 
 /**

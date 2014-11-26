@@ -113,7 +113,7 @@ function zmt_cos_uri($cos) {
  * Zmt cos entity label callback.
  */
 function zmt_cos_label($cos, $entity_type) {
-  return t('Class of Service') . ' ' . $cos->name;
+  return t('Class of Service @name', array('@name' => $cos->name));
 }
 
 /**

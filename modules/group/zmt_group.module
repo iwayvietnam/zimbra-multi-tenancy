@@ -419,7 +419,7 @@ function zmt_group_uri($group) {
  * Zmt group entity label callback.
  */
 function zmt_group_label($group, $entity_type) {
-  return t('Group') . ' ' . $group->name;
+  return t('Group @name', array('@name' => $group->name));
 }
 
 /**

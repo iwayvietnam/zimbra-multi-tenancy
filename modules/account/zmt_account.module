@@ -180,7 +180,7 @@ function zmt_account_uri($account) {
  * Zmt account entity label callback.
  */
 function zmt_account_label($account, $entity_type) {
-  return t('Account ') . ' ' . $account->name;
+  return t('Account @name', array('@name' => $account->name));
 }
 
 /**
