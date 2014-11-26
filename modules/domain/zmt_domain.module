@@ -224,12 +224,12 @@ function zmt_domain_user_load(array $users) {
  * @return
  *   A domain object or FALSE.
  */
-function zmt_domain_load($id) {
+function zmt_domain_load($id, $reset = FALSE) {
   if (empty($id)) {
     return FALSE;
   }
 
-  $domains = zmt_domain_load_multiple(array($id), array());
+  $domains = zmt_domain_load_multiple(array($id), array(), $reset);
   return $domains ? reset($domains) : FALSE;
 }
 

@@ -158,12 +158,12 @@ function zmt_alias_label($alias, $entity_type) {
 /**
  * Loads a alias by ID.
  */
-function zmt_alias_load($id) {
+function zmt_alias_load($id, $reset = FALSE) {
   if (empty($id)) {
     return FALSE;
   }
 
-  $alias = zmt_alias_load_multiple(array($id), array());
+  $alias = zmt_alias_load_multiple(array($id), array(), $reset);
   return $alias ? reset($alias) : FALSE;
 }
 

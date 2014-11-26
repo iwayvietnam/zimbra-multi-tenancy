@@ -186,12 +186,12 @@ function zmt_account_label($account, $entity_type) {
 /**
  * Loads a account by ID.
  */
-function zmt_account_load($id) {
+function zmt_account_load($id, $reset = FALSE) {
   if (empty($id)) {
     return FALSE;
   }
 
-  $accounts = zmt_account_load_multiple(array($id), array());
+  $accounts = zmt_account_load_multiple(array($id), array(), $reset);
   return $accounts ? reset($accounts) : FALSE;
 }
 

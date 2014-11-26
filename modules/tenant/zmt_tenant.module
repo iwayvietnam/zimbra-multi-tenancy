@@ -195,12 +195,12 @@ function zmt_tenant_label($tenant, $entity_type) {
 /**
  * Loads a tenant by ID.
  */
-function zmt_tenant_load($id) {
+function zmt_tenant_load($id, $reset = FALSE) {
   if (empty($id)) {
     return FALSE;
   }
 
-  $tenants = zmt_tenant_load_multiple(array($id), array());
+  $tenants = zmt_tenant_load_multiple(array($id), array(), $reset);
   return $tenants ? reset($tenants) : FALSE;
 }
 

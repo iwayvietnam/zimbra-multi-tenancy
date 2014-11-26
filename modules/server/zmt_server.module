@@ -106,12 +106,12 @@ function zmt_server_label($server, $entity_type) {
  *
  * @see zmt_server_load_multiple()
  */
-function zmt_server_load($id) {
+function zmt_server_load($id, $reset = FALSE) {
   if (empty($id)) {
     return FALSE;
   }
 
-  $servers = zmt_server_load_multiple(array($id), array());
+  $servers = zmt_server_load_multiple(array($id), array(), $reset);
   return $servers ? reset($servers) : FALSE;
 }
 
