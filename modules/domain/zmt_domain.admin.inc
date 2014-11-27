@@ -119,8 +119,6 @@ function zmt_domain_edit_form($form, &$form_state, $domain){
   $values = &$form_state['values'];
   $domain_id = isset($domain->id) ? (int) $domain->id : 0;
 
-  $none = array('' => t('- None -'));
-
   $form['domain_name'] = array(
     '#title' => t('Name'),
     '#type' => 'textfield',
@@ -147,17 +145,15 @@ function zmt_domain_edit_form($form, &$form_state, $domain){
 
   $server_id = isset($values['server_id']) ? (int) $values['server_id'] : (int) $domain->server_id;
   $options = array();
-  if (!$tenant) {
+  if ($tenant) {
+    $domain->tenant_id = $tenant->id;
+    $options[$tenant->id] = $tenant->name;
+  }
+  else {
     $tenants = zmt_tenant_load_multiple_by_server($server_id);
     foreach ($tenants as $tenant) {
       $options[$tenant->id] = $tenant->name;
     }
-    if ((int) $domain->tenant_id == 0) {
-      $options = $none + $options;
-    }
-  }
-  else {
-    $options[$tenant->id] = $user->name;
   }
   $form['tenant'] = array(
     '#type' => 'container',
@@ -168,6 +164,7 @@ function zmt_domain_edit_form($form, &$form_state, $domain){
     '#type' => 'select',
     '#title' => t('Tenant'),
     '#options' => $options,
+    '#empty_option' => t('- None -'),
     '#default_value' => $domain->tenant_id,
     '#required' => TRUE,
     '#ajax' => array(

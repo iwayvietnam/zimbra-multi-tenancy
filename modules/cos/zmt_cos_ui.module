@@ -95,7 +95,7 @@ function zmt_cos_delete_access($cos, $account = NULL) {
  */
 function zmt_cos_select_expand($element) {
   if (empty($element['#options'])) {
-    $options = array('' => t('- None -'));
+    $options = array();
     if ($element['#server'] !== NULL) {
       $services = zmt_cos_load_multiple_by_server($element['#server']);
     }
@@ -106,6 +106,7 @@ function zmt_cos_select_expand($element) {
       $options[$service->id] = $service->name;
     }
     $element['#options'] = $options;
+    $element['#empty_option'] = t('- None -');
   }
   if (empty($element['#title'])) {
     $element['#title'] = t('Class of Service');

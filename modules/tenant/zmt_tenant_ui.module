@@ -111,7 +111,7 @@ function zmt_tenant_delete_access($tenant, $account = NULL) {
  */
 function zmt_tenant_select_expand($element) {
   if (empty($element['#options'])) {
-    $options = array('' => t('- None -'));
+    $options = array();
     if ($element['#server'] !== NULL) {
       $tenants = zmt_tenant_load_multiple_by_server($element['#server']);
     }
@@ -122,6 +122,7 @@ function zmt_tenant_select_expand($element) {
       $options[$tenant->id] = $tenant->name;
     }
     $element['#options'] = $options;
+    $element['#empty_option'] = t('- None -');
   }
   if (empty($element['#title'])) {
     $element['#title'] = t('Tenant');

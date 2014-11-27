@@ -90,7 +90,6 @@ function zmt_cos_edit_page($cos) {
  */
 function zmt_cos_edit_form($form, &$form_state, $cos){
   $form_state['cos'] = $cos;
-  $none = array('' => t('- None -'));
   $cos_id = isset($cos->id) ? (int) $cos->id : 0;
 
   $form['name'] = array(

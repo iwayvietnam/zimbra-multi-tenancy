@@ -110,12 +110,13 @@ function zmt_server_delete_access($server, $account = NULL) {
  */
 function zmt_server_select_expand($element) {
   if (empty($element['#options'])) {
-    $options = array('' => t('- None -'));
+    $options = array();
     $servers = zmt_server_load_all();
     foreach ($servers as $server) {
       $options[$server->id] = $server->name;
     }
     $element['#options'] = $options;
+    $element['#empty_option'] = t('- None -');
   }
   if (empty($element['#title'])) {
     $element['#title'] = t('Zimbra Server');

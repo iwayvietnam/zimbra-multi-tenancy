@@ -111,7 +111,7 @@ function zmt_domain_delete_access($domain, $account = NULL) {
  */
 function zmt_domain_select_expand($element) {
   if (empty($element['#options'])) {
-    $options = array('' => t('- None -'));
+    $options = array();
     if ($element['#server'] !== NULL) {
       $domains = zmt_domain_load_multiple_by_server($element['#server'], TRUE);
     }
@@ -122,6 +122,7 @@ function zmt_domain_select_expand($element) {
       $options[$domain->id] = $domain->name;
     }
     $element['#options'] = $options;
+    $element['#empty_option'] = t('- None -');
   }
   if (empty($element['#title'])) {
     $element['#title'] = t('Domain');

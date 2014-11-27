@@ -135,7 +135,6 @@ function zmt_account_edit_form($form, &$form_state, $account){
   global $user;
 
   $form_state['account'] = $account;
-  $none = array('' => t('- None -'));
 
   $form['name'] = array(
     '#title' => t('Name'),
@@ -159,7 +158,7 @@ function zmt_account_edit_form($form, &$form_state, $account){
       $domains = zmt_domain_load_all();
     }
     if (count($domains) !== 1) {
-      $options = $none;
+      $options = array('' => t('- None -'));
     }
     foreach ($domains as $domain) {
       $options[$domain->id] = $domain->name;
@@ -178,7 +177,7 @@ function zmt_account_edit_form($form, &$form_state, $account){
   );
 
   $domain_id = isset($form_state['values']['domain_id']) ? (int) $form_state['values']['domain_id'] : (int) $account->domain_id;
-  $options = $none;
+  $options = array();
   if ($domain_id) {
     $mappings = zmt_domain_cos_load_multiple_by_domain(array($domain_id));
     foreach ($mappings as $map) {
@@ -189,6 +188,7 @@ function zmt_account_edit_form($form, &$form_state, $account){
     '#type' => 'select',
     '#title' => t('COS'),
     '#options' => $options,
+    '#empty_option' => t('- None -'),
     '#default_value' => $account->cos_id,
     '#required' => TRUE,
     '#prefix' => '<div id="zmt-cos-wrap">',
@@ -320,7 +320,6 @@ function zmt_account_import_page() {
  */
 function zmt_account_import_form($form, &$form_state){
   global $user;
-  $none = array('' => t('- None -'));
 
   $form['file'] = array(
     '#type' => 'file',
@@ -336,7 +335,7 @@ function zmt_account_import_form($form, &$form_state){
     $domains = zmt_domain_load_all();
   }
   if (count($domains) !== 1) {
-    $options = $none;
+    $options = array('' => t('- None -'));
   }
   foreach ($domains as $domain) {
     $options[$domain->id] = $domain->name;
@@ -354,7 +353,7 @@ function zmt_account_import_form($form, &$form_state){
   );
 
   $domain_id = isset($form_state['values']['domain_id']) ? (int) $form_state['values']['domain_id'] : 0;
-  $options = $none;
+  $options = array();
   if ($domain_id) {
     $mappings = zmt_domain_cos_load_multiple_by_domain(array($domain_id));
     foreach ($mappings as $map) {
@@ -365,6 +364,7 @@ function zmt_account_import_form($form, &$form_state){
     '#type' => 'select',
     '#title' => t('COS'),
     '#options' => $options,
+    '#empty_option' => t('- None -'),
     '#required' => TRUE,
     '#prefix' => '<div id="zmt-cos-wrap">',
     '#suffix' => '</div>',

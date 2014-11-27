@@ -171,7 +171,7 @@ function zmt_alias_edit_form($form, &$form_state, $alias){
 
   $domain_id = isset($form_state['values']['domain_id']) ? (int) $form_state['values']['domain_id'] : (int) $alias->domain_id;
   $accounts = zmt_account_load_multiple_by_domain($domain_id);
-  $options = array('' => t('- None -'));
+  $options = array();
   foreach ($accounts as $account) {
     $options[$account->id] = $account->name;
   }
@@ -179,6 +179,7 @@ function zmt_alias_edit_form($form, &$form_state, $alias){
     '#type' => 'select',
     '#title' => t('Account'),
     '#options' => $options,
+    '#empty_option' => t('- None -'),
     '#default_value' => $alias->account_id,
     '#required' => TRUE,
     '#prefix' => '<div id="dropdown-account-replace">',
