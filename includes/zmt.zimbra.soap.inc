@@ -1903,7 +1903,6 @@ class HttpSoapClient {
         'headers' => $headers,
         'method' => 'POST',
         'data' => (string) $request,
-        'context' => $context,
       ));
     }
     else {
