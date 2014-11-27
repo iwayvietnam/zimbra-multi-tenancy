@@ -1898,24 +1898,30 @@ class HttpSoapClient {
    */
   private function _doRequest($request, array $headers = array()) {
     $this->_headers = $headers;
-    $context = NULL;
-    if (!module_exists('chr') && !module_exists('httprl')) {
+    if (module_exists('chr')) {
+      $response = chr_curl_http_request($this->_location, array(
+        'headers' => $headers,
+        'method' => 'POST',
+        'data' => (string) $request,
+        'context' => $context,
+      ));
+    }
+    else {
       $context = stream_context_create(array(
         'http' => array(
           'method'           => 'POST',
           'header'           => implode("\r\n", $headers),
           'protocol_version' => 1.1,
-          'max_redirects'    => 3,
           'timeout'          => 30.0,
         ),
       ));
+      $response = drupal_http_request($this->_location, array(
+        'headers' => $headers,
+        'method' => 'POST',
+        'data' => (string) $request,
+        'context' => $context,
+      ));
     }
-    $response = drupal_http_request($this->_location, array(
-      'headers' => $headers,
-      'method' => 'POST',
-      'data' => (string) $request,
-      'context' => $context,
-    ));
     $this->_responseHeaders = isset($response->headers) ? $response->headers : array();
     $this->_response = isset($response->data) ? $response->data : NULL;
     return $response;
