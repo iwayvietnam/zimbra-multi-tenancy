@@ -3,3 +3,4 @@ description = Administrative user interface to Group.
 package = Zimbra Multi Tenancy
 core = 7.x
 dependencies[] = zmt_group
+dependencies[] = zmt_alias_ui

@@ -3,3 +3,4 @@ description = Administrative user interface to Account.
 package = Zimbra Multi Tenancy
 core = 7.x
 dependencies[] = zmt_account
+dependencies[] = zmt_domain_ui
