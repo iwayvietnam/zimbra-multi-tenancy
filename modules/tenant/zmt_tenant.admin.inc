@@ -55,25 +55,21 @@ function zmt_tenant_list_all() {
     $row[] = l($tenant->name, 'zmt/tenant/' . $tenant->id . '/edit', array('query' => $destination));
     $row[] = array(
       'data' => ((int) $tenant->status > 0) ? t('Active') : t('Blocked'),
-      'id' => $tenant->status,
     );
     if (module_exists('zmt_domain')) {
       $total_domain = isset($tenant->total_domain) ? $tenant->total_domain : 0;
       $row[] = array(
         'data' => $total_domain,
-        'id' => $total_domain,
       );
     }
     if (module_exists('zmt_account')) {
       $total_account = isset($tenant->total_account) ? $tenant->total_account : 0;
       $row[] = array(
         'data' => $total_account,
-        'id' => $total_account,
       );
     }
     $row[] = array(
       'data' => $tenant->server,
-      'id' => $tenant->server,
     );
 
     $operations = l(t('edit'), 'zmt/tenant/' . $tenant->id . '/edit', array('query' => $destination));

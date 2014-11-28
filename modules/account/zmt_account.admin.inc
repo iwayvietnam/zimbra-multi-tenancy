@@ -67,15 +67,12 @@ function zmt_account_list_all() {
     $row[] = l($account_name, 'zmt/account/' . $account->id . '/edit', array('query' => $destination));
     $row[] = array(
       'data' => $account->full_name,
-      'id' => $account->full_name,
     );
     $row[] = array(
       'data' => $account->cos,
-      'id' => $account->cos,
     );
     $row[] = array(
       'data' => isset($statuses[$account->status]) ? $statuses[$account->status] : $account->status,
-      'id' => $account->status,
     );
 
     $operations = l(t('edit'), 'zmt/account/' . $account->id . '/edit', array('query' => $destination));

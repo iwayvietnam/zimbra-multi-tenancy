@@ -68,11 +68,9 @@ function zmt_group_list_all() {
     $row[] = l($group_name, 'zmt/group/' . $group->id . '/edit', array('query' => $destination));
     $row[] = array(
       'data' => $group->full_name,
-      'id' => $group->full_name,
     );
     $row[] = array(
       'data' => $group->total_member,
-      'id' => $group->total_member,
     );
 
     $operations = l(t('edit'), 'zmt/group/' . $group->id . '/edit', array('query' => $destination));

@@ -42,15 +42,12 @@ function zmt_cos_list_all() {
     $row[] = l($cos->name, 'zmt/cos/' . $cos->id . '/edit', array('query' => $destination));
     $row[] = array(
       'data' => $cos->mail_quota . ' MB',
-      'id' => $cos->mail_quota,
     );
     $row[] = array(
       'data' => $cos->max_account,
-      'id' => $cos->max_account,
     );
     $row[] = array(
       'data' => $cos->server,
-      'id' => $cos->server,
     );
     $row[] = l(t('edit'), 'zmt/cos/' . $cos->id . '/edit', array('query' => $destination));
     $rows[] = $row;

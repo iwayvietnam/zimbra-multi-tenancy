@@ -35,11 +35,9 @@ function zmt_server_list_all() {
     $row[] = l($server->name, 'zmt/server/' . $server->id . '/edit', array('query' => $destination));
     $row[] = array(
       'data' => $server->service_location,
-      'id' => $server->service_location,
     );
     $row[] = array(
       'data' => $server->admin_user,
-      'id' => $server->admin_user,
     );
 
     $operations = l(t('edit'), 'zmt/server/' . $server->id . '/edit', array('query' => $destination));

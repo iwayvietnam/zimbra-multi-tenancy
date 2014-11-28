@@ -54,12 +54,10 @@ function zmt_domain_list_all() {
       $total_account = isset($domain->total_account) ? $domain->total_account : 0;
       $row[] = array(
         'data' => $total_account,
-        'id' => $total_account,
       );
     }
     $row[] = array(
       'data' => $domain->tenant,
-      'id' => $domain->tenant,
     );
 
     $operations = l(t('edit'), 'zmt/domain/' . $domain->id . '/edit', array('query' => $destination));

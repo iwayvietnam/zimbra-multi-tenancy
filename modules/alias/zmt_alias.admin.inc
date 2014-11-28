@@ -64,7 +64,6 @@ function zmt_alias_list_all() {
     $row[] = l($alias_name, 'zmt/alias/' . $alias->id . '/edit', array('query' => $destination));
     $row[] = array(
       'data' => $alias->account . '@' . $alias->domain,
-      'id' => $alias->account,
     );
 
     $operations = l(t('edit'), 'zmt/alias/' . $alias->id . '/edit', array('query' => $destination));
