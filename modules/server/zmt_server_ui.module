@@ -78,28 +78,28 @@ function zmt_server_view($server) {
 }
 
 /**
- * Access callback: determines if the user can create country.
+ * Access callback: determines if the user can create server.
  */
 function zmt_server_list_access($account = NULL) {
   return zmt_server_access('list', NULL, $account);
 }
 
 /**
- * Access callback: determines if the user can create country.
+ * Access callback: determines if the user can create server.
  */
 function zmt_server_add_access($account = NULL) {
   return zmt_server_access('create', NULL, $account);
 }
 
 /**
- * Access callback: determines if the user can edit country.
+ * Access callback: determines if the user can edit server.
  */
 function zmt_server_edit_access($server, $account = NULL) {
   return zmt_server_access('edit', $server, $account);
 }
 
 /**
- * Access callback: determines if the user can delete country.
+ * Access callback: determines if the user can delete server.
  */
 function zmt_server_delete_access($server, $account = NULL) {
   return zmt_server_access('delete', $server, $account);

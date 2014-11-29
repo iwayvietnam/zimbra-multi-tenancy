@@ -1,5 +1,5 @@
 name = ZMT Group
-description = Defines the Zimbra Group (Distribution List) entity and associated features.
+description = Defines the Group (Distribution List) entity and associated features.
 package = Zimbra Multi Tenancy
 core = 7.x
 dependencies[] = zmt_alias

@@ -1,4 +1,14 @@
-#member-container-wapper { width: 100%; clear: both; float: left; }
-#member-container-wapper select { width: 240px; height: 150px; }
-#member-container-wapper .form-item { float: left; margin: 0; padding: 0 25px 0 0; }
-
+#member-container-wapper {
+  width: 100%;
+  clear: both;
+  float: left; 
+}
+#member-container-wapper select {
+  width: 240px;
+  height: 150px;
+}
+#member-container-wapper .form-item {
+  float: left;
+  margin: 0;
+  padding: 0 25px 0 0;
+}

@@ -28,19 +28,19 @@ function zmt_tenant_schema() {
           'not null' => TRUE,
         ),
         'tenant_uid' => array(
-          'description' => 'The {users}.uid representation of this tenant.',
+          'description' => 'The {users}.uid representation of the tenant.',
           'type' => 'int',
           'not null' => TRUE,
           'default' => 0,
         ),
         'server_id' => array(
-          'description' => 'The {zmt_server}.id of this tenant.',
+          'description' => 'The {zmt_server}.id of the tenant.',
           'type' => 'int',
           'not null' => TRUE,
           'default' => 0,
         ),
         'uid' => array(
-          'description' => 'The {users}.uid that created this tenant.',
+          'description' => 'The {users}.uid that created the tenant.',
           'type' => 'int',
           'not null' => TRUE,
           'default' => 0,
@@ -101,13 +101,13 @@ function zmt_tenant_schema() {
           'default' => 0,
         ),
         'max_account' => array(
-          'description' => 'The max account number of this mapping.',
+          'description' => 'The max account number of the mapping.',
           'type' => 'int',
           'not null' => TRUE,
           'default' => 0,
         ),
         'uid' => array(
-          'description' => 'The {users}.uid that created this mapping.',
+          'description' => 'The {users}.uid that created the mapping.',
           'type' => 'int',
           'not null' => TRUE,
           'default' => 0,

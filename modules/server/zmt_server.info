@@ -1,5 +1,5 @@
 name = ZMT Server
-description = Defines the Server entity and associated features.
+description = Defines the Server entity and associated features. 
 package = Zimbra Multi Tenancy
 core = 7.x
 dependencies[] = zmt

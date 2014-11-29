@@ -66,7 +66,7 @@ function zmt_server_permission() {
 }
 
 /**
- * Access callback for Zimbra Server.
+ * Access callback for Server.
  */
 function zmt_server_access($op, $server, $account = NULL, $entity_type = NULL) {
   global $user;
@@ -251,6 +251,9 @@ function zmt_server_delete_multiple(array $ids = array()) {
   entity_get_controller('zmt_server')->delete($ids);
 }
 
+/**
+ * Defines exclude mailbox patterns.
+ */
 function zmt_server_exclude_mailbox() {
   return array(
     'postmaster*',

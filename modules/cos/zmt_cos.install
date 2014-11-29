@@ -34,24 +34,24 @@ function zmt_cos_schema() {
           'default' => 0,
         ),
         'name' => array(
-          'description' => 'The name of this cos, always treated as non-markup plain text.',
+          'description' => 'The name of the cos, always treated as non-markup plain text.',
           'type' => 'varchar',
           'length' => 255,
           'not null' => TRUE,
           'default' => '',
         ),
         'description' => array(
-          'description' => 'The description of this cos.',
+          'description' => 'The description of the cos.',
           'type' => 'text',
         ),
         'mail_quota' => array(
-          'description' => 'The mail quota of this cos.',
+          'description' => 'The mail quota of the cos.',
           'type' => 'int',
           'not null' => TRUE,
           'default' => 0,
         ),
         'max_account' => array(
-          'description' => 'The default max account number of this cos.',
+          'description' => 'The default max account number of the cos.',
           'type' => 'int',
           'not null' => TRUE,
           'default' => 0,
@@ -63,7 +63,7 @@ function zmt_cos_schema() {
           'default' => '',
         ),
         'uid' => array(
-          'description' => 'The {users}.uid that created this cos.',
+          'description' => 'The {users}.uid that created the cos.',
           'type' => 'int',
           'not null' => TRUE,
           'default' => 0,

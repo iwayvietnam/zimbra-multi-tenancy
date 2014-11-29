@@ -71,7 +71,7 @@ function zmt_domain_ui_menu() {
 }
 
 /**
- * Server view callback.
+ * Domain view callback.
  */
 function zmt_domain_view($domain) {
   drupal_set_title(entity_label('zmt_domain', $domain));
@@ -79,35 +79,35 @@ function zmt_domain_view($domain) {
 }
 
 /**
- * Access callback: determines if the user can create country.
+ * Access callback: determines if the user can create domain.
  */
 function zmt_domain_list_access($account = NULL) {
   return zmt_domain_access('list', NULL, $account);
 }
 
 /**
- * Access callback: determines if the user can create country.
+ * Access callback: determines if the user can create domain.
  */
 function zmt_domain_add_access($account = NULL) {
   return zmt_domain_access('create', NULL, $account);
 }
 
 /**
- * Access callback: determines if the user can edit country.
+ * Access callback: determines if the user can edit domain.
  */
 function zmt_domain_edit_access($domain, $account = NULL) {
   return zmt_domain_access('edit', $domain, $account);
 }
 
 /**
- * Access callback: determines if the user can delete country.
+ * Access callback: determines if the user can delete domain.
  */
 function zmt_domain_delete_access($domain, $account = NULL) {
   return zmt_domain_access('delete', $domain, $account);
 }
 
 /**
- * Our process callback to expand the COS FAPI element.
+ * Our process callback to expand the domain FAPI element.
  */
 function zmt_domain_select_expand($element) {
   if (empty($element['#options'])) {

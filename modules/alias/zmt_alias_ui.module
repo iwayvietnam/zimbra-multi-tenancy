@@ -48,7 +48,7 @@ function zmt_alias_ui_menu() {
 }
 
 /**
- * Server view callback.
+ * Alias view callback.
  */
 function zmt_alias_view($alias) {
   drupal_set_title(entity_label('zmt_alias', $alias));

@@ -35,28 +35,28 @@ function zmt_server_schema() {
           'default' => '',
         ),
         'service_location' => array(
-          'description' => 'The service location of this server.',
+          'description' => 'The service location of the server.',
           'type' => 'varchar',
           'length' => 255,
           'not null' => TRUE,
           'default' => '',
         ),
         'admin_user' => array(
-          'description' => 'The admin user of this server.',
+          'description' => 'The admin user of the server.',
           'type' => 'varchar',
           'length' => 255,
           'not null' => TRUE,
           'default' => '',
         ),
         'admin_password' => array(
-          'description' => 'The admin password of this server.',
+          'description' => 'The admin password of the server.',
           'type' => 'varchar',
           'length' => 255,
           'not null' => TRUE,
           'default' => '',
         ),
         'exclude_mailbox' => array(
-          'description' => 'The exclude mailbox of this server.',
+          'description' => 'The exclude mailbox of the server.',
           'type' => 'text',
         ),
         'delete_domain' => array(
@@ -88,7 +88,7 @@ function zmt_server_schema() {
           'default' => 0,
         ),
         'uid' => array(
-          'description' => 'The {users}.uid that created this server.',
+          'description' => 'The {users}.uid that created the server.',
           'type' => 'int',
           'not null' => TRUE,
           'default' => 0,

@@ -48,7 +48,7 @@ function zmt_group_ui_menu() {
 }
 
 /**
- * Server view callback.
+ * Group view callback.
  */
 function zmt_group_view($group) {
   drupal_set_title(entity_label('zmt_group', $group));
@@ -56,21 +56,21 @@ function zmt_group_view($group) {
 }
 
 /**
- * Access callback: determines if the user can create country.
+ * Access callback: determines if the user can create group.
  */
 function zmt_group_list_access($account = NULL) {
   return zmt_group_access('list', NULL, $account);
 }
 
 /**
- * Access callback: determines if the user can create country.
+ * Access callback: determines if the user can create group.
  */
 function zmt_group_add_access($account = NULL) {
   return zmt_group_access('create', NULL, $account);
 }
 
 /**
- * Access callback: determines if the user can edit country.
+ * Access callback: determines if the user can edit group.
  */
 function zmt_group_edit_access($group, $account = NULL) {
   global $user;
@@ -94,7 +94,7 @@ function zmt_group_edit_access($group, $account = NULL) {
 }
 
 /**
- * Access callback: determines if the user can delete country.
+ * Access callback: determines if the user can delete group.
  */
 function zmt_group_delete_access($group, $account = NULL) {
   return zmt_group_access('delete', $group, $account);

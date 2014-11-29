@@ -387,7 +387,7 @@ function zmt_group_user_delete($account) {
 }
 
 /**
- * Access callback for Account.
+ * Access callback for Group.
  */
 function zmt_group_access($op, $group, $account = NULL, $entity_type = NULL) {
   global $user;
@@ -529,7 +529,7 @@ function zmt_group_load_by_user($user) {
 }
 
 /**
- * Load an group by name.
+ * Load a group by name.
  *
  * @param $domain
  *   The domain to load group for, or its id.
@@ -650,20 +650,20 @@ function zmt_group_save($group, $by_entity = TRUE) {
 }
 
 /**
- * Deletes a domain by ID.
+ * Deletes a group by ID.
  *
  * @param $id
- *   The ID of the domain to delete.
+ *   The ID of the group to delete.
  */
 function zmt_group_delete($id) {
   return zmt_group_delete_multiple(array($id));
 }
 
 /**
- * Deletes multiple domain by ID.
+ * Deletes multiple group by ID.
  *
  * @param $ids
- *   An array of domain IDs to delete.
+ *   An array of group IDs to delete.
  */
 function zmt_group_delete_multiple(array $ids = array()) {
   zmt_group_member_delete_multiple_by_group($ids);
@@ -671,7 +671,7 @@ function zmt_group_delete_multiple(array $ids = array()) {
 }
 
 /**
- * Deletes multiple domain by domains.
+ * Deletes multiple group by domains.
  *
  * @param $ids
  *   An array of domain IDs to delete.
@@ -859,7 +859,7 @@ function zmt_group_member_delete_multiple(array $ids = array(), $by_entity = TRU
 }
 
 /**
- * Deletes multiple group member by by group.
+ * Deletes multiple group member by group.
  *
  * @param $group_ids
  *   An array of group IDs.

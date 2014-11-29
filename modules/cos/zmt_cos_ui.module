@@ -55,7 +55,7 @@ function zmt_cos_ui_menu() {
 }
 
 /**
- * Server view callback.
+ * COS view callback.
  */
 function zmt_cos_view($cos) {
   drupal_set_title(entity_label('zmt_cos', $cos));
@@ -63,28 +63,28 @@ function zmt_cos_view($cos) {
 }
 
 /**
- * Access callback: determines if the user can create country.
+ * Access callback: determines if the user can create cos.
  */
 function zmt_cos_list_access($account = NULL) {
   return zmt_cos_access('list', NULL, $account);
 }
 
 /**
- * Access callback: determines if the user can create country.
+ * Access callback: determines if the user can create cos.
  */
 function zmt_cos_add_access($account = NULL) {
   return zmt_cos_access('create', NULL, $account);
 }
 
 /**
- * Access callback: determines if the user can edit country.
+ * Access callback: determines if the user can edit cos.
  */
 function zmt_cos_edit_access($cos, $account = NULL) {
   return zmt_cos_access('edit', $cos, $account);
 }
 
 /**
- * Access callback: determines if the user can delete country.
+ * Access callback: determines if the user can delete cos.
  */
 function zmt_cos_delete_access($cos, $account = NULL) {
   return zmt_cos_access('delete', $cos, $account);

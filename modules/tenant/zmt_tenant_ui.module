@@ -71,7 +71,7 @@ function zmt_tenant_ui_menu() {
 }
 
 /**
- * Server view callback.
+ * Tenant view callback.
  */
 function zmt_tenant_view($tenant) {
   drupal_set_title(entity_label('zmt_tenant', $tenant));
@@ -79,35 +79,35 @@ function zmt_tenant_view($tenant) {
 }
 
 /**
- * Access callback: determines if the user can create country.
+ * Access callback: determines if the user can create tenant.
  */
 function zmt_tenant_list_access($account = NULL) {
   return zmt_tenant_access('list', NULL, $account);
 }
 
 /**
- * Access callback: determines if the user can create country.
+ * Access callback: determines if the user can create tenant.
  */
 function zmt_tenant_add_access($account = NULL) {
   return zmt_tenant_access('create', NULL, $account);
 }
 
 /**
- * Access callback: determines if the user can edit country.
+ * Access callback: determines if the user can edit tenant.
  */
 function zmt_tenant_edit_access($tenant, $account = NULL) {
   return zmt_tenant_access('edit', $tenant, $account);
 }
 
 /**
- * Access callback: determines if the user can delete country.
+ * Access callback: determines if the user can delete tenant.
  */
 function zmt_tenant_delete_access($tenant, $account = NULL) {
   return zmt_tenant_access('delete', $tenant, $account);
 }
 
 /**
- * Our process callback to expand the COS FAPI element.
+ * Our process callback to expand the tenant FAPI element.
  */
 function zmt_tenant_select_expand($element) {
   if (empty($element['#options'])) {
