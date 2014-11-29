@@ -55,7 +55,7 @@ function zmt_account_ui_menu() {
 }
 
 /**
- * Server view callback.
+ * Account view callback.
  */
 function zmt_account_view($account) {
   drupal_set_title(entity_label('zmt_account', $account));
@@ -63,21 +63,21 @@ function zmt_account_view($account) {
 }
 
 /**
- * Access callback: determines if the user can create country.
+ * Access callback: determines if the user can create account.
  */
 function zmt_account_list_access($account = NULL) {
   return zmt_account_access('list', NULL, $account);
 }
 
 /**
- * Access callback: determines if the user can create country.
+ * Access callback: determines if the user can create account.
  */
 function zmt_account_add_access($account = NULL) {
   return zmt_account_access('create', NULL, $account);
 }
 
 /**
- * Access callback: determines if the user can edit country.
+ * Access callback: determines if the user can edit account.
  */
 function zmt_account_edit_access($acc, $account = NULL) {
   global $user;
@@ -102,7 +102,7 @@ function zmt_account_edit_access($acc, $account = NULL) {
 }
 
 /**
- * Access callback: determines if the user can delete country.
+ * Access callback: determines if the user can delete account.
  */
 function zmt_account_delete_access($acc, $account = NULL) {
   return zmt_account_edit_access($acc, $account);
