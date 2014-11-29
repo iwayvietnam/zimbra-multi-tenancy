@@ -148,7 +148,7 @@ function zmt_account_mailbox_exists($domain_id, $name, $id) {
 }
 
 /**
- * Access callback for Account.
+ * Access callback for account.
  */
 function zmt_account_access($op, $acc, $account = NULL, $entity_type = NULL) {
   global $user;
@@ -184,7 +184,7 @@ function zmt_account_label($account, $entity_type) {
 }
 
 /**
- * Loads a account by ID.
+ * Loads an account by ID.
  */
 function zmt_account_load($id, $reset = FALSE) {
   if (empty($id)) {
@@ -354,7 +354,7 @@ function zmt_account_new($name = '') {
 }
 
 /**
- * Saves a account.
+ * Saves an account.
  *
  * @param $account
  *   The full account object to save.
@@ -399,7 +399,7 @@ function zmt_account_save($account, $by_entity = TRUE) {
 }
 
 /**
- * Deletes a account by ID.
+ * Deletes an account by ID.
  *
  * @param $id
  *   The ID of the account to delete.
