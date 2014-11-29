@@ -340,9 +340,9 @@ function ajax_zmt_server_test_connection($form, $form_state) {
   }
   $connected = zimbra_test_connection($location, $user, $password);
   if ($connected) {
-    $message = 'Connection to zimbra service success!';
+    $message = 'Connection to zimbra server success!';
   } else {
-    $message = 'Connection to zimbra service failed!';
+    $message = 'Connection to zimbra server failed!';
   }
 
   $commands = array();

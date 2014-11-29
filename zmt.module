@@ -7,7 +7,7 @@ function zmt_permission() {
   return array(
     'administer zmt' => array(
       'title' => t('Administer zimbra multi tenancy'), 
-      'description' => t('Allows users to configure and manage zimbra multi tenancy.'),
+      'description' => t('Allows users to perform any action on zimbra multi tenancy.'),
       'restrict access' => TRUE,
     ),
   );
@@ -21,13 +21,13 @@ function zmt_access_permissions($entity_type, $entity_name) {
 
   $permissions['administer any ' . $entity_type . ''] = array(
     'title' => t('Administer any @entity_name', array('@entity_name' => $entity_name)),
-    'description' => t('Allows users to perform any action on @entity_name.', array('@entity_name' => $entity_name)),
+    'description' => t('Allows users to perform action on any @entity_name.', array('@entity_name' => $entity_name)),
     'restrict access' => TRUE,
   );
 
   $permissions['administer own ' . $entity_type . ''] = array(
     'title' => t('Administer own @entity_name', array('@entity_name' => $entity_name)),
-    'description' => t('Allows users to perform own action on @entity_name.', array('@entity_name' => $entity_name)),
+    'description' => t('Allows users to perform action on own @entity_name.', array('@entity_name' => $entity_name)),
     'restrict access' => TRUE,
   );
   return $permissions;
@@ -70,7 +70,7 @@ function zmt_ajax_command_redirect($url, $delay = 0, $options = array()) {
 }
 
 /**
- * Force a reload of the current page.
+ * Force reload of the current page.
  */
 function zmt_ajax_command_reload() {
   $path = drupal_get_path('module', 'zmt');
@@ -81,7 +81,7 @@ function zmt_ajax_command_reload() {
 }
 
 /**
- * Encrypt a string.
+ * Encrypt a plain string.
  */
 function zmt_password_encrypt($text) {
   $key = md5(drupal_get_hash_salt());
