@@ -56,21 +56,21 @@ function zmt_alias_view($alias) {
 }
 
 /**
- * Access callback: determines if the user can create country.
+ * Access callback: determines if the user can create alias.
  */
 function zmt_alias_list_access($account = NULL) {
   return zmt_alias_access('list', NULL, $account);
 }
 
 /**
- * Access callback: determines if the user can create country.
+ * Access callback: determines if the user can create alias.
  */
 function zmt_alias_add_access($account = NULL) {
   return zmt_alias_access('create', NULL, $account);
 }
 
 /**
- * Access callback: determines if the user can edit country.
+ * Access callback: determines if the user can edit alias.
  */
 function zmt_alias_edit_access($alias, $account = NULL) {
   global $user;
@@ -95,7 +95,7 @@ function zmt_alias_edit_access($alias, $account = NULL) {
 }
 
 /**
- * Access callback: determines if the user can delete country.
+ * Access callback: determines if the user can delete alias.
  */
 function zmt_alias_delete_access($alias, $account = NULL) {
   return zmt_alias_edit_access($alias, $account);

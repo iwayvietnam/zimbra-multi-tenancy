@@ -120,7 +120,7 @@ function zmt_alias_mailbox_exists($domain_id, $name, $id) {
 }
 
 /**
- * Access callback for Account.
+ * Access callback for Alias.
  */
 function zmt_alias_access($op, $alias, $account = NULL, $entity_type = NULL) {
   global $user;
@@ -156,7 +156,7 @@ function zmt_alias_label($alias, $entity_type) {
 }
 
 /**
- * Loads a alias by ID.
+ * Loads an alias by ID.
  */
 function zmt_alias_load($id, $reset = FALSE) {
   if (empty($id)) {
@@ -316,7 +316,7 @@ function zmt_alias_new($name = '') {
 }
 
 /**
- * Saves a alias.
+ * Saves an alias.
  *
  * @param $alias
  *   The full alias object to save.
@@ -355,7 +355,7 @@ function zmt_alias_save($alias, $by_entity = TRUE) {
 }
 
 /**
- * Deletes a alias by ID.
+ * Deletes an alias by ID.
  *
  * @param $id
  *   The ID of the alias to delete.
