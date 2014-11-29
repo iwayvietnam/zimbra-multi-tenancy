@@ -35,6 +35,11 @@ Copyright (C) 2013 [iWay Vietnam] (http://www.iwayvietnam.com/)
 
 ###For supervisors
 
+####Server management
+  * Create a new server (create server and set permissions at the same time)
+  * Update an existing server
+  * Delete an existing server
+
 ####Tenant management
   * Create a new tenant (create tenant-account and set permissions at the same time)
   * Update an existing tenant

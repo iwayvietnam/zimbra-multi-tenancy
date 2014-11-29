@@ -1,4 +1,4 @@
-; $Id: README.txt,v 1.0 2014/08/25 07:32:18 miglius Exp $
+; $Id: README.txt,v 1.0 2014/11/25 09:32:18 nguyennv1981@gmail.com Exp $
 
 Implements Zimbra multi-tenacy of Zimbra mail.
 
@@ -6,41 +6,44 @@ Implements Zimbra multi-tenacy of Zimbra mail.
 FEATURES
 ________
 
-1. Tenant management
+1. Server management
+  * Create a new server (create server and set permissions at the same time)
+  * Update an existing server
+  * Delete an existing server
+
+2. Tenant management
   * Create a new tenant (create tenant-account and set permissions at the same time)
   * Update an existing tenant
   * Delete an existing tenant
 
-2. Domain management
+3. Domain management
   * Create a new domain (create domain-admin-account and set permissions at the same time)
   * Update an existing domain
   * Delete an existing domain
 
-3. Group/Distribution List management
+4. Group/Distribution List management
   * Create a new distribution list
   * Update an existing distribution list
   * Delete an existing distribution list
   
-4. Mailbox/Account management
+5. Mailbox/Account management
   * Create a new mailbox
   * Update an existing mailbox
   * Delete an existing mailbox
   * Reset mailbox password
 
-5. Alias management
+6. Alias management
   * Create a new alias
   * Update an existing alias
   * Delete an existing alias
-
-6. Provide commands for Zimbra implementation in zimbra_queuedcommand table.
 
 
 REQUIREMENTS
 ____________
 
-- Drupal 7.x;
-- Zimbra server
+- Drupal 7.x (https://www.drupal.org/project/drupal);
 - Entity module (https://drupal.org/project/entity)
+- Zimbra server (http://www.zimbra.com);
 
 INSTALLATION
 ____________

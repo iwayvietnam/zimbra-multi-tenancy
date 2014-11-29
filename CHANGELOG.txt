@@ -5,7 +5,6 @@
 
 Documentation has moved online. Important changes are noted below.
 
-
 ===============
 Version history
 ===============

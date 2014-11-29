@@ -2,9 +2,9 @@
 REQUIREMENTS
 ____________
 
-- Drupal 7.x;
-- Entity module;
-- Zimbra mail server
+- Drupal 7.x (https://www.drupal.org/project/drupal);
+- Entity module (https://drupal.org/project/entity);
+- Zimbra mail server (http://www.zimbra.com)
 
 
 INSTALLATION
