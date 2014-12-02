@@ -457,6 +457,7 @@ class DomainSelector extends SoapStruct {
  * ServerSelector struct class
  */
 class ServerSelector extends SoapStruct {
+
   /**
    * Server by enums
    *
@@ -496,6 +497,7 @@ class ServerSelector extends SoapStruct {
  * Soap request struct class
  */
 abstract class SoapRequest extends SoapStruct {
+
   /**
    * SoapRequest constructor
    *
@@ -577,7 +579,7 @@ class AuthRequest extends SoapRequest {
    *   Password - must be present if not using AuthToken
    * @param string  $authToken
    *   An authToken can be passed instead of account/password/name to validate an existing auth authToken.
-   * @param Account $account
+   * @param AccountSelector $account
    *   The account
    * @param string  $virtualHost
    *   Virtual host
@@ -785,6 +787,32 @@ class CreateLDAPEntryRequest extends SoapRequest {
     $this->dn = trim($dn);
     if (!empty($attrs)) {
       $this->a = $attrs;
+    }
+  }
+}
+
+/**
+ * DelegateAuth request class
+ * Used to request a new auth token that is valid for the specified account.
+ * The id of the auth token will be the id of the target account,
+ * and the requesting admin's id will be stored in the auth token for auditing purposes.
+ */
+class DelegateAuthRequest extends SoapRequest {
+
+  /**
+   * Constructor method for DelegateAuthRequest
+   * @param AccountSelector $account
+   *   Details of target account
+   * @param int $duration
+   *    Lifetime in seconds of the newly-created authtoken. Defaults to 1 hour.
+   *    Can't be longer then zimbraAuthTokenLifetime.
+   * @return self
+   */
+  function __construct(AccountSelector $account, $duration = NULL) {
+    parent::__construct();
+    $this->account = $account;
+    if (NULL !== $duration) {
+      $this->duration = (int) $duration;
     }
   }
 }

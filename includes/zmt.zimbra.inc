@@ -959,6 +959,34 @@ function zimbra_rename_account(ZimbraAdminApi $api, $id, $name) {
 }
 
 /**
+ * Used to request a new auth token that is valid for the specified account.
+ *
+ * @param  ZimbraAdminApi $api
+ *   Zimbra admin api.
+ * @param  string $name
+ *   An account name.
+ * @param  int $duration
+ *   Lifetime in seconds of the newly-created authtoken.
+ * @return mix
+ */
+function zimbra_delegate_auth(ZimbraAdminApi $api, $name, $duration = NULL) {
+  try {
+    $authToken = NULL;
+    $result = $api->delegateAuth(new AccountSelector('name', $name), $duration);
+    if (!empty($result->authToken)){
+      if (isset($result->authToken[0]->_content)) {
+        $authToken =  $result->authToken[0]->_content;
+      }
+    }
+    return $authToken;
+  }
+  catch (Exception $ex) {
+    watchdog('zimbra', $ex->__toString());
+    return $ex;
+  }
+}
+
+/**
  * Delete Zimbra account
  *
  * @param  ZimbraAdminApi $api

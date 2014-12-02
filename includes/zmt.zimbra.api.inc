@@ -200,6 +200,20 @@ interface ZimbraAdminApiInterface {
   function createLDAPEntry($dn, array $attrs = array());
 
   /**
+   * Used to request a new auth token that is valid for the specified account.
+   * The id of the auth token will be the id of the target account,
+   * and the requesting admin's id will be stored in the auth token for auditing purposes.
+   *
+   * @param  AccountSelector $account
+   *   Details of target account.
+   * @param  int  $duration
+   *   Lifetime in seconds of the newly-created authtoken. Defaults to 1 hour.
+   *   Can't be longer then zimbraAuthTokenLifetime.
+   * @return SoapResponse
+   */
+  function delegateAuth(AccountSelector $account, $duration = NULL);
+
+  /**
    * Deletes the account with the given id.
    * Notes:
    *   1. If the request is sent to the server on which the mailbox resides,
@@ -728,7 +742,7 @@ class ZimbraAdminApi implements ZimbraAdminApiInterface {
     );
     $result = $this->_client->doRequest($request);
     $authToken = NULL;
-    if (isset($result->authToken) && !empty($result->authToken)){
+    if (!empty($result->authToken)){
       if (isset($result->authToken[0]->_content)) {
         $authToken =  $result->authToken[0]->_content;
       }
@@ -910,6 +924,25 @@ class ZimbraAdminApi implements ZimbraAdminApiInterface {
   public function createLDAPEntry($dn, array $attrs = array()) {
     $request = new CreateLDAPEntryRequest(
       $dn, $attrs
+    );
+    return $this->_client->doRequest($request);
+  }
+
+  /**
+   * Used to request a new auth token that is valid for the specified account.
+   * The id of the auth token will be the id of the target account,
+   * and the requesting admin's id will be stored in the auth token for auditing purposes.
+   *
+   * @param  AccountSelector $account
+   *   Details of target account.
+   * @param  int  $duration
+   *   Lifetime in seconds of the newly-created authtoken. Defaults to 1 hour.
+   *   Can't be longer then zimbraAuthTokenLifetime.
+   * @return SoapResponse
+   */
+  public function delegateAuth(AccountSelector $account, $duration = NULL) {
+    $request = new DelegateAuthRequest(
+      $account, $duration
     );
     return $this->_client->doRequest($request);
   }
