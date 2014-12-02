@@ -27,6 +27,13 @@ function zmt_tenant_schema() {
           'unsigned' => TRUE,
           'not null' => TRUE,
         ),
+        'full_name' => array(
+          'description' => 'The full name of the tenant.',
+          'type' => 'varchar',
+          'length' => 255,
+          'not null' => TRUE,
+          'default' => '',
+        ),
         'tenant_uid' => array(
           'description' => 'The {users}.uid representation of the tenant.',
           'type' => 'int',

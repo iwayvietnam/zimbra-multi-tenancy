@@ -13,6 +13,7 @@ function zmt_tenant_entity_info() {
       'fieldable' => FALSE,
       'entity keys' => array(
         'id' => 'id',
+        'label' => 'full_name',
       ),
       'view modes' => array(
         'full' => array(
@@ -184,12 +185,7 @@ function zmt_tenant_uri($tenant) {
  * Zmt tenant entity label callback.
  */
 function zmt_tenant_label($tenant, $entity_type) {
-  if (isset($tenant->name)) {
-    return t('Tenant @name', array('@name' => $tenant->name));
-  }
-  else {
-    return t('Tenant');
-  }
+  return t('Tenant @name', array('@name' => $tenant->full_name));
 }
 
 /**
@@ -345,17 +341,18 @@ function zmt_ternant_get_server($id) {
 /**
  * Returns an initialized tenant object.
  *
- * @param $tenant_uid
- *   The machine-readable tenant uid of the tenant.
+ * @param $full_name
+ *   The full name of the tenant.
  *
  * @return
  *   A tenant object with all default fields initialized.
  */
-function zmt_tenant_new($tenant_uid = 0) {
+function zmt_tenant_new($full_name = '') {
   global $user;
   $values = array(
+    'full_name' => $full_name,
     'server_id' => 0,
-    'tenant_uid' => $tenant_uid,
+    'tenant_uid' => 0,
     'uid' => $user->uid,
     'created' => REQUEST_TIME,
     'changed' => REQUEST_TIME,
@@ -379,6 +376,7 @@ function zmt_tenant_save($tenant, $by_entity = TRUE) {
   }
   else {
     $fields = array(
+      'full_name' => $tenant->full_name,
       'server_id' => $tenant->server_id,
       'tenant_uid' => $tenant->tenant_uid,
       'uid' => $tenant->uid,

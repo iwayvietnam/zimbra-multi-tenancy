@@ -9,7 +9,8 @@ function zmt_tenant_list_all() {
   drupal_set_title('Tenants');
   $header = array();
   $header[] = array('data' => t('No.'));
-  $header[] = array('data' => t('Name'), 'field' => 'u.name');
+  $header[] = array('data' => t('Full Name'), 'field' => 't.full_name');
+  $header[] = array('data' => t('User Name'), 'field' => 'u.name');
   $header[] = array('data' => t('Status'), 'field' => 'u.status');
   if (module_exists('zmt_domain')) {
     $header[] = array('data' => t('Total domains'), 'field' => 'd.total_domain');
@@ -41,7 +42,7 @@ function zmt_tenant_list_all() {
 
   $item_per_page = variable_get('zimbra_item_per_page', 20);
   $result = $query
-    ->fields('t', array('id'))
+    ->fields('t', array('id', 'full_name'))
     ->orderByHeader($header)
     ->limit($item_per_page)
     ->execute();
@@ -52,7 +53,10 @@ function zmt_tenant_list_all() {
   foreach ($result as $key => $tenant) {
     $row = array();
     $row[] = $key + 1 + (pager_find_page() * $item_per_page);
-    $row[] = l($tenant->name, 'zmt/tenant/' . $tenant->id . '/edit', array('query' => $destination));
+    $row[] = l($tenant->full_name, 'zmt/tenant/' . $tenant->id . '/edit', array('query' => $destination));
+    $row[] = array(
+      'data' => $tenant->name,
+    );
     $row[] = array(
       'data' => ((int) $tenant->status > 0) ? t('Active') : t('Blocked'),
     );
@@ -129,8 +133,15 @@ function zmt_tenant_edit_form($form, &$form_state, $tenant){
 
   $id = isset($tenant->id) ? (int) $tenant->id : 0;
 
+  $form['full_name'] = array(
+    '#title' => t('Full Name'),
+    '#type' => 'textfield',
+    '#maxlength' => 255,
+    '#required' => TRUE,
+    '#default_value' => $tenant->full_name,
+  );
   $form['name'] = array(
-    '#title' => t('Tenant Name'),
+    '#title' => t('User Name'),
     '#type' => 'textfield',
     '#maxlength' => USERNAME_MAX_LENGTH,
     '#attributes' => array('class' => array('username')),
@@ -316,6 +327,7 @@ function zmt_tenant_edit_form_submit($form, &$form_state) {
   }
   $account = user_save($account, $edit);
 
+  $tenant->full_name = check_plain($values['full_name']);
   $tenant->tenant_uid = $account->uid;
   $tenant->server_id = (int) $values['server_id'];
   zmt_tenant_save($tenant);
