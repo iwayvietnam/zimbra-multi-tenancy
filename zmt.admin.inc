@@ -30,36 +30,6 @@ function zmt_setting_form($form, &$form_state) {
     '#default_value' => variable_get('zimbra_item_per_pull', 100),
     '#weight' => -6,
   );
-
-  $roles = user_roles();
-  $form['zmt_zimbra_role_id'] = array(
-    '#type' => 'select',
-    '#title' => t('Role manage Zimbra multi-tenancy'),
-    '#default_value' => variable_get('zmt_zimbra_role_id', 4),
-    '#options' => $roles,
-    '#weight' => -5,
-  );
-  $form['zmt_tenant_role_id'] = array(
-    '#type' => 'select',
-    '#title' => t('Role for Tenant'),
-    '#default_value' => variable_get('zmt_tenant_role_id', 5),
-    '#options' => $roles,
-    '#weight' => -4,
-  );
-  $form['zmt_domain_role_id'] = array(
-    '#type' => 'select',
-    '#title' => t('Role for Domain'),
-    '#default_value' => variable_get('zmt_domain_role_id', 7),
-    '#options' => $roles,
-    '#weight' => -2,
-  );
-  $form['zmt_group_role_id'] = array(
-    '#type' => 'select',
-    '#title' => t('Role for Group'),
-    '#default_value' => variable_get('zmt_group_role_id', 8),
-    '#options' => $roles,
-    '#weight' => -1,
-  );
   
   $form = system_settings_form($form);
   return $form;
