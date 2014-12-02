@@ -33,7 +33,7 @@ function zmt_ui_zmt_domain_presave($domain) {
   $api = zimbra_admin_api_by_server($domain->server_id);
   $zimbra_domain = zimbra_get_domain($api, $domain->name);
   if (!$zimbra_domain) {
-    $zimbra_domain = zimbra_create_domain($api, $domain->name, $attrs);
+    $zimbra_domain = zimbra_create_domain($api, $domain->name);
     $domain->zimbra_id = isset($zimbra_domain->id) ? $zimbra_domain->id : '';
   }
 }
