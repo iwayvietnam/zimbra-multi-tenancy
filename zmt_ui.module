@@ -144,7 +144,7 @@ function zmt_ui_zmt_alias_presave($alias) {
     $account_zimbra_id = $alias->account_zimbra_id;
   }
   else {
-    $account = zim_account_load($alias->account_id);
+    $account = zmt_account_load($alias->account_id);
 
     $domain_name = !empty($account->domain) ? $account->domain : '';
     $server_id = !empty($account->server_id) ? (int) $account->server_id : 0;
@@ -155,7 +155,7 @@ function zmt_ui_zmt_alias_presave($alias) {
     $api = zimbra_admin_api_by_server($server_id);
 
     $alias_address = $alias->name . '@' . $domain_name;
-    if (!empty($alias->id)) {
+    if (empty($alias->id)) {
       zimbra_add_account_alias($api, $account_zimbra_id, $alias_address);
     }
     else {
