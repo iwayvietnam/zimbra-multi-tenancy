@@ -399,7 +399,7 @@ function zmt_account_import_form_callback($form, &$form_state) {
           }
         }
         $account = zmt_account_prepare($record, $domain_id);
-        if (!empty($account->name)) {
+        if (!empty($account->name) && preg_match('!^[a-zA-Z0-9_.]+$!', $account->name)) {
           $results = module_invoke_all('mailbox_exists', $domain_id, $account->name, 0);
           $exists = FALSE;
           foreach ($results as $result) {
