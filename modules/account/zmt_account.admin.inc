@@ -415,18 +415,20 @@ function zmt_account_ajax_import_form_callback($form, $form_state) {
           }
         }
         $account = zmt_account_prepare($record, $domain_id);
-        $account->cos_id = $cos_id;
-        $results = module_invoke_all('mailbox_exists', $domain_id, $account->name, 0);
-        $exists = FALSE;
-        foreach ($results as $result) {
-          if ($result === TRUE) {
-            $exists = $result;
-            break;
+        if (!empty($account->name)) {
+          $account->cos_id = $cos_id;
+          $results = module_invoke_all('mailbox_exists', $domain_id, $account->name, 0);
+          $exists = FALSE;
+          foreach ($results as $result) {
+            if ($result === TRUE) {
+              $exists = $result;
+              break;
+            }
           }
-        }
-        if (!$exists) {
-          zmt_account_save($account);
-          $count++;
+          if (!$exists) {
+            zmt_account_save($account);
+            $count++;
+          }
         }
       }
       fclose($handle);
