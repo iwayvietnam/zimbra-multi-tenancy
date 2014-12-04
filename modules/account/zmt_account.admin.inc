@@ -448,7 +448,10 @@ function zmt_account_prepare($record, $domain_id = 0) {
   $account = zmt_account_new();
   $account->domain_id = (int) $domain_id;
   foreach ($record as $field => $value) {
-    $account->$field = $value;
+    $account->$field = trim($value);
+  }
+  if (isset($account->name)) {
+    $account->name = filter_var($account->name, FILTER_SANITIZE_EMAIL);
   }
   return $account;
 }
