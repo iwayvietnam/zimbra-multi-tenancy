@@ -262,6 +262,8 @@ function zmt_account_edit_form_validate($form, &$form_state) {
   $domain_id = (int) $values['domain_id'];
   $name = trim($values['name']);
   $id = isset($account->id) ? (int) $account->id : 0;
+  if(!preg_match('!^[a-zA-Z0-9_.]+$!', $name))
+    form_set_error('name', t('Please enter a valid account name.'));
 
   $results = module_invoke_all('mailbox_exists', $domain_id, $name, $id);
   foreach ($results as $result) {
@@ -291,7 +293,7 @@ function zmt_account_edit_form_submit($form, &$form_state) {
   $values = $form_state['values'];
 
   $account->domain_id = (int) $values['domain_id'];
-  $account->name = check_plain($values['name']);
+  $account->name = check_plain(strtolower($values['name']));
   $account->password = trim($values['password']);
   $account->full_name = check_plain($values['full_name']);
   $account->code = check_plain($values['code']);
@@ -400,6 +402,7 @@ function zmt_account_import_form_callback($form, &$form_state) {
         }
         $account = zmt_account_prepare($record, $domain_id);
         if (!empty($account->name) && preg_match('!^[a-zA-Z0-9_.]+$!', $account->name)) {
+          $account->name =strtolower($account->name);
           $results = module_invoke_all('mailbox_exists', $domain_id, $account->name, 0);
           $exists = FALSE;
           foreach ($results as $result) {
