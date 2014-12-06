@@ -139,20 +139,14 @@ function zmt_group_zmt_domain_delete($domain){
  * Implements hook_zmt_account_delete().
  */ 
 function zmt_group_zmt_account_delete($account){
-  db_delete('zmt_group_member')
-    ->condition('member_id', $account->id)
-    ->condition('type', GROUP_MEMBER_ACCOUNT)
-    ->execute();
+  zmt_group_member_delete_multiple_by_account($account->id);
 }
 
 /**
  * Implements hook_zmt_alias_delete().
  */ 
 function zmt_group_zmt_alias_delete($alias){
-  db_delete('zmt_group_member')
-    ->condition('member_id', $alias->id)
-    ->condition('type', GROUP_MEMBER_ALIAS)
-    ->execute();
+  zmt_group_member_delete_multiple_by_alias($alias->id);
 }
 
 /**
@@ -868,4 +862,36 @@ function zmt_group_member_delete_multiple_by_group(array $group_ids = array()) {
     $ids = isset($result['zmt_group_member']) ? array_keys($result['zmt_group_member']) : array();
     zmt_group_member_delete_multiple($ids);
   }
+}
+
+/**
+ * Deletes multiple group member by account.
+ *
+ * @param $account_id
+ *   An acount ID.
+ */
+function zmt_group_member_delete_multiple_by_account($account_id) {
+  $query = new EntityFieldQuery();
+  $result = $query->entityCondition('entity_type', 'zmt_group_member')
+    ->propertyCondition('member_id', $account_id)
+    ->propertyCondition('type', GROUP_MEMBER_ACCOUNT)
+    ->execute();
+  $ids = isset($result['zmt_group_member']) ? array_keys($result['zmt_group_member']) : array();
+  zmt_group_member_delete_multiple($ids);
+}
+
+/**
+ * Deletes multiple group member by alias.
+ *
+ * @param $alias_id
+ *   An alias ID.
+ */
+function zmt_group_member_delete_multiple_by_alias($alias_id) {
+  $query = new EntityFieldQuery();
+  $result = $query->entityCondition('entity_type', 'zmt_group_member')
+    ->propertyCondition('member_id', $alias_id)
+    ->propertyCondition('type', GROUP_MEMBER_ALIAS)
+    ->execute();
+  $ids = isset($result['zmt_group_member']) ? array_keys($result['zmt_group_member']) : array();
+  zmt_group_member_delete_multiple($ids);
 }
