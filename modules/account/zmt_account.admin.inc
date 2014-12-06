@@ -289,7 +289,7 @@ function zmt_account_edit_form_submit($form, &$form_state) {
 
   $account->domain_id = (int) $values['domain_id'];
   $account->cos_id = (int) $values['cos_id'];
-  $account->name = check_plain(trim($values['name']));
+  $account->name = check_plain(strtolower($values['name']));
   $account->password = trim($values['password']);
   $account->full_name = $values['full_name'];
   $account->status = check_plain($values['status']);
