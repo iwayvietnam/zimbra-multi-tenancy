@@ -688,6 +688,17 @@ class CountObjectsRequest extends SoapRequest {
       $this->domain = $domain;
     }
   }
+
+  /**
+   * Returns the array representation of this class 
+   *
+   * @param  string $name
+   * @return array
+   */
+  public function toArray($name = NULL) {
+    $this->type = in_array($this->type, self::$_types) ? $this->type : 'account';
+    return parent::toArray($name);
+  }
 }
 
 /**
