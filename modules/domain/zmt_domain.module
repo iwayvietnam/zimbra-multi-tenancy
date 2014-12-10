@@ -133,12 +133,12 @@ function zmt_domain_zmt_cos_delete($cos){
  * Implements hook_query_TAG_alter().
  */ 
 function zmt_domain_query_tenant_count_domain_alter(QueryAlterableInterface $query) {
-  $sub_query = db_select('zmt_domain', 'd')
+  $count_domain_query = db_select('zmt_domain', 'd')
     ->fields('d', array('tenant_id'))
     ->groupBy('d.tenant_id');
-  $sub_query->addExpression('COUNT(d.id)', 'total_domain');
-  $query->leftJoin($sub_query, 'sq', 'sq.tenant_id = t.id');
-  $query->addExpression('IFNULL(sq.total_domain, 0)', 'total_domain');
+  $count_domain_query->addExpression('COUNT(d.id)', 'total_domain');
+  $query->leftJoin($count_domain_query, 'cdq', 'cdq.tenant_id = t.id');
+  $query->addExpression('IFNULL(cdq.total_domain, 0)', 'total_domain');
 }
 
 /**

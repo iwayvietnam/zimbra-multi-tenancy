@@ -110,26 +110,26 @@ function zmt_account_query_zmt_account_load_multiple_alter(QueryAlterableInterfa
  * Implements hook_query_TAG_alter().
  */ 
 function zmt_account_query_domain_count_account_alter(QueryAlterableInterface $query) {
-  $sub_query = db_select('zmt_account', 'a')
+  $count_account_query = db_select('zmt_account', 'a')
     ->fields('a', array('domain_id'))
     ->groupBy('a.domain_id');
-  $sub_query->addExpression('COUNT(a.id)', 'total_account');
-  $query->leftJoin($sub_query, 'sq', 'sq.domain_id = d.id');
-  $query->addExpression('IFNULL(sq.total_account, 0)', 'total_account');
+  $count_account_query->addExpression('COUNT(a.id)', 'total_account');
+  $query->leftJoin($count_account_query, 'caq', 'caq.domain_id = d.id');
+  $query->addExpression('IFNULL(caq.total_account, 0)', 'total_account');
 }
 
 /**
  * Implements hook_query_TAG_alter().
  */ 
 function zmt_account_query_tenant_count_account_alter(QueryAlterableInterface $query) {
-  $sub_query = db_select('zmt_account', 'a');
-  $sub_query->leftJoin('zmt_domain', 'd', 'd.id = a.domain_id');
-  $sub_query->addField('d', 'tenant_id', 'tenant_id');
-  $sub_query->addExpression('COUNT(a.id)', 'total_account');
-  $sub_query->groupBy('d.tenant_id');
+  $count_account_query = db_select('zmt_account', 'a');
+  $count_account_query->leftJoin('zmt_domain', 'd', 'd.id = a.domain_id');
+  $count_account_query->addField('d', 'tenant_id', 'tenant_id');
+  $count_account_query->addExpression('COUNT(a.id)', 'total_account');
+  $count_account_query->groupBy('d.tenant_id');
 
-  $query->leftJoin($sub_query, 'sq', 'sq.tenant_id = t.id');
-  $query->addExpression('IFNULL(sq.total_account, 0)', 'total_account');
+  $query->leftJoin($count_account_query, 'caq', 'caq.tenant_id = t.id');
+  $query->addExpression('IFNULL(caq.total_account, 0)', 'total_account');
 }
 
 /**
