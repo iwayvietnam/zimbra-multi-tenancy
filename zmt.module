@@ -19,13 +19,13 @@ function zmt_permission() {
 function zmt_access_permissions($entity_type, $entity_name) {
   $permissions = array();
 
-  $permissions['administer any ' . $entity_type . ''] = array(
+  $permissions['administer any ' . $entity_type] = array(
     'title' => t('Administer any @entity_name', array('@entity_name' => $entity_name)),
     'description' => t('Allows users to perform action on any @entity_name.', array('@entity_name' => $entity_name)),
     'restrict access' => TRUE,
   );
 
-  $permissions['administer own ' . $entity_type . ''] = array(
+  $permissions['administer own ' . $entity_type] = array(
     'title' => t('Administer own @entity_name', array('@entity_name' => $entity_name)),
     'description' => t('Allows users to perform action on own @entity_name.', array('@entity_name' => $entity_name)),
     'restrict access' => TRUE,
