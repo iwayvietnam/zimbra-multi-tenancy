@@ -335,6 +335,9 @@ class AccountSelector extends SoapStruct {
    * @return array
    */
   public function toArray($name = 'account') {
+    if (!in_array($this->by, self::$_by_enums)) {
+      $this->by = 'name';
+    }
     return parent::toArray($name);
   }
 }
@@ -372,6 +375,9 @@ class CosSelector extends SoapStruct {
    * @return array
    */
   public function toArray($name = 'cos') {
+    if (!in_array($this->by, self::$_by_enums)) {
+      $this->by = 'name';
+    }
     return parent::toArray($name);
   }
 }
@@ -409,6 +415,9 @@ class DistributionListSelector extends SoapStruct {
    * @return array
    */
   public function toArray($name = 'dl') {
+    if (!in_array($this->by, self::$_by_enums)) {
+      $this->by = 'name';
+    }
     return parent::toArray($name);
   }
 }
@@ -449,6 +458,9 @@ class DomainSelector extends SoapStruct {
    * @return array
    */
   public function toArray($name = 'domain') {
+    if (!in_array($this->by, self::$_by_enums)) {
+      $this->by = 'name';
+    }
     return parent::toArray($name);
   }
 }
@@ -489,6 +501,9 @@ class ServerSelector extends SoapStruct {
    * @return array
    */
   public function toArray($name = 'server') {
+    if (!in_array($this->by, self::$_by_enums)) {
+      $this->by = 'name';
+    }
     return parent::toArray($name);
   }
 }
