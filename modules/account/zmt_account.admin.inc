@@ -140,10 +140,12 @@ function zmt_account_edit_form($form, &$form_state, $account){
     '#required' => TRUE,
   );
 
+  $domain_id = isset($form_state['values']['domain_id']) ? (int) $form_state['values']['domain_id'] : (int) $account->domain_id;
   $options = array();
   if (isset($account->id) && (int) $account->id > 0) {
     $domain = zmt_domain_load($account->domain_id);
     if ($domain) {
+      $domain_id = $domain->id;
       $options[$domain->id] = $domain->name;
     }
   }
@@ -156,6 +158,10 @@ function zmt_account_edit_form($form, &$form_state, $account){
     }
     if (count($domains) !== 1) {
       $options = array('' => t('- None -'));
+    }
+    elseif (count($domains) == 1) {
+      $domain = reset($domains);
+      $domain_id = $domain->id;
     }
     foreach ($domains as $domain) {
       $options[$domain->id] = $domain->name;
@@ -173,7 +179,6 @@ function zmt_account_edit_form($form, &$form_state, $account){
     ),
   );
 
-  $domain_id = isset($form_state['values']['domain_id']) ? (int) $form_state['values']['domain_id'] : (int) $account->domain_id;
   $options = array();
   if ($domain_id) {
     $mappings = zmt_domain_cos_load_multiple_by_domain(array($domain_id));
