@@ -149,7 +149,21 @@ function zmt_server_edit_form($form, &$form_state, $server){
     '#suffix' => l(t('Cancel'), 'zmt/server'),
   );
 
+  $form['#validate'][] = 'zmt_server_edit_form_validate';
+
   return $form;
+}
+
+/**
+ * Form validation handler for zmt_server_edit_form().
+ *
+ * @see zmt_server_edit_form()
+ */
+function zmt_server_edit_form_validate($form, &$form_state) {
+  $values = &$form_state['values'];
+  if (!valid_url($values['service_location'], TRUE)) {
+    form_set_error('service_location', t('The service location is an invalid url.'));
+  }
 }
 
 /**
