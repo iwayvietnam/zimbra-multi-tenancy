@@ -151,12 +151,12 @@ abstract class SoapStruct implements SoapStructInterface {
     if (!empty($this->_namespace)) {
       $arr['_jsns'] = $this->_namespace;
     }
-    if (count($this->_properties)) {
+    if (!empty($this->_properties)) {
       foreach ($this->_properties as $key => $value) {
         if ($value instanceof SoapStructInterface) {
           $arr += $value->toArray($key);
         }
-        elseif (is_array($value) && count($value)) {
+        elseif (is_array($value) && !empty($value)) {
           $arr[$key] = array();
           foreach ($value as $child) {
             if ($child instanceof SoapStructInterface) {
@@ -228,7 +228,7 @@ abstract class SoapStruct implements SoapStructInterface {
    *   The value to set
    */
   public function offsetSet($offset, $value) {
-    if (is_NULL($offset)) {
+    if (is_null($offset)) {
       $this->_properties[] = $value;
     }
     else {
@@ -275,7 +275,7 @@ abstract class SoapStruct implements SoapStructInterface {
  * KeyValuePair struct class
  */
 class KeyValuePair extends SoapStruct {
-  
+
   /**
    * Constructor method for KeyValuePair
    * @param string $key
@@ -316,7 +316,7 @@ class AccountSelector extends SoapStruct {
     'krb5Principal',
     'name',
   );
-  
+
   /**
    * Constructor method for AccountSelector
    * @param  string $by
@@ -356,7 +356,7 @@ class CosSelector extends SoapStruct {
     'id',
     'name',
   );
-  
+
   /**
    * Constructor method for CosSelector
    * @param  string $by
@@ -396,7 +396,7 @@ class DistributionListSelector extends SoapStruct {
     'id',
     'name',
   );
-  
+
   /**
    * Constructor method for CosSelector
    * @param  string $by
@@ -439,7 +439,7 @@ class DomainSelector extends SoapStruct {
     'name',
     'virtualHostname',
   );
-  
+
   /**
    * Constructor method for CosSelector
    * @param  string $by
@@ -480,7 +480,7 @@ class ServerSelector extends SoapStruct {
     'name',
     'serviceHostname',
   );
-  
+
   /**
    * Constructor method for ServerSelector
    * @param  string $by
@@ -541,7 +541,7 @@ abstract class SoapRequest extends SoapStruct {
  * Add an alias for the account
  */
 class AddAccountAliasRequest extends SoapRequest {
-  
+
   /**
    * Constructor method for AddAccountAliasRequest
    * @param  string $id Zimbra ID
@@ -560,7 +560,7 @@ class AddAccountAliasRequest extends SoapRequest {
  * Adding members to a distribution list
  */
 class AddDistributionListMemberRequest extends SoapRequest {
-  
+
   /**
    * Constructor method for AddDistributionListMember
    * @param  string $id Zimbra ID
@@ -585,7 +585,7 @@ class AddDistributionListMemberRequest extends SoapRequest {
  * 
  */
 class AuthRequest extends SoapRequest {
-  
+
   /**
    * Constructor method for Auth
    * @param string  $name
@@ -636,7 +636,7 @@ class AuthRequest extends SoapRequest {
  * Count number of accounts by cos in a domain.
  */
 class CountAccountRequest extends SoapRequest {
-  
+
   /**
    * Constructor method for CountAccountRequest
    * @param DomainSelector $domain Domain
@@ -706,7 +706,7 @@ class CountObjectsRequest extends SoapRequest {
  * Create account.
  */
 class CreateAccountRequest extends SoapRequest {
-  
+
   /**
    * Constructor method for CreateAccountRequest
    * @param string $name
@@ -752,7 +752,7 @@ class CreateCosRequest extends SoapRequest {
  * Create a distribution list.
  */
 class CreateDistributionListRequest extends SoapRequest {
-  
+
   /**
    * Constructor method for CreateDistributionListRequest
    * @param string $name
@@ -800,7 +800,7 @@ class CreateDomainRequest extends SoapRequest {
  * Create an LDAP entry.
  */
 class CreateLDAPEntryRequest extends SoapRequest {
-  
+
   /**
    * Constructor method for CreateLDAPEntry
    * @param string $dn
@@ -933,7 +933,7 @@ class DeleteLDAPEntryRequest extends SoapRequest {
  * Get attributes related to an account.
  */
 class GetAccountRequest extends SoapRequest {
-  
+
   /**
    * Constructor method for GetAccount
    * @param  AccountSelector $account
@@ -962,7 +962,7 @@ class GetAccountRequest extends SoapRequest {
  * Get information about an account.
  */
 class GetAccountInfoRequest extends SoapRequest {
-  
+
   /**
    * Constructor method for GetAccountInfoRequest
    * @param  AccountSelector $account Account selector
@@ -979,7 +979,7 @@ class GetAccountInfoRequest extends SoapRequest {
  * Get All servers matching the selectin criteria.
  */
 class GetAllAccountsRequest extends SoapRequest {
-  
+
   /**
    * Constructor method for GetAllAccountsRequest
    * @param  ServerSelector $server
@@ -1028,7 +1028,7 @@ class GetAllDistributionListsRequest extends SoapRequest {
  * Get all domains.
  */
 class GetAllDomainsRequest extends SoapRequest {
-  
+
   /**
    * Constructor method for GetAllDomainsRequest
    * @param  bool $applyConfig
@@ -1048,7 +1048,7 @@ class GetAllDomainsRequest extends SoapRequest {
  * Get Class Of Service (COS).
  */
 class GetCosRequest extends SoapRequest {
-  
+
   /**
    * Constructor method for GetCosRequest
    * @param  Cos $cos
@@ -1073,7 +1073,7 @@ class GetCosRequest extends SoapRequest {
  * Get a Distribution List.
  */
 class GetDistributionListRequest extends SoapRequest {
-  
+
   /**
    * Constructor method for GetDistributionListRequest
    * @param  DistributionListSelector $dl
@@ -1118,7 +1118,7 @@ class GetDistributionListRequest extends SoapRequest {
  * Get information about a domain.
  */
 class GetDomainRequest extends SoapRequest {
-  
+
   /**
    * Constructor method for GetDomainRequest
    * @param  DomainSelector $domain
@@ -1148,7 +1148,7 @@ class GetDomainRequest extends SoapRequest {
  * Get domain information.
  */
 class GetDomainInfoRequest extends SoapRequest {
-  
+
   /**
    * Constructor method for GetDomainInfoRequest
    * @param  DomainSelector $account
@@ -1173,7 +1173,7 @@ class GetDomainInfoRequest extends SoapRequest {
  * Get LDAP entries
  */
 class GetLDAPEntriesRequest extends SoapRequest {
-  
+
   /**
    * Constructor method for GetLDAPEntriesRequest
    * @param string $query
@@ -1235,7 +1235,7 @@ class GetAllSkinsRequest extends SoapRequest {
  * Modify an account.
  */
 class ModifyAccountRequest extends SoapRequest {
-  
+
   /**
    * Constructor method for ModifyAccountRequest
    * @param string $id
@@ -1257,7 +1257,7 @@ class ModifyAccountRequest extends SoapRequest {
  * Modify Class of Service (COS) attributes.
  */
 class ModifyCosRequest extends SoapRequest {
-  
+
   /**
    * Constructor method for ModifyCosRequest
    * @param string $id Zimbra ID
@@ -1278,7 +1278,7 @@ class ModifyCosRequest extends SoapRequest {
  * Modify attributes for a Distribution List.
  */
 class ModifyDistributionListRequest extends SoapRequest {
-  
+
   /**
    * Constructor method for ModifyDistributionListRequet
    * @param string $id Zimbra ID
@@ -1299,7 +1299,7 @@ class ModifyDistributionListRequest extends SoapRequest {
  * Modify attributes for a domain.
  */
 class ModifyDomainRequest extends SoapRequest {
-  
+
   /**
    * Constructor method for ModifyDomainRequest
    * @param string $id Zimbra ID
@@ -1320,7 +1320,7 @@ class ModifyDomainRequest extends SoapRequest {
  * Modify an LDAP Entry.
  */
 class ModifyLDAPEntryRequest extends SoapRequest {
-  
+
   /**
    * Constructor method for ModifyLDAPEntryRequest
    * @param string $dn
@@ -1342,7 +1342,7 @@ class ModifyLDAPEntryRequest extends SoapRequest {
  * Remove Account Alias.
  */
 class RemoveAccountAliasRequest extends SoapRequest {
-  
+
   /**
    * Constructor method for RemoveAccountAliasRequest
    * @param string $alias Alias
@@ -1364,7 +1364,7 @@ class RemoveAccountAliasRequest extends SoapRequest {
  * Unlike add, remove of a non-existent member causes an exception and no modification to the list.
  */
 class RemoveDistributionListMemberRequest extends SoapRequest {
-  
+
   /**
    * Constructor method for RemoveDistributionListMemberRequest
    * @param  string $id Zimbra ID
@@ -1445,7 +1445,7 @@ class RenameDistributionListRequest extends SoapRequest {
  * Rename LDAP Entry.
  */
 class RenameLDAPEntryRequest extends SoapRequest {
-  
+
   /**
    * Constructor method for RenameLDAPEntryRequest
    * @param string $dn
@@ -1466,7 +1466,7 @@ class RenameLDAPEntryRequest extends SoapRequest {
  * Search directory.
  */
 class SearchDirectoryRequest extends SoapRequest {
-  
+
   /**
    * Constructor method for SearchDirectoryRequest
    * @param string $query
@@ -1552,7 +1552,7 @@ class SearchDirectoryRequest extends SoapRequest {
  * Set Password.
  */
 class SetPasswordRequest extends SoapRequest {
-  
+
   /**
    * Constructor method for SetPasswordRequest
    * @param string $id Zimbra ID
@@ -1900,7 +1900,7 @@ class HttpSoapClient {
       'SoapAction' => $request->getNamespace() . '#' . $request->className()
     ));
     if ($this->_debug) {
-      $name = 'zimbra - '.str_replace('Request', 'Response', $request->className());
+      $name = 'zimbra - ' . str_replace('Request', 'Response', $request->className());
       $data = isset($response->data) ? $response->data : '';
       watchdog($name, htmlentities($data), array(), WATCHDOG_DEBUG);
     }
