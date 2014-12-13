@@ -40,7 +40,6 @@ class ZmtUiTestCase extends DrupalWebTestCase {
   public function testZmtEntityHooks() {
     $this->assertTrue(module_implements('zmt_domain_presave'), t('Implement zmt_domain_presave hook found.'));
     $this->assertTrue(module_implements('zmt_domain_delete'), t('Implement zmt_domain_delete hook found.'));
-    $this->assertTrue(module_implements('zmt_account_presave'), t('Implement zmt_account_presave hook found.'));
     $this->assertTrue(module_implements('zmt_account_delete'), t('Implement zmt_account_delete hook found.'));
     $this->assertTrue(module_implements('zmt_alias_presave'), t('Implement zmt_alias_presave hook found.'));
     $this->assertTrue(module_implements('zmt_alias_delete'), t('Implement zmt_alias_delete hook found.'));
