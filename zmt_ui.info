@@ -3,3 +3,4 @@ description = Zimbra Multi Tenancy User Interface
 package = Zimbra Multi Tenancy
 core = 7.x
 dependencies[] = zmt_group_ui
+files[] = zmt_ui.test

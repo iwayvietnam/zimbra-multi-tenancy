@@ -1,0 +1,691 @@
+<?php
+
+/**
+ * Test case for Zmt tests.
+ */
+class ZmtTestCase extends DrupalWebTestCase {
+
+  public static function getInfo() {
+    return array(
+      'name' => 'Zmt Unit Test Case',
+      'description' => 'Test cases for zmt functionality.',
+      'group' => 'Zmt Modules',
+    );
+  }
+
+  /**
+   * Test encrypt and decrypt.
+   */
+  public function testZmtCrypto() {
+    $plain_text = drupal_random_key();
+    $encrypted = zmt_password_encrypt($plain_text);
+    $decrypted = zmt_password_decrypt($encrypted);
+    $this->assertEqual($plain_text, $decrypted, t('The value was successfully encrypted and decrypted.'));
+  }
+
+  /**
+   * Test zmt permissions.
+   */
+  public function testZmtPermissions() {
+    $this->assertTrue($this->checkPermissions('administer zmt'), t('Invalid permission administer zmt.'));
+
+    $permissions = zmt_access_permissions('zmt', 'zmt');
+    $this->assertTrue(isset($permissions['administer any zmt']), t('Invalid permission administer any zmt.'));
+    $this->assertTrue(isset($permissions['administer own zmt']), t('Invalid permission administer own zmt.'));
+  }
+
+  /**
+   * Test zmt ajax.
+   */
+  public function testZmtAjax() {
+    $command_reload = array(
+      'command' => 'zmt_ajax_reload',
+    );
+    $this->assertEqual($command_reload, zmt_ajax_command_reload());
+
+    $command_redirect = array(
+      'command' => 'zmt_ajax_redirect',
+      'url' => url('test'),
+      'delay' => 0,
+    );
+    $this->assertEqual($command_redirect, zmt_ajax_command_redirect('test'));
+
+    $_SERVER['HTTP_X_REQUESTED_WITH'] = 'XmlHttpRequest';
+    $this->assertTrue(zmt_is_ajax_request());
+  }
+}
+
+/**
+ * Test case for zimbra soap api tests.
+ */
+class ZmtZimbraApiTestCase extends DrupalWebTestCase {
+
+  public function testZmbraSoapStruct() {
+    module_load_include('inc', 'zmt', 'zmt.zimbra.soap');
+
+    $key = DrupalTestCase::randomName();
+    $value = DrupalTestCase::randomName();
+    $kpv = new KeyValuePair($key, $value);
+    $this->assertEqual($kpv->n, $key);
+    $this->assertEqual($kpv->getValue(), $value);
+    $this->assertEqual($kpv->toArray(), array('a' => array(
+      'n' => $key,
+      '_content' => $value,
+    )));
+
+    $name = DrupalTestCase::randomName();
+    $by = DrupalTestCase::randomName();
+
+    $account = new AccountSelector($by, $name);
+    $this->assertNotEqual($account->by, $by);
+    $this->assertEqual($account->getValue(), $name);
+
+    $account = new AccountSelector('name', $name);
+    $this->assertEqual($account->by, 'name');
+    $this->assertEqual($account->toArray(), array('account' => array(
+      'by' => 'name',
+      '_content' => $value,
+    )));
+
+    $cos = new CosSelector($by, $name);
+    $this->assertNotEqual($cos->by, $by);
+    $this->assertEqual($cos->getValue(), $name);
+
+    $cos = new CosSelector('name', $name);
+    $this->assertEqual($cos->by, 'name');
+    $this->assertEqual($cos->toArray(), array('cos' => array(
+      'by' => 'name',
+      '_content' => $value,
+    )));
+
+    $dl = new DistributionListSelector($by, $name);
+    $this->assertNotEqual($dl->by, $by);
+    $this->assertEqual($dl->getValue(), $name);
+
+    $dl = new DistributionListSelector('name', $name);
+    $this->assertEqual($dl->by, 'name');
+    $this->assertEqual($dl->toArray(), array('dl' => array(
+      'by' => 'name',
+      '_content' => $value,
+    )));
+
+    $domain = new DomainSelector($by, $name);
+    $this->assertNotEqual($domain->by, $by);
+    $this->assertEqual($domain->getValue(), $name);
+
+    $domain = new DomainSelector('name', $name);
+    $this->assertEqual($domain->by, 'name');
+    $this->assertEqual($domain->toArray(), array('domain' => array(
+      'by' => 'name',
+      '_content' => $value,
+    )));
+
+    $server = new ServerSelector($by, $name);
+    $this->assertNotEqual($server->by, $by);
+    $this->assertEqual($server->getValue(), $name);
+
+    $server = new ServerSelector('name', $name);
+    $this->assertEqual($server->by, 'name');
+    $this->assertEqual($server->toArray(), array('server' => array(
+      'by' => 'name',
+      '_content' => $value,
+    )));
+  }
+
+  public function testZmbraSoapRequest() {
+    module_load_include('inc', 'zmt', 'zmt.zimbra.soap');
+
+    $id = DrupalTestCase::randomName();
+    $name = DrupalTestCase::randomName();
+    $type = DrupalTestCase::randomName();
+    $attrs = DrupalTestCase::randomName();
+
+    $password = DrupalTestCase::randomName();
+    $authToken = DrupalTestCase::randomName();
+    $virtualHost = DrupalTestCase::randomName();
+
+    $member1 = DrupalTestCase::randomName();
+    $member2 = DrupalTestCase::randomName();
+
+    $limit = mt_rand();
+    $offset = mt_rand();
+
+    $key1 = DrupalTestCase::randomName();
+    $value1 = DrupalTestCase::randomName();
+    $key2 = DrupalTestCase::randomName();
+    $value2 = DrupalTestCase::randomName();
+    $kpv1 = new KeyValuePair($key1, $value1);
+    $kpv2 = new KeyValuePair($key2, $value2);
+
+    $server = new ServerSelector('name', $name);
+    $domain = new DomainSelector('name', $name);
+    $dl = new DistributionListSelector('name', $name);
+    $account = new AccountSelector('name', $name);
+    $cos = new CosSelector('name', $name);
+
+    $req = new AddAccountAliasRequest($id, $name);
+    $this->assertEqual($req->id, $id);
+    $this->assertEqual($req->alias, $name);
+    $this->assertEqual($req->toArray(), array('AddAccountAliasRequest' => array(
+      'id' => $id,
+      'alias' => $alias,
+    )));
+
+    $req = new AddDistributionListMemberRequest($id, array($member1, $member2));
+    $this->assertEqual($req->id, $id);
+    $this->assertEqual($req->dlm, array(
+      array('_content' => $member1),
+      array('_content' => $member2),
+    ));
+    $this->assertEqual($req->toArray(), array('AddDistributionListMemberRequest' => array(
+      'id' => $id,
+      'dlm' => array(
+        array('_content' => $member1),
+        array('_content' => $member2),
+      ),
+    )));
+
+    $req = new AuthRequest($name, $password, $authToken, $account, $virtualHost, TRUE);
+    $this->assertEqual($req->name, $name);
+    $this->assertEqual($req->password, $password);
+    $this->assertEqual($req->authToken, array(array('_content' => $authToken)));
+    $this->assertEqual($req->account, $account);
+    $this->assertEqual($req->virtualHost, $virtualHost);
+    $this->assertTrue($req->persistAuthTokenCookie);
+    $this->assertEqual($req->toArray(), array('AuthRequest' => array(
+      'name' => $name,
+      'password' => $password,
+      'authToken' => array(array('_content' => $authToken)),
+      'account' => array(
+        'by' => 'name',
+        '_content' => $name,
+      ),
+      'virtualHost' => $virtualHost,
+      'persistAuthTokenCookie' => TRUE,
+    )));
+
+    $req = new CheckPasswordStrengthRequest($id, $password);
+    $this->assertEqual($req->id, $id);
+    $this->assertEqual($req->password, $password);
+    $this->assertEqual($req->toArray(), array('CheckPasswordStrengthRequest' => array(
+      'id' => $id,
+      'password' => $password,
+    )));
+
+    $req = new CountAccountRequest($domain);
+    $this->assertEqual($req->domain, $domain);
+    $this->assertEqual($req->toArray(), array('CountAccountRequest' => array(
+      'domain' => array(
+        'by' => 'name',
+        '_content' => $name,
+      ),
+    )));
+
+    $req = new CountObjectsRequest($type, $domain);
+    $this->assertNotEqual($req->type, $type);
+    $this->assertEqual($req->domain, $domain);
+    $req = new CountObjectsRequest('account', $domain);
+    $this->assertEqual($req->type, 'account');
+    $this->assertEqual($req->toArray(), array('CountObjectsRequest' => array(
+      'type' => 'account',
+      'domain' => array(
+        'by' => 'name',
+        '_content' => $name,
+      ),
+    )));
+
+    $req = new CreateAccountRequest($name, $password, array($kpv1, $kpv2));
+    $this->assertEqual($req->name, $name);
+    $this->assertEqual($req->password, $password);
+    $this->assertEqual($req->a, array($kpv1, $kpv2));
+    $this->assertEqual($req->toArray(), array('CreateAccountRequest' => array(
+      'name' => $name,
+      'password' => $password,
+      'a' => array(
+        array(
+          'n' => $key1,
+          '_content' => $value1,
+        ),
+        array(
+          'n' => $key2,
+          '_content' => $value2,
+        ),
+      ),
+    )));
+
+    $req = new CreateCosRequest($name, array($kpv1, $kpv2));
+    $this->assertEqual($req->name, array(array('_content' => $name)));
+    $this->assertEqual($req->a, array($kpv1, $kpv2));
+    $this->assertEqual($req->toArray(), array('CreateCosRequest' => array(
+      'name' => array(array('_content' => $name)),
+      'a' => array(
+        array(
+          'n' => $key1,
+          '_content' => $value1,
+        ),
+        array(
+          'n' => $key2,
+          '_content' => $value2,
+        ),
+      ),
+    )));
+
+    $req = new CreateDistributionListRequest($name, TRUE, array($kpv1, $kpv2));
+    $this->assertEqual($req->name, $name);
+    $this->assertTrue($req->dynamic);
+    $this->assertEqual($req->a, array($kpv1, $kpv2));
+    $this->assertEqual($req->toArray(), array('CreateDistributionListRequest' => array(
+      'name' => $name,
+      'dynamic' => TRUE,
+      'a' => array(
+        array(
+          'n' => $key1,
+          '_content' => $value1,
+        ),
+        array(
+          'n' => $key2,
+          '_content' => $value2,
+        ),
+      ),
+    )));
+
+    $req = new CreateDomainRequest($name, array($kpv1, $kpv2));
+    $this->assertEqual($req->name, $name);
+    $this->assertEqual($req->a, array($kpv1, $kpv2));
+    $this->assertEqual($req->toArray(), array('CreateDomainRequest' => array(
+      'name' => $name,
+      'a' => array(
+        array(
+          'n' => $key1,
+          '_content' => $value1,
+        ),
+        array(
+          'n' => $key2,
+          '_content' => $value2,
+        ),
+      ),
+    )));
+
+    $req = new CreateLDAPEntryRequest($name, array($kpv1, $kpv2));
+    $this->assertEqual($req->dn, $name);
+    $this->assertEqual($req->a, array($kpv1, $kpv2));
+    $this->assertEqual($req->toArray(), array('CreateLDAPEntryRequest' => array(
+      'dn' => $name,
+      'a' => array(
+        array(
+          'n' => $key1,
+          '_content' => $value1,
+        ),
+        array(
+          'n' => $key2,
+          '_content' => $value2,
+        ),
+      ),
+    )));
+
+    $duration = mt_rand();
+    $req = new DelegateAuthRequest($account, $duration);
+    $this->assertEqual($req->account, $account);
+    $this->assertEqual($req->duration, $duration);
+    $this->assertEqual($req->toArray(), array('DelegateAuthRequest' => array(
+      'account' => array(
+        'by' => 'name',
+        '_content' => $name,
+      ),
+      'duration' => $duration,
+    )));
+
+    $req = new DeleteAccountRequest($id);
+    $this->assertEqual($req->id, $id);
+    $this->assertEqual($req->toArray(), array('DeleteAccountRequest' => array(
+      'id' => $id,
+    )));
+
+    $req = new DeleteCosRequest($id);
+    $this->assertEqual($req->id, $id);
+    $this->assertEqual($req->toArray(), array('DeleteCosRequest' => array(
+      'id' => $id,
+    )));
+
+    $req = new DeleteDistributionListRequest($id);
+    $this->assertEqual($req->id, $id);
+    $this->assertEqual($req->toArray(), array('DeleteDistributionListRequest' => array(
+      'id' => $id,
+    )));
+
+    $req = new DeleteDomainRequest($id);
+    $this->assertEqual($req->id, $id);
+    $this->assertEqual($req->toArray(), array('DeleteDomainRequest' => array(
+      'id' => $id,
+    )));
+
+    $req = new DeleteLDAPEntryRequest($name);
+    $this->assertEqual($req->dn, $name);
+    $this->assertEqual($req->toArray(), array('DeleteLDAPEntryRequest' => array(
+      'dn' => $name,
+    )));
+
+    $req = new GetAccountRequest($account, TRUE, $attrs);
+    $this->assertEqual($req->account, $account);
+    $this->assertTrue($req->applyCos);
+    $this->assertEqual($req->attrs, $attrs);
+    $this->assertEqual($req->toArray(), array('GetAccountRequest' => array(
+      'account' => array(
+        'by' => 'name',
+        '_content' => $name,
+      ),
+      'applyCos' => TRUE,
+      'attrs' => $attrs,
+    )));
+
+    $req = new GetAccountInfoRequest($account);
+    $this->assertEqual($req->account, $account);
+    $this->assertEqual($req->toArray(), array('GetAccountInfoRequest' => array(
+      'account' => array(
+        'by' => 'name',
+        '_content' => $name,
+      ),
+    )));
+
+    $req = new GetAllAccountsRequest($server, $domain);
+    $this->assertEqual($req->server, $server);
+    $this->assertEqual($req->domain, $domain);
+    $this->assertEqual($req->toArray(), array('GetAllAccountsRequest' => array(
+      'server' => array(
+        'by' => 'name',
+        '_content' => $name,
+      ),
+      'domain' => array(
+        'by' => 'name',
+        '_content' => $name,
+      ),
+    )));
+
+    $req = new GetAllCosRequest();
+    $this->assertEqual($req->toArray(), array('GetAllCosRequest' => array()));
+
+    $req = new GetAllDistributionListsRequest($domain);
+    $this->assertEqual($req->server, $server);
+    $this->assertEqual($req->toArray(), array('GetAllDistributionListsRequest' => array(
+      'domain' => array(
+        'by' => 'name',
+        '_content' => $name,
+      ),
+    )));
+
+    $req = new GetAllDomainsRequest(TRUE);
+    $this->assertTrue($req->applyConfig);
+    $this->assertEqual($req->toArray(), array('GetAllDomainsRequest' => array(
+      'applyConfig' => TRUE,
+    )));
+
+    $req = new GetCosRequest($cos, $attrs);
+    $this->assertEqual($req->cos, $cos);
+    $this->assertEqual($req->attrs, $attrs);
+    $this->assertEqual($req->toArray(), array('GetCosRequest' => array(
+      'cos' => array(
+        'by' => 'name',
+        '_content' => $name,
+      ),
+      'attrs' => $attrs,
+    )));
+
+    $req = new GetDistributionListRequest($dl, $limit, $offset, TRUE, array($kpv1, $kpv2));
+    $this->assertEqual($req->dl, $dl);
+    $this->assertEqual($req->limit, $limit);
+    $this->assertEqual($req->offset, $offset);
+    $this->assertTrue($req->sortAscending);
+    $this->assertEqual($req->a, array($kpv1, $kpv2));
+    $this->assertEqual($req->toArray(), array('GetDistributionListRequest' => array(
+      'dl' => array(
+        'by' => 'name',
+        '_content' => $name,
+      ),
+      'limit' => $limit,
+      'limit' => $limit,
+      'sortAscending' => TRUE,
+      'a' => array(
+        array(
+          'n' => $key1,
+          '_content' => $value1,
+        ),
+        array(
+          'n' => $key2,
+          '_content' => $value2,
+        ),
+      ),
+    )));
+
+    $req = new GetDomainRequest($domain, TRUE, $attrs);
+    $this->assertEqual($req->domain, $domain);
+    $this->assertTrue($req->applyConfig);
+    $this->assertEqual($req->attrs, $attrs);
+    $this->assertEqual($req->toArray(), array('GetDomainRequest' => array(
+      'domain' => array(
+        'by' => 'name',
+        '_content' => $name,
+      ),
+      'applyConfig' => TRUE,
+      'attrs' => $attrs,
+    )));
+
+    $req = new GetDomainInfoRequest($domain, TRUE);
+    $this->assertEqual($req->domain, $domain);
+    $this->assertTrue($req->applyConfig);
+    $this->assertEqual($req->toArray(), array('GetDomainInfoRequest' => array(
+      'domain' => array(
+        'by' => 'name',
+        '_content' => $name,
+      ),
+      'applyConfig' => TRUE,
+    )));
+
+    $query = DrupalTestCase::randomName();
+    $ldapSearchBase = DrupalTestCase::randomName();
+    $sortBy = DrupalTestCase::randomName();
+    $req = new GetLDAPEntriesRequest($query, $ldapSearchBase, $sortBy, TRUE, $limit, $offset);
+    $this->assertEqual($req->query, $query);
+    $this->assertEqual($req->ldapSearchBase, array(array('_content' => $ldapSearchBase)));
+    $this->assertEqual($req->sortBy, $sortBy);
+    $this->assertTrue($req->sortAscending);
+    $this->assertEqual($req->limit, $limit);
+    $this->assertEqual($req->offset, $offset);
+    $this->assertEqual($req->toArray(), array('GetLDAPEntriesRequest' => array(
+      'query' => $query,
+      'ldapSearchBase' => array(array('_content' => $ldapSearchBase)),
+      'sortBy' => $sortBy,
+      'sortAscending' => TRUE,
+      'limit' => $limit,
+      'limit' => $limit,
+    )));
+
+    $req = new GetVersionInfoRequest();
+    $this->assertEqual($req->toArray(), array('GetVersionInfoRequest' => array()));
+
+    $req = new GetAllSkinsRequest();
+    $this->assertEqual($req->toArray(), array('GetAllSkinsRequest' => array()));
+
+    $req = new ModifyAccountRequest($id, array($kpv1, $kpv2));
+    $this->assertEqual($req->id, $id);
+    $this->assertEqual($req->a, array($kpv1, $kpv2));
+    $this->assertEqual($req->toArray(), array('ModifyAccountRequest' => array(
+      'id' => $id,
+      'a' => array(
+        array(
+          'n' => $key1,
+          '_content' => $value1,
+        ),
+        array(
+          'n' => $key2,
+          '_content' => $value2,
+        ),
+      ),
+    )));
+
+    $req = new ModifyCosRequest($id, array($kpv1, $kpv2));
+    $this->assertEqual($req->id, array(array('_content' => $id)));
+    $this->assertEqual($req->a, array($kpv1, $kpv2));
+    $this->assertEqual($req->toArray(), array('ModifyCosRequest' => array(
+      'id' => array(array('_content' => $id)),
+      'a' => array(
+        array(
+          'n' => $key1,
+          '_content' => $value1,
+        ),
+        array(
+          'n' => $key2,
+          '_content' => $value2,
+        ),
+      ),
+    )));
+
+    $req = new ModifyDistributionListRequest($id, array($kpv1, $kpv2));
+    $this->assertEqual($req->id, $id);
+    $this->assertEqual($req->a, array($kpv1, $kpv2));
+    $this->assertEqual($req->toArray(), array('ModifyDistributionListRequest' => array(
+      'id' => $id,
+      'a' => array(
+        array(
+          'n' => $key1,
+          '_content' => $value1,
+        ),
+        array(
+          'n' => $key2,
+          '_content' => $value2,
+        ),
+      ),
+    )));
+
+    $req = new ModifyDomainRequest($id, array($kpv1, $kpv2));
+    $this->assertEqual($req->id, $id);
+    $this->assertEqual($req->a, array($kpv1, $kpv2));
+    $this->assertEqual($req->toArray(), array('ModifyDomainRequest' => array(
+      'id' => $id,
+      'a' => array(
+        array(
+          'n' => $key1,
+          '_content' => $value1,
+        ),
+        array(
+          'n' => $key2,
+          '_content' => $value2,
+        ),
+      ),
+    )));
+
+    $req = new ModifyLDAPEntryRequest($name, array($kpv1, $kpv2));
+    $this->assertEqual($req->dn, $name);
+    $this->assertEqual($req->a, array($kpv1, $kpv2));
+    $this->assertEqual($req->toArray(), array('ModifyLDAPEntryRequest' => array(
+      'dn' => $name,
+      'a' => array(
+        array(
+          'n' => $key1,
+          '_content' => $value1,
+        ),
+        array(
+          'n' => $key2,
+          '_content' => $value2,
+        ),
+      ),
+    )));
+
+    $req = new RemoveAccountAliasRequest($name, $id);
+    $this->assertEqual($req->alias, $name);
+    $this->assertEqual($req->id, $id);
+    $this->assertEqual($req->toArray(), array('RemoveAccountAliasRequest' => array(
+      'alias' => $name,
+      'id' => $id,
+    )));
+
+    $req = new RemoveDistributionListMemberRequest($id, array($member1, $member2));
+    $this->assertEqual($req->id, $id);
+    $this->assertEqual($req->dlm, array(
+      array('_content' => $member1),
+      array('_content' => $member2),
+    ));
+    $this->assertEqual($req->toArray(), array('RemoveDistributionListMemberRequest' => array(
+      'id' => $id,
+      'dlm' => array(
+        array('_content' => $member1),
+        array('_content' => $member2),
+      ),
+    )));
+
+    $req = new RenameAccountRequest($id, $name);
+    $this->assertEqual($req->id, $id);
+    $this->assertEqual($req->newName, $name);
+    $this->assertEqual($req->toArray(), array('RenameAccountRequest' => array(
+      'id' => $id,
+      'newName' => $name,
+    )));
+
+    $req = new RenameCosRequest($id, $name);
+    $this->assertEqual($req->id, $id);
+    $this->assertEqual($req->newName, $name);
+    $this->assertEqual($req->toArray(), array('RenameCosRequest' => array(
+      'id' => $id,
+      'newName' => $name,
+    )));
+
+    $req = new RenameDistributionListRequest($id, $name);
+    $this->assertEqual($req->id, $id);
+    $this->assertEqual($req->newName, $name);
+    $this->assertEqual($req->toArray(), array('RenameDistributionListRequest' => array(
+      'id' => $id,
+      'newName' => $name,
+    )));
+
+    $req = new RenameLDAPEntryRequest($id, $name);
+    $this->assertEqual($req->dn, $id);
+    $this->assertEqual($req->new_dn, $name);
+    $this->assertEqual($req->toArray(), array('RenameLDAPEntryRequest' => array(
+      'dn' => $id,
+      'new_dn' => $name,
+    )));
+
+    $query = DrupalTestCase::randomName();
+    $domain = DrupalTestCase::randomName();
+    $types = DrupalTestCase::randomName();
+    $sortBy = DrupalTestCase::randomName();
+    $attrs = DrupalTestCase::randomName();
+    $maxResults = mt_rand();
+    $req = new SearchDirectoryRequest(
+      $query, $maxResults, $limit, $offset, $domain, TRUE, TRUE, $types, $sortBy, TRUE, TRUE, $attrs
+    );
+    $this->assertEqual($req->query, $query);
+    $this->assertEqual($req->maxResults, $maxResults);
+    $this->assertEqual($req->limit, $limit);
+    $this->assertEqual($req->offset, $offset);
+    $this->assertEqual($req->domain, $domain);
+    $this->assertTrue($req->applyCos);
+    $this->assertTrue($req->applyConfig);
+    $this->assertEqual($req->types, $types);
+    $this->assertEqual($req->sortBy, $sortBy);
+    $this->assertTrue($req->sortAscending);
+    $this->assertTrue($req->countOnly);
+    $this->assertEqual($req->attrs, $attrs);
+    $this->assertEqual($req->toArray(), array('SearchDirectoryRequest' => array(
+      'query' => $query,
+      'maxResults' => $maxResults,
+      'limit' => $limit,
+      'limit' => $limit,
+      'domain' => $domain,
+      'applyCos' => TRUE,
+      'applyConfig' => TRUE,
+      'types' => $types,
+      'sortBy' => $sortBy,
+      'sortAscending' => TRUE,
+      'countOnly' => TRUE,
+      'attrs' => $attrs,
+    )));
+
+    $req = new SetPasswordRequest($id, $password);
+    $this->assertEqual($req->id, $id);
+    $this->assertEqual($req->newPassword, $password);
+    $this->assertEqual($req->toArray(), array('SetPasswordRequest' => array(
+      'id' => $id,
+      'newPassword' => $password,
+    )));
+  }
+}
