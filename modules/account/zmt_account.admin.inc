@@ -431,8 +431,19 @@ function zmt_account_ajax_import_form_callback($form, $form_state) {
             }
           }
           if (!$exists) {
-            zmt_account_save($account);
-            $count++;
+            $modules = module_implements('sync_import_account');
+            $is_sync = empty($results);
+            foreach ($modules as $module) {
+              $function = $module . '_sync_import_account';
+              $is_sync = $function($account);
+              if ($is_sync === TRUE) {
+                break;
+              }
+            }
+            if ($is_sync) {
+              zmt_account_save($account);
+              $count++;
+            }
           }
         }
       }
