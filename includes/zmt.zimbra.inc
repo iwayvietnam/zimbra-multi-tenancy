@@ -1197,16 +1197,15 @@ function zimbra_get_version_info(ZimbraAdminApi $api) {
  * @return mix
  */
 function zimbra_check_password_strength(ZimbraAdminApi $api, $id, $password) {
-  $cache = &drupal_static(__FUNCTION__, NULL);
+  $cache = &drupal_static(__FUNCTION__, FALSE);
   $cache_key = md5($api->location() . $id . $password);
   if (!isset($cache[$cache_key])) {
     try {
-      $result = $api->checkPasswordStrength($id, $password);
-      $cache[$cache_key] = $result;
+      $cache[$cache_key] = $api->checkPasswordStrength($id, $password);
     }
     catch (Exception $ex) {
       watchdog('zimbra', $ex->__toString());
-      return FALSE;
+      $cache[$cache_key] = $ex;
     }
   }
   return $cache[$cache_key];

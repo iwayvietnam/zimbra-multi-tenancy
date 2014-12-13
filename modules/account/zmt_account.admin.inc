@@ -290,13 +290,13 @@ function zmt_account_ajax_domain_select_callback($form, $form_state) {
  */
 function zmt_account_edit_form_submit($form, &$form_state) {
   $account = $form_state['account'];
-  $values = $form_state['values'];
+  $values = &$form_state['values'];
 
   $account->domain_id = (int) $values['domain_id'];
   $account->cos_id = (int) $values['cos_id'];
-  $account->name = check_plain(strtolower($values['name']));
-  $account->password = trim($values['password']);
-  $account->full_name = $values['full_name'];
+  $account->name = filter_var($values['name'], FILTER_SANITIZE_EMAIL);
+  $account->password = check_plain($values['password']);
+  $account->full_name = check_plain($values['full_name']);
   $account->status = check_plain($values['status']);
   $account->title = check_plain($values['title']);
   $account->telephone = check_plain($values['telephone']);
