@@ -282,7 +282,7 @@ class KeyValuePair extends SoapStruct {
    * @param string $value
    * @return self
    */
-  function __construct($key, $value = NULL){
+  public function __construct($key, $value = NULL){
     parent::__construct($value);
     $this->n = $key;
   }
@@ -323,7 +323,7 @@ class AccountSelector extends SoapStruct {
    * @param  string $value
    * @return self
    */
-  function __construct($by = 'name', $value = NULL) {
+  public function __construct($by = 'name', $value = NULL) {
     parent::__construct(trim($value));
     $this->by = in_array($by, self::$_by_enums) ? $by : 'name';
   }
@@ -363,7 +363,7 @@ class CosSelector extends SoapStruct {
    * @param  string $value
    * @return self
    */
-  function __construct($by = 'name', $value = NULL) {
+  public function __construct($by = 'name', $value = NULL) {
     parent::__construct(trim($value));
     $this->by = in_array($by, self::$_by_enums) ? $by : 'name';
   }
@@ -403,7 +403,7 @@ class DistributionListSelector extends SoapStruct {
    * @param  string $value
    * @return self
    */
-  function __construct($by = 'name', $value = NULL) {
+  public function __construct($by = 'name', $value = NULL) {
     parent::__construct(trim($value));
     $this->by = in_array($by, self::$_by_enums) ? $by : 'name';
   }
@@ -446,7 +446,7 @@ class DomainSelector extends SoapStruct {
    * @param  string $value
    * @return self
    */
-  function __construct($by = 'name', $value = NULL) {
+  public function __construct($by = 'name', $value = NULL) {
     parent::__construct(trim($value));
     $this->by = in_array($by, self::$_by_enums) ? $by : 'name';
   }
@@ -489,7 +489,7 @@ class ServerSelector extends SoapStruct {
    *   Key for choosing server
    * @return self
    */
-  function __construct($by, $value = NULL) {
+  public function __construct($by, $value = NULL) {
     parent::__construct(trim($value));
     $this->by = in_array($by, self::$_by_enums) ? $by : 'name';
   }
@@ -519,7 +519,7 @@ abstract class SoapRequest extends SoapStruct {
    * @param  string $value
    * @return self
    */
-  function __construct($value = NULL) {
+  public function __construct($value = NULL) {
     parent::__construct($value);
     $this->setNamespace('urn:zimbraAdmin');
   }
@@ -548,7 +548,7 @@ class AddAccountAliasRequest extends SoapRequest {
    * @param  string $alias Alias
    * @return self
    */
-  function __construct($id, $alias) {
+  public function __construct($id, $alias) {
     parent::__construct();
     $this->id = trim($id);
     $this->alias = trim($alias);
@@ -567,7 +567,7 @@ class AddDistributionListMemberRequest extends SoapRequest {
    * @param  array  $dlm Members
    * @return self
    */
-  function __construct($id, array $dlm) {
+  public function __construct($id, array $dlm) {
     parent::__construct();
     $this->id = trim($id);
     if (!empty($dlm)) {
@@ -582,7 +582,6 @@ class AddDistributionListMemberRequest extends SoapRequest {
 /**
  * Auth request class
  * Authenticate for administration
- * 
  */
 class AuthRequest extends SoapRequest {
 
@@ -602,7 +601,7 @@ class AuthRequest extends SoapRequest {
    *   Controls whether the auth authToken cookie in the response should be persisted when the browser exits.
    * @return self
    */
-  function __construct($name = NULL,
+  public function __construct($name = NULL,
     $password = NULL,
     $authToken = NULL,
     AccountSelector $account = NULL,
@@ -632,6 +631,25 @@ class AuthRequest extends SoapRequest {
 }
 
 /**
+ * CheckPasswordStrength request class
+ * Check password strength 
+ */
+class CheckPasswordStrengthRequest extends SoapRequest {
+  
+  /**
+   * Constructor method for CountAccountRequest
+   * @param string $id Zimbra ID
+   * @param string $password Passowrd to check
+   * @return self
+   */
+  public function __construct($id, $password) {
+    parent::__construct();
+    $this->id = trim($id);
+    $this->password = trim($password);
+  }
+}
+
+/**
  * CountAccount request class
  * Count number of accounts by cos in a domain.
  */
@@ -642,7 +660,7 @@ class CountAccountRequest extends SoapRequest {
    * @param DomainSelector $domain Domain
    * @return self
    */
-  function __construct(DomainSelector $domain) {
+  public function __construct(DomainSelector $domain) {
     parent::__construct();
     $this->domain = $domain;
   }
@@ -681,7 +699,7 @@ class CountObjectsRequest extends SoapRequest {
    * @param DomainSelector $domain Domain
    * @return self
    */
-  function __construct($type, DomainSelector $domain = NULL) {
+  public function __construct($type, DomainSelector $domain = NULL) {
     parent::__construct();
     $this->type = in_array($type, self::$_types) ? $type : 'account';
     if ($domain instanceof DomainSelector) {
@@ -716,7 +734,7 @@ class CreateAccountRequest extends SoapRequest {
    * @param array  $attrs
    * @return self
    */
-  function __construct($name, $password, array $attrs = array()) {
+  public function __construct($name, $password, array $attrs = array()) {
     parent::__construct();
     $this->name = trim($name);
     $this->password = trim($password);
@@ -738,7 +756,7 @@ class CreateCosRequest extends SoapRequest {
    * @param array  $attrs
    * @return self
    */
-  function __construct($name, array $attrs = array()) {
+  public function __construct($name, array $attrs = array()) {
     parent::__construct();
     $this->name = array(array('_content' => trim($name)));
     if (!empty($attrs)) {
@@ -762,7 +780,7 @@ class CreateDistributionListRequest extends SoapRequest {
    * @param array  $attrs
    * @return self
    */
-  function __construct($name, $dynamic = NULL, array $attrs = array()) {
+  public function __construct($name, $dynamic = NULL, array $attrs = array()) {
     parent::__construct();
     $this->name = trim($name);
     if (NULL !== $dynamic) {
@@ -786,7 +804,7 @@ class CreateDomainRequest extends SoapRequest {
    * @param array  $attrs
    * @return self
    */
-  function __construct($name, array $attrs = array()) {
+  public function __construct($name, array $attrs = array()) {
     parent::__construct();
     $this->name = trim($name);
     if (!empty($attrs)) {
@@ -808,7 +826,7 @@ class CreateLDAPEntryRequest extends SoapRequest {
    * @param array  $attrs
    * @return self
    */
-  function __construct($dn, array $attrs = array()) {
+  public function __construct($dn, array $attrs = array()) {
     parent::__construct();
     $this->dn = trim($dn);
     if (!empty($attrs)) {
@@ -834,7 +852,7 @@ class DelegateAuthRequest extends SoapRequest {
    *    Can't be longer then zimbraAuthTokenLifetime.
    * @return self
    */
-  function __construct(AccountSelector $account, $duration = NULL) {
+  public function __construct(AccountSelector $account, $duration = NULL) {
     parent::__construct();
     $this->account = $account;
     if (NULL !== $duration) {
@@ -854,7 +872,7 @@ class DeleteAccountRequest extends SoapRequest {
    * @param string $id Zimbra ID
    * @return self
    */
-  function __construct($id) {
+  public function __construct($id) {
     parent::__construct();
     $this->id = trim($id);
   }
@@ -871,7 +889,7 @@ class DeleteCosRequest extends SoapRequest {
    * @param string $id Zimbra ID
    * @return self
    */
-  function __construct($id) {
+  public function __construct($id) {
     parent::__construct();
     $this->id = trim($id);
   }
@@ -888,7 +906,7 @@ class DeleteDistributionListRequest extends SoapRequest {
    * @param string $id Zimbra ID
    * @return self
    */
-  function __construct($id) {
+  public function __construct($id) {
     parent::__construct();
     $this->id = trim($id);
   }
@@ -905,7 +923,7 @@ class DeleteDomainRequest extends SoapRequest {
    * @param string $id Zimbra ID
    * @return self
    */
-  function __construct($id) {
+  public function __construct($id) {
     parent::__construct();
     $this->id = trim($id);
   }
@@ -922,7 +940,7 @@ class DeleteLDAPEntryRequest extends SoapRequest {
    * @param  string $dn A valdn LDAP DN String (RFC 2253) that describes the DN to delete
    * @return self
    */
-  function __construct($dn) {
+  public function __construct($dn) {
     parent::__construct();
     $this->dn = trim($dn);
   }
@@ -943,7 +961,7 @@ class GetAccountRequest extends SoapRequest {
    *   Comma separated list of attributes
    * @return self
    */
-  function __construct(AccountSelector $account = NULL, $applyCos = NULL, $attrs = NULL) {
+  public function __construct(AccountSelector $account = NULL, $applyCos = NULL, $attrs = NULL) {
     parent::__construct();
     if ($account instanceof AccountSelector) {
       $this->account = $account;
@@ -968,7 +986,7 @@ class GetAccountInfoRequest extends SoapRequest {
    * @param  AccountSelector $account Account selector
    * @return self
    */
-  function __construct(AccountSelector $account) {
+  public function __construct(AccountSelector $account) {
     parent::__construct();
     $this->account = $account;
   }
@@ -986,7 +1004,7 @@ class GetAllAccountsRequest extends SoapRequest {
    * @param  DomainSelector $domain
    * @return self
    */
-  function __construct(ServerSelector $server = NULL, DomainSelector $domain = NULL) {
+  public function __construct(ServerSelector $server = NULL, DomainSelector $domain = NULL) {
     parent::__construct();
     if ($server instanceof ServerSelector) {
       $this->server = $server;
@@ -1015,7 +1033,7 @@ class GetAllDistributionListsRequest extends SoapRequest {
    * @param  DomainSelector $domain
    * @return self
    */
-  function __construct(DomainSelector $domain = NULL) {
+  public function __construct(DomainSelector $domain = NULL) {
     parent::__construct();
     if ($domain instanceof DomainSelector) {
         $this->domain = $domain;
@@ -1035,7 +1053,7 @@ class GetAllDomainsRequest extends SoapRequest {
    *   Apply config flag
    * @return self
    */
-  function __construct($applyConfig = NULL) {
+  public function __construct($applyConfig = NULL) {
     parent::__construct();
     if (NULL !== $applyConfig) {
       $this->applyConfig = (bool) $applyConfig;
@@ -1057,7 +1075,7 @@ class GetCosRequest extends SoapRequest {
    *   Comma separated list of attributes
    * @return self
    */
-  function __construct(CosSelector $cos = NULL, $attrs = NULL) {
+  public function __construct(CosSelector $cos = NULL, $attrs = NULL) {
     parent::__construct();
     if ($cos instanceof CosSelector) {
         $this->cos = $cos;
@@ -1087,7 +1105,7 @@ class GetDistributionListRequest extends SoapRequest {
    * @param  array $attrs
    * @return self
    */
-  function __construct(
+  public function __construct(
     DistributionListSelector $dl = NULL,
     $limit = NULL,
     $offset = NULL,
@@ -1129,7 +1147,7 @@ class GetDomainRequest extends SoapRequest {
    *   Comma separated list of attributes
    * @return self
    */
-  function __construct(DomainSelector $domain = NULL, $applyConfig = NULL, $attrs = NULL) {
+  public function __construct(DomainSelector $domain = NULL, $applyConfig = NULL, $attrs = NULL) {
     parent::__construct();
     if ($domain instanceof DomainSelector) {
       $this->domain = $domain;
@@ -1157,7 +1175,7 @@ class GetDomainInfoRequest extends SoapRequest {
    *   Apply config flag
    * @return self
    */
-  function __construct(DomainSelector $domain = NULL, $applyConfig = NULL) {
+  public function __construct(DomainSelector $domain = NULL, $applyConfig = NULL) {
     parent::__construct();
     if ($domain instanceof DomainSelector) {
       $this->domain = $domain;
@@ -1190,7 +1208,7 @@ class GetLDAPEntriesRequest extends SoapRequest {
    *   The starting offset (0, 25, etc)
    * @return self
    */
-  function __construct(
+  public function __construct(
     $query,
     $ldapSearchBase,
     $sortBy = NULL,
@@ -1243,7 +1261,7 @@ class ModifyAccountRequest extends SoapRequest {
    * @param array  $attrs
    * @return self
    */
-  function __construct($id, array $attrs = array()) {
+  public function __construct($id, array $attrs = array()) {
     parent::__construct();
     $this->id = trim($id);
     if (!empty($attrs)) {
@@ -1264,7 +1282,7 @@ class ModifyCosRequest extends SoapRequest {
    * @param array  $attrs
    * @return self
    */
-  function __construct($id = NULL, array $attrs = array()) {
+  public function __construct($id = NULL, array $attrs = array()) {
     parent::__construct();
     $this->id = array(array('_content' => trim($id)));
     if (!empty($attrs)) {
@@ -1285,7 +1303,7 @@ class ModifyDistributionListRequest extends SoapRequest {
    * @param array  $attrs
    * @return self
    */
-  function __construct($id, array $attrs = array()) {
+  public function __construct($id, array $attrs = array()) {
     parent::__construct();
     $this->id = trim($id);
     if (!empty($attrs)) {
@@ -1306,7 +1324,7 @@ class ModifyDomainRequest extends SoapRequest {
    * @param array  $attrs
    * @return self
    */
-  function __construct($id, array $attrs = array()) {
+  public function __construct($id, array $attrs = array()) {
     parent::__construct();
     $this->id = trim($id);
     if (!empty($attrs)) {
@@ -1328,7 +1346,7 @@ class ModifyLDAPEntryRequest extends SoapRequest {
    * @param array  $attrs
    * @return self
    */
-  function __construct($dn, array $attrs = array()) {
+  public function __construct($dn, array $attrs = array()) {
     parent::__construct();
     $this->dn = trim($dn);
     if (!empty($attrs)) {
@@ -1349,7 +1367,7 @@ class RemoveAccountAliasRequest extends SoapRequest {
    * @param string $id Zimbra ID
    * @return self
    */
-  function __construct($alias, $id = NULL) {
+  public function __construct($alias, $id = NULL) {
     parent::__construct();
     $this->alias = trim($alias);
     if (NULL !== $id) {
@@ -1371,7 +1389,7 @@ class RemoveDistributionListMemberRequest extends SoapRequest {
    * @param  array  $dlm Members
    * @return self
    */
-  function __construct($id, array $dlm) {
+  public function __construct($id, array $dlm) {
     parent::__construct();
     $this->id = trim($id);
     if (!empty($dlm)) {
@@ -1395,7 +1413,7 @@ class RenameAccountRequest extends SoapRequest {
    * @param string $newName New account name
    * @return self
    */
-  function __construct($id, $newName) {
+  public function __construct($id, $newName) {
     parent::__construct();
     $this->id = trim($id);
     $this->newName = trim($newName);
@@ -1414,7 +1432,7 @@ class RenameCosRequest extends SoapRequest {
    * @param string $newName New COS name
    * @return self
    */
-  function __construct($id, $newName) {
+  public function __construct($id, $newName) {
     parent::__construct();
     $this->id = trim($id);
     $this->newName = trim($newName);
@@ -1433,7 +1451,7 @@ class RenameDistributionListRequest extends SoapRequest {
    * @param string $newName New Distribution List name
    * @return self
    */
-  function __construct($id, $newName) {
+  public function __construct($id, $newName) {
     parent::__construct();
     $this->id = trim($id);
     $this->newName = trim($newName);
@@ -1454,7 +1472,7 @@ class RenameLDAPEntryRequest extends SoapRequest {
    *   New DN - a valid LDAP DN String (RFC 2253) that describes the new DN to be given to the LDAP object
    * @return self
    */
-  function __construct($dn, $new_dn) {
+  public function __construct($dn, $new_dn) {
     parent::__construct();
     $this->dn = trim($dn);
     $this->new_dn = trim($new_dn);
@@ -1495,7 +1513,7 @@ class SearchDirectoryRequest extends SoapRequest {
    *   Comma separated list of attributes
    * @return self
    */
-  function __construct(
+  public function __construct(
     $query = NULL,
     $maxResults = NULL,
     $limit = NULL,
@@ -1559,7 +1577,7 @@ class SetPasswordRequest extends SoapRequest {
    * @param string $newPassword New Password
    * @return self
    */
-  function __construct($id, $newPassword) {
+  public function __construct($id, $newPassword) {
     parent::__construct();
     $this->id = trim($id);
     $this->newPassword = trim($newPassword);
@@ -1584,7 +1602,7 @@ class SoapResponse {
    *   Http response object
    * @return self
    */
-  function __construct($response) {
+  public function __construct($response) {
     $this->_processResponse($response);
   }
 
@@ -1825,7 +1843,7 @@ class HttpSoapClient {
    *
    * @param string $location  The URL to request.
    */
-  function __construct($location, $debug = FALSE) {
+  public function __construct($location, $debug = FALSE) {
     $this->_location = $location;
     $this->_debug = (bool) $debug;
   }

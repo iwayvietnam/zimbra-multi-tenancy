@@ -171,7 +171,7 @@ function zimbra_count_objects(ZimbraAdminApi $api, $type, $domain = NULL) {
     }
     catch (Exception $ex) {
       watchdog('zimbra', $ex->__toString());
-      return NULL;
+      return FALSE;
     }
   }
   return $cache[$cache_key];
@@ -224,7 +224,7 @@ function zimbra_get_cos(ZimbraAdminApi $api, $name) {
     }
     catch (Exception $ex) {
       watchdog('zimbra', $ex->__toString());
-      return NULL;
+      return FALSE;
     }
   }
   return $cache[$cache_key];
@@ -252,7 +252,7 @@ function zimbra_create_cos(ZimbraAdminApi $api, $name, array $attrs = array()) {
   }
   catch (Exception $ex) {
     watchdog('zimbra', $ex->__toString());
-    return NULL;
+    return FALSE;
   }
 }
 
@@ -278,7 +278,7 @@ function zimbra_modify_cos(ZimbraAdminApi $api, $id, array $attrs = array()) {
   }
   catch (Exception $ex) {
     watchdog('zimbra', $ex->__toString());
-    return NULL;
+    return FALSE;
   }
 }
 
@@ -300,7 +300,7 @@ function zimbra_rename_cos(ZimbraAdminApi $api, $zimbra_id, $new_name) {
   }
   catch (Exception $ex) {
     watchdog('zimbra', $ex->__toString());
-    return NULL;
+    return FALSE;
   }
 }
 
@@ -319,7 +319,7 @@ function zimbra_delete_cos(ZimbraAdminApi $api, $zimbra_id) {
   }
   catch (Exception $ex) {
     watchdog('zimbra', $ex->__toString());
-    return false;
+    return FALSE;
   }
 }
 
@@ -371,7 +371,7 @@ function zimbra_get_domain(ZimbraAdminApi $api, $name) {
     }
     catch (Exception $ex) {
       watchdog('zimbra', $ex->__toString());
-      return NULL;
+      return FALSE;
     }
   }
   return $cache[$cache_key];
@@ -399,7 +399,7 @@ function zimbra_create_domain(ZimbraAdminApi $api, $name, array $attrs = array()
   }
   catch (Exception $ex) {
     watchdog('zimbra', $ex->__toString());
-    return NULL;
+    return FALSE;
   }
 }
 
@@ -425,7 +425,7 @@ function zimbra_modify_domain(ZimbraAdminApi $api, $id, array $attrs = array()) 
   }
   catch (Exception $ex) {
     watchdog('zimbra', $ex->__toString());
-    return NULL;
+    return FALSE;
   }
 }
 
@@ -444,7 +444,7 @@ function zimbra_delete_domain(ZimbraAdminApi $api, $zimbra_id) {
   }
   catch (Exception $ex) {
     watchdog('zimbra', $ex->__toString());
-    return false;
+    return FALSE;
   }
 }
 
@@ -560,7 +560,7 @@ function zimbra_get_dl(ZimbraAdminApi $api, $name, &$members = array()) {
     }
     catch (Exception $ex) {
       watchdog('zimbra', $ex->__toString());
-      return NULL;
+      return FALSE;
     }
   }
   return $cache[$cache_key];
@@ -613,7 +613,7 @@ function zimbra_create_dl(ZimbraAdminApi $api, $name, array $attrs = array()) {
   }
   catch (Exception $ex) {
     watchdog('zimbra', $ex->__toString());
-    return NULL;
+    return FALSE;
   }
 }
 
@@ -639,7 +639,7 @@ function zimbra_modify_dl(ZimbraAdminApi $api, $zimbra_id, array $attrs = array(
   }
   catch (Exception $ex) {
     watchdog('zimbra', $ex->__toString());
-    return NULL;
+    return FALSE;
   }
 }
 
@@ -661,7 +661,7 @@ function zimbra_rename_dl(ZimbraAdminApi $api, $zimbra_id, $new_name) {
   }
   catch (Exception $ex) {
     watchdog('zimbra', $ex->__toString());
-    return NULL;
+    return FALSE;
   }
 }
 
@@ -682,7 +682,7 @@ function zimbra_add_dl_members(ZimbraAdminApi $api, $zimbra_id, array $members =
   }
   catch (Exception $ex) {
     watchdog('zimbra', $ex->__toString());
-    return NULL;
+    return FALSE;
   }
 }
 
@@ -703,7 +703,7 @@ function zimbra_remove_dl_members(ZimbraAdminApi $api, $id, array $members) {
   }
   catch (Exception $ex) {
     watchdog('zimbra', $ex->__toString());
-    return NULL;
+    return FALSE;
   }
 }
 
@@ -722,7 +722,7 @@ function zimbra_delete_dl(ZimbraAdminApi $api, $zimbra_id) {
   }
   catch (Exception $ex) {
     watchdog('zimbra', $ex->__toString());
-    return false;
+    return FALSE;
   }
 }
 
@@ -851,7 +851,7 @@ function zimbra_get_account(ZimbraAdminApi $api, $name) {
     }
     catch (Exception $ex) {
       watchdog('zimbra', $ex->__toString());
-      return NULL;
+      return FALSE;
     }
   }
   return $cache[$cache_key];
@@ -876,7 +876,7 @@ function zimbra_count_account(ZimbraAdminApi $api, $domain = NULL) {
     }
     catch (Exception $ex) {
       watchdog('zimbra', $ex->__toString());
-      return NULL;
+      return FALSE;
     }
   }
   return $cache[$cache_key];
@@ -971,7 +971,7 @@ function zimbra_rename_account(ZimbraAdminApi $api, $id, $name) {
  */
 function zimbra_delegate_auth(ZimbraAdminApi $api, $name, $duration = NULL) {
   try {
-    $authToken = NULL;
+    $authToken = FALSE;
     $result = $api->delegateAuth(new AccountSelector('name', $name), $duration);
     if (!empty($result->authToken)){
       if (isset($result->authToken[0]->_content)) {
@@ -1086,7 +1086,7 @@ function zimbra_add_account_alias(ZimbraAdminApi $api, $id, $alias) {
   }
   catch (Exception $ex) {
     watchdog('zimbra', $ex->__toString());
-    return false;
+    return FALSE;
   }
 }
 
@@ -1156,14 +1156,14 @@ function zimbra_get_all_skins(ZimbraAdminApi $api) {
     }
     catch (Exception $ex) {
       watchdog('zimbra', $ex->__toString());
-      return NULL;
+      return FALSE;
     }
   }
   return $cache[$cache_key];
 }
 
 /**
- * Get version information .
+ * Get version information.
  * 
  * @param  ZimbraAdminApi $api
  *   Zimbra admin api.
@@ -1179,7 +1179,34 @@ function zimbra_get_version_info(ZimbraAdminApi $api) {
     }
     catch (Exception $ex) {
       watchdog('zimbra', $ex->__toString());
-      return NULL;
+      return FALSE;
+    }
+  }
+  return $cache[$cache_key];
+}
+
+/**
+ * Check password strength.
+ * 
+ * @param  ZimbraAdminApi $api
+ *   Zimbra admin api.
+ * @param  string $id
+ *   Zimbra ID.
+ * @param  string $password
+ *   Passowrd to check.
+ * @return mix
+ */
+function zimbra_check_password_strength(ZimbraAdminApi $api, $id, $password) {
+  $cache = &drupal_static(__FUNCTION__, NULL);
+  $cache_key = md5($api->location() . $id . $password);
+  if (!isset($cache[$cache_key])) {
+    try {
+      $result = $api->checkPasswordStrength($id, $password);
+      $cache[$cache_key] = $result;
+    }
+    catch (Exception $ex) {
+      watchdog('zimbra', $ex->__toString());
+      return FALSE;
     }
   }
   return $cache[$cache_key];

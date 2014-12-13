@@ -104,6 +104,15 @@ interface ZimbraAdminApiInterface {
   function authByToken($name, $token, $vhost = NULL);
 
   /**
+   * Check password strength.
+   *
+   * @param string $id Zimbra ID
+   * @param string $password Passowrd to check
+   * @return mix.
+   */
+  function checkPasswordStrength($id, $password);
+
+  /**
    * Count number of accounts by cos in a domain.
    * Note: It doesn't include any account with zimbraIsSystemResource=TRUE,
    *       nor does it include any calendar resources.
@@ -688,10 +697,10 @@ class ZimbraAdminApi implements ZimbraAdminApiInterface {
    * @return SoapResponse
    */
   public function addAccountAlias($id, $alias) {
-    $request = new AddAccountAliasRequest(
+    $req = new AddAccountAliasRequest(
       $id, $alias
     );
-    return $this->_client->doRequest($request);
+    return $this->_client->doRequest($req);
   }
 
   /**
@@ -705,10 +714,10 @@ class ZimbraAdminApi implements ZimbraAdminApiInterface {
    * @return SoapResponse
    */
   public function addDistributionListMember($id, array $dlm){
-    $request = new AddDistributionListMemberRequest(
+    $req = new AddDistributionListMemberRequest(
       $id, $dlm
     );
-    return $this->_client->doRequest($request);
+    return $this->_client->doRequest($req);
   }
 
   /**
@@ -736,11 +745,11 @@ class ZimbraAdminApi implements ZimbraAdminApiInterface {
     $virtualHost = NULL,
     $persistAuthTokenCookie = NULL
   ) {
-    $request = new AuthRequest(
+    $req = new AuthRequest(
       $name, $password, $authToken, $account,
       $virtualHost, $persistAuthTokenCookie
     );
-    $result = $this->_client->doRequest($request);
+    $result = $this->_client->doRequest($req);
     $authToken = NULL;
     if (!empty($result->authToken)){
       if (isset($result->authToken[0]->_content)) {
@@ -797,6 +806,20 @@ class ZimbraAdminApi implements ZimbraAdminApiInterface {
   }
 
   /**
+   * Check password strength.
+   *
+   * @param string $id Zimbra ID
+   * @param string $password Passowrd to check
+   * @return mix.
+   */
+  public function checkPasswordStrength($id, $password) {
+    $req = new CheckPasswordStrengthRequest(
+      $id, $password
+    );
+    return $this->_client->doRequest($req);
+  }
+
+  /**
    * Count number of accounts by cos in a domain.
    * Note: It doesn't include any account with zimbraIsSystemResource=TRUE,
    *       nor does it include any calendar resources.
@@ -806,10 +829,10 @@ class ZimbraAdminApi implements ZimbraAdminApiInterface {
    * @return SoapResponse
    */
   public function countAccount(DomainSelector $domain = NULL) {
-    $request = new CountAccountRequest(
+    $req = new CountAccountRequest(
       $domain
     );
-    return $this->_client->doRequest($request);
+    return $this->_client->doRequest($req);
   }
 
   /**
@@ -825,11 +848,11 @@ class ZimbraAdminApi implements ZimbraAdminApiInterface {
    * @return SoapResponse
    */
   public function countObjects($type, DomainSelector $domain = NULL) {
-    $request = new CountObjectsRequest(
+    $req = new CountObjectsRequest(
       $type,
       $domain
     );
-    return $this->_client->doRequest($request);
+    return $this->_client->doRequest($req);
   }
 
   /**
@@ -849,10 +872,10 @@ class ZimbraAdminApi implements ZimbraAdminApiInterface {
    * @return SoapResponse
    */
   public function createAccount($name, $password, array $attrs = array()) {
-    $request = new CreateAccountRequest(
+    $req = new CreateAccountRequest(
       $name, $password, $attrs
     );
-    return $this->_client->doRequest($request);
+    return $this->_client->doRequest($req);
   }
 
   /**
@@ -867,10 +890,10 @@ class ZimbraAdminApi implements ZimbraAdminApiInterface {
    * @return SoapResponse
    */
   public function createCos($name, array $attrs = array()) {
-    $request = new CreateCosRequest(
+    $req = new CreateCosRequest(
       $name, $attrs
     );
-    return $this->_client->doRequest($request);
+    return $this->_client->doRequest($req);
   }
 
   /**
@@ -888,10 +911,10 @@ class ZimbraAdminApi implements ZimbraAdminApiInterface {
    * @return SoapResponse
    */
   public function createDistributionList($name, $dynamic = NULL, array $attrs = array()) {
-    $request = new CreateDistributionListRequest(
+    $req = new CreateDistributionListRequest(
       $name, $dynamic, $attrs
     );
-    return $this->_client->doRequest($request);
+    return $this->_client->doRequest($req);
   }
 
   /**
@@ -906,10 +929,10 @@ class ZimbraAdminApi implements ZimbraAdminApiInterface {
    * @return SoapResponse
    */
   public function createDomain($name, array $attrs = array()) {
-    $request = new CreateDomainRequest(
+    $req = new CreateDomainRequest(
       $name, $attrs
     );
-    return $this->_client->doRequest($request);
+    return $this->_client->doRequest($req);
   }
 
   /**
@@ -922,10 +945,10 @@ class ZimbraAdminApi implements ZimbraAdminApiInterface {
    * @return SoapResponse
    */
   public function createLDAPEntry($dn, array $attrs = array()) {
-    $request = new CreateLDAPEntryRequest(
+    $req = new CreateLDAPEntryRequest(
       $dn, $attrs
     );
-    return $this->_client->doRequest($request);
+    return $this->_client->doRequest($req);
   }
 
   /**
@@ -941,10 +964,10 @@ class ZimbraAdminApi implements ZimbraAdminApiInterface {
    * @return SoapResponse
    */
   public function delegateAuth(AccountSelector $account, $duration = NULL) {
-    $request = new DelegateAuthRequest(
+    $req = new DelegateAuthRequest(
       $account, $duration
     );
-    return $this->_client->doRequest($request);
+    return $this->_client->doRequest($req);
   }
 
   /**
@@ -959,10 +982,10 @@ class ZimbraAdminApi implements ZimbraAdminApiInterface {
    * @return SoapResponse
    */
   public function deleteAccount($id) {
-    $request = new DeleteAccountRequest(
+    $req = new DeleteAccountRequest(
       $id
     );
-    return $this->_client->doRequest($request);
+    return $this->_client->doRequest($req);
   }
 
   /**
@@ -973,10 +996,10 @@ class ZimbraAdminApi implements ZimbraAdminApiInterface {
    * @return SoapResponse
    */
   public function deleteCos($id) {
-    $request = new DeleteCosRequest(
+    $req = new DeleteCosRequest(
       $id
     );
-    return $this->_client->doRequest($request);
+    return $this->_client->doRequest($req);
   }
 
   /**
@@ -988,10 +1011,10 @@ class ZimbraAdminApi implements ZimbraAdminApiInterface {
    * @return SoapResponse
    */
   public function deleteDistributionList($id) {
-    $request = new DeleteDistributionListRequest(
+    $req = new DeleteDistributionListRequest(
       $id
     );
-    return $this->_client->doRequest($request);
+    return $this->_client->doRequest($req);
   }
 
   /**
@@ -1002,10 +1025,10 @@ class ZimbraAdminApi implements ZimbraAdminApiInterface {
    * @return SoapResponse
    */
   public function deleteDomain($id) {
-    $request = new DeleteDomainRequest(
+    $req = new DeleteDomainRequest(
       $id
     );
-    return $this->_client->doRequest($request);
+    return $this->_client->doRequest($req);
   }
 
   /**
@@ -1015,10 +1038,10 @@ class ZimbraAdminApi implements ZimbraAdminApiInterface {
    * @return SoapResponse
    */
   public function deleteLDAPEntry($dn) {
-    $request = new DeleteLDAPEntryRequest(
+    $req = new DeleteLDAPEntryRequest(
       $dn
     );
-    return $this->_client->doRequest($request);
+    return $this->_client->doRequest($req);
   }
 
   /**
@@ -1036,10 +1059,10 @@ class ZimbraAdminApi implements ZimbraAdminApiInterface {
    * @return SoapResponse
    */
   public function getAccount(AccountSelector $account = NULL, $applyCos = NULL, $attrs = NULL) {
-    $request = new GetAccountRequest(
+    $req = new GetAccountRequest(
       $account, $applyCos, $attrs
     );
-    return $this->_client->doRequest($request);
+    return $this->_client->doRequest($req);
   }
 
   /**
@@ -1054,10 +1077,10 @@ class ZimbraAdminApi implements ZimbraAdminApiInterface {
    * @return SoapResponse
    */
   public function getAccountInfo(AccountSelector $account) {
-    $request = new GetAccountInfoRequest(
+    $req = new GetAccountInfoRequest(
       $account
     );
-    return $this->_client->doRequest($request);
+    return $this->_client->doRequest($req);
   }
 
   /**
@@ -1071,10 +1094,10 @@ class ZimbraAdminApi implements ZimbraAdminApiInterface {
    * @return SoapResponse
    */
   public function getAllAccounts(ServerSelector $server = NULL, DomainSelector $domain = NULL) {
-    $request = new GetAllAccountsRequest(
+    $req = new GetAllAccountsRequest(
       $server, $domain
     );
-    return $this->_client->doRequest($request);
+    return $this->_client->doRequest($req);
   }
 
   /**
@@ -1083,8 +1106,8 @@ class ZimbraAdminApi implements ZimbraAdminApiInterface {
    * @return SoapResponse
    */
   public function getAllCos() {
-    $request = new GetAllCosRequest();
-    return $this->_client->doRequest($request);
+    $req = new GetAllCosRequest();
+    return $this->_client->doRequest($req);
   }
 
   /**
@@ -1096,10 +1119,10 @@ class ZimbraAdminApi implements ZimbraAdminApiInterface {
    * @return SoapResponse
    */
   public function getAllDistributionLists(DomainSelector $domain = NULL) {
-    $request = new GetAllDistributionListsRequest(
+    $req = new GetAllDistributionListsRequest(
       $domain
     );
-    return $this->_client->doRequest($request);
+    return $this->_client->doRequest($req);
   }
 
   /**
@@ -1110,10 +1133,10 @@ class ZimbraAdminApi implements ZimbraAdminApiInterface {
    * @return SoapResponse
    */
   public function getAllDomains($applyConfig = NULL) {
-    $request = new GetAllDomainsRequest(
+    $req = new GetAllDomainsRequest(
       $applyConfig
     );
-    return $this->_client->doRequest($request);
+    return $this->_client->doRequest($req);
   }
 
   /**
@@ -1126,8 +1149,8 @@ class ZimbraAdminApi implements ZimbraAdminApiInterface {
    * @return SoapResponse
    */
   public function getCos(CosSelector $cos = NULL, $attrs = NULL) {
-    $request = new GetCosRequest($cos, $attrs);
-    return $this->_client->doRequest($request);
+    $req = new GetCosRequest($cos, $attrs);
+    return $this->_client->doRequest($req);
   }
 
   /**
@@ -1152,10 +1175,10 @@ class ZimbraAdminApi implements ZimbraAdminApiInterface {
       $sortAscending = NULL,
       array $attrs = array()
   ) {
-    $request = new GetDistributionListRequest(
+    $req = new GetDistributionListRequest(
       $dl, $limit, $offset, $sortAscending, $attrs
     );
-    return $this->_client->doRequest($request);
+    return $this->_client->doRequest($req);
   }
 
   /**
@@ -1176,10 +1199,10 @@ class ZimbraAdminApi implements ZimbraAdminApiInterface {
       $applyConfig = NULL,
       $attrs = NULL
   ) {
-    $request = new GetDomainRequest(
+    $req = new GetDomainRequest(
       $domain, $applyConfig, $attrs
     );
-    return $this->_client->doRequest($request);
+    return $this->_client->doRequest($req);
   }
 
   /**
@@ -1198,10 +1221,10 @@ class ZimbraAdminApi implements ZimbraAdminApiInterface {
    * @return SoapResponse
    */
   public function getDomainInfo(DomainSelector $domain = NULL, $applyConfig = NULL) {
-    $request = new GetDomainInfoRequest(
+    $req = new GetDomainInfoRequest(
       $domain, $applyConfig
     );
-    return $this->_client->doRequest($request);
+    return $this->_client->doRequest($req);
   }
 
   /**
@@ -1229,10 +1252,10 @@ class ZimbraAdminApi implements ZimbraAdminApiInterface {
       $limit = NULL,
       $offset = NULL
   ) {
-    $request = new GetLDAPEntriesRequest(
+    $req = new GetLDAPEntriesRequest(
       $query, $ldapSearchBase, $sortBy, $sortAscending, $limit, $offset
     );
-    return $this->_client->doRequest($request);
+    return $this->_client->doRequest($req);
   }
 
   /**
@@ -1241,8 +1264,8 @@ class ZimbraAdminApi implements ZimbraAdminApiInterface {
    * @return SoapResponse
    */
   public function getVersionInfo() {
-    $request = new GetVersionInfoRequest();
-    return $this->_client->doRequest($request);
+    $req = new GetVersionInfoRequest();
+    return $this->_client->doRequest($req);
   }
 
   /**
@@ -1251,8 +1274,8 @@ class ZimbraAdminApi implements ZimbraAdminApiInterface {
    * @return SoapResponse
    */
   public function getAllSkins() {
-    $request = new GetAllSkinsRequest();
-    return $this->_client->doRequest($request);
+    $req = new GetAllSkinsRequest();
+    return $this->_client->doRequest($req);
   }
 
   /**
@@ -1265,8 +1288,8 @@ class ZimbraAdminApi implements ZimbraAdminApiInterface {
    * @return SoapResponse
    */
   public function modifyAccount($id, array $attrs = array()) {
-    $request = new ModifyAccountRequest($id, $attrs);
-    return $this->_client->doRequest($request);
+    $req = new ModifyAccountRequest($id, $attrs);
+    return $this->_client->doRequest($req);
   }
 
   /**
@@ -1280,8 +1303,8 @@ class ZimbraAdminApi implements ZimbraAdminApiInterface {
    * @return SoapResponse
    */
   public function modifyCos($id, array $attrs = array()) {
-    $request = new ModifyCosRequest($id, $attrs);
-    return $this->_client->doRequest($request);
+    $req = new ModifyCosRequest($id, $attrs);
+    return $this->_client->doRequest($req);
   }
 
   /**
@@ -1296,10 +1319,10 @@ class ZimbraAdminApi implements ZimbraAdminApiInterface {
    * @return SoapResponse
    */
   public function modifyDistributionList($id, array $attrs = array()) {
-    $request = new ModifyDistributionListRequest(
+    $req = new ModifyDistributionListRequest(
       $id, $attrs
     );
-    return $this->_client->doRequest($request);
+    return $this->_client->doRequest($req);
   }
 
   /**
@@ -1313,10 +1336,10 @@ class ZimbraAdminApi implements ZimbraAdminApiInterface {
    * @return SoapResponse
    */
   public function modifyDomain($id, array $attrs = array()) {
-    $request = new ModifyDomainRequest(
+    $req = new ModifyDomainRequest(
       $id, $attrs
     );
-    return $this->_client->doRequest($request);
+    return $this->_client->doRequest($req);
   }
 
   /**
@@ -1329,10 +1352,10 @@ class ZimbraAdminApi implements ZimbraAdminApiInterface {
    * @return SoapResponse
    */
   public function modifyLDAPEntry($dn, array $attrs = array()) {
-    $request = new ModifyLDAPEntryRequest(
+    $req = new ModifyLDAPEntryRequest(
       $dn, $attrs
     );
-    return $this->_client->doRequest($request);
+    return $this->_client->doRequest($req);
   }
 
   /**
@@ -1347,10 +1370,10 @@ class ZimbraAdminApi implements ZimbraAdminApiInterface {
    * @return SoapResponse
    */
   public function removeAccountAlias($alias, $id = NULL) {
-    $request = new RemoveAccountAliasRequest(
+    $req = new RemoveAccountAliasRequest(
       $alias, $id
     );
-    return $this->_client->doRequest($request);
+    return $this->_client->doRequest($req);
   }
 
   /**
@@ -1365,10 +1388,10 @@ class ZimbraAdminApi implements ZimbraAdminApiInterface {
    * @return SoapResponse
    */
   public function removeDistributionListMember($id, array $dlm) {
-    $request = new RemoveDistributionListMemberRequest(
+    $req = new RemoveDistributionListMemberRequest(
       $id, $dlm
     );
-    return $this->_client->doRequest($request);
+    return $this->_client->doRequest($req);
   }
 
   /**
@@ -1383,10 +1406,10 @@ class ZimbraAdminApi implements ZimbraAdminApiInterface {
    * @return SoapResponse
    */
   public function renameAccount($id, $newName) {
-    $request = new RenameAccountRequest(
+    $req = new RenameAccountRequest(
       $id, $newName
     );
-    return $this->_client->doRequest($request);
+    return $this->_client->doRequest($req);
   }
 
   /**
@@ -1399,10 +1422,10 @@ class ZimbraAdminApi implements ZimbraAdminApiInterface {
    * @return SoapResponse
    */
   public function renameCos($id, $newName) {
-    $request = new RenameCosRequest(
+    $req = new RenameCosRequest(
       $id, $newName
     );
-    return $this->_client->doRequest($request);
+    return $this->_client->doRequest($req);
   }
 
   /**
@@ -1416,10 +1439,10 @@ class ZimbraAdminApi implements ZimbraAdminApiInterface {
    * @return SoapResponse
    */
   public function renameDistributionList($id, $newName) {
-    $request = new RenameDistributionListRequest(
+    $req = new RenameDistributionListRequest(
       $id, $newName
     );
-    return $this->_client->doRequest($request);
+    return $this->_client->doRequest($req);
   }
 
   /**
@@ -1432,10 +1455,10 @@ class ZimbraAdminApi implements ZimbraAdminApiInterface {
    * @return SoapResponse
    */
   public function renameLDAPEntry($dn, $new_dn) {
-    $request = new RenameLDAPEntryRequest(
+    $req = new RenameLDAPEntryRequest(
       $dn, $new_dn
     );
-    return $this->_client->doRequest($request);
+    return $this->_client->doRequest($req);
   }
 
   /**
@@ -1486,11 +1509,11 @@ class ZimbraAdminApi implements ZimbraAdminApiInterface {
       $countOnly = NULL,
       $attrs = NULL
   ) {
-    $request = new SearchDirectoryRequest(
+    $req = new SearchDirectoryRequest(
       $query, $maxResults, $limit, $offset, $domain, $applyCos,
       $applyConfig, $types, $sortBy, $sortAscending, $countOnly, $attrs
     );
-    return $this->_client->doRequest($request);
+    return $this->_client->doRequest($req);
   }
 
   /**
@@ -1505,9 +1528,9 @@ class ZimbraAdminApi implements ZimbraAdminApiInterface {
    * @return SoapResponse
    */
   public function setPassword($id, $newPassword) {
-    $request = new SetPasswordRequest(
+    $req = new SetPasswordRequest(
       $id, $newPassword
     );
-    return $this->_client->doRequest($request);
+    return $this->_client->doRequest($req);
   }
 }
