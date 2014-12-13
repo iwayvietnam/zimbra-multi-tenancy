@@ -287,6 +287,7 @@ function zmt_ui_account_edit_form_validate($form, &$form_state) {
         else {
           form_set_error('name', t($message));
         }
+        return FALSE;
       }
     }
     $account->zimbra_id = isset($zimbra_account->id) ? $zimbra_account->id : '';
@@ -295,6 +296,7 @@ function zmt_ui_account_edit_form_validate($form, &$form_state) {
     $zimbra_account = zimbra_modify_account($api, $account->zimbra_id, $attrs);
     if ($zimbra_account instanceof Exception) {
       form_set_error('name', t($zimbra_account->getMessage()));
+      return FALSE;
     }
     else {
       $account_id = !empty($account->id) ? $account->id : 0;
@@ -305,6 +307,7 @@ function zmt_ui_account_edit_form_validate($form, &$form_state) {
           $zimbra_account = zimbra_rename_account($api, $account->zimbra_id, $mail_address);
           if ($zimbra_account instanceof Exception) {
             form_set_error('name', t($zimbra_account->getMessage()));
+            return FALSE;
           }
         }
       }
@@ -315,6 +318,7 @@ function zmt_ui_account_edit_form_validate($form, &$form_state) {
       $result = zimbra_check_password_strength($api, $account->zimbra_id, $password);
       if ($result instanceof Exception) {
         form_set_error('password', t($result->getMessage()));
+        return FALSE;
       }
       else {
         $result = zimbra_set_password($api, $account->zimbra_id, $password);
