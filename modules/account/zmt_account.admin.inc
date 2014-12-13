@@ -142,7 +142,7 @@ function zmt_account_edit_form($form, &$form_state, $account){
 
   $domain_id = isset($form_state['values']['domain_id']) ? (int) $form_state['values']['domain_id'] : (int) $account->domain_id;
   $options = array();
-  if (isset($account->id) && (int) $account->id > 0) {
+  if (!empty($account->id)) {
     $domain = zmt_domain_load($account->domain_id);
     if ($domain) {
       $domain_id = $domain->id;
