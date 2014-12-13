@@ -1200,7 +1200,7 @@ class GetLDAPEntriesRequest extends SoapRequest {
   ) {
     parent::__construct();
     $this->query = trim($query);
-    $this->ldapSearchBase = trim($ldapSearchBase);
+    $this->ldapSearchBase = array(array('_content' => trim($ldapSearchBase)));
     if (NULL !== $sortBy) {
       $this->sortBy = trim($sortBy);
     }
