@@ -239,6 +239,7 @@ function zmt_ui_batch_update_group_members($group, array $members = array()) {
  * Implements sync_import_account().
  */
 function zmt_ui_sync_import_account($account) {
+  module_load_include('inc', 'zmt', 'includes/zmt.zimbra');
   $domain = zmt_domain_load((int) $account->domain_id);
   $cos = zmt_cos_load((int) $account->cos_id);
 
