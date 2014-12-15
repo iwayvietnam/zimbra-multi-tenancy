@@ -554,7 +554,7 @@ function zmt_group_edit_form_submit($form, &$form_state) {
     }
   }
 
-  module_invoke_all('batch_update_group_members', $group, $member_names);
+  module_invoke_all('sync_group_members', $group, $member_names);
 
   $form_state['redirect'] = 'zmt/group';
 }
