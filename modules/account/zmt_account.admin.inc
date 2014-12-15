@@ -419,7 +419,7 @@ function zmt_account_ajax_import_form_callback($form, $form_state) {
         $account = zmt_account_prepare($record, $domain_id);
         if (!empty($account->name)) {
           $account->cos_id = $cos_id;
-          $exists = zmt_account_exists($domain_id, $name);
+          $exists = zmt_account_exists($domain_id, $account->name);
           if (!$exists) {
             $modules = module_implements('sync_import_account');
             $is_sync = empty($results);
