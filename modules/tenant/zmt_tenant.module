@@ -125,19 +125,6 @@ function zmt_tenant_query_zmt_tenant_cos_load_multiple_alter(QueryAlterableInter
 }
 
 /**
- * Implements hook_user_load().
- */
-function zmt_tenant_user_load(array $users) {
-  $result = db_select('zmt_tenant', 'zt')
-    ->fields('zt')
-    ->condition('zt.tenant_uid', array_keys($users))
-    ->execute();
-  foreach ($result as $tenant) {
-    $users[$tenant->tenant_uid]->tenant = $tenant;
-  }
-}
-
-/**
  * Access callback for tenant.
  */
 function zmt_tenant_access($op, $tenant, $tenant = NULL, $entity_type = NULL) {

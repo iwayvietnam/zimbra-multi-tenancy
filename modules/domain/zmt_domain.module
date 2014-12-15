@@ -204,19 +204,6 @@ function zmt_domain_label($domain, $entity_type) {
 }
 
 /**
- * Implements hook_user_load().
- */
-function zmt_domain_user_load(array $users) {
-  $result = db_select('zmt_domain', 'zd')
-    ->fields('zd')
-    ->condition('zd.domain_uid', array_keys($users))
-    ->execute();
-  foreach ($result as $domain) {
-    $users[$domain->domain_uid]->domain = $domain;
-  }
-}
-
-/**
  * Loads a domain by ID.
  *
  * @param $id
