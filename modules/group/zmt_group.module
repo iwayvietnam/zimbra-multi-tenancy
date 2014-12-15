@@ -131,28 +131,28 @@ function zmt_group_permission() {
  * Implements hook_query_TAG_alter().
  */ 
 function zmt_group_query_zmt_group_load_multiple_alter(QueryAlterableInterface $query) {
-  $query->join('zmt_domain', 'd', 'd.id = base.domain_id');
-  $query->join('zmt_server', 's', 's.id = d.server_id');
+  $query->join('zmt_domain', 'zd', 'zd.id = base.domain_id');
+  $query->join('zmt_server', 'zs', 'zs.id = zd.server_id');
 
-  $query->addField('d', 'name', 'domain');
-  $query->addField('s', 'name', 'server');
-  $query->addField('s', 'delete_dl');
-  $query->addField('s', 'id', 'server_id');
+  $query->addField('zd', 'name', 'domain');
+  $query->addField('zs', 'name', 'server');
+  $query->addField('zs', 'delete_dl');
+  $query->addField('zs', 'id', 'server_id');
 }
 
 /**
  * Implements hook_query_TAG_alter().
  */ 
 function zmt_group_query_zmt_group_member_load_multiple_alter(QueryAlterableInterface $query) {
-  $query->join('zmt_group', 'g', 'g.id = base.group_id');
-  $query->join('zmt_domain', 'd', 'd.id = g.domain_id');
-  $query->join('zmt_server', 's', 's.id = d.server_id');
+  $query->join('zmt_group', 'zg', 'zg.id = base.group_id');
+  $query->join('zmt_domain', 'zd', 'zd.id = zg.domain_id');
+  $query->join('zmt_server', 'zs', 'zs.id = zd.server_id');
 
-  $query->addField('g', 'name', 'group_name');
-  $query->addField('d', 'name', 'domain');
-  $query->addField('s', 'name', 'server');
-  $query->addField('d', 'id', 'domain_id');
-  $query->addField('s', 'id', 'server_id');
+  $query->addField('zg', 'name', 'group_name');
+  $query->addField('zd', 'name', 'domain');
+  $query->addField('zs', 'name', 'server');
+  $query->addField('zd', 'id', 'domain_id');
+  $query->addField('zs', 'id', 'server_id');
 }
 
 /**
@@ -189,9 +189,9 @@ function zmt_group_mailbox_exists($domain_id, $name, $id) {
  */ 
 function zmt_group_domain_load_by_user() {
   global $user;
-  $domain_id = db_select('zmt_group', 'g')
-    ->fields('g', array('domain_id'))
-    ->condition('g.group_uid', $user->uid)
+  $domain_id = db_select('zmt_group', 'zg')
+    ->fields('zg', array('domain_id'))
+    ->condition('zg.group_uid', $user->uid)
     ->execute()
     ->fetchField();
   return (int) $domain_id;
@@ -203,12 +203,12 @@ function zmt_group_domain_load_by_user() {
 function zmt_group_query_account_query_filter_alter(QueryAlterableInterface $query) {
   global $user;
   if (in_array('Zmt Group', $user->roles)) {
-    $sub_query = db_select('zmt_group_member', 'm');
-    $sub_query->leftJoin('zmt_group', 'g', 'g.id = m.group_id');
-    $sub_query->fields('m', array('member_id'))
-      ->condition('m.type', GROUP_MEMBER_ACCOUNT)
-      ->condition('g.group_uid', $user->uid);
-    $query->condition('a.id', $sub_query, 'IN');
+    $sub_query = db_select('zmt_group_member', 'zgm');
+    $sub_query->leftJoin('zmt_group', 'zg', 'zg.id = zgm.group_id');
+    $sub_query->fields('zgm', array('member_id'))
+      ->condition('zgm.type', GROUP_MEMBER_ACCOUNT)
+      ->condition('zg.group_uid', $user->uid);
+    $query->condition('za.id', $sub_query, 'IN');
   }
 }
 
@@ -218,11 +218,11 @@ function zmt_group_query_account_query_filter_alter(QueryAlterableInterface $que
 function zmt_group_query_account_entity_filter_alter(QueryAlterableInterface $query) {
   global $user;
   if (in_array('Zmt Group', $user->roles)) {
-    $sub_query = db_select('zmt_group_member', 'm');
-    $sub_query->leftJoin('zmt_group', 'g', 'g.id = m.group_id');
-    $sub_query->fields('m', array('member_id'))
-      ->condition('m.type', GROUP_MEMBER_ACCOUNT)
-      ->condition('g.group_uid', $user->uid);
+    $sub_query = db_select('zmt_group_member', 'zgm');
+    $sub_query->join('zmt_group', 'zg', 'zg.id = zgm.group_id');
+    $sub_query->fields('zgm', array('member_id'))
+      ->condition('zgm.type', GROUP_MEMBER_ACCOUNT)
+      ->condition('zg.group_uid', $user->uid);
     $query->condition('zmt_account.id', $sub_query, 'IN');
   }
 }
@@ -233,12 +233,12 @@ function zmt_group_query_account_entity_filter_alter(QueryAlterableInterface $qu
 function zmt_group_query_alias_query_filter_alter(QueryAlterableInterface $query) {
   global $user;
   if (in_array('Zmt Group', $user->roles)) {
-    $sub_query = db_select('zmt_group_member', 'm');
-    $sub_query->leftJoin('zmt_group', 'g', 'g.id = m.group_id');
-    $sub_query->fields('m', array('member_id'))
-      ->condition('m.type', GROUP_MEMBER_ALIAS)
-      ->condition('g.group_uid', $user->uid);
-    $query->condition('a.id', $sub_query, 'IN');
+    $sub_query = db_select('zmt_group_member', 'zgm');
+    $sub_query->join('zmt_group', 'zg', 'zg.id = zgm.group_id');
+    $sub_query->fields('zgm', array('member_id'))
+      ->condition('zgm.type', GROUP_MEMBER_ALIAS)
+      ->condition('zg.group_uid', $user->uid);
+    $query->condition('za.id', $sub_query, 'IN');
   }
 }
 
@@ -248,11 +248,11 @@ function zmt_group_query_alias_query_filter_alter(QueryAlterableInterface $query
 function zmt_group_zmt_account_edit_access($account) {
   global $user;
   if (in_array('Zmt Group', $user->roles)) {
-    $query = db_select('zmt_group_member', 'm');
-    $query->leftJoin('zmt_group', 'g', 'g.id = m.group_id');
-    $query->fields('m', array('member_id'))
-      ->condition('m.type', GROUP_MEMBER_ACCOUNT)
-      ->condition('g.group_uid', $user->uid);
+    $query = db_select('zmt_group_member', 'zgm');
+    $query->join('zmt_group', 'zg', 'zg.id = zgm.group_id');
+    $query->fields('zgm', array('member_id'))
+      ->condition('zgm.type', GROUP_MEMBER_ACCOUNT)
+      ->condition('zg.group_uid', $user->uid);
     $result = $query->execute();
     $member_ids = array();
     foreach ($result as $data) {
@@ -269,11 +269,11 @@ function zmt_group_zmt_account_edit_access($account) {
 function zmt_group_zmt_alias_edit_access($alias) {
   global $user;
   if (in_array('Zmt Group', $user->roles)) {
-    $query = db_select('zmt_group_member', 'm');
-    $query->leftJoin('zmt_group', 'g', 'g.id = m.group_id');
-    $query->fields('m', array('member_id'))
-      ->condition('m.type', GROUP_MEMBER_ALIAS)
-      ->condition('g.group_uid', $user->uid);
+    $query = db_select('zmt_group_member', 'zgm');
+    $query->join('zmt_group', 'zg', 'zg.id = zgm.group_id');
+    $query->fields('zgm', array('member_id'))
+      ->condition('zgm.type', GROUP_MEMBER_ALIAS)
+      ->condition('zg.group_uid', $user->uid);
     $result = $query->execute();
     $member_ids = array();
     foreach ($result as $data) {
@@ -753,10 +753,10 @@ function zmt_group_member_load_multiple_by_group(array $group_ids = array()) {
 function zmt_group_member_load_multiple_by_group_user($uid) {
   $cache = &drupal_static(__FUNCTION__, array());
   if (!isset($cache[$uid])) {
-    $query = db_select('zmt_group_member', 'm');
-    $query->leftJoin('zmt_group', 'g', 'g.id = m.group_id');
-    $query->condition('g.group_uid', $uid);
-    $result = $query->fields('m')->execute();
+    $query = db_select('zmt_group_member', 'zgm');
+    $query->join('zmt_group', 'zg', 'zg.id = zgm.group_id');
+    $query->condition('zg.group_uid', $uid);
+    $result = $query->fields('zgm')->execute();
 
     $members = array();
     foreach ($result as $member) {

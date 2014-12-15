@@ -133,11 +133,11 @@ function zmt_domain_zmt_cos_delete($cos){
  * Implements hook_query_TAG_alter().
  */ 
 function zmt_domain_query_tenant_count_domain_alter(QueryAlterableInterface $query) {
-  $count_domain_query = db_select('zmt_domain', 'd')
-    ->fields('d', array('tenant_id'))
-    ->groupBy('d.tenant_id');
-  $count_domain_query->addExpression('COUNT(d.id)', 'total_domain');
-  $query->leftJoin($count_domain_query, 'cdq', 'cdq.tenant_id = t.id');
+  $count_domain_query = db_select('zmt_domain', 'zd')
+    ->fields('zd', array('tenant_id'))
+    ->groupBy('zd.tenant_id');
+  $count_domain_query->addExpression('COUNT(zd.id)', 'total_domain');
+  $query->leftJoin($count_domain_query, 'cdq', 'cdq.tenant_id = zt.id');
   $query->addExpression('IFNULL(cdq.total_domain, 0)', 'total_domain');
 }
 
@@ -145,13 +145,13 @@ function zmt_domain_query_tenant_count_domain_alter(QueryAlterableInterface $que
  * Implements hook_query_TAG_alter().
  */ 
 function zmt_domain_query_zmt_domain_load_multiple_alter(QueryAlterableInterface $query) {
-  $query->join('zmt_server', 's', 's.id = base.server_id');
-  $query->leftJoin('zmt_tenant', 't', 't.id = base.tenant_id');
-  $query->leftJoin('users', 'tu', 'tu.uid = t.tenant_uid');
+  $query->join('zmt_server', 'zs', 'zs.id = base.server_id');
+  $query->leftJoin('zmt_tenant', 'zt', 'zt.id = base.tenant_id');
+  $query->leftJoin('users', 'tu', 'tu.uid = zt.tenant_uid');
   $query->leftJoin('users', 'du', 'du.uid = base.domain_uid');
 
-  $query->addField('s', 'name', 'server');
-  $query->addField('s', 'delete_domain');
+  $query->addField('zs', 'name', 'server');
+  $query->addField('zs', 'delete_domain');
   $query->addField('tu', 'name', 'tenant');
   $query->addField('du', 'mail', 'mail');
   $query->addField('du', 'status', 'status');
@@ -161,10 +161,10 @@ function zmt_domain_query_zmt_domain_load_multiple_alter(QueryAlterableInterface
  * Implements hook_query_TAG_alter().
  */ 
 function zmt_domain_query_zmt_domain_cos_load_multiple_alter(QueryAlterableInterface $query) {
-  $query->join('zmt_cos', 'c', 'c.id = base.cos_id');
-  $query->join('zmt_domain', 'd', 'd.id = base.domain_id');
-  $query->addField('c', 'name', 'cos');
-  $query->addField('d', 'name', 'domain');
+  $query->join('zmt_cos', 'zc', 'zc.id = base.cos_id');
+  $query->join('zmt_domain', 'zd', 'zd.id = base.domain_id');
+  $query->addField('zc', 'name', 'cos');
+  $query->addField('zd', 'name', 'domain');
 }
 
 /**
@@ -207,9 +207,9 @@ function zmt_domain_label($domain, $entity_type) {
  * Implements hook_user_load().
  */
 function zmt_domain_user_load(array $users) {
-  $result = db_select('zmt_domain', 'd')
-    ->fields('d', array('id', 'name', 'domain_uid'))
-    ->condition('d.domain_uid', array_keys($users))
+  $result = db_select('zmt_domain', 'zd')
+    ->fields('zd')
+    ->condition('zd.domain_uid', array_keys($users))
     ->execute();
   foreach ($result as $domain) {
     $users[$domain->domain_uid]->domain = $domain;

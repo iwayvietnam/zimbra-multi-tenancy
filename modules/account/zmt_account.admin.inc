@@ -9,17 +9,17 @@ function zmt_account_list_all() {
   drupal_set_title('Accounts');
   $header = array();
   $header[] = array('data' => t('No.'));
-  $header[] = array('data' => t('Name'), 'field' => 'a.name');
-  $header[] = array('data' => t('Full name'), 'field' => 'a.full_name');
-  $header[] = array('data' => t('COS'), 'field' => 'c.name');
-  $header[] = array('data' => t('Status'), 'field' => 'a.status');
+  $header[] = array('data' => t('Name'), 'field' => 'za.name');
+  $header[] = array('data' => t('Full name'), 'field' => 'za.full_name');
+  $header[] = array('data' => t('COS'), 'field' => 'zc.name');
+  $header[] = array('data' => t('Status'), 'field' => 'za.status');
   $header[] = array('data' => t('Operations'));
 
-  $query = db_select('zmt_account', 'a')->extend('PagerDefault')->extend('TableSort');
-  $query->join('zmt_domain', 'd', 'd.id = a.domain_id');
-  $query->leftJoin('zmt_cos', 'c', 'c.id = a.cos_id');
-  $query->addField('d', 'name', 'domain');
-  $query->addField('c', 'name', 'cos');
+  $query = db_select('zmt_account', 'za')->extend('PagerDefault')->extend('TableSort');
+  $query->join('zmt_domain', 'zd', 'zd.id = za.domain_id');
+  $query->leftJoin('zmt_cos', 'zc', 'zc.id = za.cos_id');
+  $query->addField('zd', 'name', 'domain');
+  $query->addField('zc', 'name', 'cos');
 
   $domain_ids = array();
   if (!(user_access('administer zmt'))) {
@@ -32,27 +32,27 @@ function zmt_account_list_all() {
 
       $domain_id = isset($_SESSION['zmt_filter_domain_id']) ? (int) $_SESSION['zmt_filter_domain_id'] : 0;
       if ($domain_id) {
-        $query->condition('a.domain_id', $domain_id);
+        $query->condition('za.domain_id', $domain_id);
       }
       else {
-        $query->condition('a.domain_id', $domain_ids);
+        $query->condition('za.domain_id', $domain_ids);
         $query->addTag('account_query_filter');
       }
     }
     else {
-      $query->condition('a.uid', $user->uid);
+      $query->condition('za.uid', $user->uid);
     }
   }
   else {
     $domain_id = isset($_SESSION['zmt_filter_domain_id']) ? (int) $_SESSION['zmt_filter_domain_id'] : 0;
     if ($domain_id) {
-      $query->condition('a.domain_id', $domain_id);
+      $query->condition('za.domain_id', $domain_id);
     }
   }
 
   $item_per_page = variable_get('zimbra_item_per_page', 20);
   $result = $query
-    ->fields('a')
+    ->fields('za')
     ->orderByHeader($header)
     ->limit($item_per_page)
     ->execute();

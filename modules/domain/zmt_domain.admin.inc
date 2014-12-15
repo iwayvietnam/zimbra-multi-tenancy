@@ -9,16 +9,16 @@ function zmt_domain_list_all() {
   drupal_set_title('Domains');
   $header = array();
   $header[] = array('data' => t('No.'));
-  $header[] = array('data' => t('Name'), 'field' => 'd.name');
+  $header[] = array('data' => t('Name'), 'field' => 'zd.name');
   if (module_exists('zmt_account')) {
-    $header[] = array('data' => t('Total account'), 'field' => 'a.total_account');
+    $header[] = array('data' => t('Total account'), 'field' => 'za.total_account');
   }
   $header[] = array('data' => t('Tenant'), 'field' => 'u.name');
 
   $header[] = array('data' => t('Operations'));
-  $query = db_select('zmt_domain', 'd')->extend('PagerDefault')->extend('TableSort');
-  $query->leftJoin('zmt_tenant', 't', 't.id = d.tenant_id');
-  $query->leftJoin('users', 'u', 'u.uid = t.tenant_uid');
+  $query = db_select('zmt_domain', 'zd')->extend('PagerDefault')->extend('TableSort');
+  $query->leftJoin('zmt_tenant', 'zt', 'zt.id = zd.tenant_id');
+  $query->leftJoin('users', 'u', 'u.uid = zt.tenant_uid');
   $query->addField('u', 'name', 'tenant');
 
   $query->addTag('domain_count_account');
@@ -28,17 +28,17 @@ function zmt_domain_list_all() {
       $query->condition('u.uid', $user->uid);
     }
     else {
-      $query->condition('d.uid', $user->uid);
+      $query->condition('zd.uid', $user->uid);
     }
   }
   $server_id = isset($_SESSION['zmt_filter_server_id']) ? (int) $_SESSION['zmt_filter_server_id'] : 0;
   if ($server_id) {
-    $query->condition('d.server_id', $server_id);
+    $query->condition('zd.server_id', $server_id);
   }
 
   $item_per_page = variable_get('zimbra_item_per_page', 20);
   $result = $query
-    ->fields('d')
+    ->fields('zd')
     ->orderByHeader($header)
     ->limit($item_per_page)
     ->execute();

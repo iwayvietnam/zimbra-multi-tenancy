@@ -94,27 +94,27 @@ function zmt_account_permission() {
  * Implements hook_query_TAG_alter().
  */ 
 function zmt_account_query_zmt_account_load_multiple_alter(QueryAlterableInterface $query) {
-  $query->leftJoin('zmt_cos', 'c', 'c.id = base.cos_id');
-  $query->join('zmt_domain', 'd', 'd.id = base.domain_id');
-  $query->join('zmt_server', 's', 's.id = d.server_id');
+  $query->leftJoin('zmt_cos', 'zc', 'zc.id = base.cos_id');
+  $query->join('zmt_domain', 'zd', 'zd.id = base.domain_id');
+  $query->join('zmt_server', 'zs', 'zs.id = zd.server_id');
 
-  $query->addField('d', 'name', 'domain');
-  $query->addField('s', 'name', 'server');
-  $query->addField('s', 'id', 'server_id');
-  $query->addField('s', 'delete_account');
-  $query->addField('c', 'name', 'cos');
-  $query->addField('c', 'zimbra_id', 'cos_zimbra_id');
+  $query->addField('zd', 'name', 'domain');
+  $query->addField('zs', 'name', 'server');
+  $query->addField('zs', 'id', 'server_id');
+  $query->addField('zs', 'delete_account');
+  $query->addField('zc', 'name', 'cos');
+  $query->addField('zc', 'zimbra_id', 'cos_zimbra_id');
 }
 
 /**
  * Implements hook_query_TAG_alter().
  */ 
 function zmt_account_query_domain_count_account_alter(QueryAlterableInterface $query) {
-  $count_account_query = db_select('zmt_account', 'a')
-    ->fields('a', array('domain_id'))
-    ->groupBy('a.domain_id');
-  $count_account_query->addExpression('COUNT(a.id)', 'total_account');
-  $query->leftJoin($count_account_query, 'caq', 'caq.domain_id = d.id');
+  $count_account_query = db_select('zmt_account', 'za')
+    ->fields('za', array('domain_id'))
+    ->groupBy('za.domain_id');
+  $count_account_query->addExpression('COUNT(za.id)', 'total_account');
+  $query->leftJoin($count_account_query, 'caq', 'caq.domain_id = zd.id');
   $query->addExpression('IFNULL(caq.total_account, 0)', 'total_account');
 }
 
@@ -122,13 +122,13 @@ function zmt_account_query_domain_count_account_alter(QueryAlterableInterface $q
  * Implements hook_query_TAG_alter().
  */ 
 function zmt_account_query_tenant_count_account_alter(QueryAlterableInterface $query) {
-  $count_account_query = db_select('zmt_account', 'a');
-  $count_account_query->leftJoin('zmt_domain', 'd', 'd.id = a.domain_id');
-  $count_account_query->addField('d', 'tenant_id', 'tenant_id');
-  $count_account_query->addExpression('COUNT(a.id)', 'total_account');
-  $count_account_query->groupBy('d.tenant_id');
+  $count_account_query = db_select('zmt_account', 'za');
+  $count_account_query->join('zmt_domain', 'zd', 'zd.id = za.domain_id');
+  $count_account_query->addField('zd', 'tenant_id', 'tenant_id');
+  $count_account_query->addExpression('COUNT(za.id)', 'total_account');
+  $count_account_query->groupBy('zd.tenant_id');
 
-  $query->leftJoin($count_account_query, 'caq', 'caq.tenant_id = t.id');
+  $query->leftJoin($count_account_query, 'caq', 'caq.tenant_id = zt.id');
   $query->addExpression('IFNULL(caq.total_account, 0)', 'total_account');
 }
 

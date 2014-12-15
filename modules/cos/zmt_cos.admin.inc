@@ -9,26 +9,27 @@ function zmt_cos_list_all() {
   drupal_set_title('Class of Services');
   $header = array();
   $header[] = array('data' => t('No.'));
-  $header[] = array('data' => t('Name'), 'field' => 'c.name');
-  $header[] = array('data' => t('Mailbox quota'), 'field' => 'c.mail_quota');
-  $header[] = array('data' => t('Max account number'), 'field' => 'c.max_account');
-  $header[] = array('data' => t('Server'), 'field' => 's.name');
+  $header[] = array('data' => t('Name'), 'field' => 'zc.name');
+  $header[] = array('data' => t('Mailbox quota'), 'field' => 'zc.mail_quota');
+  $header[] = array('data' => t('Max account number'), 'field' => 'zc.max_account');
+  $header[] = array('data' => t('Server'), 'field' => 'zs.name');
   $header[] = array('data' => t('Operations'));
 
-  $query = db_select('zmt_cos', 'c')->extend('PagerDefault')->extend('TableSort');
-  $query->join('zmt_server', 's', 's.id = c.server_id');
-  $query->addField('s', 'name', 'server');
+  $query = db_select('zmt_cos', 'zc')->extend('PagerDefault')->extend('TableSort');
+  $query->join('zmt_server', 'zs', 'zs.id = zc.server_id');
+  $query->addField('zs', 'name', 'server');
+
   if (!(user_access('administer zmt') || user_access('administer any zmt_cos'))) {
-    $query->condition('c.uid', $user->uid);
+    $query->condition('zc.uid', $user->uid);
   }
   $server_id = isset($_SESSION['zmt_filter_server_id']) ? (int) $_SESSION['zmt_filter_server_id'] : 0;
   if ($server_id) {
-    $query->condition('c.server_id', $server_id);
+    $query->condition('zc.server_id', $server_id);
   }
 
   $item_per_page = variable_get('zimbra_item_per_page', 20);
   $result = $query
-    ->fields('c')
+    ->fields('zc')
     ->orderByHeader($header)
     ->limit($item_per_page)
     ->execute();

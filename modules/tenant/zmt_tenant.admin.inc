@@ -9,7 +9,7 @@ function zmt_tenant_list_all() {
   drupal_set_title('Tenants');
   $header = array();
   $header[] = array('data' => t('No.'));
-  $header[] = array('data' => t('Full Name'), 'field' => 't.full_name');
+  $header[] = array('data' => t('Full Name'), 'field' => 'zt.full_name');
   $header[] = array('data' => t('User Name'), 'field' => 'u.name');
   $header[] = array('data' => t('Status'), 'field' => 'u.status');
   if (module_exists('zmt_domain')) {
@@ -21,16 +21,16 @@ function zmt_tenant_list_all() {
   $header[] = array('data' => t('Server'), 'field' => 's.name');
   $header[] = array('data' => t('Operations'));
 
-  $query = db_select('zmt_tenant', 't')->extend('PagerDefault')->extend('TableSort');
-  $query->leftJoin('users', 'u', 'u.uid = t.tenant_uid');
-  $query->leftJoin('zmt_server', 's', 's.id = t.server_id');
+  $query = db_select('zmt_tenant', 'zt')->extend('PagerDefault')->extend('TableSort');
+  $query->join('users', 'u', 'u.uid = zt.tenant_uid');
+  $query->join('zmt_server', 'zs', 'zs.id = zt.server_id');
 
   $query->addTag('tenant_count_account')
     ->addTag('tenant_count_domain');
 
   $query->addField('u', 'name', 'name');
   $query->addField('u', 'status', 'status');
-  $query->addField('s', 'name', 'server');
+  $query->addField('zs', 'name', 'server');
 
   if (!(user_access('administer zmt') || user_access('administer any zmt_tenant'))) {
     $query->condition('t.uid', $user->uid);
@@ -42,7 +42,7 @@ function zmt_tenant_list_all() {
 
   $item_per_page = variable_get('zimbra_item_per_page', 20);
   $result = $query
-    ->fields('t', array('id', 'full_name'))
+    ->fields('zt', array('id', 'full_name'))
     ->orderByHeader($header)
     ->limit($item_per_page)
     ->execute();

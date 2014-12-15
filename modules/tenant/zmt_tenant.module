@@ -104,10 +104,10 @@ function zmt_tenant_permission() {
  * Implements hook_query_TAG_alter().
  */ 
 function zmt_tenant_query_zmt_tenant_load_multiple_alter(QueryAlterableInterface $query) {
-  $query->join('zmt_server', 's', 's.id = base.server_id');
+  $query->join('zmt_server', 'zs', 'zs.id = base.server_id');
   $query->join('users', 'u', 'u.uid = base.tenant_uid');
 
-  $query->addField('s', 'name', 'server');
+  $query->addField('zs', 'name', 'server');
   $query->addField('u', 'name', 'name');
   $query->addField('u', 'mail', 'mail');
   $query->addField('u', 'status', 'status');
@@ -117,10 +117,10 @@ function zmt_tenant_query_zmt_tenant_load_multiple_alter(QueryAlterableInterface
  * Implements hook_query_TAG_alter().
  */ 
 function zmt_tenant_query_zmt_tenant_cos_load_multiple_alter(QueryAlterableInterface $query) {
-  $query->join('zmt_cos', 'c', 'c.id = base.cos_id');
-  $query->join('zmt_tenant', 't', 't.id = base.tenant_id');
-  $query->join('users', 'u', 'u.uid = t.tenant_uid');
-  $query->addField('c', 'name', 'cos');
+  $query->join('zmt_cos', 'zc', 'zc.id = base.cos_id');
+  $query->join('zmt_tenant', 'zt', 'zt.id = base.tenant_id');
+  $query->join('users', 'u', 'u.uid = zt.tenant_uid');
+  $query->addField('zc', 'name', 'cos');
   $query->addField('u', 'name', 'tenant');
 }
 
@@ -128,9 +128,9 @@ function zmt_tenant_query_zmt_tenant_cos_load_multiple_alter(QueryAlterableInter
  * Implements hook_user_load().
  */
 function zmt_tenant_user_load(array $users) {
-  $result = db_select('zmt_tenant', 't')
-    ->fields('t', array('id', 'tenant_uid'))
-    ->condition('t.tenant_uid', array_keys($users))
+  $result = db_select('zmt_tenant', 'zt')
+    ->fields('zt')
+    ->condition('zt.tenant_uid', array_keys($users))
     ->execute();
   foreach ($result as $tenant) {
     $users[$tenant->tenant_uid]->tenant = $tenant;

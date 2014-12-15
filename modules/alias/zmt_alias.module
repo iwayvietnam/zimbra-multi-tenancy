@@ -84,16 +84,16 @@ function zmt_alias_permission() {
  * Implements hook_query_TAG_alter().
  */ 
 function zmt_alias_query_zmt_alias_load_multiple_alter(QueryAlterableInterface $query) {
-  $query->join('zmt_account', 'a', 'a.id = base.account_id');
-  $query->join('zmt_domain', 'd', 'd.id = base.domain_id');
-  $query->join('zmt_server', 's', 's.id = d.server_id');
+  $query->join('zmt_account', 'za', 'za.id = base.account_id');
+  $query->join('zmt_domain', 'zd', 'zd.id = base.domain_id');
+  $query->join('zmt_server', 'zs', 'zs.id = zd.server_id');
 
-  $query->addField('a', 'name', 'account');
-  $query->addField('d', 'name', 'domain');
-  $query->addField('s', 'name', 'server');
-  $query->addField('s', 'delete_alias');
-  $query->addField('s', 'id', 'server_id');
-  $query->addField('a', 'zimbra_id', 'account_zimbra_id');
+  $query->addField('za', 'name', 'account');
+  $query->addField('zd', 'name', 'domain');
+  $query->addField('zs', 'name', 'server');
+  $query->addField('zs', 'delete_alias');
+  $query->addField('zs', 'id', 'server_id');
+  $query->addField('za', 'zimbra_id', 'account_zimbra_id');
 }
 
 /**

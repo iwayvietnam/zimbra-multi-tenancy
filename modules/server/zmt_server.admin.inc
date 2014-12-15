@@ -9,19 +9,19 @@ function zmt_server_list_all() {
   drupal_set_title('Zimbra Servers');
   $header = array();
   $header[] = array('data' => t('No.'));
-  $header[] = array('data' => t('Name'), 'field' => 's.name');
-  $header[] = array('data' => t('Service location'), 'field' => 's.service_location');
-  $header[] = array('data' => t('Admin user'), 'field' => 's.admin_user');
+  $header[] = array('data' => t('Name'), 'field' => 'zs.name');
+  $header[] = array('data' => t('Service location'), 'field' => 'zs.service_location');
+  $header[] = array('data' => t('Admin user'), 'field' => 'zs.admin_user');
   $header[] = array('data' => t('Operations'));
 
-  $query = db_select('zmt_server', 's')->extend('PagerDefault')->extend('TableSort');
+  $query = db_select('zmt_server', 'zs')->extend('PagerDefault')->extend('TableSort');
   if (!(user_access('administer zmt') || user_access('administer any zmt_server'))) {
-    $query->condition('s.uid', $user->uid);
+    $query->condition('zs.uid', $user->uid);
   }
 
   $item_per_page = variable_get('zimbra_item_per_page', 20);
   $result = $query
-    ->fields('s')
+    ->fields('zs')
     ->orderByHeader($header)
     ->limit($item_per_page)
     ->execute();

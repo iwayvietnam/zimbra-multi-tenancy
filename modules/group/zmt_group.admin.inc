@@ -9,14 +9,14 @@ function zmt_group_list_all() {
   drupal_set_title('Groups');
   $header = array();
   $header[] = array('data' => t('No.'));
-  $header[] = array('data' => t('Name'), 'field' => 'g.name');
-  $header[] = array('data' => t('Full name'), 'field' => 'g.full_name');
-  $header[] = array('data' => t('Total member'), 'field' => 'm.total_member');
+  $header[] = array('data' => t('Name'), 'field' => 'zg.name');
+  $header[] = array('data' => t('Full name'), 'field' => 'zg.full_name');
+  $header[] = array('data' => t('Total member'), 'field' => 'total_member');
   $header[] = array('data' => t('Operations'));
 
-  $query = db_select('zmt_group', 'g')->extend('PagerDefault')->extend('TableSort');
-  $query->leftJoin('zmt_domain', 'd', 'd.id = g.domain_id');
-  $query->addField('d', 'name', 'domain');
+  $query = db_select('zmt_group', 'zg')->extend('PagerDefault')->extend('TableSort');
+  $query->leftJoin('zmt_domain', 'zd', 'zd.id = zg.domain_id');
+  $query->addField('zd', 'name', 'domain');
 
   $domain_ids = array();
   if (!(user_access('administer zmt'))) {
@@ -28,33 +28,33 @@ function zmt_group_list_all() {
       }
       $domain_id = isset($_SESSION['zmt_filter_domain_id']) ? (int) $_SESSION['zmt_filter_domain_id'] : 0;
       if ($domain_id) {
-        $query->condition('g.domain_id', $domain_id);
+        $query->condition('zg.domain_id', $domain_id);
       }
       else {
-        $query->condition('g.domain_id', $domain_ids);
+        $query->condition('zg.domain_id', $domain_ids);
       }
     }
     else {
-      $query->condition('g.uid', $user->uid);
+      $query->condition('zg.uid', $user->uid);
     }
   }
   else {
     $domain_id = isset($_SESSION['zmt_filter_domain_id']) ? (int) $_SESSION['zmt_filter_domain_id'] : 0;
     if ($domain_id) {
-      $query->condition('g.domain_id', $domain_id);
+      $query->condition('zg.domain_id', $domain_id);
     }
   }
 
-  $sub_query = db_select('zmt_group_member', 'm')
-    ->fields('m', array('group_id'))
-    ->groupBy('m.group_id');
-  $sub_query->addExpression('COUNT(m.id)', 'total_member');
-  $query->leftJoin($sub_query, 'sub_query', 'sub_query.group_id = g.id');
-  $query->addExpression('IFNULL(sub_query.total_member, 0)', 'total_member');
+  $group_member_query = db_select('zmt_group_member', 'zgm')
+    ->fields('zgm', array('group_id'))
+    ->groupBy('zgm.group_id');
+  $group_member_query->addExpression('COUNT(zgm.id)', 'total_member');
+  $query->leftJoin($group_member_query, 'gmq', 'gmq.group_id = zg.id');
+  $query->addExpression('IFNULL(gmq.total_member, 0)', 'total_member');
 
   $item_per_page = variable_get('zimbra_item_per_page', 20);
   $result = $query
-    ->fields('g')
+    ->fields('zg')
     ->orderByHeader($header)
     ->limit($item_per_page)
     ->execute();
