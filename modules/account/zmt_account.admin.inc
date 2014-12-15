@@ -260,12 +260,9 @@ function zmt_account_edit_form_validate($form, &$form_state) {
   $name = trim($values['name']);
   $id = isset($account->id) ? (int) $account->id : 0;
 
-  $results = module_invoke_all('mailbox_exists', $domain_id, $name, $id);
-  foreach ($results as $result) {
-    if ($result === TRUE) {
-      form_set_error('name', t('The mailbox name already exists in selected domain.'));
-      break;
-    }
+  $exists = zmt_account_exists($domain_id, $name, $id);
+  if ($exists === TRUE) {
+    form_set_error('name', t('The mailbox name already exists in selected domain.'));
   }
 
   if ($id === 0) {
@@ -422,14 +419,7 @@ function zmt_account_ajax_import_form_callback($form, $form_state) {
         $account = zmt_account_prepare($record, $domain_id);
         if (!empty($account->name)) {
           $account->cos_id = $cos_id;
-          $results = module_invoke_all('mailbox_exists', $domain_id, $account->name, 0);
-          $exists = FALSE;
-          foreach ($results as $result) {
-            if ($result === TRUE) {
-              $exists = $result;
-              break;
-            }
-          }
+          $exists = zmt_account_exists($domain_id, $name);
           if (!$exists) {
             $modules = module_implements('sync_import_account');
             $is_sync = empty($results);

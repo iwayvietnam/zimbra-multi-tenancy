@@ -122,14 +122,14 @@ function zmt_group_member_get_properties($member, array $options, $name) {
 
 /**
  * Implements hook_permission().
- */ 
+ */
 function zmt_group_permission() {
   return zmt_access_permissions('zmt_group', 'Group');
 }
 
 /**
  * Implements hook_query_TAG_alter().
- */ 
+ */
 function zmt_group_query_zmt_group_load_multiple_alter(QueryAlterableInterface $query) {
   $query->join('zmt_domain', 'zd', 'zd.id = base.domain_id');
   $query->join('zmt_server', 'zs', 'zs.id = zd.server_id');
@@ -142,7 +142,7 @@ function zmt_group_query_zmt_group_load_multiple_alter(QueryAlterableInterface $
 
 /**
  * Implements hook_query_TAG_alter().
- */ 
+ */
 function zmt_group_query_zmt_group_member_load_multiple_alter(QueryAlterableInterface $query) {
   $query->join('zmt_group', 'zg', 'zg.id = base.group_id');
   $query->join('zmt_domain', 'zd', 'zd.id = zg.domain_id');
@@ -156,8 +156,38 @@ function zmt_group_query_zmt_group_member_load_multiple_alter(QueryAlterableInte
 }
 
 /**
+ * Implements hook_query_TAG_alter().
+ */
+function zmt_group_query_account_mailbox_exists_alter(QueryAlterableInterface $query) {
+  $domain_id = (int) $query->getMetaData('domain_id');
+  $name = $query->getMetaData('mailbox_name');
+
+  $group_query = db_select('zmt_group', 'zg');
+  $group_query->fields('zg', array('id'))
+    ->condition('zg.domain_id', $domain_id)
+    ->condition('zg.name', $name);
+
+  $query->union($group_query);
+}
+
+/**
+ * Implements hook_query_TAG_alter().
+ */
+function zmt_group_query_alias_mailbox_exists_alter(QueryAlterableInterface $query) {
+  $domain_id = (int) $query->getMetaData('domain_id');
+  $name = $query->getMetaData('mailbox_name');
+
+  $group_query = db_select('zmt_group', 'zg');
+  $group_query->fields('zg', array('id'))
+    ->condition('zg.domain_id', $domain_id)
+    ->condition('zg.name', $name);
+
+  $query->union($group_query);
+}
+
+/**
  * Implements hook_zmt_domain_delete().
- */ 
+ */
 function zmt_group_zmt_domain_delete($domain){
   $id = $domain ? $domain->id : 0;
   zmt_group_delete_multiple_by_domain(array($id));
@@ -165,28 +195,21 @@ function zmt_group_zmt_domain_delete($domain){
 
 /**
  * Implements hook_zmt_account_delete().
- */ 
+ */
 function zmt_group_zmt_account_delete($account){
   zmt_group_member_delete_multiple_by_account($account->id);
 }
 
 /**
  * Implements hook_zmt_alias_delete().
- */ 
+ */
 function zmt_group_zmt_alias_delete($alias){
   zmt_group_member_delete_multiple_by_alias($alias->id);
 }
 
 /**
- * Implements hook_mailbox_exists().
- */ 
-function zmt_group_mailbox_exists($domain_id, $name, $id) {
-  return zmt_group_exists($domain_id, $name, $id);
-}
-
-/**
  * Implements hook_domain_load_by_user().
- */ 
+ */
 function zmt_group_domain_load_by_user() {
   global $user;
   $domain_id = db_select('zmt_group', 'zg')
@@ -199,7 +222,7 @@ function zmt_group_domain_load_by_user() {
 
 /**
  * Implements hook_query_TAG_alter().
- */ 
+ */
 function zmt_group_query_account_query_filter_alter(QueryAlterableInterface $query) {
   global $user;
   if (in_array('Zmt Group', $user->roles)) {
@@ -214,7 +237,7 @@ function zmt_group_query_account_query_filter_alter(QueryAlterableInterface $que
 
 /**
  * Implements hook_query_TAG_alter().
- */ 
+ */
 function zmt_group_query_account_entity_filter_alter(QueryAlterableInterface $query) {
   global $user;
   if (in_array('Zmt Group', $user->roles)) {
@@ -229,7 +252,7 @@ function zmt_group_query_account_entity_filter_alter(QueryAlterableInterface $qu
 
 /**
  * Implements hook_query_TAG_alter().
- */ 
+ */
 function zmt_group_query_alias_query_filter_alter(QueryAlterableInterface $query) {
   global $user;
   if (in_array('Zmt Group', $user->roles)) {
@@ -567,14 +590,18 @@ function zmt_group_exists($domain, $name, $id = 0) {
   $domain_id = is_object($domain) ? $domain->id : $domain;
   $cache_key = md5($domain_id . '-' . $name . '-' . $id);
   if (!isset($cache[$cache_key])) {
-    $query = new EntityFieldQuery();
-    $result = $query->entityCondition('entity_type', 'zmt_group')
-      ->propertyCondition('domain_id', $domain_id)
-      ->propertyCondition('name', $name)
-      ->propertyCondition('id', $id, '!=')
-      ->count()
-      ->execute();
-    $cache[$cache_key] = (int) $result > 0;
+    $query = db_select('zmt_group', 'zg');
+    $query->fields('zg', array('id'))
+      ->condition('zg.domain_id', $domain_id)
+      ->condition('zg.name', $name)
+      ->condition('zg.id', (int) $id, '!=');
+
+    $query->addTag('group_mailbox_exists');
+    $query->addMetaData('domain_id', $domain_id);
+    $query->addMetaData('mailbox_name', $name);
+
+    $result = (int) $query->countQuery()->execute()->fetchField();
+    $cache[$cache_key] = $result > 0;
   }
   return $cache[$cache_key];
 }

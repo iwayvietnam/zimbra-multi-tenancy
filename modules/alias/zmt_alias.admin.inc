@@ -215,12 +215,9 @@ function zmt_alias_edit_form_validate($form, &$form_state) {
   $name = trim($values['name']) ;
   $id = isset($alias->id) ? (int) $alias->id : 0;
 
-  $results = module_invoke_all('mailbox_exists', $domain_id, $name, $id);
-  foreach ($results as $result) {
-    if ($result === TRUE) {
-      form_set_error('name', t('The mailbox name already exists in selected domain.'));
-      break;
-    }
+  $exists = zmt_alias_exists($domain_id, $name, $id);
+  if ($exists === TRUE) {
+    form_set_error('name', t('The mailbox name already exists in selected domain.'));
   }
 }
 
