@@ -293,7 +293,7 @@ function zmt_ui_form_zmt_account_edit_form_alter(&$form, &$form_state) {
  * Zimbra account edit form validate callback.
  */
 function zmt_ui_account_edit_form_validate($form, &$form_state) {
-  if (!form_set_error() !zmt_is_ajax_request()) {
+  if (!form_set_error() && !zmt_is_ajax_request()) {
     module_load_include('inc', 'zmt', 'includes/zmt.zimbra');
     $values = &$form_state['values'];
     $account = $form_state['account'];
