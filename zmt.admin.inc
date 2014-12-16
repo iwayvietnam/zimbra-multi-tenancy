@@ -382,7 +382,7 @@ function _zmt_ui_update_group_data(ZimbraAdminApi $api, array $zimbra_domains) {
           }
           zmt_group_save($group, FALSE);
 
-          $members = isset($dl->dlm) ? $dl->dlm : zimbra_get_dl_members($api, $dl->name);
+          $members = !empty($dl->dlm) ? $dl->dlm : zimbra_get_dl_members($api, $dl->name);
           if (!is_array($members)) {
             $members = array($members);
           }
@@ -421,7 +421,7 @@ function _zmt_ui_update_group_data(ZimbraAdminApi $api, array $zimbra_domains) {
             }
 
             foreach ($members as $member) {
-              $member_name = isset($member->_content) ? $member->_content : '';
+              $member_name = isset($member->_content) ? $member->_content : $member;
               $zmt_member = isset($zmt_members[$member_name]) ? $zmt_members[$member_name] : NULL;
               if ($zmt_member) {
                 $group_member = zmt_group_member_new($member_name);
