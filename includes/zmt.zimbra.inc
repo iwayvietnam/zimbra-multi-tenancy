@@ -583,7 +583,7 @@ function zimbra_get_dl_members(ZimbraAdminApi $api, $name) {
     $members = array();
     if (isset($dl->dlm) && is_array($dl->dlm)) {
       foreach ($dl->dlm as $member) {
-        $members[] = isset($member->_content) ? $member->_content : '';
+        $members[] = isset($member->_content) ? $member->_content : $member;
       }
     }
     $cache[$cache_key] = $members;
