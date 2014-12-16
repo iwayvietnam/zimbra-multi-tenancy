@@ -37,7 +37,7 @@ function zmt_tenant_list_all() {
   }
   $server_id = isset($_SESSION['zmt_filter_server_id']) ? (int) $_SESSION['zmt_filter_server_id'] : 0;
   if ($server_id) {
-    $query->condition('t.server_id', $server_id);
+    $query->condition('zt.server_id', $server_id);
   }
 
   $item_per_page = variable_get('zimbra_item_per_page', 20);
