@@ -1,0 +1,31 @@
+<?php
+
+class ZmtAccountUITestCase extends DrupalWebTestCase {
+  public static function getInfo() {
+    return array(
+      'name' => t('Zmt Account UI Test Case'),
+      'description' => t('Test create/edit/delete accounts.'),
+      'group' => t('Zmt Modules'),
+    );
+  }
+
+  /**
+   * Test account operations is implemented.
+   */
+  public function testAccountOperations() {
+    $user = $this->drupalCreateUser(array('administer zmt', 'administer any zmt_account'));
+    $this->drupalLogin($user);
+
+    $this->drupalGet('zmt/account');
+    $this->assertText(t('There are no accounts available.'), t('No accounts available after fresh installation.'));
+    $this->assertLink(t('Add one now'));
+    $this->assertLink(t('Add Account'));
+
+    $this->drupalGet('zmt/account/add');
+    $this->assertText(t('Add Account'));
+    $this->assertText(t('Name'));
+    $this->assertText(t('Domain'));
+    $this->assertText(t('Class of Service'));
+    $this->assertText(t('Full name'));
+  }
+}

@@ -1,0 +1,70 @@
+<?php
+
+/**
+ * Tests the zmt account.
+ */
+class ZmtAccountTestCase extends DrupalWebTestCase {
+  public static function getInfo() {
+    return array(
+      'name' => 'Zmt Account Test Case',
+      'description' => 'Test cases for zmt account functionality.',
+      'group' => 'Zmt Modules',
+    );
+  }
+
+  /**
+   * Test the zmt account CRUD functions.
+   */
+  function testZmtAccountCrud() {
+    $name = DrupalTestCase::randomName();
+    $title = DrupalTestCase::randomName();
+    $full_name = DrupalTestCase::randomName();
+    $telephone = DrupalTestCase::randomName();
+    $mobile = DrupalTestCase::randomName();
+    $company = DrupalTestCase::randomName();
+    $zimbra_id = DrupalTestCase::randomName();
+    $status = mt_rand(0, 1);
+    $domain_id = mt_rand();
+    $cos_id = mt_rand();
+
+    $account = zmt_account_new($name);
+    $this->assertTrue(isset($account->name), t('New account name exists.'));
+    $this->assertTrue(isset($account->title), t('New account title exists.'));
+    $this->assertTrue(isset($account->full_name), t('New account full name exists.'));
+    $this->assertTrue(isset($account->telephone), t('New account telephone exists.'));
+    $this->assertTrue(isset($account->mobile), t('New account mobile exists.'));
+    $this->assertTrue(isset($account->company), t('New account company exists.'));
+    $this->assertTrue(isset($account->zimbra_id), t('New account zimbra id exists.'));
+    $this->assertTrue(isset($account->status), t('New account status id exists.'));
+    $this->assertTrue(isset($account->domain_id), t('New account domain id exists.'));
+    $this->assertTrue(isset($account->cos_id), t('New account cos id exists.'));
+
+    $account->title = $title;
+    $account->full_name = $full_name;
+    $account->telephone = $telephone;
+    $account->mobile = $mobile;
+    $account->company = $company;
+    $account->zimbra_id = $zimbra_id;
+    $account->status = $status;
+    $account->domain_id = $domain_id;
+    $account->cos_id = $cos_id;
+    zmt_account_save($account);
+
+    $account_load = zmt_account_load($account->id);
+    $this->assertEqual($account_load->name, $account->name, t('Loaded account name has same value.'));
+
+    $this->assertEqual($account_load->title, $account->title, t('Loaded account title has same value.'));
+    $this->assertEqual($account_load->full_name, $account->full_name, t('Loaded account full name has same value.'));
+    $this->assertEqual($account_load->telephone, $account->telephone, t('Loaded account telephone has same value.'));
+    $this->assertEqual($account_load->mobile, $account->mobile, t('Loaded account mobile has same value.'));
+    $this->assertEqual($account_load->company, $account->company, t('Loaded account company has same value.'));
+    $this->assertEqual($account_load->zimbra_id, $account->zimbra_id, t('Loaded account zimbra id has same value.'));
+    $this->assertEqual($account_load->status, $account->status, t('Loaded account status has same value.'));
+    $this->assertEqual($account_load->domain_id, $account->domain_id, t('Loaded account domain id has same value.'));
+    $this->assertEqual($account_load->cos_id, $account->cos_id, t('Loaded account cos id has same value.'));
+
+    zmt_account_delete($account);
+    $account_load = zmt_account_load($account->id, TRUE);
+    $this->assertTrue(empty($account_load), t('Account deleted.'));
+  }
+}
