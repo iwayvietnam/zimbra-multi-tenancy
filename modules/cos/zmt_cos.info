@@ -3,3 +3,4 @@ description = Defines the COS (Class of Service) entity and associated features.
 package = Zimbra Multi Tenancy
 core = 7.x
 dependencies[] = zmt_server
+files[] = zmt_cos.test

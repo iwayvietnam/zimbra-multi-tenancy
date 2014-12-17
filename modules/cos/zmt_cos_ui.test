@@ -1,0 +1,22 @@
+<?php
+
+class ZmtCOSUITestCase extends DrupalWebTestCase {
+  public static function getInfo() {
+    return array(
+      'name' => t('Zmt COS UI Test Case'),
+      'description' => t('Test create/edit/delete Class of Services.'),
+      'group' => t('Zmt Modules'),
+    );
+  }
+
+  /**
+   * Test server operations is implemented.
+   */
+  public function testCOSOperations() {
+    $user = $this->drupalCreateUser(array('administer zmt', 'administer any zmt_cos'));
+    $this->drupalLogin($user);
+
+    $this->drupalGet('zmt/cos');
+    $this->assertText(t('There are no COSes available.'), t('No COSes available after fresh installation.'));
+  }
+}
