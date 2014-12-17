@@ -3,3 +3,4 @@ description = Defines the Group (Distribution List) entity and associated featur
 package = Zimbra Multi Tenancy
 core = 7.x
 dependencies[] = zmt_alias
+files[] = zmt_group.test

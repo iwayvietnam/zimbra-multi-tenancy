@@ -1,0 +1,30 @@
+<?php
+
+class ZmtGroupUITestCase extends DrupalWebTestCase {
+  public static function getInfo() {
+    return array(
+      'name' => t('Zmt Group UI Test Case'),
+      'description' => t('Test create/edit/delete groups.'),
+      'group' => t('Zmt Modules'),
+    );
+  }
+
+  /**
+   * Test group operations is implemented.
+   */
+  public function testGroupOperations() {
+    $user = $this->drupalCreateUser(array('administer zmt', 'administer any zmt_group'));
+    $this->drupalLogin($user);
+
+    $this->drupalGet('zmt/group');
+    $this->assertText(t('There are no groups available.'), t('No groups available after fresh installation.'));
+    $this->assertLink(t('Add one now'));
+    $this->assertLink(t('Add Group'));
+
+    $this->drupalGet('zmt/group/add');
+    $this->assertText(t('Add Group'));
+    $this->assertText(t('Name'));
+    $this->assertText(t('Full name'));
+    $this->assertText(t('Domain'));
+  }
+}
