@@ -52,7 +52,6 @@ class ZmtAccountTestCase extends DrupalWebTestCase {
 
     $account_load = zmt_account_load($account->id);
     $this->assertEqual($account_load->name, $account->name, t('Loaded account name has same value.'));
-
     $this->assertEqual($account_load->title, $account->title, t('Loaded account title has same value.'));
     $this->assertEqual($account_load->full_name, $account->full_name, t('Loaded account full name has same value.'));
     $this->assertEqual($account_load->telephone, $account->telephone, t('Loaded account telephone has same value.'));
@@ -63,7 +62,7 @@ class ZmtAccountTestCase extends DrupalWebTestCase {
     $this->assertEqual($account_load->domain_id, $account->domain_id, t('Loaded account domain id has same value.'));
     $this->assertEqual($account_load->cos_id, $account->cos_id, t('Loaded account cos id has same value.'));
 
-    zmt_account_delete($account);
+    zmt_account_delete($account->id);
     $account_load = zmt_account_load($account->id, TRUE);
     $this->assertTrue(empty($account_load), t('Account deleted.'));
   }

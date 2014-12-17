@@ -58,7 +58,7 @@ class ZmtServerTestCase extends DrupalWebTestCase {
     $this->assertEqual($server_load->delete_account, $server->delete_account, t('Loaded server delete account has same value.'));
     $this->assertEqual($server_load->delete_alias, $server->delete_alias, t('Loaded server delete alias has same value.'));
 
-    zmt_server_delete($server);
+    zmt_server_delete($server->id);
     $server_load = zmt_server_load($server->id, TRUE);
     $this->assertTrue(empty($server_load), t('Server deleted.'));
   }

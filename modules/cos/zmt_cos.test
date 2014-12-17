@@ -45,7 +45,7 @@ class ZmtCOSTestCase extends DrupalWebTestCase {
     $this->assertEqual($cos_load->max_account, $cos->max_account, t('Loaded cos max account has same value.'));
     $this->assertEqual($cos_load->zimbra_id, $cos->zimbra_id, t('Loaded cos zimbra id has same value.'));
 
-    zmt_cos_delete($cos);
+    zmt_cos_delete($cos->id);
     $cos_load = zmt_cos_load($cos->id, TRUE);
     $this->assertTrue(empty($cos_load), t('COS deleted.'));
   }

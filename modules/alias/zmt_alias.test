@@ -38,7 +38,7 @@ class ZmtAliasTestCase extends DrupalWebTestCase {
     $this->assertEqual($alias_load->account_id, $alias->account_id, t('Loaded alias account id has same value.'));
     $this->assertEqual($alias_load->zimbra_target_id, $alias->zimbra_target_id, t('Loaded alias zimbra target id has same value.'));
 
-    zmt_alias_delete($alias);
+    zmt_alias_delete($alias->id);
     $alias_load = zmt_alias_load($alias->id, TRUE);
     $this->assertTrue(empty($alias_load), t('Alias deleted.'));
   }

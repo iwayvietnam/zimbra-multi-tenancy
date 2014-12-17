@@ -42,7 +42,7 @@ class ZmtDomainTestCase extends DrupalWebTestCase {
     $this->assertEqual($domain_load->zimbra_id, $domain->zimbra_id, t('Loaded domain zimbra id has same value.'));
     $this->assertEqual($domain_load->domain_uid, $domain->domain_uid, t('Loaded domain uid has same value.'));
 
-    zmt_domain_delete($domain);
+    zmt_domain_delete($domain->id);
     $domain_load = zmt_domain_load($domain->id, TRUE);
     $this->assertTrue(empty($domain_load), t('Domain deleted.'));
   }
@@ -68,7 +68,7 @@ class ZmtDomainTestCase extends DrupalWebTestCase {
     $this->assertEqual($dc_load->cos_id, $dc->cos_id, t('Loaded mapping cos id has same value.'));
     $this->assertEqual($dc_load->max_account, $dc->max_account, t('Loaded mapping max account has same value.'));
 
-    zmt_domain_cos_delete($domain);
+    zmt_domain_cos_delete($dc->id);
     $dc_load = zmt_domain_cos_load($dc->id, TRUE);
     $this->assertTrue(empty($dc_load), t('Domain cos mapping deleted.'));
   }

@@ -34,7 +34,7 @@ class ZmtTenantTestCase extends DrupalWebTestCase {
     $this->assertEqual($tenant_load->tenant_uid, $tenant->tenant_uid, t('Loaded tenant uid has same value.'));
     $this->assertEqual($tenant_load->server_id, $tenant->server_id, t('Loaded tenant server id has same value.'));
 
-    zmt_tenant_delete($tenant);
+    zmt_tenant_delete($tenant->id);
     $tenant_load = zmt_tenant_load($tenant->id, TRUE);
     $this->assertTrue(empty($tenant_load), t('Tenant deleted.'));
   }
@@ -60,7 +60,7 @@ class ZmtTenantTestCase extends DrupalWebTestCase {
     $this->assertEqual($tc_load->cos_id, $tc->cos_id, t('Loaded mapping cos id has same value.'));
     $this->assertEqual($tc_load->max_account, $tc->max_account, t('Loaded mapping max account has same value.'));
 
-    zmt_tenant_cos_delete($tenant);
+    zmt_tenant_cos_delete($tc->id);
     $tc_load = zmt_tenant_cos_load($tc->id, TRUE);
     $this->assertTrue(empty($tc_load), t('Tenant cos mapping deleted.'));
   }
