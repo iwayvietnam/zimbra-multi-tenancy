@@ -88,26 +88,26 @@ function zmt_server_edit_form($form, &$form_state, $server){
   $form_state['server'] = $server;
 
   $form['name'] = array(
-    '#title' => t('Server Name'),
+    '#title' => t('Server name'),
     '#type' => 'textfield',
     '#default_value' => $server->name,
     '#required' => TRUE,
   );
   $form['service_location'] = array(
-    '#title' => t('Service Location'),
+    '#title' => t('Service location'),
     '#type' => 'textfield',
     '#default_value' => $server->service_location,
     '#required' => TRUE,
   );
   $form['admin_user'] = array(
-    '#title' => t('Admin User'),
+    '#title' => t('Admin user'),
     '#type' => 'textfield',
     '#default_value' => $server->admin_user,
     '#required' => TRUE,
     '#size' => 30,
   );
   $form['admin_password'] = array(
-    '#title' => t('Admin Password'),
+    '#title' => t('Admin password'),
     '#type' => 'password',
     '#default_value' => $server->admin_password,
     '#required' => !isset($server->id) || (int) $server->id == 0,
@@ -117,7 +117,7 @@ function zmt_server_edit_form($form, &$form_state, $server){
     $server->exclude_mailbox = implode(PHP_EOL, zmt_server_exclude_mailbox());
   }
   $form['exclude_mailbox'] = array(
-    '#title' => t('Exclude Mailboxes'),
+    '#title' => t('Exclude mailboxes'),
     '#type' => 'textarea',
     '#default_value' => $server->exclude_mailbox,
   );

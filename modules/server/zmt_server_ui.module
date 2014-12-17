@@ -119,7 +119,7 @@ function zmt_server_select_expand($element) {
     $element['#empty_option'] = t('- None -');
   }
   if (empty($element['#title'])) {
-    $element['#title'] = t('Zimbra Server');
+    $element['#title'] = t('Zimbra server');
   }
   if (isset($element['#ajax']) && !isset($element['#ajax']['event'])) {
     $element['#ajax']['event'] = 'change';

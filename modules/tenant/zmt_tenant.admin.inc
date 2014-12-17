@@ -9,8 +9,8 @@ function zmt_tenant_list_all() {
   drupal_set_title('Tenants');
   $header = array();
   $header[] = array('data' => t('No.'));
-  $header[] = array('data' => t('Full Name'), 'field' => 'zt.full_name');
-  $header[] = array('data' => t('User Name'), 'field' => 'u.name');
+  $header[] = array('data' => t('Full name'), 'field' => 'zt.full_name');
+  $header[] = array('data' => t('User name'), 'field' => 'u.name');
   $header[] = array('data' => t('Status'), 'field' => 'u.status');
   if (module_exists('zmt_domain')) {
     $header[] = array('data' => t('Total domains'), 'field' => 'd.total_domain');
@@ -134,14 +134,14 @@ function zmt_tenant_edit_form($form, &$form_state, $tenant){
   $id = isset($tenant->id) ? (int) $tenant->id : 0;
 
   $form['full_name'] = array(
-    '#title' => t('Full Name'),
+    '#title' => t('Full name'),
     '#type' => 'textfield',
     '#maxlength' => 255,
     '#required' => TRUE,
     '#default_value' => $tenant->full_name,
   );
   $form['name'] = array(
-    '#title' => t('User Name'),
+    '#title' => t('User name'),
     '#type' => 'textfield',
     '#maxlength' => USERNAME_MAX_LENGTH,
     '#attributes' => array('class' => array('username')),
@@ -149,7 +149,7 @@ function zmt_tenant_edit_form($form, &$form_state, $tenant){
     '#default_value' => ($account) ? $account->name : '',
   );
   $form['mail'] = array(
-    '#title' => t('Tenant Email'),
+    '#title' => t('Email'),
     '#type' => 'textfield',
     '#maxlength' => EMAIL_MAX_LENGTH,
     '#required' => TRUE,
