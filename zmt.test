@@ -1,5 +1,7 @@
 <?php
 
+module_load_include('inc', 'zmt', 'zmt.zimbra.soap');
+
 /**
  * Test case for Zmt tests.
  */
@@ -61,10 +63,15 @@ class ZmtTestCase extends DrupalWebTestCase {
 class ZmtZimbraApiTestCase extends DrupalWebTestCase {
 
   public function testZmbraSoapStruct() {
-    module_load_include('inc', 'zmt', 'zmt.zimbra.soap');
+    $foo = DrupalTestCase::randomName();
+    $bar = DrupalTestCase::randomName();
 
     $key = DrupalTestCase::randomName();
     $value = DrupalTestCase::randomName();
+
+    $name = DrupalTestCase::randomName();
+    $by = DrupalTestCase::randomName();
+
     $kpv = new KeyValuePair($key, $value);
     $this->assertEqual($kpv->n, $key);
     $this->assertEqual($kpv->getValue(), $value);
@@ -72,9 +79,6 @@ class ZmtZimbraApiTestCase extends DrupalWebTestCase {
       'n' => $key,
       '_content' => $value,
     )));
-
-    $name = DrupalTestCase::randomName();
-    $by = DrupalTestCase::randomName();
 
     $account = new AccountSelector($by, $name);
     $this->assertNotEqual($account->by, $by);
@@ -131,8 +135,6 @@ class ZmtZimbraApiTestCase extends DrupalWebTestCase {
       '_content' => $value,
     )));
 
-    $foo = DrupalTestCase::randomName();
-    $bar = DrupalTestCase::randomName();
     $data = array(
       'Body' => array(
         'TestResponse' => array(
@@ -147,10 +149,38 @@ class ZmtZimbraApiTestCase extends DrupalWebTestCase {
     $res = new SoapResponse($response);
     $this->assertEqual($res->foo, $foo);
     $this->assertEqual($res->bar, $bar);
+
+    $req = new TestRequest($foo, $bar);
+    $message = new SoapMessage();
+    $message->setRequest($req)
+      ->addHeader('foo', $foo)
+      ->addHeader('bar', $bar);
+    $this->assertEqual($message->getRequest(), $req);
+    $this->assertEqual($message->header('foo'), $foo);
+    $this->assertEqual($message->header('bar'), $bar);
+    $this->assertEqual($message->header(), array(
+      'foo' => $foo,
+      'bar' => $bar,
+    ));
+    $array = array(
+      'Header' => array(
+        'context' => array(
+          '_jsns' => 'urn:zimbra',
+          'foo' => $foo,
+          'bar' => $bar,
+        ),
+      ),
+      'Body' => array(
+        'TestRequest' => array(
+          'foo' => $foo,
+          'bar' => $bar,
+        ),
+      ),
+    );
+    $this->assertEqual($message->toJson(), json_encode((object) $array));
   }
 
   public function testZmbraSoapRequest() {
-    module_load_include('inc', 'zmt', 'zmt.zimbra.soap');
 
     $id = DrupalTestCase::randomName();
     $name = DrupalTestCase::randomName();
@@ -704,5 +734,17 @@ class ZmtZimbraApiTestCase extends DrupalWebTestCase {
       'id' => $id,
       'newPassword' => $password,
     )));
+  }
+}
+
+/**
+ * Test request class
+ */
+class TestRequest extends SoapRequest{
+  
+  function __construct($foo, $baa){
+    parent::__construct();
+    $this->foo = $foo;
+    $this->baa = $baa;
   }
 }
