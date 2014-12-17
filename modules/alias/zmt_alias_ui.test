@@ -4,7 +4,7 @@ class ZmtAliasUITestCase extends DrupalWebTestCase {
   public static function getInfo() {
     return array(
       'name' => t('Zmt Alias UI Test Case'),
-      'description' => t('Test create/edit/delete aliass.'),
+      'description' => t('Test create/edit/delete aliases.'),
       'group' => t('Zmt Modules'),
     );
   }
@@ -17,7 +17,7 @@ class ZmtAliasUITestCase extends DrupalWebTestCase {
     $this->drupalLogin($user);
 
     $this->drupalGet('zmt/alias');
-    $this->assertText(t('There are no aliass available.'), t('No aliass available after fresh installation.'));
+    $this->assertText(t('There are no aliases available.'), t('No aliases available after fresh installation.'));
     $this->assertLink(t('Add one now'));
     $this->assertLink(t('Add Alias'));
 
