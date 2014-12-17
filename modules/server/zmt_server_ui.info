@@ -3,3 +3,4 @@ description = Administrative user interface to Server.
 package = Zimbra Multi Tenancy
 core = 7.x
 dependencies[] = zmt_server
+files[] = zmt_server_ui.test

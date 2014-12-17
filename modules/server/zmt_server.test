@@ -1,0 +1,65 @@
+<?php
+
+/**
+ * Tests the zmt server.
+ */
+class ZmtServerTestCase extends DrupalWebTestCase {
+  public static function getInfo() {
+    return array(
+      'name' => 'Zmt Server Test Case',
+      'description' => 'Test cases for zmt server functionality.',
+      'group' => 'Zmt Modules',
+    );
+  }
+
+  /**
+   * Test the zmt server CRUD functions.
+   */
+  function testZmtServerCrud() {
+    $name = DrupalTestCase::randomName();
+    $service_location = DrupalTestCase::randomName();
+    $admin_user = DrupalTestCase::randomName();
+    $admin_password = DrupalTestCase::randomName();
+    $exclude_mailbox = DrupalTestCase::randomName();
+    $delete_domain = mt_rand(0, 1);
+    $delete_dl = mt_rand(0, 1);
+    $delete_account = mt_rand(0, 1);
+    $delete_alias = mt_rand(0, 1);
+
+    $server = zmt_server_new($name);
+    $this->assertTrue(isset($server->name), t('New server name exists.'));
+    $this->assertTrue(isset($server->service_location), t('New server service location exists.'));
+    $this->assertTrue(isset($server->admin_user), t('New server admin user exists.'));
+    $this->assertTrue(isset($server->admin_password), t('New server admin password exists.'));
+    $this->assertTrue(isset($server->exclude_mailbox), t('New server exclude mailbox exists.'));
+    $this->assertTrue(isset($server->delete_domain), t('New server delete domain exists.'));
+    $this->assertTrue(isset($server->delete_dl), t('New server delete dl exists.'));
+    $this->assertTrue(isset($server->delete_account), t('New server delete account exists.'));
+    $this->assertTrue(isset($server->delete_alias), t('New server delete alias exists.'));
+
+    $server->service_location = $service_location;
+    $server->admin_user = $admin_user;
+    $server->admin_password = $admin_password;
+    $server->exclude_mailbox = $exclude_mailbox;
+    $server->delete_domain = $delete_domain;
+    $server->delete_dl = $delete_dl;
+    $server->delete_account = $delete_account;
+    $server->delete_alias = $delete_alias;
+    zmt_server_save($server);
+
+    $server_load = zmt_server_load($server->id);
+    $this->assertEqual($server_load->name, $server->name, t('Loaded server name has same value.'));
+    $this->assertEqual($server_load->service_location, $server->service_location, t('Loaded server service location has same value.'));
+    $this->assertEqual($server_load->admin_user, $server->admin_user, t('Loaded server admin user has same value.'));
+    $this->assertEqual($server_load->admin_password, $server->admin_password, t('Loaded server admin password has same value.'));
+    $this->assertEqual($server_load->exclude_mailbox, $server->exclude_mailbox, t('Loaded server exclude mailbox has same value.'));
+    $this->assertEqual($server_load->delete_domain, $server->delete_domain, t('Loaded server delete domain has same value.'));
+    $this->assertEqual($server_load->delete_dl, $server->delete_dl, t('Loaded server delete dl has same value.'));
+    $this->assertEqual($server_load->delete_account, $server->delete_account, t('Loaded server delete account has same value.'));
+    $this->assertEqual($server_load->delete_alias, $server->delete_alias, t('Loaded server delete alias has same value.'));
+
+    zmt_server_delete($server);
+    $server_load = zmt_server_load($server->id, TRUE);
+    $this->assertTrue(empty($server_load), t('Server deleted.'));
+  }
+}
