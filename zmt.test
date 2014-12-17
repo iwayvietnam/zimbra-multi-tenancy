@@ -130,6 +130,22 @@ class ZmtZimbraApiTestCase extends DrupalWebTestCase {
       'by' => 'name',
       '_content' => $value,
     )));
+
+    $foo = DrupalTestCase::randomName();
+    $bar = DrupalTestCase::randomName();
+    $response = new stdClass;
+    $response->code = 200;
+    $response->data = drupal_json_encode(array(
+      'Body' => array(
+        'TestResponse' => array(
+          'foo' => $foo,
+          'bar' => $bar,
+        ),
+      ),
+    ));
+    $res = new SoapResponse($response);
+    $this->assertEqual($res->foo, $foo);
+    $this->assertEqual($res->bar, $bar);
   }
 
   public function testZmbraSoapRequest() {
