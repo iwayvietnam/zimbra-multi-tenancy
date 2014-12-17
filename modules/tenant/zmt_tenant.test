@@ -22,7 +22,7 @@ class ZmtTenantTestCase extends DrupalWebTestCase {
 
     $tenant = zmt_tenant_new($full_name);
     $this->assertTrue(isset($tenant->full_name), t('New tenant full name exists.'));
-    $this->assertTrue(isset($tenant->tenant_uid), t('New tenant tenant uid exists.'));
+    $this->assertTrue(isset($tenant->tenant_uid), t('New tenant uid exists.'));
     $this->assertTrue(isset($tenant->server_id), t('New tenant server id exists.'));
 
     $tenant->tenant_uid = $tenant_uid;
