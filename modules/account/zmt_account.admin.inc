@@ -188,7 +188,7 @@ function zmt_account_edit_form($form, &$form_state, $account){
   }
   $form['cos_id'] = array(
     '#type' => 'select',
-    '#title' => t('COS'),
+    '#title' => t('Class of Service'),
     '#options' => $options,
     '#empty_option' => t('- None -'),
     '#default_value' => $account->cos_id,
@@ -361,7 +361,7 @@ function zmt_account_import_form($form, &$form_state){
   }
   $form['cos_id'] = array(
     '#type' => 'select',
-    '#title' => t('COS'),
+    '#title' => t('Class of Service'),
     '#options' => $options,
     '#empty_option' => t('- None -'),
     '#required' => TRUE,
