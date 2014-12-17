@@ -4,3 +4,4 @@ package = Zimbra Multi Tenancy
 core = 7.x
 dependencies[] = zmt_alias
 dependencies[] = zmt_account_ui
+files[] = zmt_alias_ui.test

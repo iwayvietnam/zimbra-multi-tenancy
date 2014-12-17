@@ -1,0 +1,45 @@
+<?php
+
+/**
+ * Tests the zmt alias.
+ */
+class ZmtAliasTestCase extends DrupalWebTestCase {
+  public static function getInfo() {
+    return array(
+      'name' => 'Zmt Alias Test Case',
+      'description' => 'Test cases for zmt alias functionality.',
+      'group' => 'Zmt Modules',
+    );
+  }
+
+  /**
+   * Test the zmt alias CRUD functions.
+   */
+  function testZmtAliasCrud() {
+    $name = DrupalTestCase::randomName();
+    $zimbra_target_id = DrupalTestCase::randomName();
+    $domain_id = mt_rand();
+    $account_id = mt_rand();
+
+    $alias = zmt_alias_new($name);
+    $this->assertTrue(isset($alias->name), t('New alias name exists.'));
+    $this->assertTrue(isset($alias->domain_id), t('New alias domain id exists.'));
+    $this->assertTrue(isset($alias->account_id), t('New alias account id exists.'));
+    $this->assertTrue(isset($alias->zimbra_target_id), t('New alias zimbra target id exists.'));
+
+    $alias->domain_id = $domain_id;
+    $alias->account_id = $account_id;
+    $alias->zimbra_target_id = $zimbra_target_id;
+    zmt_alias_save($alias);
+
+    $alias_load = zmt_alias_load($alias->id);
+    $this->assertEqual($alias_load->name, $alias->name, t('Loaded alias name has same value.'));
+    $this->assertEqual($alias_load->domain_id, $alias->domain_id, t('Loaded alias domain id has same value.'));
+    $this->assertEqual($alias_load->account_id, $alias->account_id, t('Loaded alias account id has same value.'));
+    $this->assertEqual($alias_load->zimbra_target_id, $alias->zimbra_target_id, t('Loaded alias zimbra target id has same value.'));
+
+    zmt_alias_delete($alias);
+    $alias_load = zmt_alias_load($alias->id, TRUE);
+    $this->assertTrue(empty($alias_load), t('Alias deleted.'));
+  }
+}
