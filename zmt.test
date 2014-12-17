@@ -62,6 +62,14 @@ class ZmtTestCase extends DrupalWebTestCase {
  */
 class ZmtZimbraApiTestCase extends DrupalWebTestCase {
 
+  public static function getInfo() {
+    return array(
+      'name' => 'Zmt Zimbra Api Unit Test Case',
+      'description' => 'Test cases for zimbra api functionality.',
+      'group' => 'Zmt Modules',
+    );
+  }
+
   public function testZmbraSoapStruct() {
     $foo = DrupalTestCase::randomName();
     $bar = DrupalTestCase::randomName();
