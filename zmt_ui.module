@@ -164,7 +164,7 @@ function zmt_ui_zmt_group_member_presave($member) {
   }
   else {
     $group = zmt_group_load($member->group_id);
-    $group_name = $group->group_name;
+    $group_name = $group->name;
     $domain_name = !empty($group->domain) ? $group->domain : '';
     $server_id = !empty($group->server_id) ? (int) $group->server_id : 0;
   }
