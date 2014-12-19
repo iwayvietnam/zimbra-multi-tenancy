@@ -602,7 +602,7 @@ function zmt_group_delete_form_submit($form, &$form_state) {
   foreach ($members as $member) {
     $member_names[] = $member->name;
   }
-  module_invoke_all('sync_delete_group_members', $group, $member_names);
+  module_invoke_all('sync_remove_group_members', $group, $member_names);
 
   zmt_group_delete($group->id);
   drupal_set_message(t('%name has been deleted.', array('%name' => $group->name)));
