@@ -687,7 +687,7 @@ function zmt_group_delete($id) {
  *   An array of group IDs to delete.
  */
 function zmt_group_delete_multiple(array $ids = array()) {
-  zmt_group_member_delete_multiple_by_group($ids);
+  zmt_group_member_delete_multiple_by_group($ids, FALSE);
   entity_get_controller('zmt_group')->delete($ids);
 }
 

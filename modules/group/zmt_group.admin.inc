@@ -597,6 +597,13 @@ function zmt_group_delete_form($form, &$form_state, $group) {
  */
 function zmt_group_delete_form_submit($form, &$form_state) {
   $group = $form_state['#group'];
+  $members = zmt_group_member_load_multiple_by_group(array($group->id));
+  $member_names = array();
+  foreach ($members as $member) {
+    $member_names[] = $member->name;
+  }
+  module_invoke_all('sync_delete_group_members', $group, $member_names);
+
   zmt_group_delete($group->id);
   drupal_set_message(t('%name has been deleted.', array('%name' => $group->name)));
   watchdog('zmt_group', 'Deleted group %name.', array('%name' => $group->name), WATCHDOG_NOTICE);
