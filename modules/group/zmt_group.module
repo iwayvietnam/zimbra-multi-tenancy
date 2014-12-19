@@ -885,14 +885,14 @@ function zmt_group_member_delete_multiple(array $ids = array(), $by_entity = TRU
  * @param $group_ids
  *   An array of group IDs.
  */
-function zmt_group_member_delete_multiple_by_group(array $group_ids = array()) {
+function zmt_group_member_delete_multiple_by_group(array $group_ids = array(), $by_entity = TRUE) {
   if (!empty($group_ids)) {
     $query = new EntityFieldQuery();
     $result = $query->entityCondition('entity_type', 'zmt_group_member')
       ->propertyCondition('group_id', $group_ids)
       ->execute();
     $ids = isset($result['zmt_group_member']) ? array_keys($result['zmt_group_member']) : array();
-    zmt_group_member_delete_multiple($ids);
+    zmt_group_member_delete_multiple($ids, $by_entity);
   }
 }
 
@@ -902,14 +902,14 @@ function zmt_group_member_delete_multiple_by_group(array $group_ids = array()) {
  * @param $account_id
  *   An acount ID.
  */
-function zmt_group_member_delete_multiple_by_account($account_id) {
+function zmt_group_member_delete_multiple_by_account($account_id, $by_entity = TRUE) {
   $query = new EntityFieldQuery();
   $result = $query->entityCondition('entity_type', 'zmt_group_member')
     ->propertyCondition('member_id', $account_id)
     ->propertyCondition('type', GROUP_MEMBER_ACCOUNT)
     ->execute();
   $ids = isset($result['zmt_group_member']) ? array_keys($result['zmt_group_member']) : array();
-  zmt_group_member_delete_multiple($ids);
+  zmt_group_member_delete_multiple($ids, $by_entity);
 }
 
 /**
@@ -918,12 +918,12 @@ function zmt_group_member_delete_multiple_by_account($account_id) {
  * @param $alias_id
  *   An alias ID.
  */
-function zmt_group_member_delete_multiple_by_alias($alias_id) {
+function zmt_group_member_delete_multiple_by_alias($alias_id, $by_entity = TRUE) {
   $query = new EntityFieldQuery();
   $result = $query->entityCondition('entity_type', 'zmt_group_member')
     ->propertyCondition('member_id', $alias_id)
     ->propertyCondition('type', GROUP_MEMBER_ALIAS)
     ->execute();
   $ids = isset($result['zmt_group_member']) ? array_keys($result['zmt_group_member']) : array();
-  zmt_group_member_delete_multiple($ids);
+  zmt_group_member_delete_multiple($ids, $by_entity);
 }
