@@ -183,7 +183,7 @@ function zmt_ui_zmt_group_member_presave($member) {
 function zmt_ui_zmt_group_member_delete($member) {
   module_load_include('inc', 'zmt', 'includes/zmt.zimbra');
   $api = zimbra_admin_api_by_server($member->server_id);
-  $members = zimbra_get_dl_members($api, $member->group . '@' . $member->domain);
+  $members = zimbra_get_dl_members($api, $member->group_name . '@' . $member->domain);
   if (in_array($member->name, $members)) {
     zimbra_remove_dl_members($api, $dl->id, array($member->name));
   }
