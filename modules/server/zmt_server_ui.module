@@ -144,11 +144,13 @@ function zmt_filter_by_server_form($form, &$form_state) {
     '#submit' => array('zmt_filter_by_server_apply_callback'),
     '#prefix' => '&nbsp;',
   );
-  $form['actions']['reset'] = array(
-    '#type' => 'submit',
-    '#value' => t('Reset'),
-    '#submit' => array('zmt_filter_by_server_reset_callback'),
-  );
+  if (!empty($server_id)) {
+    $form['actions']['reset'] = array(
+      '#type' => 'submit',
+      '#value' => t('Reset'),
+      '#submit' => array('zmt_filter_by_server_reset_callback'),
+    );
+  }
   return $form;
 }
 

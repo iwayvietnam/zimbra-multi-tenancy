@@ -175,11 +175,13 @@ function zmt_filter_by_domain_form($form, &$form_state) {
     '#submit' => array('zmt_filter_by_domain_apply_callback'),
     '#prefix' => '&nbsp;',
   );
-  $form['reset'] = array(
-    '#type' => 'submit',
-    '#value' => t('Reset'),
-    '#submit' => array('zmt_filter_by_domain_reset_callback'),
-  );
+  if (!empty($select_server_id) || !empty($domain_id)) {
+    $form['reset'] = array(
+      '#type' => 'submit',
+      '#value' => t('Reset'),
+      '#submit' => array('zmt_filter_by_domain_reset_callback'),
+    );
+  }
   return $form;
 }
 
