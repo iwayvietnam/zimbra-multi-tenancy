@@ -519,7 +519,7 @@ function zmt_group_edit_form_submit($form, &$form_state) {
 
   $group->domain_id = (int) $values['domain_id'];
   $group->name = check_plain(trim($values['name']));
-  $group->full_name = check_plain(trim($values['mail']));
+  $group->full_name = check_plain(trim($values['full_name']));
   $domain = zmt_domain_load($group->domain_id);
 
   zmt_group_save($group);

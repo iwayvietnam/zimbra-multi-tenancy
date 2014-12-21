@@ -568,7 +568,7 @@ function zimbra_list_dl(ZimbraAdminApi $api, $domain = NULL, $limit = NULL, $off
  *   Distribution list name.
  * @return mix
  */
-function zimbra_get_dl(ZimbraAdminApi $api, $name, &$members = array(), $reset = FALSE) {
+function zimbra_get_dl(ZimbraAdminApi $api, $name, $reset = FALSE) {
   $cache = &drupal_static(__FUNCTION__, NULL);
   $cache_key = md5($api->location() . $name);
   if ($reset && isset($cache[$cache_key])) {

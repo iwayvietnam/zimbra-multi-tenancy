@@ -387,8 +387,9 @@ function zmt_account_import_form($form, &$form_state){
  * Import accounts form validate callback
  */
 function zmt_account_import_form_validate($form, &$form_state) {
+  $op = isset($form_state['values']['op']);
   $accounts = array();
-  if (!form_set_error()) {
+  if (!form_set_error() && ($op || !zmt_is_ajax_request())) {
     $destination = 'public://zmt/';
     if (file_prepare_directory($destination, FILE_CREATE_DIRECTORY)) {
       $file = file_save_upload(
