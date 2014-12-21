@@ -237,50 +237,82 @@ function zmt_ui_sync_group_members($group, array $members = array()) {
 }
 
 /**
- * Implements sync_import_account().
+ * Implements hook_form_FORM_ID_alter() for the group delete form.
  */
-function zmt_ui_sync_import_account($account) {
-  module_load_include('inc', 'zmt', 'includes/zmt.zimbra');
-  $domain = zmt_domain_load((int) $account->domain_id);
-  $cos = zmt_cos_load((int) $account->cos_id);
+function zmt_ui_form_zmt_account_import_form_alter(&$form, &$form_state) {
+  $form['#validate'][] = 'zmt_ui_zmt_account_import_form_validate';
+}
 
-  $domain_name = !empty($domain->name) ? $domain->name : '';
-  $server_id = !empty($domain->server_id) ? (int) $domain->server_id : 0;
-  $cos_zimbra_id = !empty($cos->zimbra_id) ? $cos->zimbra_id : '';
-  $api = zimbra_admin_api_by_server($server_id);
+/**
+ * Account import form validate callback.
+ */
+function zmt_ui_zmt_account_import_form_validate($form, &$form_state) {
+  $synchronized_accounts = array();
+  if (!form_set_error()) {
+    $accounts = !empty($form_state['accounts']) ? $form_state['accounts'] : FALSE;
+    if (!empty($accounts) && is_array($accounts)) {
+      module_load_include('inc', 'zmt', 'includes/zmt.zimbra');
+      $domain_id = (int) $form_state['values']['domain_id'];
+      $cos_id = (int) $form_state['values']['cos_id'];
+      $domain = zmt_domain_load((int) $account->domain_id);
+      $cos = zmt_cos_load((int) $account->cos_id);
 
-  $attrs = array(
-    'displayName' => $account->full_name,
-    'sn' => $account->full_name,
-    'zimbraAccountStatus' => $account->status,
-    'title' => $account->title,
-    'telephoneNumber' => $account->telephone,
-    'company' => $account->company,
-    'mobile' => $account->mobile,
-  );
-  if (!empty($cos_zimbra_id)) {
-    $attrs['zimbraCOSId'] = $cos_zimbra_id;
+      $domain_name = !empty($domain->name) ? $domain->name : '';
+      $server_id = !empty($domain->server_id) ? (int) $domain->server_id : 0;
+      $cos_zimbra_id = !empty($cos->zimbra_id) ? $cos->zimbra_id : '';
+      $api = zimbra_admin_api_by_server($server_id);
+    
+      foreach ($accounts as $account) {
+        $synchronized = FALSE;
+        $attrs = array(
+          'displayName' => $account->full_name,
+          'sn' => $account->full_name,
+          'zimbraAccountStatus' => $account->status,
+          'title' => $account->title,
+          'telephoneNumber' => $account->telephone,
+          'company' => $account->company,
+          'mobile' => $account->mobile,
+        );
+        if (!empty($cos_zimbra_id)) {
+          $attrs['zimbraCOSId'] = $cos_zimbra_id;
+        }
+        $mail_address = $account->name . '@' . $domain_name;
+        $zimbra_account = zimbra_get_account($api, $mail_address);
+        if (!$zimbra_account) {
+          $zimbra_account = zimbra_create_account($api, $mail_address, $account->password, $attrs);
+          if ($zimbra_account instanceof Exception) {
+            drupal_set_message(t('Account @name is invalid. @message', array(
+              '@name' => $account->name,
+              '@message' => $zimbra_account->getMessage(),
+            )));
+          }
+          else {
+            $synchronized = TRUE;
+          }
+        }
+        else {
+          zimbra_modify_account($api, $zimbra_account->id, $attrs);
+
+          $result = zimbra_check_password_strength($api, $zimbra_account->id, $password);
+          if ($result instanceof Exception) {
+            drupal_set_message(t('Account @name is invalid. @message', array(
+              '@name' => $account->name,
+              '@message' => $result->getMessage(),
+            )));
+          }
+          else {
+            zimbra_set_password($api, $zimbra_account->id, $password);
+            $synchronized = TRUE;
+          }
+        }
+        if ($synchronized) {
+          $account->zimbra_id = isset($zimbra_account->id) ? $zimbra_account->id : '';
+          $synchronized_accounts[] = $account;
+        }
+      }
+    }
   }
-  $mail_address = $account->name . '@' . $domain_name;
-  $zimbra_account = zimbra_get_account($api, $mail_address);
-  if (!$zimbra_account) {
-    $zimbra_account = zimbra_create_account($api, $mail_address, $account->password, $attrs);
-  }
-  else {
-    zimbra_set_password($api, $zimbra_account->id, $password);
-    zimbra_modify_account($api, $zimbra_account->id, $attrs);
-  }
-  if ($zimbra_account instanceof Exception) {
-    drupal_set_message(t('Account @name is invalid. @message', array(
-      '@name' => $account->name,
-      '@message' => $zimbra_account->getMessage(),
-    )));
-    return FALSE;
-  }
-  else {
-    $account->zimbra_id = isset($zimbra_account->id) ? $zimbra_account->id : '';
-    return !empty($account->zimbra_id);
-  }
+  $form_state['accounts'] = $synchronized_accounts;
 }
 
 /**
@@ -291,7 +323,7 @@ function zmt_ui_form_zmt_group_delete_form_alter(&$form, &$form_state) {
 }
 
 /**
- * Zimbra group delete form validate callback.
+ * Group delete form validate callback.
  */
 function zmt_ui_group_delete_form_validate($form, &$form_state) {
   if (!form_set_error()) {
@@ -330,7 +362,7 @@ function zmt_ui_form_zmt_account_edit_form_alter(&$form, &$form_state) {
 }
 
 /**
- * Zimbra account edit form validate callback.
+ * Account edit form validate callback.
  */
 function zmt_ui_account_edit_form_validate($form, &$form_state) {
   if (!form_set_error() && !zmt_is_ajax_request()) {

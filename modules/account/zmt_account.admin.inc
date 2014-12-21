@@ -377,72 +377,84 @@ function zmt_account_import_form($form, &$form_state){
     ),
     '#suffix' => l(t('Cancel'), 'zmt/account'),
   );
+
+  $form['#validate'] = array('zmt_account_import_form_validate');
+
   return $form;
+}
+
+/**
+ * Import accounts form validate callback
+ */
+function zmt_account_import_form_validate($form, &$form_state) {
+  $accounts = array();
+  if (!form_set_error()) {
+    $destination = 'public://zmt/';
+    if (file_prepare_directory($destination, FILE_CREATE_DIRECTORY)) {
+      $file = file_save_upload(
+        'file',
+        array('file_validate_extensions' => array('csv')),
+        $destination
+      );
+      if ($file) {
+        $statuses = zmt_account_statuses();
+        $domain_id = (int) $form_state['values']['domain_id'];
+        $cos_id = (int) $form_state['values']['cos_id'];
+
+        $handle = fopen($file->uri, 'r');
+        $row = fgetcsv($handle);
+        $columns = array();
+        foreach ($row as $i => $header) {
+          $columns[$i] = trim($header);
+        }
+        $count = 0;
+        while ($row = fgetcsv($handle)) {
+          $record = array();
+          $quota = 0;
+          foreach ($row as $i => $field) {
+            if ($columns[$i] === 'status' && !in_array($field, $statuses)) {
+              $field = 'active';
+            }
+
+            $column = $columns[$i];
+            if ($column) {
+              $record[$column] = $field;
+            }
+          }
+          $account = zmt_account_prepare($record, $domain_id);
+          if (!empty($account->name)) {
+            $account->cos_id = $cos_id;
+            $exists = zmt_account_exists($domain_id, $account->name);
+            if (!$exists) {
+              $accounts[] = $account;
+            }
+          }
+        }
+        fclose($handle);
+      }
+    }
+  }
+  $form_state['accounts'] = $accounts;
 }
 
 /**
  * Import accounts form callback
  */
 function zmt_account_ajax_import_form_callback($form, $form_state) {
-  $destination = 'public://zmt/';
-  if (file_prepare_directory($destination, FILE_CREATE_DIRECTORY)) {
-    $file = file_save_upload(
-      'file',
-      array('file_validate_extensions' => array('csv')),
-      $destination
-    );
-    if ($file) {
-      $statuses = zmt_account_statuses();
-      $domain_id = (int) $form_state['values']['domain_id'];
-      $cos_id = (int) $form_state['values']['cos_id'];
-
-      $handle = fopen($file->uri, 'r');
-      $row = fgetcsv($handle);
-      $columns = array();
-      foreach ($row as $i => $header) {
-        $columns[$i] = trim($header);
-      }
-      $count = 0;
-      while ($row = fgetcsv($handle)) {
-        $record = array();
-        $quota = 0;
-        foreach ($row as $i => $field) {
-          if ($columns[$i] === 'status' && !in_array($field, $statuses)) {
-            $field = 'active';
-          }
-
-          $column = $columns[$i];
-          if ($column) {
-            $record[$column] = $field;
-          }
-        }
-        $account = zmt_account_prepare($record, $domain_id);
-        if (!empty($account->name)) {
-          $account->cos_id = $cos_id;
-          $exists = zmt_account_exists($domain_id, $account->name);
-          if (!$exists) {
-            $modules = module_implements('sync_import_account');
-            $is_sync = empty($results);
-            foreach ($modules as $module) {
-              $function = $module . '_sync_import_account';
-              $is_sync = $function($account);
-              if ($is_sync === TRUE) {
-                break;
-              }
-            }
-            if ($is_sync) {
-              zmt_account_save($account);
-              $count++;
-            }
-          }
-        }
-      }
-      fclose($handle);
-      drupal_set_message($count . ' accounts were updated.');
-    }
-  }
   $commands = array();
-  $commands[] = zmt_ajax_command_redirect('zmt/account');
+  if (form_set_error()) {
+    $commands[] = zmt_ajax_command_reload();
+  }
+  else {
+    $accounts = $form_state['accounts'];
+    $count = 0;
+    foreach ($accounts as $account) {
+      zmt_account_save($account);
+      $count++;
+    }
+    drupal_set_message(t('@count accounts were updated.', array('@count' => $count)));
+    $commands[] = zmt_ajax_command_redirect('zmt/account');
+  }
   return array(
     '#type' => 'ajax',
     '#commands' => $commands,
