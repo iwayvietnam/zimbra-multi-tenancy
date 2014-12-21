@@ -84,8 +84,8 @@ class ZmtZimbraApiTestCase extends DrupalWebTestCase {
     $this->assertEqual($kpv->n, $key);
     $this->assertEqual($kpv->getValue(), $value);
     $this->assertEqual($kpv->toArray(), array('a' => array(
-      'n' => $key,
       '_content' => $value,
+      'n' => $key,
     )));
 
     $account = new AccountSelector($by, $name);
@@ -95,8 +95,8 @@ class ZmtZimbraApiTestCase extends DrupalWebTestCase {
     $account = new AccountSelector('name', $name);
     $this->assertEqual($account->by, 'name');
     $this->assertEqual($account->toArray(), array('account' => array(
+      '_content' => $name,
       'by' => 'name',
-      '_content' => $value,
     )));
 
     $cos = new CosSelector($by, $name);
@@ -106,8 +106,8 @@ class ZmtZimbraApiTestCase extends DrupalWebTestCase {
     $cos = new CosSelector('name', $name);
     $this->assertEqual($cos->by, 'name');
     $this->assertEqual($cos->toArray(), array('cos' => array(
+      '_content' => $name,
       'by' => 'name',
-      '_content' => $value,
     )));
 
     $dl = new DistributionListSelector($by, $name);
@@ -117,8 +117,8 @@ class ZmtZimbraApiTestCase extends DrupalWebTestCase {
     $dl = new DistributionListSelector('name', $name);
     $this->assertEqual($dl->by, 'name');
     $this->assertEqual($dl->toArray(), array('dl' => array(
+      '_content' => $name,
       'by' => 'name',
-      '_content' => $value,
     )));
 
     $domain = new DomainSelector($by, $name);
@@ -128,8 +128,8 @@ class ZmtZimbraApiTestCase extends DrupalWebTestCase {
     $domain = new DomainSelector('name', $name);
     $this->assertEqual($domain->by, 'name');
     $this->assertEqual($domain->toArray(), array('domain' => array(
+      '_content' => $name,
       'by' => 'name',
-      '_content' => $value,
     )));
 
     $server = new ServerSelector($by, $name);
@@ -139,8 +139,8 @@ class ZmtZimbraApiTestCase extends DrupalWebTestCase {
     $server = new ServerSelector('name', $name);
     $this->assertEqual($server->by, 'name');
     $this->assertEqual($server->toArray(), array('server' => array(
+      '_content' => $name,
       'by' => 'name',
-      '_content' => $value,
     )));
 
     $data = array(
@@ -180,6 +180,7 @@ class ZmtZimbraApiTestCase extends DrupalWebTestCase {
       ),
       'Body' => array(
         'TestRequest' => array(
+          '_jsns' => 'urn:zimbraAdmin',
           'foo' => $foo,
           'bar' => $bar,
         ),
@@ -222,8 +223,9 @@ class ZmtZimbraApiTestCase extends DrupalWebTestCase {
     $this->assertEqual($req->id, $id);
     $this->assertEqual($req->alias, $name);
     $this->assertEqual($req->toArray(), array('AddAccountAliasRequest' => array(
+      '_jsns' => 'urn:zimbraAdmin',
       'id' => $id,
-      'alias' => $alias,
+      'alias' => $name,
     )));
 
     $req = new AddDistributionListMemberRequest($id, array($member1, $member2));
@@ -233,6 +235,7 @@ class ZmtZimbraApiTestCase extends DrupalWebTestCase {
       array('_content' => $member2),
     ));
     $this->assertEqual($req->toArray(), array('AddDistributionListMemberRequest' => array(
+      '_jsns' => 'urn:zimbraAdmin',
       'id' => $id,
       'dlm' => array(
         array('_content' => $member1),
@@ -248,12 +251,13 @@ class ZmtZimbraApiTestCase extends DrupalWebTestCase {
     $this->assertEqual($req->virtualHost, $virtualHost);
     $this->assertTrue($req->persistAuthTokenCookie);
     $this->assertEqual($req->toArray(), array('AuthRequest' => array(
+      '_jsns' => 'urn:zimbraAdmin',
       'name' => $name,
       'password' => $password,
       'authToken' => array(array('_content' => $authToken)),
       'account' => array(
-        'by' => 'name',
         '_content' => $name,
+        'by' => 'name',
       ),
       'virtualHost' => $virtualHost,
       'persistAuthTokenCookie' => TRUE,
@@ -263,6 +267,7 @@ class ZmtZimbraApiTestCase extends DrupalWebTestCase {
     $this->assertEqual($req->id, $id);
     $this->assertEqual($req->password, $password);
     $this->assertEqual($req->toArray(), array('CheckPasswordStrengthRequest' => array(
+      '_jsns' => 'urn:zimbraAdmin',
       'id' => $id,
       'password' => $password,
     )));
@@ -270,9 +275,10 @@ class ZmtZimbraApiTestCase extends DrupalWebTestCase {
     $req = new CountAccountRequest($domain);
     $this->assertEqual($req->domain, $domain);
     $this->assertEqual($req->toArray(), array('CountAccountRequest' => array(
+      '_jsns' => 'urn:zimbraAdmin',
       'domain' => array(
-        'by' => 'name',
         '_content' => $name,
+        'by' => 'name',
       ),
     )));
 
@@ -282,10 +288,11 @@ class ZmtZimbraApiTestCase extends DrupalWebTestCase {
     $req = new CountObjectsRequest('account', $domain);
     $this->assertEqual($req->type, 'account');
     $this->assertEqual($req->toArray(), array('CountObjectsRequest' => array(
+      '_jsns' => 'urn:zimbraAdmin',
       'type' => 'account',
       'domain' => array(
-        'by' => 'name',
         '_content' => $name,
+        'by' => 'name',
       ),
     )));
 
@@ -294,16 +301,17 @@ class ZmtZimbraApiTestCase extends DrupalWebTestCase {
     $this->assertEqual($req->password, $password);
     $this->assertEqual($req->a, array($kpv1, $kpv2));
     $this->assertEqual($req->toArray(), array('CreateAccountRequest' => array(
+      '_jsns' => 'urn:zimbraAdmin',
       'name' => $name,
       'password' => $password,
       'a' => array(
         array(
-          'n' => $key1,
           '_content' => $value1,
+          'n' => $key1,
         ),
         array(
-          'n' => $key2,
           '_content' => $value2,
+          'n' => $key2,
         ),
       ),
     )));
@@ -312,15 +320,16 @@ class ZmtZimbraApiTestCase extends DrupalWebTestCase {
     $this->assertEqual($req->name, array(array('_content' => $name)));
     $this->assertEqual($req->a, array($kpv1, $kpv2));
     $this->assertEqual($req->toArray(), array('CreateCosRequest' => array(
+      '_jsns' => 'urn:zimbraAdmin',
       'name' => array(array('_content' => $name)),
       'a' => array(
         array(
-          'n' => $key1,
           '_content' => $value1,
+          'n' => $key1,
         ),
         array(
-          'n' => $key2,
           '_content' => $value2,
+          'n' => $key2,
         ),
       ),
     )));
@@ -330,16 +339,17 @@ class ZmtZimbraApiTestCase extends DrupalWebTestCase {
     $this->assertTrue($req->dynamic);
     $this->assertEqual($req->a, array($kpv1, $kpv2));
     $this->assertEqual($req->toArray(), array('CreateDistributionListRequest' => array(
+      '_jsns' => 'urn:zimbraAdmin',
       'name' => $name,
       'dynamic' => TRUE,
       'a' => array(
         array(
-          'n' => $key1,
           '_content' => $value1,
+          'n' => $key1,
         ),
         array(
-          'n' => $key2,
           '_content' => $value2,
+          'n' => $key2,
         ),
       ),
     )));
@@ -348,15 +358,16 @@ class ZmtZimbraApiTestCase extends DrupalWebTestCase {
     $this->assertEqual($req->name, $name);
     $this->assertEqual($req->a, array($kpv1, $kpv2));
     $this->assertEqual($req->toArray(), array('CreateDomainRequest' => array(
+      '_jsns' => 'urn:zimbraAdmin',
       'name' => $name,
       'a' => array(
         array(
-          'n' => $key1,
           '_content' => $value1,
+          'n' => $key1,
         ),
         array(
-          'n' => $key2,
           '_content' => $value2,
+          'n' => $key2,
         ),
       ),
     )));
@@ -365,15 +376,16 @@ class ZmtZimbraApiTestCase extends DrupalWebTestCase {
     $this->assertEqual($req->dn, $name);
     $this->assertEqual($req->a, array($kpv1, $kpv2));
     $this->assertEqual($req->toArray(), array('CreateLDAPEntryRequest' => array(
+      '_jsns' => 'urn:zimbraAdmin',
       'dn' => $name,
       'a' => array(
         array(
-          'n' => $key1,
           '_content' => $value1,
+          'n' => $key1,
         ),
         array(
-          'n' => $key2,
           '_content' => $value2,
+          'n' => $key2,
         ),
       ),
     )));
@@ -383,9 +395,10 @@ class ZmtZimbraApiTestCase extends DrupalWebTestCase {
     $this->assertEqual($req->account, $account);
     $this->assertEqual($req->duration, $duration);
     $this->assertEqual($req->toArray(), array('DelegateAuthRequest' => array(
+      '_jsns' => 'urn:zimbraAdmin',
       'account' => array(
-        'by' => 'name',
         '_content' => $name,
+        'by' => 'name',
       ),
       'duration' => $duration,
     )));
@@ -393,30 +406,35 @@ class ZmtZimbraApiTestCase extends DrupalWebTestCase {
     $req = new DeleteAccountRequest($id);
     $this->assertEqual($req->id, $id);
     $this->assertEqual($req->toArray(), array('DeleteAccountRequest' => array(
+      '_jsns' => 'urn:zimbraAdmin',
       'id' => $id,
     )));
 
     $req = new DeleteCosRequest($id);
     $this->assertEqual($req->id, $id);
     $this->assertEqual($req->toArray(), array('DeleteCosRequest' => array(
+      '_jsns' => 'urn:zimbraAdmin',
       'id' => $id,
     )));
 
     $req = new DeleteDistributionListRequest($id);
     $this->assertEqual($req->id, $id);
     $this->assertEqual($req->toArray(), array('DeleteDistributionListRequest' => array(
+      '_jsns' => 'urn:zimbraAdmin',
       'id' => $id,
     )));
 
     $req = new DeleteDomainRequest($id);
     $this->assertEqual($req->id, $id);
     $this->assertEqual($req->toArray(), array('DeleteDomainRequest' => array(
+      '_jsns' => 'urn:zimbraAdmin',
       'id' => $id,
     )));
 
     $req = new DeleteLDAPEntryRequest($name);
     $this->assertEqual($req->dn, $name);
     $this->assertEqual($req->toArray(), array('DeleteLDAPEntryRequest' => array(
+      '_jsns' => 'urn:zimbraAdmin',
       'dn' => $name,
     )));
 
@@ -425,9 +443,10 @@ class ZmtZimbraApiTestCase extends DrupalWebTestCase {
     $this->assertTrue($req->applyCos);
     $this->assertEqual($req->attrs, $attrs);
     $this->assertEqual($req->toArray(), array('GetAccountRequest' => array(
+      '_jsns' => 'urn:zimbraAdmin',
       'account' => array(
-        'by' => 'name',
         '_content' => $name,
+        'by' => 'name',
       ),
       'applyCos' => TRUE,
       'attrs' => $attrs,
@@ -436,9 +455,10 @@ class ZmtZimbraApiTestCase extends DrupalWebTestCase {
     $req = new GetAccountInfoRequest($account);
     $this->assertEqual($req->account, $account);
     $this->assertEqual($req->toArray(), array('GetAccountInfoRequest' => array(
+      '_jsns' => 'urn:zimbraAdmin',
       'account' => array(
-        'by' => 'name',
         '_content' => $name,
+        'by' => 'name',
       ),
     )));
 
@@ -446,31 +466,36 @@ class ZmtZimbraApiTestCase extends DrupalWebTestCase {
     $this->assertEqual($req->server, $server);
     $this->assertEqual($req->domain, $domain);
     $this->assertEqual($req->toArray(), array('GetAllAccountsRequest' => array(
+      '_jsns' => 'urn:zimbraAdmin',
       'server' => array(
-        'by' => 'name',
         '_content' => $name,
+        'by' => 'name',
       ),
       'domain' => array(
-        'by' => 'name',
         '_content' => $name,
+        'by' => 'name',
       ),
     )));
 
     $req = new GetAllCosRequest();
-    $this->assertEqual($req->toArray(), array('GetAllCosRequest' => array()));
+    $this->assertEqual($req->toArray(), array('GetAllCosRequest' => array(
+      '_jsns' => 'urn:zimbraAdmin',
+    )));
 
     $req = new GetAllDistributionListsRequest($domain);
-    $this->assertEqual($req->server, $server);
+    $this->assertEqual($req->domain, $domain);
     $this->assertEqual($req->toArray(), array('GetAllDistributionListsRequest' => array(
+      '_jsns' => 'urn:zimbraAdmin',
       'domain' => array(
-        'by' => 'name',
         '_content' => $name,
+        'by' => 'name',
       ),
     )));
 
     $req = new GetAllDomainsRequest(TRUE);
     $this->assertTrue($req->applyConfig);
     $this->assertEqual($req->toArray(), array('GetAllDomainsRequest' => array(
+      '_jsns' => 'urn:zimbraAdmin',
       'applyConfig' => TRUE,
     )));
 
@@ -478,9 +503,10 @@ class ZmtZimbraApiTestCase extends DrupalWebTestCase {
     $this->assertEqual($req->cos, $cos);
     $this->assertEqual($req->attrs, $attrs);
     $this->assertEqual($req->toArray(), array('GetCosRequest' => array(
+      '_jsns' => 'urn:zimbraAdmin',
       'cos' => array(
-        'by' => 'name',
         '_content' => $name,
+        'by' => 'name',
       ),
       'attrs' => $attrs,
     )));
@@ -492,21 +518,22 @@ class ZmtZimbraApiTestCase extends DrupalWebTestCase {
     $this->assertTrue($req->sortAscending);
     $this->assertEqual($req->a, array($kpv1, $kpv2));
     $this->assertEqual($req->toArray(), array('GetDistributionListRequest' => array(
+      '_jsns' => 'urn:zimbraAdmin',
       'dl' => array(
-        'by' => 'name',
         '_content' => $name,
+        'by' => 'name',
       ),
       'limit' => $limit,
-      'limit' => $limit,
+      'offset' => $offset,
       'sortAscending' => TRUE,
       'a' => array(
         array(
-          'n' => $key1,
           '_content' => $value1,
+          'n' => $key1,
         ),
         array(
-          'n' => $key2,
           '_content' => $value2,
+          'n' => $key2,
         ),
       ),
     )));
@@ -516,9 +543,10 @@ class ZmtZimbraApiTestCase extends DrupalWebTestCase {
     $this->assertTrue($req->applyConfig);
     $this->assertEqual($req->attrs, $attrs);
     $this->assertEqual($req->toArray(), array('GetDomainRequest' => array(
+      '_jsns' => 'urn:zimbraAdmin',
       'domain' => array(
-        'by' => 'name',
         '_content' => $name,
+        'by' => 'name',
       ),
       'applyConfig' => TRUE,
       'attrs' => $attrs,
@@ -528,9 +556,10 @@ class ZmtZimbraApiTestCase extends DrupalWebTestCase {
     $this->assertEqual($req->domain, $domain);
     $this->assertTrue($req->applyConfig);
     $this->assertEqual($req->toArray(), array('GetDomainInfoRequest' => array(
+      '_jsns' => 'urn:zimbraAdmin',
       'domain' => array(
-        'by' => 'name',
         '_content' => $name,
+        'by' => 'name',
       ),
       'applyConfig' => TRUE,
     )));
@@ -546,33 +575,39 @@ class ZmtZimbraApiTestCase extends DrupalWebTestCase {
     $this->assertEqual($req->limit, $limit);
     $this->assertEqual($req->offset, $offset);
     $this->assertEqual($req->toArray(), array('GetLDAPEntriesRequest' => array(
+      '_jsns' => 'urn:zimbraAdmin',
       'query' => $query,
       'ldapSearchBase' => array(array('_content' => $ldapSearchBase)),
       'sortBy' => $sortBy,
       'sortAscending' => TRUE,
       'limit' => $limit,
-      'limit' => $limit,
+      'offset' => $offset,
     )));
 
     $req = new GetVersionInfoRequest();
-    $this->assertEqual($req->toArray(), array('GetVersionInfoRequest' => array()));
+    $this->assertEqual($req->toArray(), array('GetVersionInfoRequest' => array(
+      '_jsns' => 'urn:zimbraAdmin',
+    )));
 
     $req = new GetAllSkinsRequest();
-    $this->assertEqual($req->toArray(), array('GetAllSkinsRequest' => array()));
+    $this->assertEqual($req->toArray(), array('GetAllSkinsRequest' => array(
+      '_jsns' => 'urn:zimbraAdmin',
+    )));
 
     $req = new ModifyAccountRequest($id, array($kpv1, $kpv2));
     $this->assertEqual($req->id, $id);
     $this->assertEqual($req->a, array($kpv1, $kpv2));
     $this->assertEqual($req->toArray(), array('ModifyAccountRequest' => array(
+      '_jsns' => 'urn:zimbraAdmin',
       'id' => $id,
       'a' => array(
         array(
-          'n' => $key1,
           '_content' => $value1,
+          'n' => $key1,
         ),
         array(
-          'n' => $key2,
           '_content' => $value2,
+          'n' => $key2,
         ),
       ),
     )));
@@ -581,15 +616,16 @@ class ZmtZimbraApiTestCase extends DrupalWebTestCase {
     $this->assertEqual($req->id, array(array('_content' => $id)));
     $this->assertEqual($req->a, array($kpv1, $kpv2));
     $this->assertEqual($req->toArray(), array('ModifyCosRequest' => array(
+      '_jsns' => 'urn:zimbraAdmin',
       'id' => array(array('_content' => $id)),
       'a' => array(
         array(
-          'n' => $key1,
           '_content' => $value1,
+          'n' => $key1,
         ),
         array(
-          'n' => $key2,
           '_content' => $value2,
+          'n' => $key2,
         ),
       ),
     )));
@@ -598,15 +634,16 @@ class ZmtZimbraApiTestCase extends DrupalWebTestCase {
     $this->assertEqual($req->id, $id);
     $this->assertEqual($req->a, array($kpv1, $kpv2));
     $this->assertEqual($req->toArray(), array('ModifyDistributionListRequest' => array(
+      '_jsns' => 'urn:zimbraAdmin',
       'id' => $id,
       'a' => array(
         array(
-          'n' => $key1,
           '_content' => $value1,
+          'n' => $key1,
         ),
         array(
-          'n' => $key2,
           '_content' => $value2,
+          'n' => $key2,
         ),
       ),
     )));
@@ -615,15 +652,16 @@ class ZmtZimbraApiTestCase extends DrupalWebTestCase {
     $this->assertEqual($req->id, $id);
     $this->assertEqual($req->a, array($kpv1, $kpv2));
     $this->assertEqual($req->toArray(), array('ModifyDomainRequest' => array(
+      '_jsns' => 'urn:zimbraAdmin',
       'id' => $id,
       'a' => array(
         array(
-          'n' => $key1,
           '_content' => $value1,
+          'n' => $key1,
         ),
         array(
-          'n' => $key2,
           '_content' => $value2,
+          'n' => $key2,
         ),
       ),
     )));
@@ -632,15 +670,16 @@ class ZmtZimbraApiTestCase extends DrupalWebTestCase {
     $this->assertEqual($req->dn, $name);
     $this->assertEqual($req->a, array($kpv1, $kpv2));
     $this->assertEqual($req->toArray(), array('ModifyLDAPEntryRequest' => array(
+      '_jsns' => 'urn:zimbraAdmin',
       'dn' => $name,
       'a' => array(
         array(
-          'n' => $key1,
           '_content' => $value1,
+          'n' => $key1,
         ),
         array(
-          'n' => $key2,
           '_content' => $value2,
+          'n' => $key2,
         ),
       ),
     )));
@@ -649,6 +688,7 @@ class ZmtZimbraApiTestCase extends DrupalWebTestCase {
     $this->assertEqual($req->alias, $name);
     $this->assertEqual($req->id, $id);
     $this->assertEqual($req->toArray(), array('RemoveAccountAliasRequest' => array(
+      '_jsns' => 'urn:zimbraAdmin',
       'alias' => $name,
       'id' => $id,
     )));
@@ -660,6 +700,7 @@ class ZmtZimbraApiTestCase extends DrupalWebTestCase {
       array('_content' => $member2),
     ));
     $this->assertEqual($req->toArray(), array('RemoveDistributionListMemberRequest' => array(
+      '_jsns' => 'urn:zimbraAdmin',
       'id' => $id,
       'dlm' => array(
         array('_content' => $member1),
@@ -671,6 +712,7 @@ class ZmtZimbraApiTestCase extends DrupalWebTestCase {
     $this->assertEqual($req->id, $id);
     $this->assertEqual($req->newName, $name);
     $this->assertEqual($req->toArray(), array('RenameAccountRequest' => array(
+      '_jsns' => 'urn:zimbraAdmin',
       'id' => $id,
       'newName' => $name,
     )));
@@ -679,6 +721,7 @@ class ZmtZimbraApiTestCase extends DrupalWebTestCase {
     $this->assertEqual($req->id, $id);
     $this->assertEqual($req->newName, $name);
     $this->assertEqual($req->toArray(), array('RenameCosRequest' => array(
+      '_jsns' => 'urn:zimbraAdmin',
       'id' => $id,
       'newName' => $name,
     )));
@@ -687,6 +730,7 @@ class ZmtZimbraApiTestCase extends DrupalWebTestCase {
     $this->assertEqual($req->id, $id);
     $this->assertEqual($req->newName, $name);
     $this->assertEqual($req->toArray(), array('RenameDistributionListRequest' => array(
+      '_jsns' => 'urn:zimbraAdmin',
       'id' => $id,
       'newName' => $name,
     )));
@@ -695,6 +739,7 @@ class ZmtZimbraApiTestCase extends DrupalWebTestCase {
     $this->assertEqual($req->dn, $id);
     $this->assertEqual($req->new_dn, $name);
     $this->assertEqual($req->toArray(), array('RenameLDAPEntryRequest' => array(
+      '_jsns' => 'urn:zimbraAdmin',
       'dn' => $id,
       'new_dn' => $name,
     )));
@@ -721,10 +766,11 @@ class ZmtZimbraApiTestCase extends DrupalWebTestCase {
     $this->assertTrue($req->countOnly);
     $this->assertEqual($req->attrs, $attrs);
     $this->assertEqual($req->toArray(), array('SearchDirectoryRequest' => array(
+      '_jsns' => 'urn:zimbraAdmin',
       'query' => $query,
       'maxResults' => $maxResults,
       'limit' => $limit,
-      'limit' => $limit,
+      'offset' => $offset,
       'domain' => $domain,
       'applyCos' => TRUE,
       'applyConfig' => TRUE,
@@ -739,6 +785,7 @@ class ZmtZimbraApiTestCase extends DrupalWebTestCase {
     $this->assertEqual($req->id, $id);
     $this->assertEqual($req->newPassword, $password);
     $this->assertEqual($req->toArray(), array('SetPasswordRequest' => array(
+      '_jsns' => 'urn:zimbraAdmin',
       'id' => $id,
       'newPassword' => $password,
     )));
@@ -750,9 +797,9 @@ class ZmtZimbraApiTestCase extends DrupalWebTestCase {
  */
 class TestRequest extends SoapRequest{
   
-  function __construct($foo, $baa){
+  function __construct($foo, $bar){
     parent::__construct();
     $this->foo = $foo;
-    $this->baa = $baa;
+    $this->bar = $bar;
   }
 }
