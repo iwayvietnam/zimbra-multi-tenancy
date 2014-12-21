@@ -192,51 +192,6 @@ function zmt_ui_zmt_group_member_delete($member) {
 }
 
 /**
- * Implements hook_sync_group_members().
- */
-function zmt_ui_sync_group_members($group, array $members = array()) {
-  module_load_include('inc', 'zmt', 'includes/zmt.zimbra');
-  $server_id = !empty($group->server_id) ? (int) $group->server_id : 0;
-  $domain_name = !empty($group->domain) ? $group->domain : '';
-  if (empty($server_id) && empty($domain_name)) {
-    $domain  = zmt_domain_load($group->domain_id);
-    $server_id = !empty($domain->server_id) ? (int) $domain->server_id : 0;
-    $domain_name = !empty($domain->name) ? $domain->name : '';
-  }
-  $api = zimbra_admin_api_by_server($server_id);
-  $dl = zimbra_get_dl($api, $group->name . '@' . $domain_name);
-  if ($dl) {
-    $dl_members = zimbra_get_dl_members($api, $group->name . '@' . $domain_name);
-    if (!empty($dl_members)) {
-      $remove_members = array();
-      foreach ($dl_members as $dl_member) {
-        if (!in_array($dl_member, $members)) {
-          $remove_members[] = $dl_member;
-        }
-      }
-      if (!empty($remove_members)) {
-        zimbra_remove_dl_members($api, $dl->id, $remove_members);
-      }
-
-      $add_members = array();
-      foreach ($members as $member) {
-        if (!in_array($member, $dl_members)) {
-          $add_members[] = $member;
-        }
-      }
-      if (!empty($add_members)) {
-        zimbra_add_dl_members($api, $dl->id, $add_members);
-      }
-    }
-    else {
-      if (!empty($members)) {
-        zimbra_add_dl_members($api, $dl->id, $members);
-      }
-    }
-  }
-}
-
-/**
  * Implements hook_form_FORM_ID_alter() for the group delete form.
  */
 function zmt_ui_form_zmt_account_import_form_alter(&$form, &$form_state) {
@@ -313,6 +268,96 @@ function zmt_ui_zmt_account_import_form_validate($form, &$form_state) {
     }
   }
   $form_state['accounts'] = $synchronized_accounts;
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter() for the group edit form.
+ */
+function hook_form_zmt_group_edit_form_alter(&$form, &$form_state) {
+  $form['#validate'][] = 'zmt_ui_group_edit_form_validate';
+}
+
+/**
+ * Group edit form validate callback.
+ */
+function zmt_ui_group_edit_form_validate($form, &$form_state) {
+  if (!form_set_error()) {
+    module_load_include('inc', 'zmt', 'includes/zmt.zimbra');
+    $group = $form_state['#group'];
+    $values = &$form_state['values'];
+
+    $domain = zmt_domain_load((int) $values['domain_id']);
+    $domain_name = !empty($domain->name) ? $domain->name : '';
+    $server_id = !empty($domain->server_id) ? (int) $domain->server_id : 0;
+    $api = zimbra_admin_api_by_server($server_id);
+
+    $mail_address = $values['name'] . '@' . $domain_name;
+    if (empty($group->zimbra_id)) {
+      $dl = zimbra_get_dl($api, $mail_address);
+      if (!$dl) {
+        $dl = zimbra_create_dl($api, $mail_address, array(
+          'displayName' => $values['full_name'],
+          'description' => $values['full_name'],
+        ));
+      }
+      if ($dl instanceof Exception) {
+        form_set_error('name', t($dl->getMessage()));
+      }
+      else {
+        $group->zimbra_id = isset($dl->id) ? $dl->id : '';
+      }
+    }
+    else {
+      $result = zimbra_modify_dl($api, $group->zimbra_id, array(
+        'displayName' => $values['full_name'],
+        'description' => $values['full_name'],
+      ));
+      if ($result instanceof Exception) {
+        form_set_error('name', t($result->getMessage()));
+      }
+    }
+
+    if (!form_set_error()) {
+      $dl = zimbra_get_dl($api, $mail_address, TRUE);
+      if ($dl) {
+        $dl_members = zimbra_get_dl_members($api, $mail_address);
+        $value_members = is_array($values['members']) ? array_values($values['members']) : array();
+        $members = array();
+        foreach ($value_members as $member) {
+          $member = drupal_json_decode($member);
+          if (!empty($member['name'])) {
+            $members[] = $member['name'];
+          }
+        }
+        if (!empty($dl_members)) {
+          $remove_members = array();
+          foreach ($dl_members as $dl_member) {
+            if (!in_array($dl_member, $members)) {
+              $remove_members[] = $dl_member;
+            }
+          }
+          if (!empty($remove_members)) {
+            zimbra_remove_dl_members($api, $dl->id, $remove_members);
+          }
+
+          $add_members = array();
+          foreach ($members as $member) {
+            if (!in_array($member, $dl_members)) {
+              $add_members[] = $member;
+            }
+          }
+          if (!empty($add_members)) {
+            zimbra_add_dl_members($api, $dl->id, $add_members);
+          }
+        }
+        else {
+          if (!empty($members)) {
+            zimbra_add_dl_members($api, $dl->id, $members);
+          }
+        }
+      }
+    }
+  }
 }
 
 /**
