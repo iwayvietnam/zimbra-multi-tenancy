@@ -192,25 +192,6 @@ function zmt_ui_zmt_group_member_delete($member) {
 }
 
 /**
- * Implements hook_sync_remove_group_members().
- */
-function zmt_ui_sync_remove_group_members($group, array $members = array()) {
-  module_load_include('inc', 'zmt', 'includes/zmt.zimbra');
-  $server_id = !empty($group->server_id) ? (int) $group->server_id : 0;
-  $domain_name = !empty($group->domain) ? $group->domain : '';
-  if (empty($server_id) && empty($domain_name)) {
-    $domain  = zmt_domain_load($group->domain_id);
-    $server_id = !empty($domain->server_id) ? (int) $domain->server_id : 0;
-    $domain_name = !empty($domain->name) ? $domain->name : '';
-  }
-  $api = zimbra_admin_api_by_server($server_id);
-  $dl = zimbra_get_dl($api, $group->name . '@' . $domain_name);
-  if ($dl && !empty($members)) {
-    zimbra_remove_dl_members($api, $dl->id, $members);
-  }
-}
-
-/**
  * Implements hook_sync_group_members().
  */
 function zmt_ui_sync_group_members($group, array $members = array()) {
@@ -299,6 +280,45 @@ function zmt_ui_sync_import_account($account) {
   else {
     $account->zimbra_id = isset($zimbra_account->id) ? $zimbra_account->id : '';
     return !empty($account->zimbra_id);
+  }
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter() for the group delete form.
+ */
+function zmt_ui_form_zmt_group_delete_form_alter(&$form, &$form_state) {
+  $form['#validate'][] = 'zmt_ui_group_delete_form_validate';
+}
+
+/**
+ * Zimbra group delete form validate callback.
+ */
+function zmt_ui_group_delete_form_validate($form, &$form_state) {
+  if (!form_set_error()) {
+    module_load_include('inc', 'zmt', 'includes/zmt.zimbra');
+
+    $group = $form_state['#group'];
+    $members = zmt_group_member_load_multiple_by_group(array($group->id));
+    if (!empty($members)) {
+      $member_names = array();
+      foreach ($members as $member) {
+        $member_names[] = $member->name;
+      }
+
+      $server_id = !empty($group->server_id) ? (int) $group->server_id : 0;
+      $domain_name = !empty($group->domain) ? $group->domain : '';
+      if (empty($server_id) && empty($domain_name)) {
+        $domain  = zmt_domain_load($group->domain_id);
+        $server_id = !empty($domain->server_id) ? (int) $domain->server_id : 0;
+        $domain_name = !empty($domain->name) ? $domain->name : '';
+      }
+
+      $api = zimbra_admin_api_by_server($server_id);
+      $dl = zimbra_get_dl($api, $group->name . '@' . $domain_name);
+      if ($dl) {
+        zimbra_remove_dl_members($api, $dl->id, $member_names);
+      }
+    }
   }
 }
 
