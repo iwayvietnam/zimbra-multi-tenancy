@@ -5,7 +5,7 @@ module_load_include('inc', 'zmt', 'includes/zmt.zimbra.api');
 /**
  * Initialize Zimbra API
  *
- * @param  string $location
+ * @param string $location
  *   Zimbra service location.
  * @return ZimbraAdminApi
  */
@@ -21,11 +21,11 @@ function zimbra_admin_api($location = 'https://localhost:7071/service/admin/soap
 /**
  * Test connection to Zimbra service
  *
- * @param  string $location
+ * @param string $location
  *   Zimbra service location.
- * @param  string $user
+ * @param string $user
  *   Zimbra admin user.
- * @param  string $password
+ * @param string $password
  *   Zimbra admin password.
  * @return bool
  */
@@ -53,9 +53,9 @@ function zimbra_test_connection(
 /**
  * Initialize Zimbra API by tenant
  *
- * @param  string $tenant_id
+ * @param string $tenant_id
  *   Tenant id.
- * @return Zimbra Admin API
+ * @return ZimbraAdminApi
  */
 function zimbra_admin_api_by_tenant($tenant_id) {
   $server = zmt_ternant_get_server($tenant_id);
@@ -66,9 +66,9 @@ function zimbra_admin_api_by_tenant($tenant_id) {
 /**
  * Initialize Zimbra API by domain
  *
- * @param  string $domain_id
+ * @param string $domain_id
  *   Domain id.
- * @return Zimbra Admin API
+ * @return ZimbraAdminApi
  */
 function zimbra_admin_api_by_domain($domain_id) {
   $server = zmt_domain_get_server($domain_id);
@@ -79,9 +79,9 @@ function zimbra_admin_api_by_domain($domain_id) {
 /**
  * Initialize Zimbra API by server
  *
- * @param  string $server_id
+ * @param string $server_id
  *   Server id.
- * @return Zimbra Admin API
+ * @return ZimbraAdminApi
  */
 function zimbra_admin_api_by_server($server_id) {
   $cache = &drupal_static(__FUNCTION__, NULL);
@@ -109,13 +109,13 @@ function zimbra_admin_api_by_server($server_id) {
 /**
  * Zimbra authentication
  *
- * @param  ZimbraAdminApi $api
+ * @param ZimbraAdminApi $api
  *   Zimbra admin api.
- * @param  string $user
+ * @param string $user
  *   Zimbra admin user.
- * @param  string $password
+ * @param string $password
  *   Zimbra admin password.
- * @return mix
+ * @return boolean
  */
 function zimbra_authentication(ZimbraAdminApi $api, $user, $password = '') {
   $cache = &drupal_static(__FUNCTION__, NULL);
@@ -153,13 +153,14 @@ function zimbra_authentication(ZimbraAdminApi $api, $user, $password = '') {
 /**
  * Count number of objects.
  *
- * @param  ZimbraAdminApi $api
+ * @param ZimbraAdminApi $api
  *   Zimbra admin api.
- * @param  string $type
+ * @param string $type
  *   Object type.
- * @param  string $domain
+ * @param string $domain
  *   Domain name.
- * @return mix
+ * @return integer
+ *   Number of objects.
  */
 function zimbra_count_objects(ZimbraAdminApi $api, $type, $domain = NULL) {
   $cache = &drupal_static(__FUNCTION__, NULL);
@@ -180,12 +181,17 @@ function zimbra_count_objects(ZimbraAdminApi $api, $type, $domain = NULL) {
 /**
  * Gets all classes of service
  *
- * @param  ZimbraAdminApi $api Zimbra admin api.
- * @return mix
+ * @param ZimbraAdminApi $api
+ *   Zimbra admin api.
+ * @return
+ *   An array of classes of service
  */
-function zimbra_get_all_cos(ZimbraAdminApi $api) {
+function zimbra_get_all_cos(ZimbraAdminApi $api, $reset = FALSE) {
   $cache = &drupal_static(__FUNCTION__, NULL);
   $cache_key = md5($api->location());
+  if ($reset && isset($cache[$cache_key])) {
+    unset($cache[$cache_key])
+  }
   if (!isset($cache[$cache_key])) {
     $all_cos = array();
     try {
@@ -208,15 +214,18 @@ function zimbra_get_all_cos(ZimbraAdminApi $api) {
 /**
  * Get information of Zimbra classes of service
  *
- * @param  ZimbraAdminApi $api
+ * @param ZimbraAdminApi $api
  *   Zimbra admin api.
- * @param  string $name
+ * @param string $name
  *   COS name.
  * @return mix
  */
-function zimbra_get_cos(ZimbraAdminApi $api, $name) {
+function zimbra_get_cos(ZimbraAdminApi $api, $name, $reset = FALSE) {
   $cache = &drupal_static(__FUNCTION__, NULL);
   $cache_key = md5($api->location() . $name);
+  if ($reset && isset($cache[$cache_key])) {
+    unset($cache[$cache_key])
+  }
   if (!isset($cache[$cache_key])) {
     try {
       $result = $api->getCos(new CosSelector('name', $name));
@@ -233,11 +242,11 @@ function zimbra_get_cos(ZimbraAdminApi $api, $name) {
 /**
  * Create Zimbra classes of service
  *
- * @param  ZimbraAdminApi $api
+ * @param ZimbraAdminApi $api
  *   Zimbra admin api.
- * @param  string $name
+ * @param string $name
  *   COS name.
- * @param  array  $attrs
+ * @param array  $attrs
  *   COS attributes.
  * @return mix
  */
@@ -259,11 +268,11 @@ function zimbra_create_cos(ZimbraAdminApi $api, $name, array $attrs = array()) {
 /**
  * Modify Zimbra classes of service
  *
- * @param  ZimbraAdminApi $api
+ * @param ZimbraAdminApi $api
  *   Zimbra admin api.
- * @param  string $id
+ * @param string $id
  *   Zimbra COS ID.
- * @param  array  $attrs
+ * @param array  $attrs
  *   COS attributes.
  * @return mix
  */
@@ -285,11 +294,11 @@ function zimbra_modify_cos(ZimbraAdminApi $api, $id, array $attrs = array()) {
 /**
  * Rename Zimbra classes of service
  *
- * @param  ZimbraAdminApi $api
+ * @param ZimbraAdminApi $api
  *   Zimbra admin api.
- * @param  string $zimbra_id
+ * @param string $zimbra_id
  *   Zimbra COS ID.
- * @param  string $new_name
+ * @param string $new_name
  *   New COS name.
  * @return mix
  */
@@ -307,9 +316,9 @@ function zimbra_rename_cos(ZimbraAdminApi $api, $zimbra_id, $new_name) {
 /**
  * Delete Zimbra classes of service
  *
- * @param  ZimbraAdminApi $api
+ * @param ZimbraAdminApi $api
  *   Zimbra admin api.
- * @param  string $zimbra_id
+ * @param string $zimbra_id
  *   COS Zimbra ID.
  * @return mix
  */
@@ -326,13 +335,16 @@ function zimbra_delete_cos(ZimbraAdminApi $api, $zimbra_id) {
 /**
  * Gets all Zimbra domains
  *
- * @param  ZimbraAdminApi $api
+ * @param ZimbraAdminApi $api
  *   Zimbra admin api.
  * @return mix
  */
-function zimbra_get_all_domain(ZimbraAdminApi $api) {
+function zimbra_get_all_domain(ZimbraAdminApi $api, $reset = FALSE) {
   $cache = &drupal_static(__FUNCTION__, array());
   $cache_key = md5($api->location());
+  if ($reset && isset($cache[$cache_key])) {
+    unset($cache[$cache_key])
+  }
   if (!isset($cache[$cache_key])) {
     $all_domain = array();
     try {
@@ -355,15 +367,18 @@ function zimbra_get_all_domain(ZimbraAdminApi $api) {
 /**
  * Get information of Zimbra domain
  *
- * @param  ZimbraAdminApi $api
+ * @param ZimbraAdminApi $api
  *   Zimbra admin api.
- * @param  string $name
+ * @param string $name
  *   Domain name.
  * @return mix
  */
-function zimbra_get_domain(ZimbraAdminApi $api, $name) {
+function zimbra_get_domain(ZimbraAdminApi $api, $name, $reset = FALSE) {
   $cache = &drupal_static(__FUNCTION__, NULL);
   $cache_key = md5($api->location() . $name);
+  if ($reset && isset($cache[$cache_key])) {
+    unset($cache[$cache_key])
+  }
   if (!isset($cache[$cache_key])) {
     try {
       $result = $api->getDomain(new DomainSelector('name', $name));
@@ -380,11 +395,11 @@ function zimbra_get_domain(ZimbraAdminApi $api, $name) {
 /**
  * Create Zimbra domain
  *
- * @param  ZimbraAdminApi $api
+ * @param ZimbraAdminApi $api
  *   Zimbra admin api.
- * @param  string $name
+ * @param string $name
  *   Domain name.
- * @param  array  $attrs
+ * @param array  $attrs
  *   Domain attributes.
  * @return mix
  */
@@ -406,11 +421,11 @@ function zimbra_create_domain(ZimbraAdminApi $api, $name, array $attrs = array()
 /**
  * Modify Zimbra domain
  *
- * @param  ZimbraAdminApi $api
+ * @param ZimbraAdminApi $api
  *   Zimbra admin api.
- * @param  string $id
+ * @param string $id
  *   Zimbra domain ID.
- * @param  array  $attrs
+ * @param array  $attrs
  *   Domain attributes.
  * @return mix
  */
@@ -432,9 +447,9 @@ function zimbra_modify_domain(ZimbraAdminApi $api, $id, array $attrs = array()) 
 /**
  * Delete Zimbra domain
  *
- * @param  ZimbraAdminApi $api
+ * @param ZimbraAdminApi $api
  *   Zimbra admin api.
- * @param  string $zimbra_id
+ * @param string $zimbra_id
  *   Domain Zimbra ID.
  * @return mix
  */
@@ -451,15 +466,18 @@ function zimbra_delete_domain(ZimbraAdminApi $api, $zimbra_id) {
 /**
  * Gets all Zimbra distribution lists
  *
- * @param  ZimbraAdminApi $api
+ * @param ZimbraAdminApi $api
  *   Zimbra admin api.
- * @param  string $domain
+ * @param string $domain
  *   Domain name.
  * @return array of distribution lists
  */
-function zimbra_get_all_dl(ZimbraAdminApi $api, $domain = NULL) {
+function zimbra_get_all_dl(ZimbraAdminApi $api, $domain = NULL, $reset = FALSE) {
   $cache = &drupal_static(__FUNCTION__, array());
   $cache_key = md5($api->location() . $domain);
+  if ($reset && isset($cache[$cache_key])) {
+    unset($cache[$cache_key])
+  }
   if (!isset($cache[$cache_key])) {
     $all_dl = array();
     try {
@@ -487,13 +505,13 @@ function zimbra_get_all_dl(ZimbraAdminApi $api, $domain = NULL) {
 /**
  * Lists Zimbra distribution lists
  *
- * @param  ZimbraAdminApi $api
+ * @param ZimbraAdminApi $api
  *   Zimbra admin api.
- * @param  string $domain
+ * @param string $domain
  *   The domain name to limit the search to.
- * @param  int $limit
+ * @param int $limit
  *   The maximum number of accounts to return (0 is default and means all)
- * @param  int $offset
+ * @param int $offset
  *   The starting offset
  * @return array of distribution lists
  */
@@ -544,15 +562,18 @@ function zimbra_list_dl(ZimbraAdminApi $api, $domain = NULL, $limit = NULL, $off
 /**
  * Get information of Zimbra distribution list
  *
- * @param  ZimbraAdminApi $api
+ * @param ZimbraAdminApi $api
  *   Zimbra admin api.
- * @param  string $name
+ * @param string $name
  *   Distribution list name.
  * @return mix
  */
-function zimbra_get_dl(ZimbraAdminApi $api, $name, &$members = array()) {
+function zimbra_get_dl(ZimbraAdminApi $api, $name, &$members = array(), $reset = FALSE) {
   $cache = &drupal_static(__FUNCTION__, NULL);
   $cache_key = md5($api->location() . $name);
+  if ($reset && isset($cache[$cache_key])) {
+    unset($cache[$cache_key])
+  }
   if (!isset($cache[$cache_key])) {
     try {
       $result = $api->getDistributionList(new DistributionListSelector('name', $name));
@@ -569,9 +590,9 @@ function zimbra_get_dl(ZimbraAdminApi $api, $name, &$members = array()) {
 /**
  * Get Zimbra distribution list members
  *
- * @param  ZimbraAdminApi $api
+ * @param ZimbraAdminApi $api
  *   Zimbra admin api.
- * @param  string $name
+ * @param string $name
  *   Distribution list name.
  * @return array
  */
@@ -594,11 +615,11 @@ function zimbra_get_dl_members(ZimbraAdminApi $api, $name) {
 /**
  * Create Zimbra distribution list
  *
- * @param  ZimbraAdminApi $api
+ * @param ZimbraAdminApi $api
  *   Zimbra admin api.
- * @param  string $name
+ * @param string $name
  *   Distribution list name.
- * @param  array  $attrs
+ * @param array  $attrs
  *   Domain attributes.
  * @return mix
  */
@@ -620,11 +641,11 @@ function zimbra_create_dl(ZimbraAdminApi $api, $name, array $attrs = array()) {
 /**
  * Modify Zimbra distribution list
  *
- * @param  ZimbraAdminApi $api
+ * @param ZimbraAdminApi $api
  *   Zimbra admin api.
- * @param  string $zimbra_id
+ * @param string $zimbra_id
  *   Zimbra ID.
- * @param  array  $attrs
+ * @param array  $attrs
  *   Dl attributes.
  * @return mix
  */
@@ -646,11 +667,11 @@ function zimbra_modify_dl(ZimbraAdminApi $api, $zimbra_id, array $attrs = array(
 /**
  * Rename Zimbra distribution list
  *
- * @param  ZimbraAdminApi $api
+ * @param ZimbraAdminApi $api
  *   Zimbra admin api.
- * @param  string $zimbra_id
+ * @param string $zimbra_id
  *   Zimbra ID.
- * @param  string $new_name
+ * @param string $new_name
  *   New dl name.
  * @return mix
  */
@@ -668,11 +689,11 @@ function zimbra_rename_dl(ZimbraAdminApi $api, $zimbra_id, $new_name) {
 /**
  * Adding members to a distribution list.
  *
- * @param  ZimbraAdminApi $api
+ * @param ZimbraAdminApi $api
  *   Zimbra admin api.
- * @param  string $zimbra_id
+ * @param string $zimbra_id
  *   Value of zimbra identify.
- * @param  array  $members
+ * @param array  $members
  *   Distribution list members.
  * @return mix
  */
@@ -689,11 +710,11 @@ function zimbra_add_dl_members(ZimbraAdminApi $api, $zimbra_id, array $members =
 /**
  * Remove distribution list members.
  *
- * @param  ZimbraAdminApi $api
+ * @param ZimbraAdminApi $api
  *   Zimbra admin api.
- * @param  string $zimbra_id
+ * @param string $zimbra_id
  *   Value of zimbra identify.
- * @param  array  $members
+ * @param array  $members
  *   Distribution list members.
  * @return mix
  */
@@ -710,9 +731,9 @@ function zimbra_remove_dl_members(ZimbraAdminApi $api, $id, array $members) {
 /**
  * Delete Zimbra distribution list
  *
- * @param  ZimbraAdminApi $api
+ * @param ZimbraAdminApi $api
  *   Zimbra admin api.
- * @param  string $zimbra_id
+ * @param string $zimbra_id
  *   Distribution list Zimbra ID.
  * @return mix
  */
@@ -729,17 +750,20 @@ function zimbra_delete_dl(ZimbraAdminApi $api, $zimbra_id) {
 /**
  * Gets all Zimbra account
  *
- * @param  ZimbraAdminApi $api
+ * @param ZimbraAdminApi $api
  *   Zimbra admin api.
- * @param  string $domain_name
+ * @param string $domain_name
  *   Domain name.
- * @param  string $server_name
+ * @param string $server_name
  *   Server name
  * @return mix
  */
-function zimbra_get_all_account(ZimbraAdminApi $api, $domain_name = '', $server_name = '') {
+function zimbra_get_all_account(ZimbraAdminApi $api, $domain_name = '', $server_name = '', $reset = FALSE) {
   $cache = &drupal_static(__FUNCTION__, NULL);
   $cache_key = md5($api->location() . $domain_name . '-' . $server_name);
+  if ($reset && isset($cache[$cache_key])) {
+    unset($cache[$cache_key])
+  }
   if (!isset($cache[$cache_key])) {
     $all_account = array();
     try {
@@ -764,13 +788,13 @@ function zimbra_get_all_account(ZimbraAdminApi $api, $domain_name = '', $server_
 /**
  * Lists Zimbra account
  *
- * @param  ZimbraAdminApi $api
+ * @param ZimbraAdminApi $api
  *   Zimbra admin api.
- * @param  string $domain
+ * @param string $domain
  *   The domain name to limit the search to.
- * @param  int $limit
+ * @param int $limit
  *   The maximum number of accounts to return (0 is default and means all)
- * @param  int $offset
+ * @param int $offset
  *   The starting offset
  * @return mix
  */
@@ -835,15 +859,18 @@ function zimbra_list_account(ZimbraAdminApi $api, $domain = NULL, $limit = NULL,
 /**
  * Get information of Zimbra account
  *
- * @param  ZimbraAdminApi $api
+ * @param ZimbraAdminApi $api
  *   Zimbra admin api.
- * @param  string $name
+ * @param string $name
  *   The name used to identify the account.
  * @return mix
  */
-function zimbra_get_account(ZimbraAdminApi $api, $name) {
+function zimbra_get_account(ZimbraAdminApi $api, $name, $reset = FALSE) {
   $cache = &drupal_static(__FUNCTION__, NULL);
   $cache_key = md5($api->location() . $name);
+  if ($reset && isset($cache[$cache_key])) {
+    unset($cache[$cache_key])
+  }
   if (!isset($cache[$cache_key])) {
     try {
       $result = $api->getAccount(new AccountSelector('name', $name));
@@ -860,9 +887,9 @@ function zimbra_get_account(ZimbraAdminApi $api, $name) {
 /**
  * Count number of accounts by cos in a domain.
  *
- * @param  ZimbraAdminApi $api
+ * @param ZimbraAdminApi $api
  *   Zimbra admin api.
- * @param  string $domain
+ * @param string $domain
  *   Domain name.
  * @return mix
  */
@@ -885,13 +912,13 @@ function zimbra_count_account(ZimbraAdminApi $api, $domain = NULL) {
 /**
  * Create Zimbra account
  *
- * @param  ZimbraAdminApi $api
+ * @param ZimbraAdminApi $api
  *   Zimbra admin api.
- * @param  string $name
+ * @param string $name
  *   New account's name. Must include domain (uid@name), and domain specified in name must exist.
- * @param  string $password
+ * @param string $password
  *   New account's password.
- * @param  array  $attrs
+ * @param array  $attrs
  *   Account attributes.
  * @return mix
  */
@@ -913,11 +940,11 @@ function zimbra_create_account(ZimbraAdminApi $api, $name, $password, array $att
 /**
  * Modify Zimbra account
  *
- * @param  ZimbraAdminApi $api
+ * @param ZimbraAdminApi $api
  *   Zimbra admin api.
- * @param  string $id
+ * @param string $id
  *   Zimbra ID of account.
- * @param  array  $attrs
+ * @param array  $attrs
  *   Attributes.
  * @return mix
  */
@@ -939,11 +966,11 @@ function zimbra_modify_account(ZimbraAdminApi $api, $id, array $attrs = array())
 /**
  * Rename Zimbra account
  *
- * @param  ZimbraAdminApi $api
+ * @param ZimbraAdminApi $api
  *   Zimbra admin api.
- * @param  string $id
+ * @param string $id
  *   Zimbra ID of account.
- * @param  string $name
+ * @param string $name
  *   New account name.
  * @return mix
  */
@@ -961,11 +988,11 @@ function zimbra_rename_account(ZimbraAdminApi $api, $id, $name) {
 /**
  * Used to request a new auth token that is valid for the specified account.
  *
- * @param  ZimbraAdminApi $api
+ * @param ZimbraAdminApi $api
  *   Zimbra admin api.
- * @param  string $name
+ * @param string $name
  *   An account name.
- * @param  int $duration
+ * @param int $duration
  *   Lifetime in seconds of the newly-created authtoken.
  * @return mix
  */
@@ -989,9 +1016,9 @@ function zimbra_delegate_auth(ZimbraAdminApi $api, $name, $duration = NULL) {
 /**
  * Delete Zimbra account
  *
- * @param  ZimbraAdminApi $api
+ * @param ZimbraAdminApi $api
  *   Zimbra admin api.
- * @param  string $zimbra_id
+ * @param string $zimbra_id
  *   Account Zimbra ID.
  * @return mix
  */
@@ -1008,9 +1035,9 @@ function zimbra_delete_account(ZimbraAdminApi $api, $zimbra_id){
 /**
  * Lists Zimbra account alias
  *
- * @param  ZimbraAdminApi $api
+ * @param ZimbraAdminApi $api
  *   Zimbra admin api.
- * @param  string $domain
+ * @param string $domain
  *   Domain name.
  * @return array
  */
@@ -1072,11 +1099,11 @@ function zimbra_list_alias(ZimbraAdminApi $api, $domain = NULL, $limit = NULL, $
 /**
  * Add Zimbra account alias
  *
- * @param  ZimbraAdminApi $api
+ * @param ZimbraAdminApi $api
  *   Zimbra admin api.
- * @param  string $id
+ * @param string $id
  *   Value of zimbra identify.
- * @param  string $alias
+ * @param string $alias
  *   Account alias.
  * @return mix
  */
@@ -1093,11 +1120,11 @@ function zimbra_add_account_alias(ZimbraAdminApi $api, $id, $alias) {
 /**
  * Remove Zimbra account alias.
  * 
- * @param  ZimbraAdminApi $api
+ * @param ZimbraAdminApi $api
  *   Zimbra admin api.
- * @param  string $alias
+ * @param string $alias
  *   Account alias.
- * @param  string $id
+ * @param string $id
  *   Zimbra ID.
  * @return mix
  */
@@ -1114,11 +1141,11 @@ function zimbra_remove_account_alias(ZimbraAdminApi $api, $alias, $id = '') {
 /**
  * Set password.
  * 
- * @param  ZimbraAdminApi $api
+ * @param ZimbraAdminApi $api
  *   Zimbra admin api.
- * @param  string $id
+ * @param string $id
  *   Zimbra ID.
- * @param  string $password
+ * @param string $password
  *   New password.
  * @return mix
  */
@@ -1135,13 +1162,16 @@ function zimbra_set_password(ZimbraAdminApi $api, $id, $password) {
 /**
  * Get all installed skins on the server.
  * 
- * @param  ZimbraAdminApi $api
+ * @param ZimbraAdminApi $api
  *   Zimbra admin api.
  * @return An array of skin
  */
-function zimbra_get_all_skins(ZimbraAdminApi $api) {
+function zimbra_get_all_skins(ZimbraAdminApi $api, $reset = FALSE) {
   $cache = &drupal_static(__FUNCTION__, NULL);
   $cache_key = md5($api->location());
+  if ($reset && isset($cache[$cache_key])) {
+    unset($cache[$cache_key])
+  }
   if (!isset($cache[$cache_key])) {
     try {
       $all_skins = array();
@@ -1165,7 +1195,7 @@ function zimbra_get_all_skins(ZimbraAdminApi $api) {
 /**
  * Get version information.
  * 
- * @param  ZimbraAdminApi $api
+ * @param ZimbraAdminApi $api
  *   Zimbra admin api.
  * @return mix
  */
@@ -1188,11 +1218,11 @@ function zimbra_get_version_info(ZimbraAdminApi $api) {
 /**
  * Check password strength.
  * 
- * @param  ZimbraAdminApi $api
+ * @param ZimbraAdminApi $api
  *   Zimbra admin api.
- * @param  string $id
+ * @param string $id
  *   Zimbra ID.
- * @param  string $password
+ * @param string $password
  *   Passowrd to check.
  * @return mix
  */
