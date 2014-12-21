@@ -252,7 +252,7 @@ function zimbra_create_cos(ZimbraAdminApi $api, $name, array $attrs = array()) {
   }
   catch (Exception $ex) {
     watchdog('zimbra', $ex->__toString());
-    return FALSE;
+    return $ex;
   }
 }
 
@@ -319,7 +319,7 @@ function zimbra_delete_cos(ZimbraAdminApi $api, $zimbra_id) {
   }
   catch (Exception $ex) {
     watchdog('zimbra', $ex->__toString());
-    return FALSE;
+    return $ex;
   }
 }
 
@@ -399,7 +399,7 @@ function zimbra_create_domain(ZimbraAdminApi $api, $name, array $attrs = array()
   }
   catch (Exception $ex) {
     watchdog('zimbra', $ex->__toString());
-    return FALSE;
+    return $ex;
   }
 }
 
@@ -444,7 +444,7 @@ function zimbra_delete_domain(ZimbraAdminApi $api, $zimbra_id) {
   }
   catch (Exception $ex) {
     watchdog('zimbra', $ex->__toString());
-    return FALSE;
+    return $ex;
   }
 }
 
@@ -613,7 +613,7 @@ function zimbra_create_dl(ZimbraAdminApi $api, $name, array $attrs = array()) {
   }
   catch (Exception $ex) {
     watchdog('zimbra', $ex->__toString());
-    return FALSE;
+    return $ex;
   }
 }
 
@@ -703,7 +703,7 @@ function zimbra_remove_dl_members(ZimbraAdminApi $api, $id, array $members) {
   }
   catch (Exception $ex) {
     watchdog('zimbra', $ex->__toString());
-    return FALSE;
+    return $ex;
   }
 }
 
@@ -722,7 +722,7 @@ function zimbra_delete_dl(ZimbraAdminApi $api, $zimbra_id) {
   }
   catch (Exception $ex) {
     watchdog('zimbra', $ex->__toString());
-    return FALSE;
+    return $ex;
   }
 }
 
@@ -1086,7 +1086,7 @@ function zimbra_add_account_alias(ZimbraAdminApi $api, $id, $alias) {
   }
   catch (Exception $ex) {
     watchdog('zimbra', $ex->__toString());
-    return FALSE;
+    return $ex;
   }
 }
 
@@ -1107,7 +1107,7 @@ function zimbra_remove_account_alias(ZimbraAdminApi $api, $alias, $id = '') {
   }
   catch (Exception $ex) {
     watchdog('zimbra', $ex->__toString());
-    return false;
+    return $ex;
   }
 }
 
