@@ -1,6 +1,6 @@
 <?php
 
-module_load_include('inc', 'zmt', 'zmt.zimbra.soap');
+module_load_include('inc', 'zmt', 'includes/zmt.zimbra.soap');
 
 /**
  * Test case for Zmt tests.
