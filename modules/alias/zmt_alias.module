@@ -84,9 +84,9 @@ function zmt_alias_permission() {
  * Implements hook_query_TAG_alter().
  */
 function zmt_alias_query_zmt_alias_load_multiple_alter(QueryAlterableInterface $query) {
-  $query->join('zmt_account', 'za', 'za.id = base.account_id');
-  $query->join('zmt_domain', 'zd', 'zd.id = base.domain_id');
-  $query->join('zmt_server', 'zs', 'zs.id = zd.server_id');
+  $query->leftJoin('zmt_account', 'za', 'za.id = base.account_id');
+  $query->leftJoin('zmt_domain', 'zd', 'zd.id = base.domain_id');
+  $query->leftJoin('zmt_server', 'zs', 'zs.id = zd.server_id');
 
   $query->addField('za', 'name', 'account');
   $query->addField('zd', 'name', 'domain');
@@ -139,6 +139,7 @@ function zmt_alias_zmt_domain_delete($domain){
  */
 function zmt_alias_zmt_account_delete($account){
   $id = $account ? $account->id : 0;
+  echo $id;exit;
   zmt_alias_delete_multiple_by_account(array($id));
 }
 
