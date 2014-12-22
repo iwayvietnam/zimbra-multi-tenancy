@@ -10,6 +10,17 @@ class ZmtServerUITestCase extends DrupalWebTestCase {
   }
 
   /**
+   * Enable dependency modules.
+   */
+  public function setUp() {
+    parent::setUp(array(
+      'entity',
+      'zmt',
+      'zmt_server',
+    ));
+  }
+
+  /**
    * Test server operations is implemented.
    */
   public function testServerOperations() {

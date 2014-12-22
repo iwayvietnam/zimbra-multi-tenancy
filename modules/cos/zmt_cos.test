@@ -13,6 +13,17 @@ class ZmtCOSTestCase extends DrupalWebTestCase {
   }
 
   /**
+   * Enable dependency modules.
+   */
+  public function setUp() {
+    parent::setUp(array(
+      'entity',
+      'zmt',
+      'zmt_server',
+    ));
+  }
+
+  /**
    * Test the zmt cos CRUD functions.
    */
   function testZmtCOSCrud() {

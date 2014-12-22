@@ -10,6 +10,25 @@ class ZmtAccountUITestCase extends DrupalWebTestCase {
   }
 
   /**
+   * Enable dependency modules.
+   */
+  public function setUp() {
+    parent::setUp(array(
+      'entity',
+      'zmt',
+      'zmt_server',
+      'zmt_cos',
+      'zmt_tenant',
+      'zmt_domain',
+      'zmt_account',
+      'zmt_server_ui',
+      'zmt_cos_ui',
+      'zmt_tenant_ui',
+      'zmt_domain_ui',
+    ));
+  }
+
+  /**
    * Test account operations is implemented.
    */
   public function testAccountOperations() {

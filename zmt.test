@@ -16,6 +16,15 @@ class ZmtTestCase extends DrupalWebTestCase {
   }
 
   /**
+   * Enable dependency modules.
+   */
+  public function setUp() {
+    parent::setUp(array(
+      'entity',
+    ));
+  }
+
+  /**
    * Test encrypt and decrypt.
    */
   public function testZmtCrypto() {

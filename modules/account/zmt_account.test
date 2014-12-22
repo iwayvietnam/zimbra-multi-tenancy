@@ -13,6 +13,20 @@ class ZmtAccountTestCase extends DrupalWebTestCase {
   }
 
   /**
+   * Enable dependency modules.
+   */
+  public function setUp() {
+    parent::setUp(array(
+      'entity',
+      'zmt',
+      'zmt_server',
+      'zmt_cos',
+      'zmt_tenant',
+      'zmt_domain',
+    ));
+  }
+
+  /**
    * Test the zmt account CRUD functions.
    */
   function testZmtAccountCrud() {
