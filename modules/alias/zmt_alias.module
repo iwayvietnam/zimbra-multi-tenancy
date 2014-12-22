@@ -139,7 +139,6 @@ function zmt_alias_zmt_domain_delete($domain){
  */
 function zmt_alias_zmt_account_delete($account){
   $id = $account ? $account->id : 0;
-  echo $id;exit;
   zmt_alias_delete_multiple_by_account(array($id));
 }
 
