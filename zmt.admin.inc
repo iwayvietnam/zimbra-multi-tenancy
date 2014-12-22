@@ -148,17 +148,17 @@ function zmt_ajax_pull_data_callback($form, &$form_state) {
         break;
       case 'account':
         if (!empty($zimbra_domains)) {
-          _zmt_ui_update_account_data($api, $zimbra_domains, $excludes);
+          _zmt_ui_update_account_data($api, $zimbra_domains, $server->id, $excludes);
         }
         break;
       case 'alias':
         if (!empty($zimbra_domains)) {
-          _zmt_ui_update_alias_data($api, $zimbra_domains, $excludes);
+          _zmt_ui_update_alias_data($api, $zimbra_domains, $server->id, $excludes);
         }
         break;
       case 'group':
         if (!empty($zimbra_domains)) {
-          _zmt_ui_update_group_data($api, $zimbra_domains);
+          _zmt_ui_update_group_data($api, $zimbra_domains, $server->id);
         }
         break;
     }
@@ -247,12 +247,12 @@ function _zmt_ui_update_domain_data(array $zimbra_domains, $server_id = 0, $tena
  * @return
  *   Total number of updated accounts.
  */
-function _zmt_ui_update_account_data(ZimbraAdminApi $api, array $zimbra_domains, array $excludes = array()) {
+function _zmt_ui_update_account_data(ZimbraAdminApi $api, array $zimbra_domains, $server_id = 0, array $excludes = array()) {
   $count = 0;
   foreach ($zimbra_domains as $zimbra_domain) {
     $domain_name = $zimbra_domain->name;
     $domain = zmt_domain_load_by_name($domain_name);
-    if ($domain) {
+    if ($domain && $domain->server_id = $server_id) {
       $pager = array();
       $limit = variable_get('zimbra_item_per_pull', 100);
       $offset = 0;
@@ -311,12 +311,12 @@ function _zmt_ui_update_account_data(ZimbraAdminApi $api, array $zimbra_domains,
  * @return
  *   Total number of updated aliases.
  */
-function _zmt_ui_update_alias_data(ZimbraAdminApi $api, array $zimbra_domains, array $excludes = array()) {
+function _zmt_ui_update_alias_data(ZimbraAdminApi $api, array $zimbra_domains, $server_id = 0, array $excludes = array()) {
   $count = 0;
   foreach ($zimbra_domains as $zimbra_domain) {
     $domain_name = $zimbra_domain->name;
     $domain = zmt_domain_load_by_name($domain_name);
-    if ($domain) {
+    if ($domain && $domain->server_id = $server_id) {
       $pager = array();
       $limit = variable_get('zimbra_item_per_pull', 100);
       $offset = 0;
@@ -357,12 +357,12 @@ function _zmt_ui_update_alias_data(ZimbraAdminApi $api, array $zimbra_domains, a
  * @return
  *   Total number of updated groups.
  */
-function _zmt_ui_update_group_data(ZimbraAdminApi $api, array $zimbra_domains) {
+function _zmt_ui_update_group_data(ZimbraAdminApi $api, array $zimbra_domains, $server_id = 0) {
   $count = 0;
   foreach ($zimbra_domains as $zimbra_domain) {
     $domain_name = $zimbra_domain->name;
     $domain = zmt_domain_load_by_name($domain_name);
-    if ($domain) {
+    if ($domain && $domain->server_id = $server_id) {
       $zimbra_dls = zimbra_get_all_dl($api, $domain_name);
       foreach ($zimbra_dls as $zimbra_id => $dl) {
         $group_name = substr($dl->name, 0, (int) strpos($dl->name, '@'));
