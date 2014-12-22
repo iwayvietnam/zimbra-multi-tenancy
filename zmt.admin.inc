@@ -126,41 +126,43 @@ function zmt_ajax_pull_data_callback($form, &$form_state) {
   $data_types = $values['data_type'];
 
   $server = zmt_server_load($server_id);
-  $excludes = explode(PHP_EOL, $server->exclude_mailbox);
-  $excludes = array_map('trim', $excludes);
+  if ($server) {
+    $excludes = explode(PHP_EOL, $server->exclude_mailbox);
+    $excludes = array_map('trim', $excludes);
 
-  $api = zimbra_admin_api_by_server($server_id);
-  $zimbra_domains = zimbra_get_all_domain($api);
+    $api = zimbra_admin_api_by_server($server->id);
+    $zimbra_domains = zimbra_get_all_domain($api);
 
-  $types = array_filter($data_types);
-  foreach ($types as $type) {
-    switch ($type) {
-      case 'cos':
-        $zimbra_coses = zimbra_get_all_cos($api);
-        if (!empty($zimbra_coses)) {
-          _zmt_ui_update_cos_data($zimbra_coses, $server->id);
-        }
-        break;
-      case 'domain':
-        if (!empty($zimbra_domains)) {
-          _zmt_ui_update_domain_data($zimbra_domains, $server->id, $tenant_id);
-        }
-        break;
-      case 'account':
-        if (!empty($zimbra_domains)) {
-          _zmt_ui_update_account_data($api, $zimbra_domains, $server->id, $excludes);
-        }
-        break;
-      case 'alias':
-        if (!empty($zimbra_domains)) {
-          _zmt_ui_update_alias_data($api, $zimbra_domains, $server->id, $excludes);
-        }
-        break;
-      case 'group':
-        if (!empty($zimbra_domains)) {
-          _zmt_ui_update_group_data($api, $zimbra_domains, $server->id);
-        }
-        break;
+    $types = array_filter($data_types);
+    foreach ($types as $type) {
+      switch ($type) {
+        case 'cos':
+          $zimbra_coses = zimbra_get_all_cos($api);
+          if (!empty($zimbra_coses)) {
+            _zmt_ui_update_cos_data($zimbra_coses, $server->id);
+          }
+          break;
+        case 'domain':
+          if (!empty($zimbra_domains)) {
+            _zmt_ui_update_domain_data($zimbra_domains, $server->id, $tenant_id);
+          }
+          break;
+        case 'account':
+          if (!empty($zimbra_domains)) {
+            _zmt_ui_update_account_data($api, $zimbra_domains, $server->id, $excludes);
+          }
+          break;
+        case 'alias':
+          if (!empty($zimbra_domains)) {
+            _zmt_ui_update_alias_data($api, $zimbra_domains, $server->id, $excludes);
+          }
+          break;
+        case 'group':
+          if (!empty($zimbra_domains)) {
+            _zmt_ui_update_group_data($api, $zimbra_domains, $server->id);
+          }
+          break;
+      }
     }
   }
 
