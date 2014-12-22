@@ -14,6 +14,31 @@ class ZmtUiTestCase extends DrupalWebTestCase {
   }
 
   /**
+   * Enable dependency modules.
+   */
+  public function setUp() {
+    parent::setUp(array(
+      'entity',
+      'zmt',
+      'zmt_server',
+      'zmt_cos',
+      'zmt_tenant',
+      'zmt_domain',
+      'zmt_account',
+      'zmt_alias',
+      'zmt_group',
+      'zmt_server_ui',
+      'zmt_cos_ui',
+      'zmt_tenant_ui',
+      'zmt_domain_ui',
+      'zmt_account_ui',
+      'zmt_alias_ui',
+      'zmt_group_ui',
+      'zmt_ui',
+    ));
+  }
+
+  /**
    * Test operations is implemented.
    */
   public function testZmtUiOperations() {

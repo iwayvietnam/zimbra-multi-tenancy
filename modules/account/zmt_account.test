@@ -23,6 +23,7 @@ class ZmtAccountTestCase extends DrupalWebTestCase {
       'zmt_cos',
       'zmt_tenant',
       'zmt_domain',
+      'zmt_account',
     ));
   }
 

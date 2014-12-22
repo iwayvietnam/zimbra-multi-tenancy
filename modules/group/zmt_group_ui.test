@@ -29,6 +29,7 @@ class ZmtGroupUITestCase extends DrupalWebTestCase {
       'zmt_domain_ui',
       'zmt_account_ui',
       'zmt_alias_ui',
+      'zmt_group_ui',
     ));
   }
 

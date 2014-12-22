@@ -20,6 +20,7 @@ class ZmtCOSTestCase extends DrupalWebTestCase {
       'entity',
       'zmt',
       'zmt_server',
+      'zmt_cos',
     ));
   }
 

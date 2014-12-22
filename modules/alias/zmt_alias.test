@@ -24,6 +24,7 @@ class ZmtAliasTestCase extends DrupalWebTestCase {
       'zmt_tenant',
       'zmt_domain',
       'zmt_account',
+      'zmt_alias',
     ));
   }
 

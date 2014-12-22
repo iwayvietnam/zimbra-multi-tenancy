@@ -19,6 +19,7 @@ class ZmtServerTestCase extends DrupalWebTestCase {
     parent::setUp(array(
       'entity',
       'zmt',
+      'zmt_server',
     ));
   }
 

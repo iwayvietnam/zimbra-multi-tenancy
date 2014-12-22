@@ -18,6 +18,7 @@ class ZmtCOSUITestCase extends DrupalWebTestCase {
       'zmt',
       'zmt_server',
       'zmt_cos',
+      'zmt_cos_ui',
       'zmt_server_ui',
     ));
   }

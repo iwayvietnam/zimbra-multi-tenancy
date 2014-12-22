@@ -25,6 +25,7 @@ class ZmtGroupTestCase extends DrupalWebTestCase {
       'zmt_domain',
       'zmt_account',
       'zmt_alias',
+      'zmt_group',
     ));
   }
 

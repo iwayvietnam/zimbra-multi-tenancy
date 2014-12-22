@@ -21,6 +21,7 @@ class ZmtTenantUITestCase extends DrupalWebTestCase {
       'zmt_tenant',
       'zmt_server_ui',
       'zmt_cos_ui',
+      'zmt_tenant_ui',
     ));
   }
 

@@ -17,6 +17,7 @@ class ZmtServerUITestCase extends DrupalWebTestCase {
       'entity',
       'zmt',
       'zmt_server',
+      'zmt_server_ui',
     ));
   }
 

@@ -27,6 +27,7 @@ class ZmtAliasUITestCase extends DrupalWebTestCase {
       'zmt_tenant_ui',
       'zmt_domain_ui',
       'zmt_account_ui',
+      'zmt_alias_ui',
     ));
   }
 
