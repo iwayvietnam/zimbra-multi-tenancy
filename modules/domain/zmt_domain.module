@@ -446,22 +446,58 @@ function zmt_domain_get_server($id) {
  * @param $id
  *   The domain ID.
  * @return
- *   Total number of accouns.
+ *   Total number of accounts.
  */
 function zmt_domain_count_accounts($id) {
   static $total_account = NULL;
   if (NULL === $total_account) {
+    $total_account = 0;
     $query = db_select('zmt_domain', 'zd');
     $result = $query->fields('zd', array('id'))
       ->condition('zd.id', (int) $id)
       ->range(0, 1)
       ->addTag('domain_count_account')
-      ->execute();
-    foreach ($result as $domain) {
-      $total_account = isset($domain->total_account) ? (int) $domain->total_account : 0;
+      ->execute()
+      ->fetchObject();
+    if (!empty($result->total_account)) {
+      $total_account = (int) $result->total_account;
     }
   }
   return (int) $total_account;
+}
+
+/**
+ * Count number of mailboxes in domain.
+ *
+ * @param $id
+ *   The domain ID.
+ * @return
+ *   Total number of mailboxes.
+ */
+function zmt_domain_count_mailboxes($id) {
+  static $total_mailboxes = NULL;
+  if (NULL === $total_account) {
+    $total_mailboxes = 0;
+    $query = db_select('zmt_domain', 'zd');
+    $result = $query->fields('zd', array('id'))
+      ->condition('zd.id', (int) $id)
+      ->range(0, 1)
+      ->addTag('domain_count_account')
+      ->addTag('domain_count_alias')
+      ->addTag('domain_count_group')
+      ->execute()
+      ->fetchObject();
+    if (!empty($result->total_account)) {
+      $total_mailboxes += (int) $result->total_account;
+    }
+    if (!empty($result->total_alias)) {
+      $total_mailboxes += (int) $result->total_alias;
+    }
+    if (!empty($result->total_group)) {
+      $total_mailboxes += (int) $result->total_group;
+    }
+  }
+  return (int) $total_mailboxes;
 }
 
 /**

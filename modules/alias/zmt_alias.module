@@ -99,6 +99,18 @@ function zmt_alias_query_zmt_alias_load_multiple_alter(QueryAlterableInterface $
 /**
  * Implements hook_query_TAG_alter().
  */
+function zmt_alias_query_domain_count_alias_alter(QueryAlterableInterface $query) {
+  $count_account_query = db_select('zmt_alias', 'za')
+    ->fields('za', array('domain_id'))
+    ->groupBy('za.domain_id');
+  $count_account_query->addExpression('COUNT(za.id)', 'total_alias');
+  $query->leftJoin($count_account_query, 'caq', 'caq.domain_id = zd.id');
+  $query->addExpression('IFNULL(caq.total_alias, 0)', 'total_alias');
+}
+
+/**
+ * Implements hook_query_TAG_alter().
+ */
 function zmt_alias_query_account_mailbox_exists_alter(QueryAlterableInterface $query) {
   $domain_id = (int) $query->getMetaData('domain_id');
   $name = $query->getMetaData('mailbox_name');
