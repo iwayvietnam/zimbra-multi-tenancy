@@ -210,6 +210,7 @@ function zmt_server_delete_form($form, &$form_state, $server) {
   $form_state['server'] = $server;
 
   $form['#submit'][] = 'zmt_server_delete_form_submit';
+  $form['#validate'][] = 'zmt_server_delete_form_validate';
 
   $form = confirm_form($form,
     t('Are you sure you want to delete server %name?', array('%name' => $server->name)),
@@ -221,6 +222,17 @@ function zmt_server_delete_form($form, &$form_state, $server) {
   );
 
   return $form;
+}
+
+/**
+ * Validate callback for zmt_server_delete_form().
+ */
+function zmt_server_delete_form_validate($form, &$form_state) {
+  $server = $form_state['server'];
+  $mailbox_number = zmt_server_count_domain($server->id);
+  if ($mailbox_number) {
+    form_set_error('actions', t('Please delete all domains of this server before delete this server.'));
+  }
 }
 
 /**

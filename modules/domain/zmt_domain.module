@@ -156,6 +156,18 @@ function zmt_domain_query_zmt_domain_cos_load_multiple_alter(QueryAlterableInter
 }
 
 /**
+ * Implements hook_query_TAG_alter() for server_count_domain query tag.
+ */ 
+function zmt_domain_query_server_count_domain_alter(QueryAlterableInterface $query) {
+  $count_domain_query = db_select('zmt_domain', 'zd')
+    ->fields('zd', array('server_id'))
+    ->groupBy('zd.server_id');
+  $count_domain_query->addExpression('COUNT(zd.id)', 'total_domain');
+  $query->leftJoin($count_domain_query, 'cdq', 'cdq.server_id = zs.id');
+  $query->addExpression('IFNULL(cdq.total_domain, 0)', 'total_domain');
+}
+
+/**
  * Implements hook_query_TAG_alter() for tenant_count_domain query tag.
  */ 
 function zmt_domain_query_tenant_count_domain_alter(QueryAlterableInterface $query) {
