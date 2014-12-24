@@ -475,7 +475,7 @@ function zmt_domain_count_accounts($id) {
  */
 function zmt_domain_count_mailboxes($id) {
   static $total_mailboxes = NULL;
-  if (NULL === $total_account) {
+  if (NULL === $total_mailboxes) {
     $total_mailboxes = 0;
     $query = db_select('zmt_domain', 'zd')
       ->fields('zd', array('id'))
