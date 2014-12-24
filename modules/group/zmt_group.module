@@ -159,12 +159,12 @@ function zmt_group_query_zmt_group_member_load_multiple_alter(QueryAlterableInte
  * Implements hook_query_TAG_alter() for domain_count_group query tag.
  */
 function zmt_group_query_domain_count_group_alter(QueryAlterableInterface $query) {
-  $count_account_query = db_select('zmt_group', 'zg')
+  $count_group_query = db_select('zmt_group', 'zg')
     ->fields('zg', array('domain_id'))
     ->groupBy('zg.domain_id');
-  $count_account_query->addExpression('COUNT(zg.id)', 'total_group');
-  $query->leftJoin($count_account_query, 'caq', 'caq.domain_id = zd.id');
-  $query->addExpression('IFNULL(caq.total_group, 0)', 'total_group');
+  $count_group_query->addExpression('COUNT(zg.id)', 'total_group');
+  $query->leftJoin($count_group_query, 'cgq', 'cgq.domain_id = zd.id');
+  $query->addExpression('IFNULL(cgq.total_group, 0)', 'total_group');
 }
 
 /**

@@ -100,12 +100,12 @@ function zmt_alias_query_zmt_alias_load_multiple_alter(QueryAlterableInterface $
  * Implements hook_query_TAG_alter() for domain_count_alias query tag.
  */
 function zmt_alias_query_domain_count_alias_alter(QueryAlterableInterface $query) {
-  $count_account_query = db_select('zmt_alias', 'za')
-    ->fields('za', array('domain_id'))
-    ->groupBy('za.domain_id');
-  $count_account_query->addExpression('COUNT(za.id)', 'total_alias');
-  $query->leftJoin($count_account_query, 'caq', 'caq.domain_id = zd.id');
-  $query->addExpression('IFNULL(caq.total_alias, 0)', 'total_alias');
+  $count_alias_query = db_select('zmt_alias', 'zal')
+    ->fields('zal', array('domain_id'))
+    ->groupBy('zal.domain_id');
+  $count_alias_query->addExpression('COUNT(zal.id)', 'total_alias');
+  $query->leftJoin($count_alias_query, 'calq', 'calq.domain_id = zd.id');
+  $query->addExpression('IFNULL(calq.total_alias, 0)', 'total_alias');
 }
 
 /**
