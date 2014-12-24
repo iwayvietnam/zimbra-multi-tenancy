@@ -520,6 +520,7 @@ function zmt_domain_delete_form($form, &$form_state, $domain) {
   $form_state['domain'] = $domain;
 
   $form['#submit'][] = 'zmt_domain_delete_form_submit';
+  $form['#validate'][] = 'zmt_domain_delete_form_validate';
 
   $form = confirm_form($form,
     t('Are you sure you want to delete domain %name?', array('%name' => $domain->name)),
@@ -534,11 +535,22 @@ function zmt_domain_delete_form($form, &$form_state, $domain) {
 }
 
 /**
+ * Validate callback for zmt_domain_delete_form().
+ */
+function zmt_domain_delete_form_validate($form, &$form_state) {
+  $domain = $form_state['domain'];
+  $mailbox_number = zmt_domain_count_mailboxes($domain->id);
+  if ($mailbox_number) {
+    form_set_error('actions', t('Please delete all accounts, aliases, group of this domain before delete this domain.'));
+  }
+}
+
+/**
  * Submit callback for zmt_domain_delete_form().
  */
 function zmt_domain_delete_form_submit($form, &$form_state) {
   $domain = $form_state['domain'];
-  zmt_domain_delete($domain->id);
+  // zmt_domain_delete($domain->id);
   drupal_set_message(t('%name has been deleted.', array('%name' => $domain->name)));
   watchdog('zmt_domain', 'Deleted domain %name.', array('%name' => $domain->name), WATCHDOG_NOTICE);
 }
