@@ -101,7 +101,7 @@ function zmt_tenant_permission() {
 }
 
 /**
- * Implements hook_query_TAG_alter().
+ * Implements hook_query_TAG_alter() for zmt_tenant_load_multiple query tag.
  */ 
 function zmt_tenant_query_zmt_tenant_load_multiple_alter(QueryAlterableInterface $query) {
   $query->leftJoin('zmt_server', 'zs', 'zs.id = base.server_id');
@@ -114,7 +114,7 @@ function zmt_tenant_query_zmt_tenant_load_multiple_alter(QueryAlterableInterface
 }
 
 /**
- * Implements hook_query_TAG_alter().
+ * Implements hook_query_TAG_alter() for zmt_tenant_cos_load_multiple query tag.
  */ 
 function zmt_tenant_query_zmt_tenant_cos_load_multiple_alter(QueryAlterableInterface $query) {
   $query->leftJoin('zmt_cos', 'zc', 'zc.id = base.cos_id');

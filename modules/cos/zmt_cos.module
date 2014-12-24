@@ -117,7 +117,7 @@ function zmt_cos_label($cos, $entity_type) {
 }
 
 /**
- * Implements hook_query_TAG_alter().
+ * Implements hook_query_TAG_alter() for zmt_cos_load_multiple query tag.
  */ 
 function zmt_cos_query_zmt_cos_load_multiple_alter(QueryAlterableInterface $query) {
   $query->leftJoin('zmt_server', 'zs', 'zs.id = base.server_id');
