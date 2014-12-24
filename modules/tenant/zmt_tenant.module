@@ -326,6 +326,31 @@ function zmt_ternant_get_server($id) {
 }
 
 /**
+ * Count number of domains in tenant.
+ *
+ * @param $id
+ *   The tenant ID.
+ * @return
+ *   Total number of domains.
+ */
+function zmt_ternant_count_domain($id) {
+  static $total_domain = NULL;
+  if (NULL === $total_domain) {
+    $total_domain = 0;
+    $query = db_select('zmt_tenant', 'zt')
+      ->fields('zt', array('id'))
+      ->condition('zt.id', (int) $id)
+      ->range(0, 1)
+      ->addTag('tenant_count_domain');
+    $result = $query->execute()->fetchObject();
+    if (!empty($result->total_domain)) {
+      $total_domain = (int) $result->total_domain;
+    }
+  }
+  return (int) $total_domain;
+}
+
+/**
  * Returns an initialized tenant object.
  *
  * @param $full_name

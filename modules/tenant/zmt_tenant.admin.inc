@@ -383,6 +383,7 @@ function zmt_tenant_delete_form($form, &$form_state, $tenant) {
   $user = user_load($tenant->tenant_uid);
 
   $form['#submit'][] = 'zmt_tenant_delete_form_submit';
+  $form['#submit'][] = 'zmt_tenant_delete_form_validate';
 
   $form = confirm_form($form,
     t('Are you sure you want to delete tenant %name?', array('%name' => $user->name)),
@@ -394,6 +395,17 @@ function zmt_tenant_delete_form($form, &$form_state, $tenant) {
   );
 
   return $form;
+}
+
+/**
+ * Validate callback for zmt_tenant_delete_form().
+ */
+function zmt_tenant_delete_form_validate($form, &$form_state) {
+  $tenant = $form_state['tenant'];
+  $mailbox_number = zmt_ternant_count_domain($tenant->id);
+  if ($mailbox_number) {
+    form_set_error('actions', t('Please delete all domains of this tenant before delete this tenant.'));
+  }
 }
 
 /**
