@@ -128,7 +128,7 @@ function zmt_group_permission() {
 }
 
 /**
- * Implements hook_query_TAG_alter().
+ * Implements hook_query_TAG_alter() for zmt_group_load_multiple query tag.
  */
 function zmt_group_query_zmt_group_load_multiple_alter(QueryAlterableInterface $query) {
   $query->leftJoin('zmt_domain', 'zd', 'zd.id = base.domain_id');
@@ -141,19 +141,7 @@ function zmt_group_query_zmt_group_load_multiple_alter(QueryAlterableInterface $
 }
 
 /**
- * Implements hook_query_TAG_alter().
- */
-function zmt_group_query_domain_count_group_alter(QueryAlterableInterface $query) {
-  $count_account_query = db_select('zmt_group', 'zg')
-    ->fields('zg', array('domain_id'))
-    ->groupBy('zg.domain_id');
-  $count_account_query->addExpression('COUNT(zg.id)', 'total_group');
-  $query->leftJoin($count_account_query, 'caq', 'caq.domain_id = zd.id');
-  $query->addExpression('IFNULL(caq.total_group, 0)', 'total_group');
-}
-
-/**
- * Implements hook_query_TAG_alter().
+ * Implements hook_query_TAG_alter() for zmt_group_member_load_multiple query tag.
  */
 function zmt_group_query_zmt_group_member_load_multiple_alter(QueryAlterableInterface $query) {
   $query->leftJoin('zmt_group', 'zg', 'zg.id = base.group_id');
@@ -168,14 +156,26 @@ function zmt_group_query_zmt_group_member_load_multiple_alter(QueryAlterableInte
 }
 
 /**
- * Implements hook_query_TAG_alter().
+ * Implements hook_query_TAG_alter() for domain_count_group query tag.
+ */
+function zmt_group_query_domain_count_group_alter(QueryAlterableInterface $query) {
+  $count_account_query = db_select('zmt_group', 'zg')
+    ->fields('zg', array('domain_id'))
+    ->groupBy('zg.domain_id');
+  $count_account_query->addExpression('COUNT(zg.id)', 'total_group');
+  $query->leftJoin($count_account_query, 'caq', 'caq.domain_id = zd.id');
+  $query->addExpression('IFNULL(caq.total_group, 0)', 'total_group');
+}
+
+/**
+ * Implements hook_query_TAG_alter() for account_mailbox_exists query tag.
  */
 function zmt_group_query_account_mailbox_exists_alter(QueryAlterableInterface $query) {
   $domain_id = (int) $query->getMetaData('domain_id');
   $name = $query->getMetaData('mailbox_name');
 
-  $group_query = db_select('zmt_group', 'zg');
-  $group_query->fields('zg', array('id'))
+  $group_query = db_select('zmt_group', 'zg')
+    ->fields('zg', array('id'))
     ->condition('zg.domain_id', $domain_id)
     ->condition('zg.name', $name);
 
@@ -183,14 +183,14 @@ function zmt_group_query_account_mailbox_exists_alter(QueryAlterableInterface $q
 }
 
 /**
- * Implements hook_query_TAG_alter().
+ * Implements hook_query_TAG_alter() for alias_mailbox_exists query tag.
  */
 function zmt_group_query_alias_mailbox_exists_alter(QueryAlterableInterface $query) {
   $domain_id = (int) $query->getMetaData('domain_id');
   $name = $query->getMetaData('mailbox_name');
 
-  $group_query = db_select('zmt_group', 'zg');
-  $group_query->fields('zg', array('id'))
+  $group_query = db_select('zmt_group', 'zg')
+    ->fields('zg', array('id'))
     ->condition('zg.domain_id', $domain_id)
     ->condition('zg.name', $name);
 
@@ -602,15 +602,23 @@ function zmt_group_exists($domain, $name, $id = 0) {
   $domain_id = is_object($domain) ? $domain->id : $domain;
   $cache_key = md5($domain_id . '-' . $name . '-' . $id);
   if (!isset($cache[$cache_key])) {
-    $query = db_select('zmt_group', 'zg');
-    $query->fields('zg', array('id'))
+    $query = db_select('zmt_group', 'zg')
+      ->fields('zg', array('id'))
       ->condition('zg.domain_id', $domain_id)
       ->condition('zg.name', $name)
       ->condition('zg.id', (int) $id, '!=');
 
-    $query->addTag('group_mailbox_exists');
-    $query->addMetaData('domain_id', $domain_id);
-    $query->addMetaData('mailbox_name', $name);
+    $alias_query = db_select('zmt_alias', 'zal')
+      ->fields('zal', array('id'))
+      ->condition('zal.domain_id', $domain_id)
+      ->condition('zal.name', $name);
+
+    $account_query = db_select('zmt_account', 'zac')
+      ->fields('zac', array('id'))
+      ->condition('zac.domain_id', $domain_id)
+      ->condition('zac.name', $name);
+
+    $query->union($alias_query)->union($account_query);
 
     $result = (int) $query->countQuery()->execute()->fetchField();
     $cache[$cache_key] = $result > 0;

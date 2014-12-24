@@ -81,7 +81,7 @@ function zmt_alias_permission() {
 }
 
 /**
- * Implements hook_query_TAG_alter().
+ * Implements hook_query_TAG_alter() for zmt_alias_load_multiple query tag.
  */
 function zmt_alias_query_zmt_alias_load_multiple_alter(QueryAlterableInterface $query) {
   $query->leftJoin('zmt_account', 'za', 'za.id = base.account_id');
@@ -97,7 +97,7 @@ function zmt_alias_query_zmt_alias_load_multiple_alter(QueryAlterableInterface $
 }
 
 /**
- * Implements hook_query_TAG_alter().
+ * Implements hook_query_TAG_alter() for domain_count_alias query tag.
  */
 function zmt_alias_query_domain_count_alias_alter(QueryAlterableInterface $query) {
   $count_account_query = db_select('zmt_alias', 'za')
@@ -109,29 +109,14 @@ function zmt_alias_query_domain_count_alias_alter(QueryAlterableInterface $query
 }
 
 /**
- * Implements hook_query_TAG_alter().
+ * Implements hook_query_TAG_alter() for account_mailbox_exists query tag.
  */
 function zmt_alias_query_account_mailbox_exists_alter(QueryAlterableInterface $query) {
   $domain_id = (int) $query->getMetaData('domain_id');
   $name = $query->getMetaData('mailbox_name');
 
-  $alias_query = db_select('zmt_alias', 'zal');
-  $alias_query->fields('zal', array('id'))
-    ->condition('zal.domain_id', $domain_id)
-    ->condition('zal.name', $name);
-
-  $query->union($alias_query);
-}
-
-/**
- * Implements hook_query_TAG_alter().
- */
-function zmt_alias_query_group_mailbox_exists_alter(QueryAlterableInterface $query) {
-  $domain_id = (int) $query->getMetaData('domain_id');
-  $name = $query->getMetaData('mailbox_name');
-
-  $alias_query = db_select('zmt_alias', 'zal');
-  $alias_query->fields('zal', array('id'))
+  $alias_query = db_select('zmt_alias', 'zal')
+    ->fields('zal', array('id'))
     ->condition('zal.domain_id', $domain_id)
     ->condition('zal.name', $name);
 
@@ -315,15 +300,21 @@ function zmt_alias_exists($domain, $name, $id = 0) {
   $domain_id = is_object($domain) ? $domain->id : $domain;
   $cache_key = md5($domain_id . '-' . $name . '-' . $id);
   if (!isset($cache[$cache_key])) {
-    $query = db_select('zmt_alias', 'zal');
-    $query->fields('zal', array('id'))
+    $query = db_select('zmt_alias', 'zal')
+      ->fields('zal', array('id'))
       ->condition('zal.domain_id', $domain_id)
       ->condition('zal.name', $name)
       ->condition('zal.id', (int) $id, '!=');
 
-    $query->addTag('alias_mailbox_exists');
-    $query->addMetaData('domain_id', $domain_id);
-    $query->addMetaData('mailbox_name', $name);
+    $account_query = db_select('zmt_account', 'zac')
+      ->fields('zac', array('id'))
+      ->condition('zac.domain_id', $domain_id)
+      ->condition('zac.name', $name);
+
+    $query->union($account_query)
+      ->addTag('alias_mailbox_exists')
+      ->addMetaData('domain_id', $domain_id)
+      ->addMetaData('mailbox_name', $name);
 
     $result = (int) $query->countQuery()->execute()->fetchField();
     $cache[$cache_key] = $result > 0;

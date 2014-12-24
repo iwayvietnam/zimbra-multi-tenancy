@@ -91,7 +91,7 @@ function zmt_account_permission() {
 }
 
 /**
- * Implements hook_query_TAG_alter().
+ * Implements hook_query_TAG_alter() for zmt_account_load_multiple query tag.
  */
 function zmt_account_query_zmt_account_load_multiple_alter(QueryAlterableInterface $query) {
   $query->leftJoin('zmt_cos', 'zc', 'zc.id = base.cos_id');
@@ -107,7 +107,7 @@ function zmt_account_query_zmt_account_load_multiple_alter(QueryAlterableInterfa
 }
 
 /**
- * Implements hook_query_TAG_alter().
+ * Implements hook_query_TAG_alter() for domain_count_account query tag.
  */
 function zmt_account_query_domain_count_account_alter(QueryAlterableInterface $query) {
   $count_account_query = db_select('zmt_account', 'za')
@@ -119,7 +119,7 @@ function zmt_account_query_domain_count_account_alter(QueryAlterableInterface $q
 }
 
 /**
- * Implements hook_query_TAG_alter().
+ * Implements hook_query_TAG_alter() for tenant_count_account query tag.
  */
 function zmt_account_query_tenant_count_account_alter(QueryAlterableInterface $query) {
   $count_account_query = db_select('zmt_account', 'za');
@@ -130,36 +130,6 @@ function zmt_account_query_tenant_count_account_alter(QueryAlterableInterface $q
 
   $query->leftJoin($count_account_query, 'caq', 'caq.tenant_id = zt.id');
   $query->addExpression('IFNULL(caq.total_account, 0)', 'total_account');
-}
-
-/**
- * Implements hook_query_TAG_alter().
- */
-function zmt_account_query_alias_mailbox_exists_alter(QueryAlterableInterface $query) {
-  $domain_id = (int) $query->getMetaData('domain_id');
-  $name = $query->getMetaData('mailbox_name');
-
-  $account_query = db_select('zmt_account', 'zac');
-  $account_query->fields('zac', array('id'))
-    ->condition('zac.domain_id', $domain_id)
-    ->condition('zac.name', $name);
-
-  $query->union($account_query);
-}
-
-/**
- * Implements hook_query_TAG_alter().
- */
-function zmt_account_query_group_mailbox_exists_alter(QueryAlterableInterface $query) {
-  $domain_id = (int) $query->getMetaData('domain_id');
-  $name = $query->getMetaData('mailbox_name');
-
-  $account_query = db_select('zmt_account', 'zac');
-  $account_query->fields('zac', array('id'))
-    ->condition('zac.domain_id', $domain_id)
-    ->condition('zac.name', $name);
-
-  $query->union($account_query);
 }
 
 /**
@@ -334,15 +304,15 @@ function zmt_account_exists($domain, $name, $id = 0) {
   $domain_id = is_object($domain) ? $domain->id : $domain;
   $cache_key = md5($domain_id . '-' . $name . '-' . $id);
   if (!isset($cache[$cache_key])) {
-    $query = db_select('zmt_account', 'zac');
-    $query->fields('zac', array('id'))
+    $query = db_select('zmt_account', 'zac')
+      ->fields('zac', array('id'))
       ->condition('zac.domain_id', $domain_id)
       ->condition('zac.name', $name)
       ->condition('zac.id', (int) $id, '!=');
 
-    $query->addTag('account_mailbox_exists');
-    $query->addMetaData('domain_id', $domain_id);
-    $query->addMetaData('mailbox_name', $name);
+    $query->addTag('account_mailbox_exists')
+      ->addMetaData('domain_id', $domain_id)
+      ->addMetaData('mailbox_name', $name);
 
     $result = (int) $query->countQuery()->execute()->fetchField();
     $cache[$cache_key] = $result > 0;
