@@ -130,19 +130,7 @@ function zmt_domain_zmt_cos_delete($cos){
 }
 
 /**
- * Implements hook_query_TAG_alter().
- */ 
-function zmt_domain_query_tenant_count_domain_alter(QueryAlterableInterface $query) {
-  $count_domain_query = db_select('zmt_domain', 'zd')
-    ->fields('zd', array('tenant_id'))
-    ->groupBy('zd.tenant_id');
-  $count_domain_query->addExpression('COUNT(zd.id)', 'total_domain');
-  $query->leftJoin($count_domain_query, 'cdq', 'cdq.tenant_id = zt.id');
-  $query->addExpression('IFNULL(cdq.total_domain, 0)', 'total_domain');
-}
-
-/**
- * Implements hook_query_TAG_alter().
+ * Implements hook_query_TAG_alter() for zmt_domain_load_multiple query tag.
  */ 
 function zmt_domain_query_zmt_domain_load_multiple_alter(QueryAlterableInterface $query) {
   $query->leftJoin('zmt_server', 'zs', 'zs.id = base.server_id');
@@ -158,13 +146,25 @@ function zmt_domain_query_zmt_domain_load_multiple_alter(QueryAlterableInterface
 }
 
 /**
- * Implements hook_query_TAG_alter().
+ * Implements hook_query_TAG_alter() for zmt_domain_cos_load_multiple query tag.
  */ 
 function zmt_domain_query_zmt_domain_cos_load_multiple_alter(QueryAlterableInterface $query) {
   $query->leftJoin('zmt_cos', 'zc', 'zc.id = base.cos_id');
   $query->leftJoin('zmt_domain', 'zd', 'zd.id = base.domain_id');
   $query->addField('zc', 'name', 'cos');
   $query->addField('zd', 'name', 'domain');
+}
+
+/**
+ * Implements hook_query_TAG_alter() for tenant_count_domain query tag.
+ */ 
+function zmt_domain_query_tenant_count_domain_alter(QueryAlterableInterface $query) {
+  $count_domain_query = db_select('zmt_domain', 'zd')
+    ->fields('zd', array('tenant_id'))
+    ->groupBy('zd.tenant_id');
+  $count_domain_query->addExpression('COUNT(zd.id)', 'total_domain');
+  $query->leftJoin($count_domain_query, 'cdq', 'cdq.tenant_id = zt.id');
+  $query->addExpression('IFNULL(cdq.total_domain, 0)', 'total_domain');
 }
 
 /**
@@ -452,13 +452,12 @@ function zmt_domain_count_accounts($id) {
   static $total_account = NULL;
   if (NULL === $total_account) {
     $total_account = 0;
-    $query = db_select('zmt_domain', 'zd');
-    $result = $query->fields('zd', array('id'))
+    $query = db_select('zmt_domain', 'zd')
+      ->fields('zd', array('id'))
       ->condition('zd.id', (int) $id)
       ->range(0, 1)
-      ->addTag('domain_count_account')
-      ->execute()
-      ->fetchObject();
+      ->addTag('domain_count_account');
+    $result = $query->execute()->fetchObject();
     if (!empty($result->total_account)) {
       $total_account = (int) $result->total_account;
     }
@@ -478,15 +477,14 @@ function zmt_domain_count_mailboxes($id) {
   static $total_mailboxes = NULL;
   if (NULL === $total_account) {
     $total_mailboxes = 0;
-    $query = db_select('zmt_domain', 'zd');
-    $result = $query->fields('zd', array('id'))
+    $query = db_select('zmt_domain', 'zd')
+      ->fields('zd', array('id'))
       ->condition('zd.id', (int) $id)
       ->range(0, 1)
       ->addTag('domain_count_account')
       ->addTag('domain_count_alias')
-      ->addTag('domain_count_group')
-      ->execute()
-      ->fetchObject();
+      ->addTag('domain_count_group');
+    $result = $query->execute()->fetchObject();
     if (!empty($result->total_account)) {
       $total_mailboxes += (int) $result->total_account;
     }
