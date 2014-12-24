@@ -129,7 +129,7 @@ function zmt_server_load($id, $reset = FALSE) {
  *   Whether to reset the internal server loading cache.
  *
  * @return
- *   An array of server domains indexed by id.
+ *   An array of server objects indexed by id.
  */
 function zmt_server_load_multiple($ids = array(), array $conditions = array(), $reset = FALSE) {
   if (empty($ids) && empty($conditions)) {
