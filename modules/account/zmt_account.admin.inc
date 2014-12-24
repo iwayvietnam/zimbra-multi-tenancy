@@ -408,27 +408,40 @@ function zmt_account_import_form_validate($form, &$form_state) {
         foreach ($row as $i => $header) {
           $columns[$i] = trim($header);
         }
+        $col_number = count($columns);
         $count = 0;
         while ($row = fgetcsv($handle)) {
-          $record = array();
-          $quota = 0;
-          foreach ($row as $i => $field) {
-            if ($columns[$i] === 'status' && !in_array($field, $statuses)) {
-              $field = 'active';
-            }
+          $count++;
+          if (count($row) == count($col_number)) {
+            $record = array();
+            foreach ($row as $i => $field) {
+              if ($columns[$i] === 'status' && !in_array($field, $statuses)) {
+                $field = 'active';
+              }
 
-            $column = $columns[$i];
-            if ($column) {
-              $record[$column] = $field;
+              $column = $columns[$i];
+              if ($column) {
+                $record[$column] = $field;
+              }
+            }
+            $account = zmt_account_prepare($record, $domain_id);
+            if (!empty($account->name) && !empty($account->password)) {
+              $account->cos_id = $cos_id;
+              $exists = zmt_account_exists($domain_id, $account->name);
+              if (!$exists) {
+                $accounts[] = $account;
+              }
+            }
+            else {
+              drupal_set_message(t('Row @count is empty name or password', array(
+                '@count' => $count,
+              )));
             }
           }
-          $account = zmt_account_prepare($record, $domain_id);
-          if (!empty($account->name)) {
-            $account->cos_id = $cos_id;
-            $exists = zmt_account_exists($domain_id, $account->name);
-            if (!$exists) {
-              $accounts[] = $account;
-            }
+          else {
+            drupal_set_message(t('Row @count is invalid', array(
+              '@count' => $count,
+            )));
           }
         }
         fclose($handle);

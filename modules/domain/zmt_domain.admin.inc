@@ -108,7 +108,7 @@ function zmt_domain_edit_page($domain) {
 /**
  * Zimbra domain edit form.
  */
-function zmt_domain_edit_form($form, &$form_state, $domain){
+function zmt_domain_edit_form($form, &$form_state, $domain) {
   global $user;
 
   $form_state['domain'] = $domain;
