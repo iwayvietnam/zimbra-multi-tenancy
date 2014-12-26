@@ -578,10 +578,16 @@ function zmt_group_delete_form($form, &$form_state, $group) {
 
   $form['#submit'][] = 'zmt_group_delete_form_submit';
 
+  $description = '';
+  if ((int) $group->delete_dl > 0 && !empty($group->zimbra_id)) {
+    $description .= t('Delete this group also delete it in zimbra server.');
+  }
+  $description .= t(' This action cannot be undone.');
+
   $form = confirm_form($form,
     t('Are you sure you want to delete group %name?', array('%name' => $group->name)),
     '',
-    '<p>' . t('Deleting this group cannot be undone.') . '</p>',
+    '<p>' . $description . '</p>',
     t('Delete'),
     t('Cancel'),
     'confirm'

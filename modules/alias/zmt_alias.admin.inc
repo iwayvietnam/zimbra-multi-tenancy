@@ -257,10 +257,16 @@ function zmt_alias_delete_form($form, &$form_state, $alias) {
 
   $form['#submit'][] = 'zmt_alias_delete_form_submit';
 
+  $description = '';
+  if ((int) $alias->delete_alias > 0 && !empty($alias->zimbra_target_id)) {
+    $description .= t('Delete this alias also delete it in zimbra server.');
+  }
+  $description .= t(' This action cannot be undone.');
+
   $form = confirm_form($form,
     t('Are you sure you want to delete alias %name?', array('%name' => $alias->name)),
     '',
-    '<p>' . t('Deleting this alias cannot be undone.') . '</p>',
+    '<p>' . $description . '</p>',
     t('Delete'),
     t('Cancel'),
     'confirm'

@@ -511,10 +511,16 @@ function zmt_account_delete_form($form, &$form_state, $account) {
 
   $form['#submit'][] = 'zmt_account_delete_form_submit';
 
+  $description = '';
+  if ((int) $account->delete_account > 0 && !empty($account->zimbra_id)) {
+    $description .= t('Delete this account also delete it in zimbra server.');
+  }
+  $description .= t(' This action cannot be undone.');
+
   $form = confirm_form($form,
     t('Are you sure you want to delete account %name?', array('%name' => $account->name)),
     '',
-    '<p>' . t('Deleting this account cannot be undone.') . '</p>',
+    '<p>' . $description . '</p>',
     t('Delete'),
     t('Cancel'),
     'confirm'

@@ -522,10 +522,16 @@ function zmt_domain_delete_form($form, &$form_state, $domain) {
   $form['#submit'][] = 'zmt_domain_delete_form_submit';
   $form['#validate'][] = 'zmt_domain_delete_form_validate';
 
+  $description = '';
+  if ((int) $domain->delete_domain > 0 && !empty($domain->zimbra_id)) {
+    $description .= t('Delete this domain also delete it in zimbra server.');
+  }
+  $description .= t(' This action cannot be undone.');
+
   $form = confirm_form($form,
     t('Are you sure you want to delete domain %name?', array('%name' => $domain->name)),
     '',
-    '<p>' . t('Deleting this domain cannot be undone.') . '</p>',
+    '<p>' . $description . '</p>',
     t('Delete'),
     t('Cancel'),
     'confirm'
