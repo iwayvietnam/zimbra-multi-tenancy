@@ -150,7 +150,7 @@ function zmt_ajax_server_select_callback($form, $form_state) {
  */
 function zmt_pulling_progress($time) {
   $progress = array(
-    'message' => t('Starting pulling...'),
+    'message' => t('Starting pull data...'),
     'percentage' => -1,
   );
 
