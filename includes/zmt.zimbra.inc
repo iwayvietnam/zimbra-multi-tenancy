@@ -167,7 +167,12 @@ function zimbra_count_objects(ZimbraAdminApi $api, $type, $domain = NULL) {
   $cache_key = md5($api->location() . $type . $domain);
   if (!isset($cache[$cache_key])) {
     try {
-      $result = $api->countObjects($type, new DomainSelector('name', $domain));
+      if (!empty($domain)) {
+        $result = $api->countObjects($type, new DomainSelector('name', $domain));
+      }
+      else {
+        $result = $api->countObjects($type);
+      }
       $cache[$cache_key] = isset($result->num) ? (int) $result->num : (int) $result;
     }
     catch (Exception $ex) {
