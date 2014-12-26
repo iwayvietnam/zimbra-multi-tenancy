@@ -251,7 +251,6 @@ function zmt_ui_zmt_account_import_form_validate($form, &$form_state) {
 
         $progress++;
         variable_set($progress_name, floor($progress * 100 / $total_account));
-        sleep(1);
       }
     }
   }

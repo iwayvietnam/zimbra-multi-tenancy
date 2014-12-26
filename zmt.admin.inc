@@ -233,8 +233,8 @@ function zmt_ajax_pull_data_callback($form, &$form_state) {
         }
       }
     }
-    variable_del($progress_name);
     variable_del($message_name);
+    variable_del($progress_name);
 
     $commands[] = zmt_ajax_command_redirect('zmt/server');
   }
