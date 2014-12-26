@@ -618,6 +618,37 @@ function zimbra_get_dl_members(ZimbraAdminApi $api, $name) {
 }
 
 /**
+ * Count number of distribution lists in a domain.
+ *
+ * @param ZimbraAdminApi $api
+ *   Zimbra admin api.
+ * @param string $domain
+ *   Domain name.
+ * @return mix
+ */
+function zimbra_count_dl(ZimbraAdminApi $api, $domain = NULL) {
+  $cache = &drupal_static(__FUNCTION__, array());
+  $cache_key = md5($api->location() . $domain);
+  if (!isset($cache[$cache_key])) {
+    try {
+      $attrs = array(
+        'zimbraId',
+      );
+      $result = $api->searchDirectory(
+        '', NULL, 1, 0, $domain, NULL, NULL,
+        'distributionlists', NULL, NULL, TRUE, implode(',', $attrs)
+      );
+      $cache[$cache_key] = isset($result->searchTotal) ? $result->searchTotal : 0;
+    }
+    catch (Exception $ex) {
+      watchdog('zimbra', $ex->__toString());
+      return FALSE;
+    }
+  }
+  return $cache[$cache_key];
+}
+
+/**
  * Create Zimbra distribution list
  *
  * @param ZimbraAdminApi $api
@@ -890,7 +921,7 @@ function zimbra_get_account(ZimbraAdminApi $api, $name, $reset = FALSE) {
 }
 
 /**
- * Count number of accounts by cos in a domain.
+ * Count number of accounts in a domain.
  *
  * @param ZimbraAdminApi $api
  *   Zimbra admin api.
@@ -899,6 +930,37 @@ function zimbra_get_account(ZimbraAdminApi $api, $name, $reset = FALSE) {
  * @return mix
  */
 function zimbra_count_account(ZimbraAdminApi $api, $domain = NULL) {
+  $cache = &drupal_static(__FUNCTION__, array());
+  $cache_key = md5($api->location() . $domain);
+  if (!isset($cache[$cache_key])) {
+    try {
+      $attrs = array(
+        'zimbraId',
+      );
+      $result = $api->searchDirectory(
+        '', NULL, 1, 0, $domain, NULL, NULL,
+        'accounts', NULL, NULL, TRUE, implode(',', $attrs)
+      );
+      $cache[$cache_key] = isset($result->searchTotal) ? $result->searchTotal : 0;
+    }
+    catch (Exception $ex) {
+      watchdog('zimbra', $ex->__toString());
+      return FALSE;
+    }
+  }
+  return $cache[$cache_key];
+}
+
+/**
+ * Count number of accounts by cos in a domain.
+ *
+ * @param ZimbraAdminApi $api
+ *   Zimbra admin api.
+ * @param string $domain
+ *   Domain name.
+ * @return mix
+ */
+function zimbra_count_account_by_cos(ZimbraAdminApi $api, $domain) {
   $cache = &drupal_static(__FUNCTION__, array());
   $cache_key = md5($api->location() . $type . $domain);
   if (!isset($cache[$cache_key])) {
@@ -1097,6 +1159,37 @@ function zimbra_list_alias(ZimbraAdminApi $api, $domain = NULL, $limit = NULL, $
       watchdog('zimbra', $ex->__toString());
     }
     $cache[$cache_key] = $all_alias;
+  }
+  return $cache[$cache_key];
+}
+
+/**
+ * Count number of aliases in a domain.
+ *
+ * @param ZimbraAdminApi $api
+ *   Zimbra admin api.
+ * @param string $domain
+ *   Domain name.
+ * @return mix
+ */
+function zimbra_count_alias(ZimbraAdminApi $api, $domain = NULL) {
+  $cache = &drupal_static(__FUNCTION__, array());
+  $cache_key = md5($api->location() . $domain);
+  if (!isset($cache[$cache_key])) {
+    try {
+      $attrs = array(
+        'zimbraId',
+      );
+      $result = $api->searchDirectory(
+        '', NULL, 1, 0, $domain, NULL, NULL,
+        'aliases', NULL, NULL, TRUE, implode(',', $attrs)
+      );
+      $cache[$cache_key] = isset($result->searchTotal) ? $result->searchTotal : 0;
+    }
+    catch (Exception $ex) {
+      watchdog('zimbra', $ex->__toString());
+      return FALSE;
+    }
   }
   return $cache[$cache_key];
 }
