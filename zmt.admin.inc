@@ -106,7 +106,7 @@ function zmt_server_pull_data_form($form, &$form_state) {
         'interval' => 1000,
       ),
     ),
-    '#prefix' => '<div class="form-item pull-actions">',
+    '#prefix' => '<div class="form-item ajax-actions">',
     '#suffix' => l(t('Cancel'), 'zmt/server') . '</div>',
   );
   $form['#attached']['js'] = array(

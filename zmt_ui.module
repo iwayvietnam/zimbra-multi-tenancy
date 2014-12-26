@@ -182,6 +182,13 @@ function zmt_ui_zmt_account_import_form_validate($form, &$form_state) {
   if (!form_set_error() && ($op || !zmt_is_ajax_request())) {
     $accounts = !empty($form_state['accounts']) ? $form_state['accounts'] : FALSE;
     if (!empty($accounts) && is_array($accounts)) {
+      $progress = 0;
+      $total_account = count($accounts);
+      $message_name = 'zmt_importing_message_' . $form_state['time'];
+      $progress_name = 'zmt_importing_progress_' . $form_state['time'];
+      variable_set($message_name, t('Importing accounts to zimbra server...'));
+      variable_set($progress_name, $progress);
+
       module_load_include('inc', 'zmt', 'includes/zmt.zimbra');
       $domain_id = (int) $form_state['values']['domain_id'];
       $cos_id = (int) $form_state['values']['cos_id'];
@@ -215,7 +222,7 @@ function zmt_ui_zmt_account_import_form_validate($form, &$form_state) {
             drupal_set_message(t('Account @name is invalid. @message', array(
               '@name' => $account->name,
               '@message' => $zimbra_account->getMessage(),
-            )));
+            )), 'error');
           }
           else {
             $synchronized = TRUE;
@@ -229,21 +236,27 @@ function zmt_ui_zmt_account_import_form_validate($form, &$form_state) {
             drupal_set_message(t('Account @name is invalid. @message', array(
               '@name' => $account->name,
               '@message' => $result->getMessage(),
-            )));
+            )), 'error');
           }
           else {
             zimbra_set_password($api, $zimbra_account->id, $password);
             $synchronized = TRUE;
           }
         }
+
         if ($synchronized) {
           $account->zimbra_id = isset($zimbra_account->id) ? $zimbra_account->id : '';
           $synchronized_accounts[] = $account;
         }
+
+        $progress++;
+        variable_set($progress_name, floor($progress * 100 / $total_account));
+        sleep(1);
       }
     }
   }
   $form_state['accounts'] = $synchronized_accounts;
+  sleep(1);
 }
 
 /**

@@ -27,6 +27,14 @@ function zmt_account_ui_menu() {
     'type' => MENU_LOCAL_ACTION,
     'file' => 'zmt_account.admin.inc',
   );
+  $items['zmt/account/importing/progress/%'] = array(
+    'title' => 'Importing progress bar',
+    'page callback' => 'zmt_account_importing_progress',
+    'page arguments' => array(4),
+    'access callback' => 'zmt_account_add_access',
+    'type' => MENU_CALLBACK,
+    'file' => 'zmt_account.admin.inc',
+  );
   $items['zmt/account/%zmt_account/edit'] = array(
     'title' => 'Edit Account',
     'page callback' => 'zmt_account_edit_page',

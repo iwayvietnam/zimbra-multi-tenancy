@@ -320,6 +320,10 @@ function zmt_account_import_page() {
 function zmt_account_import_form($form, &$form_state){
   global $user;
 
+  if (empty($form_state['time'])) {
+    $form_state['time'] = REQUEST_TIME;
+  }
+
   $form['file'] = array(
     '#type' => 'file',
     '#title' => t('Csv file'),
@@ -374,13 +378,52 @@ function zmt_account_import_form($form, &$form_state){
     '#value' => t('Import'),
     '#ajax' => array(
       'callback' => 'zmt_account_ajax_import_form_callback',
+      'progress' => array(
+        'type' => 'bar',
+        'message' => t('Importing data..'),
+        'url' => url('zmt/account/importing/progress/' . $form_state['time']),
+        'interval' => 1000,
+      ),
     ),
-    '#suffix' => l(t('Cancel'), 'zmt/account'),
+    '#prefix' => '<div class="form-item ajax-actions">',
+    '#suffix' => l(t('Cancel'), 'zmt/account') . '</div>',
+  );
+
+  $form['#attached']['css'] = array(
+    drupal_get_path('module', 'zmt') .'/zmt.css',
   );
 
   $form['#validate'] = array('zmt_account_import_form_validate');
 
   return $form;
+}
+
+/**
+ * Get the progress bar importing status, as JSON.
+ *
+ * This is the menu handler for
+ * zmt/account/importing/progress/$time.
+ *
+ * @param int $time
+ *   Timestamp.
+ *
+ * @see zmt_account_ajax_import_form_callback()
+ */
+function zmt_account_importing_progress($time) {
+  $progress = array(
+    'message' => t('Starting import...'),
+    'percentage' => -1,
+  );
+
+  $message = variable_get('zmt_importing_message_' . $time, t('Importing data...'));
+  $percentage = variable_get('zmt_importing_progress_' . $time, 0);
+
+  if ($percentage) {
+    $progress['message'] = $message;
+    $progress['percentage'] = $percentage;
+  }
+
+  drupal_json_output($progress);
 }
 
 /**
@@ -412,7 +455,7 @@ function zmt_account_import_form_validate($form, &$form_state) {
         $count = 0;
         while ($row = fgetcsv($handle)) {
           $count++;
-          if (count($row) == count($col_number)) {
+          if (count($row) == $col_number) {
             $record = array();
             foreach ($row as $i => $field) {
               if ($columns[$i] === 'status' && !in_array($field, $statuses)) {
@@ -435,13 +478,13 @@ function zmt_account_import_form_validate($form, &$form_state) {
             else {
               drupal_set_message(t('Row @count is empty name or password', array(
                 '@count' => $count,
-              )));
+              )), 'error');
             }
           }
           else {
             drupal_set_message(t('Row @count is invalid', array(
               '@count' => $count,
-            )));
+            )), 'error');
           }
         }
         fclose($handle);
@@ -461,12 +504,23 @@ function zmt_account_ajax_import_form_callback($form, $form_state) {
   }
   else {
     $accounts = $form_state['accounts'];
-    $count = 0;
-    foreach ($accounts as $account) {
-      zmt_account_save($account);
-      $count++;
+    if (!empty($accounts)) {
+      $count = 0;
+      $total_account = count($accounts);
+      $message_name = 'zmt_importing_message_' . $form_state['time'];
+      $progress_name = 'zmt_importing_progress_' . $form_state['time'];
+      variable_set($message_name, t('Importing accounts to Drupal...'));
+      variable_set($progress_name, $count);
+
+      foreach ($accounts as $account) {
+        zmt_account_save($account);
+        $count++;
+        variable_set($progress_name, floor($count * 100 / $total_account));
+        sleep(1);
+      }
+      drupal_set_message(t('@count accounts were updated.', array('@count' => $count)));
+      sleep(1);
     }
-    drupal_set_message(t('@count accounts were updated.', array('@count' => $count)));
     $commands[] = zmt_ajax_command_redirect('zmt/account');
   }
   return array(
