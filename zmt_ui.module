@@ -22,6 +22,15 @@ function zmt_menu() {
     'file' => 'zmt.admin.inc',
   );
 
+  $items['zmt/pulling/progress/%'] = array(
+    'title' => 'Pulling progress bar',
+    'page callback' => 'zmt_pulling_progress',
+    'page arguments' => array(3),
+    'access callback' => 'zmt_server_add_access',
+    'type' => MENU_CALLBACK,
+    'file' => 'zmt.admin.inc',
+  );
+
   return $items;
 }
 
