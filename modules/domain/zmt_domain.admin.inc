@@ -556,7 +556,7 @@ function zmt_domain_delete_form_validate($form, &$form_state) {
  */
 function zmt_domain_delete_form_submit($form, &$form_state) {
   $domain = $form_state['domain'];
-  // zmt_domain_delete($domain->id);
+  zmt_domain_delete($domain->id);
   drupal_set_message(t('%name has been deleted.', array('%name' => $domain->name)));
   watchdog('zmt_domain', 'Deleted domain %name.', array('%name' => $domain->name), WATCHDOG_NOTICE);
 }
