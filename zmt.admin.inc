@@ -248,6 +248,16 @@ function zmt_ajax_pull_data_callback($form, &$form_state) {
   );
 }
 
+/**
+ * Update pull cos data.
+ *
+ * @param $zimbra_domains
+ *   An array of zimbra domains.
+ * @param $server_id
+ *   An ID of zmt server.
+ * @return
+ *   Total number of updated cos.
+ */
 function _zmt_ui_update_cos_data(array $zimbra_coses, $server_id = 0, $progress_name = 'zmt_pulling_progress') {
   $count = 0;
   $progress = 0;
