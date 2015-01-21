@@ -315,6 +315,16 @@ function _zmt_ui_update_domain_data(array $zimbra_domains, $server_id = 0, $tena
       $domain = zmt_domain_new($zimbra_domain->name);
       $domain->server_id = $server_id;
       $domain->zimbra_id = $zimbra_id;
+
+      $attrs = isset($zimbra_domain->a) ? $zimbra_domain->a : array();
+      if (is_array($attrs)) {
+        foreach ($attrs as $attr) {
+          if ($attr->n === 'zimbraDomainStatus') {
+            $domain->status = isset($attr->_content) ? $attr->_content : '';
+          }
+        }
+      }
+
       $tenant = zmt_tenant_load($tenant_id);
       if ($tenant) {
         $domain->tenant_id = $tenant->id;
@@ -324,6 +334,7 @@ function _zmt_ui_update_domain_data(array $zimbra_domains, $server_id = 0, $tena
           $domain->uid = (int) $tenant_user->uid;
         }
       }
+
       zmt_domain_save($domain, FALSE);
       $count++;
     }
@@ -368,6 +379,7 @@ function _zmt_ui_update_account_data(ZimbraAdminApi $api, array $zimbra_domains,
             $account = zmt_account_new($account_name);
             $account->domain_id = $domain->id;
             $account->zimbra_id = $zimbra_id;
+
             $attrs = isset($zmbra_account->a) ? $zmbra_account->a : array();
             if (is_array($attrs)) {
               foreach ($attrs as $attr) {
@@ -391,6 +403,7 @@ function _zmt_ui_update_account_data(ZimbraAdminApi $api, array $zimbra_domains,
                 }
               }
             }
+
             zmt_account_save($account, FALSE);
             $count++;
           }
