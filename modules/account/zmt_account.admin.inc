@@ -495,7 +495,9 @@ function zmt_account_import_form_validate($form, &$form_state) {
   if (!empty($accounts)) {
     $domain_cos = zmt_domain_cos_load_single($domain_id, $cos_id);
     $max_account = !empty($domain_cos->max_account) ? (int) $domain_cos->max_account : 0;
-    if ($max_account && count($accounts) >= $max_account) {
+    $total_account = zmt_account_count_by_domain($domain_id);
+    $total_account += count($accounts);
+    if ($max_account && $total_account > $max_account) {
       form_set_error('file', t('The domain has reached the maximum number of accounts.'));
     }
   }
