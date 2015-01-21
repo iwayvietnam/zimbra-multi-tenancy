@@ -524,9 +524,9 @@ function zmt_domain_delete_form($form, &$form_state, $domain) {
 
   $description = '';
   if ((int) $domain->delete_domain > 0 && !empty($domain->zimbra_id)) {
-    $description .= t('Delete this domain also delete it in zimbra server.');
+    $description .= t('Delete this domain also delete it in zimbra server. ');
   }
-  $description .= t(' This action cannot be undone.');
+  $description .= t('This action cannot be undone.');
 
   $form = confirm_form($form,
     t('Are you sure you want to delete domain %name?', array('%name' => $domain->name)),
@@ -556,7 +556,7 @@ function zmt_domain_delete_form_validate($form, &$form_state) {
  */
 function zmt_domain_delete_form_submit($form, &$form_state) {
   $domain = $form_state['domain'];
-  // zmt_domain_delete($domain->id);
+  zmt_domain_delete($domain->id);
   drupal_set_message(t('%name has been deleted.', array('%name' => $domain->name)));
   watchdog('zmt_domain', 'Deleted domain %name.', array('%name' => $domain->name), WATCHDOG_NOTICE);
 }
