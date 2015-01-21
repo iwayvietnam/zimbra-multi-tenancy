@@ -167,7 +167,7 @@ function zmt_ui_zmt_group_member_delete($member) {
 }
 
 /**
- * Implements hook_form_FORM_ID_alter() for the group delete form.
+ * Implements hook_form_FORM_ID_alter() for the account import form.
  */
 function zmt_ui_form_zmt_account_import_form_alter(&$form, &$form_state) {
   $form['#validate'][] = 'zmt_ui_zmt_account_import_form_validate';
