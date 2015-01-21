@@ -431,7 +431,10 @@ function zmt_account_importing_progress($time) {
  */
 function zmt_account_import_form_validate($form, &$form_state) {
   $op = isset($form_state['values']['op']);
+  $domain_id = (int) $form_state['values']['domain_id'];
+  $cos_id = (int) $form_state['values']['cos_id'];
   $accounts = array();
+
   if (!form_set_error() && ($op || !zmt_is_ajax_request())) {
     $destination = 'public://zmt/';
     if (file_prepare_directory($destination, FILE_CREATE_DIRECTORY)) {
@@ -442,8 +445,6 @@ function zmt_account_import_form_validate($form, &$form_state) {
       );
       if ($file) {
         $statuses = zmt_account_statuses();
-        $domain_id = (int) $form_state['values']['domain_id'];
-        $cos_id = (int) $form_state['values']['cos_id'];
 
         $handle = fopen($file->uri, 'r');
         $row = fgetcsv($handle);
@@ -489,6 +490,13 @@ function zmt_account_import_form_validate($form, &$form_state) {
         }
         fclose($handle);
       }
+    }
+  }
+  if (!empty($accounts)) {
+    $domain_cos = zmt_domain_cos_load_single($domain_id, $cos_id);
+    $max_account = !empty($domain_cos->max_account) ? (int) $domain_cos->max_account : 0;
+    if ($max_account && count($accounts) >= $max_account) {
+      form_set_error('file', t('The domain has reached the maximum number of accounts.'));
     }
   }
   $form_state['accounts'] = $accounts;
