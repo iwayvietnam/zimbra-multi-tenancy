@@ -174,6 +174,36 @@ function zmt_ui_zmt_group_member_delete($member) {
 }
 
 /**
+ * Implements hook_form_FORM_ID_alter() for the domain delete form.
+ */
+function zmt_ui_form_zmt_domain_delete_form_alter(&$form, &$form_state) {
+  $form['#validate'][] = 'zmt_ui_domain_delete_form_validate';
+}
+
+/**
+ * Validate callback for zmt_domain_delete_form().
+ */
+function zmt_ui_domain_delete_form_validate($form, &$form_state) {
+  if (!form_set_error() && !zmt_is_ajax_request()) {
+    $domain = $form_state['domain'];
+    if ((int) $domain->delete_domain > 0 && !empty($domain->zimbra_id)) {
+      module_load_include('inc', 'zmt', 'includes/zmt.zimbra');
+      $api = zimbra_admin_api_by_server($domain->server_id);
+      $zimbra_domain = zimbra_get_domain($api, $domain->name);
+      if ($zimbra_domain) {
+        $total_account = (int) zimbra_count_account($api);
+        $total_alias = (int) zimbra_count_alias($api);
+        $total_dl = (int) zimbra_count_dl($api);
+        $total_mailboxes = $total_account + $total_alias + $total_dl;
+        if ($total_mailboxes > 0) {
+          form_set_error('actions', t('Cannot delete this domain, because it is not empty in zimbra server. Please contact your administrator.'));
+        }
+      }
+    }
+  }
+}
+
+/**
  * Implements hook_form_FORM_ID_alter() for the account import form.
  */
 function zmt_ui_form_zmt_account_import_form_alter(&$form, &$form_state) {
