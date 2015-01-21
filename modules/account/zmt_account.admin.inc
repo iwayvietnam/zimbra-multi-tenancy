@@ -268,8 +268,8 @@ function zmt_account_edit_form_validate($form, &$form_state) {
   if ($id === 0) {
     $domain_cos = zmt_domain_cos_load_single($domain_id, $cos_id);
     $max_account = !empty($domain_cos->max_account) ? (int) $domain_cos->max_account : 0;
-    $total_account = zmt_account_count_by_domain($domain_id);
-    if ($max_account && $total_account >= $max_account) {
+    $total_account = zmt_account_count_by_domain($domain_id) + 1;
+    if ($max_account && $total_account > $max_account) {
       form_set_error('name', t('The domain has reached the maximum number of accounts.'));
     }
   }
