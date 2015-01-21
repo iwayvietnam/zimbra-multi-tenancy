@@ -91,6 +91,7 @@ function zmt_alias_schema() {
       'indexes' => array(
         'zmt_alias_domain_id' => array('domain_id'),
         'zmt_alias_account_id' => array('account_id'),
+        'zmt_alias_creator_uid' => array('uid'),
         'zmt_alias_created' => array('created'),
         'zmt_alias_changed' => array('changed'),
       ),

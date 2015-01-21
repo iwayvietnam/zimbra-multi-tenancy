@@ -71,6 +71,7 @@ function zmt_tenant_schema() {
       ),
       'indexes' => array(
         'zmt_tenant_server_id' => array('server_id'),
+        'zmt_tenant_uid' => array('tenant_uid'),
         'zmt_tenant_creator_uid' => array('uid'),
         'zmt_tenant_created' => array('created'),
         'zmt_tenant_changed' => array('changed'),

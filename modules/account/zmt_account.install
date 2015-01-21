@@ -133,6 +133,8 @@ function zmt_account_schema() {
       'indexes' => array(
         'zmt_account_domain_id' => array('domain_id'),
         'zmt_account_cos_id' => array('cos_id'),
+        'zmt_account_status' => array('status'),
+        'zmt_account_creator_uid' => array('uid'),
         'zmt_account_created' => array('created'),
         'zmt_account_changed' => array('changed'),
       ),

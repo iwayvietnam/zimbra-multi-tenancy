@@ -87,7 +87,7 @@ function zmt_cos_schema() {
       ),
       'indexes' => array(
         'zmt_cos_server_id' => array('server_id'),
-        'zmt_cos_uid' => array('uid'),
+        'zmt_cos_creator_uid' => array('uid'),
         'zmt_cos_created' => array('created'),
         'zmt_cos_changed' => array('changed'),
       ),

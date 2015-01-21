@@ -103,6 +103,8 @@ function _zmt_add_zmt_group_schema() {
       ),
       'indexes' => array(
         'zmt_group_domain_id' => array('domain_id'),
+        'zmt_group_uid' => array('group_uid'),
+        'zmt_group_creator_uid' => array('uid'),
         'zmt_group_created' => array('created'),
         'zmt_group_changed' => array('changed'),
       ),

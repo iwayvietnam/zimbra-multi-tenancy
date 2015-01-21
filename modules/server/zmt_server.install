@@ -108,7 +108,7 @@ function zmt_server_schema() {
       ),
       'primary key' => array('id'),
       'indexes' => array(
-        'zmt_server_uid' => array('uid'),
+        'zmt_server_creator_uid' => array('uid'),
         'zmt_server_created' => array('created'),
         'zmt_server_changed' => array('changed'),
       ),
