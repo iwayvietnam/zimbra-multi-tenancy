@@ -39,11 +39,18 @@ function zmt_menu() {
  */
 function zmt_ui_zmt_domain_presave($domain) {
   module_load_include('inc', 'zmt', 'includes/zmt.zimbra');
+  $attrs = array(
+    'zimbraDomainStatus' => $domain->status,
+  );
+
   $api = zimbra_admin_api_by_server($domain->server_id);
   $zimbra_domain = zimbra_get_domain($api, $domain->name);
   if (!$zimbra_domain) {
-    $zimbra_domain = zimbra_create_domain($api, $domain->name);
+    $zimbra_domain = zimbra_create_domain($api, $domain->name, $attrs);
     $domain->zimbra_id = isset($zimbra_domain->id) ? $zimbra_domain->id : '';
+  }
+  else {
+    zimbra_modify_domain($api, $zimbra_domain->id, $attrs);
   }
 }
 

@@ -69,6 +69,13 @@ function zmt_domain_entity_property_info_alter(&$info) {
     'getter callback' => 'zmt_domain_get_properties',
     'schema field' => 'domain_uid',
   );
+  $properties['status'] = array(
+    'type' => 'text',
+    'label' => t('Status'),
+    'description' => t('The domain\'s status.'),
+    'getter callback' => 'zmt_domain_get_properties',
+    'schema field' => 'status',
+  );
   $properties['creator'] = array(
     'type' => 'user',
     'label' => t('Creator'),
@@ -89,6 +96,9 @@ function zmt_domain_get_properties($domain, array $options, $name) {
       return zmt_domain_load($domain->tenant_id);
     case 'user':
       return user_load($domain->tenant_uid);
+    case 'status':
+      $statuses = zmt_domain_statuses();
+      return isset($statuses[$domain->status]) ? $statuses[$domain->status] : '';
     case 'creator':
       return user_load($domain->uid);
   }
@@ -104,12 +114,12 @@ function zmt_domain_permission() {
 /**
  * Implements hook_user_delete().
  */
-function zmt_domain_user_delete($account) {
+function zmt_domain_user_delete($domain) {
   db_update('zmt_domain')
     ->fields(array(
       'domain_uid' => 0,
     ))
-    ->condition('domain_uid', $account->uid)
+    ->condition('domain_uid', $domain->uid)
     ->execute();
 }
 
@@ -182,20 +192,20 @@ function zmt_domain_query_tenant_count_domain_alter(QueryAlterableInterface $que
 /**
  * Access callback for Domain.
  */
-function zmt_domain_access($op, $domain, $account = NULL, $entity_type = NULL) {
+function zmt_domain_access($op, $domain, $domain = NULL, $entity_type = NULL) {
   global $user;
-  if (NULL === $account) {
-    $account = $user;
+  if (NULL === $domain) {
+    $domain = $user;
   }
-  if (user_access('administer zmt', $account) || user_access('administer any zmt_domain', $account)) {
+  if (user_access('administer zmt', $domain) || user_access('administer any zmt_domain', $domain)) {
     return TRUE;
   }
   if ($op === 'list' || $op === 'create') {
-    return user_access('administer own zmt_domain', $account);
+    return user_access('administer own zmt_domain', $domain);
   }
   else {
-    $is_own = isset($domain->uid) && $domain->uid == $account->uid;
-    return user_access('administer own zmt_domain', $account) && $is_own;
+    $is_own = isset($domain->uid) && $domain->uid == $domain->uid;
+    return user_access('administer own zmt_domain', $domain) && $is_own;
   }
 }
 
@@ -420,7 +430,7 @@ function zmt_domain_load_multiple_by_user($domain_user = NULL, $limit = 0, $offs
 /**
  * Loads a domain by name.
  * @param $name
- *   The account name.
+ *   The domain name.
  * @return
  *   A domain object or FALSE.
  */
@@ -453,28 +463,28 @@ function zmt_domain_get_server($id) {
 }
 
 /**
- * Count number of accounts in domain.
+ * Count number of domains in domain.
  *
  * @param $id
  *   The domain ID.
  * @return
- *   Total number of accounts.
+ *   Total number of domains.
  */
-function zmt_domain_count_accounts($id) {
-  static $total_account = NULL;
-  if (NULL === $total_account) {
-    $total_account = 0;
+function zmt_domain_count_domains($id) {
+  static $total_domain = NULL;
+  if (NULL === $total_domain) {
+    $total_domain = 0;
     $query = db_select('zmt_domain', 'zd')
       ->fields('zd', array('id'))
       ->condition('zd.id', (int) $id)
       ->range(0, 1)
-      ->addTag('domain_count_account');
+      ->addTag('domain_count_domain');
     $result = $query->execute()->fetchObject();
-    if (!empty($result->total_account)) {
-      $total_account = (int) $result->total_account;
+    if (!empty($result->total_domain)) {
+      $total_domain = (int) $result->total_domain;
     }
   }
-  return (int) $total_account;
+  return (int) $total_domain;
 }
 
 /**
@@ -493,12 +503,12 @@ function zmt_domain_count_mailboxes($id) {
       ->fields('zd', array('id'))
       ->condition('zd.id', (int) $id)
       ->range(0, 1)
-      ->addTag('domain_count_account')
+      ->addTag('domain_count_domain')
       ->addTag('domain_count_alias')
       ->addTag('domain_count_group');
     $result = $query->execute()->fetchObject();
-    if (!empty($result->total_account)) {
-      $total_mailboxes += (int) $result->total_account;
+    if (!empty($result->total_domain)) {
+      $total_mailboxes += (int) $result->total_domain;
     }
     if (!empty($result->total_alias)) {
       $total_mailboxes += (int) $result->total_alias;
@@ -511,22 +521,22 @@ function zmt_domain_count_mailboxes($id) {
 }
 
 /**
- * Gets remain number of accounts.
+ * Gets remain number of domains.
  *
  * @param $id
  *   The domain ID.
  * @return
  *   Remain number of accouns.
  */
-function zmt_domain_account_number_remain($id, $cos_id){
-  $account_remain = 0;
+function zmt_domain_domain_number_remain($id, $cos_id){
+  $domain_remain = 0;
   $domain = zmt_domain_load($id);
   if ($domain) {
-    $max_account = isset($domain->max_account) ? (int) $domain->max_account : 0;
-    $total_account = zmt_domain_count_accounts($id);
-    $account_remain = $max_account - $total_account;
+    $max_domain = isset($domain->max_domain) ? (int) $domain->max_domain : 0;
+    $total_domain = zmt_domain_count_domains($id);
+    $domain_remain = $max_domain - $total_domain;
   }
-  return $account_remain;
+  return $domain_remain;
 }
 
 /**
@@ -569,6 +579,7 @@ function zmt_domain_new($name = '') {
     'server_id' => 0,
     'tenant_id' => 0,
     'name' => $name,
+    'status' => '',
     'zimbra_id' => '',
     'domain_uid' => 0,
     'uid' => $user->uid,
@@ -597,6 +608,7 @@ function zmt_domain_save($domain, $by_entity = TRUE) {
       'server_id' => $domain->server_id,
       'tenant_id' => $domain->tenant_id,
       'name' => $domain->name,
+      'status' => $domain->status,
       'zimbra_id' => $domain->zimbra_id,
       'domain_uid' => $domain->domain_uid,
       'uid' => $domain->uid,
@@ -781,7 +793,7 @@ function zmt_domain_cos_new($domain_id = 0, $cos_id = 0) {
   $values = array(
     'domain_id' => (int) $domain_id,
     'cos_id' => (int) $cos_id,
-    'max_account' => 0,
+    'max_domain' => 0,
     'uid' => $user->uid,
     'created' => REQUEST_TIME,
   );
@@ -805,7 +817,7 @@ function zmt_domain_cos_save($mapping, $by_entity = TRUE) {
     $fields = array(
       'domain_id' => $mapping->domain_id,
       'cos_id' => $mapping->cos_id,
-      'max_account' => (int) $mapping->max_account,
+      'max_domain' => (int) $mapping->max_domain,
       'uid' => $mapping->uid,
       'created' => $mapping->created,
     );
@@ -877,4 +889,17 @@ function zmt_domain_cos_delete_multiple_by_domain(array $domain_ids = array()) {
     $ids = isset($result['zmt_domain_cos']) ? array_keys($result['zmt_domain_cos']) : array();
     zmt_domain_cos_delete_multiple($ids);
   }
+}
+
+/**
+ * Define zimbra domain statuses.
+ */
+function zmt_domain_statuses() {
+  return array(
+    'active' => t('Active'),
+    'closed' => t('Closed'),
+    'locked' => t('Locked'),
+    'suspended' => t('Suspended'),
+    'maintenance' => t('Maintenance'),
+  );
 }

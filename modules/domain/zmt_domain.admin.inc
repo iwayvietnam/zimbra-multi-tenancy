@@ -10,6 +10,7 @@ function zmt_domain_list_all() {
   $header = array();
   $header[] = array('data' => t('No.'));
   $header[] = array('data' => t('Name'), 'field' => 'zd.name');
+  $header[] = array('data' => t('Status'), 'field' => 'zd.status');
   if (module_exists('zmt_account')) {
     $header[] = array('data' => t('Total account'), 'field' => 'za.total_account');
   }
@@ -44,12 +45,15 @@ function zmt_domain_list_all() {
     ->execute();
 
   $destination = drupal_get_destination();
-
+  $statuses = zmt_domain_statuses();
   $rows = array();
   foreach ($result as $key => $domain) {
     $row = array();
     $row[] = $key + 1 + (pager_find_page() * $item_per_page);
     $row[] = l($domain->name, 'zmt/domain/' . $domain->id . '/edit', array('query' => $destination));
+    $row[] = array(
+      'data' => isset($statuses[$domain->status]) ? $statuses[$domain->status] : $domain->status,
+    );
     if (module_exists('zmt_account')) {
       $total_account = isset($domain->total_account) ? $domain->total_account : 0;
       $row[] = array(
@@ -127,6 +131,13 @@ function zmt_domain_edit_form($form, &$form_state, $domain) {
   if ($domain_id) {
     $form['domain_name']['#attributes']['readonly'] = TRUE;
   }
+  $options = zmt_domain_statuses();
+  $form['status'] = array(
+    '#type' => 'select',
+    '#title' => t('Status'),
+    '#options' => $options,
+    '#default_value' => $domain->status,
+  );
 
   $tenant = zmt_tenant_load_by_user($user);
   if ((int) $domain->server_id == 0 && !$tenant) {
@@ -318,7 +329,7 @@ function zmt_domain_edit_form_validate($form, &$form_state) {
   $values = &$form_state['values'];
 
   $server_id = isset($values['server_id']) ? (int) $values['server_id'] : 0;
-  $name = trim($values['domain_name']) ;
+  $name = trim(check_plain($values['domain_name'])) ;
   $id = isset($domain->id) ? (int) $domain->id : 0;
 
   $exists = zmt_domain_exists($name, $id);
@@ -451,7 +462,8 @@ function zmt_domain_edit_form_submit($form, &$form_state) {
     $domain->domain_uid = $account->uid;
   }
 
-  $domain->name = $values['domain_name'];
+  $domain->name = check_plain($values['domain_name']);
+  $domain->status = check_plain($values['status']);
   $tenant_id = (int) $values['tenant_id'];
   $tenant = zmt_tenant_load($tenant_id);
   if ($tenant) {

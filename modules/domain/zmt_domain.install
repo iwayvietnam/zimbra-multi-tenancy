@@ -50,6 +50,13 @@ function zmt_domain_schema() {
           'not null' => TRUE,
           'default' => '',
         ),
+        'status' => array(
+          'description' => 'The status of the domain.',
+          'type' => 'varchar',
+          'length' => 32,
+          'not null' => TRUE,
+          'default' => '',
+        ),
         'zimbra_id' => array(
           'description' => 'The zimbra identify of the domain.',
           'type' => 'varchar',
@@ -89,6 +96,9 @@ function zmt_domain_schema() {
       'indexes' => array(
         'zmt_domain_server_id' => array('server_id'),
         'zmt_domain_tenant_id' => array('tenant_id'),
+        'zmt_domain_status' => array('status'),
+        'zmt_domain_uid' => array('domain_uid'),
+        'zmt_domain_creator_uid' => array('uid'),
         'zmt_domain_created' => array('created'),
         'zmt_domain_changed' => array('changed'),
       ),
