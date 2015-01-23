@@ -132,7 +132,7 @@ function zmt_domain_edit_form($form, &$form_state, $domain) {
     $form['domain_name']['#attributes']['readonly'] = TRUE;
   }
   $options = zmt_domain_statuses();
-  $form['status'] = array(
+  $form['domain_status'] = array(
     '#type' => 'select',
     '#title' => t('Status'),
     '#options' => $options,
@@ -463,7 +463,7 @@ function zmt_domain_edit_form_submit($form, &$form_state) {
   }
 
   $domain->name = check_plain($values['domain_name']);
-  $domain->status = check_plain($values['status']);
+  $domain->status = check_plain($values['domain_status']);
   $tenant_id = (int) $values['tenant_id'];
   $tenant = zmt_tenant_load($tenant_id);
   if ($tenant) {

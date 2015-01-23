@@ -470,10 +470,10 @@ function zmt_domain_get_server($id) {
  * @return
  *   Total number of domains.
  */
-function zmt_domain_count_domains($id) {
-  static $total_domain = NULL;
-  if (NULL === $total_domain) {
-    $total_domain = 0;
+function zmt_domain_count_accounts($id) {
+  static $total_account = NULL;
+  if (NULL === $total_account) {
+    $total_account = 0;
     $query = db_select('zmt_domain', 'zd')
       ->fields('zd', array('id'))
       ->condition('zd.id', (int) $id)
@@ -481,10 +481,10 @@ function zmt_domain_count_domains($id) {
       ->addTag('domain_count_domain');
     $result = $query->execute()->fetchObject();
     if (!empty($result->total_domain)) {
-      $total_domain = (int) $result->total_domain;
+      $total_account = (int) $result->total_domain;
     }
   }
-  return (int) $total_domain;
+  return (int) $total_account;
 }
 
 /**
@@ -532,9 +532,9 @@ function zmt_domain_domain_number_remain($id, $cos_id){
   $domain_remain = 0;
   $domain = zmt_domain_load($id);
   if ($domain) {
-    $max_domain = isset($domain->max_domain) ? (int) $domain->max_domain : 0;
-    $total_domain = zmt_domain_count_domains($id);
-    $domain_remain = $max_domain - $total_domain;
+    $max_account = isset($domain->max_account) ? (int) $domain->max_account : 0;
+    $total_domain = zmt_domain_count_accounts($id);
+    $domain_remain = $max_account - $total_domain;
   }
   return $domain_remain;
 }
@@ -793,7 +793,7 @@ function zmt_domain_cos_new($domain_id = 0, $cos_id = 0) {
   $values = array(
     'domain_id' => (int) $domain_id,
     'cos_id' => (int) $cos_id,
-    'max_domain' => 0,
+    'max_account' => 0,
     'uid' => $user->uid,
     'created' => REQUEST_TIME,
   );
@@ -817,7 +817,7 @@ function zmt_domain_cos_save($mapping, $by_entity = TRUE) {
     $fields = array(
       'domain_id' => $mapping->domain_id,
       'cos_id' => $mapping->cos_id,
-      'max_domain' => (int) $mapping->max_domain,
+      'max_account' => (int) $mapping->max_account,
       'uid' => $mapping->uid,
       'created' => $mapping->created,
     );
