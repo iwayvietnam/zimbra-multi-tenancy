@@ -529,9 +529,9 @@ function zmt_account_ajax_import_form_callback($form, $form_state) {
       }
       drupal_set_message(t('@count accounts were updated.', array('@count' => $count)));
       sleep(1);
+      variable_del($message_name);
+      variable_del($progress_name);
     }
-    variable_del($message_name);
-    variable_del($progress_name);
     $commands[] = zmt_ajax_command_redirect('zmt/account');
   }
   return array(
