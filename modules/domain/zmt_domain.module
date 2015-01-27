@@ -508,7 +508,7 @@ function zmt_domain_count_mailboxes($id) {
       ->addTag('domain_count_group');
     $result = $query->execute()->fetchObject();
     if (!empty($result->total_domain)) {
-      $total_mailboxes += (int) $result->total_domain;
+      $total_mailboxes += (int) $result->total_account;
     }
     if (!empty($result->total_alias)) {
       $total_mailboxes += (int) $result->total_alias;
