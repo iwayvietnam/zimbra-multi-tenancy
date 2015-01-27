@@ -545,7 +545,7 @@ function zimbra_list_dl(ZimbraAdminApi $api, $domain = NULL, $limit = NULL, $off
       $pager = array(
         'num' => isset($result->num) ? (int) $result->num : 0,
         'more' => (bool) $result->more,
-        'total' => (int) $result->searchTotal,
+        'total' => isset($result->searchTotal) ? (int) $result->searchTotal : 0,
         'limit' => (int) $limit,
         'offset' => (int) $offset,
       );
@@ -638,7 +638,15 @@ function zimbra_count_dl(ZimbraAdminApi $api, $domain = NULL) {
         '', NULL, 1, 0, $domain, NULL, NULL,
         'distributionlists', NULL, NULL, TRUE, implode(',', $attrs)
       );
-      $cache[$cache_key] = isset($result->searchTotal) ? $result->searchTotal : 0;
+      if (!empty($result->num)) {
+        return (int) $result->num;
+      }
+      elseif (!empty($result->searchTotal)) {
+        return (int) $result->searchTotal;
+      }
+      else {
+        return 0;
+      }
     }
     catch (Exception $ex) {
       watchdog('zimbra', $ex->__toString());
@@ -873,7 +881,7 @@ function zimbra_list_account(ZimbraAdminApi $api, $domain = NULL, $limit = NULL,
       $pager = array(
         'num' => isset($result->num) ? (int) $result->num : 0,
         'more' => (bool) $result->more,
-        'total' => (int) $result->searchTotal,
+        'total' => isset($result->searchTotal) ? (int) $result->searchTotal : 0,
         'limit' => (int) $limit,
         'offset' => (int) $offset,
       );
@@ -941,7 +949,15 @@ function zimbra_count_account(ZimbraAdminApi $api, $domain = NULL) {
         '', NULL, 1, 0, $domain, NULL, NULL,
         'accounts', NULL, NULL, TRUE, implode(',', $attrs)
       );
-      $cache[$cache_key] = isset($result->searchTotal) ? $result->searchTotal : 0;
+      if (!empty($result->num)) {
+        return (int) $result->num;
+      }
+      elseif (!empty($result->searchTotal)) {
+        return (int) $result->searchTotal;
+      }
+      else {
+        return 0;
+      }
     }
     catch (Exception $ex) {
       watchdog('zimbra', $ex->__toString());
@@ -1132,7 +1148,7 @@ function zimbra_list_alias(ZimbraAdminApi $api, $domain = NULL, $limit = NULL, $
       $pager = array(
         'num' => isset($result->num) ? (int) $result->num : 0,
         'more' => (bool) $result->more,
-        'total' => (int) $result->searchTotal,
+        'total' => isset($result->searchTotal) ? (int) $result->searchTotal : 0,
         'limit' => (int) $limit,
         'offset' => (int) $offset,
       );
@@ -1184,7 +1200,15 @@ function zimbra_count_alias(ZimbraAdminApi $api, $domain = NULL) {
         '', NULL, 1, 0, $domain, NULL, NULL,
         'aliases', NULL, NULL, TRUE, implode(',', $attrs)
       );
-      $cache[$cache_key] = isset($result->searchTotal) ? $result->searchTotal : 0;
+      if (!empty($result->num)) {
+        return (int) $result->num;
+      }
+      elseif (!empty($result->searchTotal)) {
+        return (int) $result->searchTotal;
+      }
+      else {
+        return 0;
+      }
     }
     catch (Exception $ex) {
       watchdog('zimbra', $ex->__toString());
@@ -1303,7 +1327,7 @@ function zimbra_get_version_info(ZimbraAdminApi $api) {
   if (!isset($cache[$cache_key])) {
     try {
       $result = $api->getVersionInfo();
-      $cache[$cache_key] = isset($result->info) ? $result->info : $result;
+      $cache[$cache_key] = isset($result->info[0]) ? $result->info[0] : $result->info;
     }
     catch (Exception $ex) {
       watchdog('zimbra', $ex->__toString());
