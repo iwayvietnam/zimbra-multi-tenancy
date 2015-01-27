@@ -187,7 +187,6 @@ function zmt_ajax_pull_data_callback($form, &$form_state) {
 
       $api = zimbra_admin_api_by_server($server->id);
       $zimbra_domains = zimbra_get_all_domain($api);
-      $info = zimbra_get_version_info($api);
 
       $types = array_filter($data_types);
       foreach ($types as $type) {
@@ -208,12 +207,7 @@ function zmt_ajax_pull_data_callback($form, &$form_state) {
             }
             break;
           case 'account':
-            if ($info && (int) $info->majorversion == 8) {
-              $total_account = (int) zimbra_count_objects($api, 'account');
-            }
-            else {
-              $total_account = (int) zimbra_count_account($api);
-            }
+            $total_account = (int) zimbra_count_account($api);
             if (!empty($zimbra_domains) && $total_account) {
               variable_set($message_name, t('Pulling account data...'));
               _zmt_ui_update_account_data($api, $zimbra_domains, $server->id, $excludes, $progress_name);
@@ -221,12 +215,7 @@ function zmt_ajax_pull_data_callback($form, &$form_state) {
             }
             break;
           case 'alias':
-            if ($info && (int) $info->majorversion == 8) {
-              $total_alias = (int) zimbra_count_objects($api, 'alias');
-            }
-            else {
-              $total_alias = (int) zimbra_count_alias($api);
-            }
+            $total_alias = (int) zimbra_count_alias($api);
             if (!empty($zimbra_domains) && $total_alias) {
               variable_set($message_name, t('Pulling alias data...'));
               _zmt_ui_update_alias_data($api, $zimbra_domains, $server->id, $excludes, $progress_name);
@@ -234,12 +223,7 @@ function zmt_ajax_pull_data_callback($form, &$form_state) {
             }
             break;
           case 'group':
-            if ($info && (int) $info->majorversion == 8) {
-              $total_dl = (int) zimbra_count_objects($api, 'dl');
-            }
-            else {
-              $total_dl = (int) zimbra_count_dl($api);
-            }
+            $total_dl = (int) zimbra_count_dl($api);
             if (!empty($zimbra_domains) && $total_dl) {
               variable_set($message_name, t('Pulling group data...'));
               _zmt_ui_update_group_data($api, $zimbra_domains, $server->id, $progress_name);
