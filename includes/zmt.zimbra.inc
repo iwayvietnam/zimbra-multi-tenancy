@@ -627,7 +627,7 @@ function zimbra_get_dl_members(ZimbraAdminApi $api, $name) {
  * @return mix
  */
 function zimbra_count_dl(ZimbraAdminApi $api, $domain = NULL) {
-  $cache = &drupal_static(__FUNCTION__, array());
+  $cache = &drupal_static(__FUNCTION__);
   $cache_key = md5($api->location() . $domain);
   if (!isset($cache[$cache_key])) {
     try {
@@ -636,13 +636,13 @@ function zimbra_count_dl(ZimbraAdminApi $api, $domain = NULL) {
         'distributionlists', NULL, NULL, TRUE, 'zimbraId'
       );
       if (!empty($result->num)) {
-        return (int) $result->num;
+        $cache[$cache_key] = (int) $result->num;
       }
       elseif (!empty($result->searchTotal)) {
-        return (int) $result->searchTotal;
+        $cache[$cache_key] = (int) $result->searchTotal;
       }
       else {
-        return 0;
+        $cache[$cache_key] = 0;
       }
     }
     catch (Exception $ex) {
@@ -935,7 +935,7 @@ function zimbra_get_account(ZimbraAdminApi $api, $name, $reset = FALSE) {
  * @return mix
  */
 function zimbra_count_account(ZimbraAdminApi $api, $domain = NULL) {
-  $cache = &drupal_static(__FUNCTION__, array());
+  $cache = &drupal_static(__FUNCTION__);
   $cache_key = md5($api->location() . $domain);
   if (!isset($cache[$cache_key])) {
     try {
@@ -944,13 +944,13 @@ function zimbra_count_account(ZimbraAdminApi $api, $domain = NULL) {
         'accounts', NULL, NULL, TRUE, 'zimbraId'
       );
       if (!empty($result->num)) {
-        return (int) $result->num;
+        $cache[$cache_key] = (int) $result->num;
       }
       elseif (!empty($result->searchTotal)) {
-        return (int) $result->searchTotal;
+        $cache[$cache_key] = (int) $result->searchTotal;
       }
       else {
-        return 0;
+        $cache[$cache_key] = 0;
       }
     }
     catch (Exception $ex) {
@@ -1183,7 +1183,7 @@ function zimbra_list_alias(ZimbraAdminApi $api, $domain = NULL, $limit = NULL, $
  * @return mix
  */
 function zimbra_count_alias(ZimbraAdminApi $api, $domain = NULL) {
-  $cache = &drupal_static(__FUNCTION__, array());
+  $cache = &drupal_static(__FUNCTION__);
   $cache_key = md5($api->location() . $domain);
   if (!isset($cache[$cache_key])) {
     try {
@@ -1192,13 +1192,13 @@ function zimbra_count_alias(ZimbraAdminApi $api, $domain = NULL) {
         'aliases', NULL, NULL, TRUE, 'zimbraId'
       );
       if (!empty($result->num)) {
-        return (int) $result->num;
+        $cache[$cache_key] = (int) $result->num;
       }
       elseif (!empty($result->searchTotal)) {
-        return (int) $result->searchTotal;
+        $cache[$cache_key] = (int) $result->searchTotal;
       }
       else {
-        return 0;
+        $cache[$cache_key] = 0;
       }
     }
     catch (Exception $ex) {
