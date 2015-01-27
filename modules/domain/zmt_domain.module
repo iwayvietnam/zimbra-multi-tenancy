@@ -478,7 +478,7 @@ function zmt_domain_count_accounts($id) {
       ->fields('zd', array('id'))
       ->condition('zd.id', (int) $id)
       ->range(0, 1)
-      ->addTag('domain_count_domain');
+      ->addTag('domain_count_account');
     $result = $query->execute()->fetchObject();
     if (!empty($result->total_domain)) {
       $total_account = (int) $result->total_domain;
@@ -503,7 +503,7 @@ function zmt_domain_count_mailboxes($id) {
       ->fields('zd', array('id'))
       ->condition('zd.id', (int) $id)
       ->range(0, 1)
-      ->addTag('domain_count_domain')
+      ->addTag('domain_count_account')
       ->addTag('domain_count_alias')
       ->addTag('domain_count_group');
     $result = $query->execute()->fetchObject();
