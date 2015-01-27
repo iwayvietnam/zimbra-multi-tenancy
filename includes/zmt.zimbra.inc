@@ -631,12 +631,9 @@ function zimbra_count_dl(ZimbraAdminApi $api, $domain = NULL) {
   $cache_key = md5($api->location() . $domain);
   if (!isset($cache[$cache_key])) {
     try {
-      $attrs = array(
-        'zimbraId',
-      );
       $result = $api->searchDirectory(
         '', NULL, 1, 0, $domain, NULL, NULL,
-        'distributionlists', NULL, NULL, TRUE, implode(',', $attrs)
+        'distributionlists', NULL, NULL, TRUE, 'zimbraId'
       );
       if (!empty($result->num)) {
         return (int) $result->num;
@@ -942,12 +939,9 @@ function zimbra_count_account(ZimbraAdminApi $api, $domain = NULL) {
   $cache_key = md5($api->location() . $domain);
   if (!isset($cache[$cache_key])) {
     try {
-      $attrs = array(
-        'zimbraId',
-      );
       $result = $api->searchDirectory(
         '', NULL, 1, 0, $domain, NULL, NULL,
-        'accounts', NULL, NULL, TRUE, implode(',', $attrs)
+        'accounts', NULL, NULL, TRUE, 'zimbraId'
       );
       if (!empty($result->num)) {
         return (int) $result->num;
@@ -1193,12 +1187,9 @@ function zimbra_count_alias(ZimbraAdminApi $api, $domain = NULL) {
   $cache_key = md5($api->location() . $domain);
   if (!isset($cache[$cache_key])) {
     try {
-      $attrs = array(
-        'zimbraId',
-      );
       $result = $api->searchDirectory(
         '', NULL, 1, 0, $domain, NULL, NULL,
-        'aliases', NULL, NULL, TRUE, implode(',', $attrs)
+        'aliases', NULL, NULL, TRUE, 'zimbraId'
       );
       if (!empty($result->num)) {
         return (int) $result->num;
