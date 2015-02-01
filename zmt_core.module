@@ -3,7 +3,7 @@
 /**
  * Implements hook_permission().
  */ 
-function zmt_permission() {
+function zmt_core_permission() {
   return array(
     'administer zmt' => array(
       'title' => t('Administer zimbra multi tenancy'), 
@@ -60,7 +60,7 @@ function zmt_is_matches(array $patterns = array(), $subject = ''){
  * Force a client-side redirect.
  */
 function zmt_ajax_command_redirect($url, $delay = 0, $options = array()) {
-  $path = drupal_get_path('module', 'zmt');
+  $path = drupal_get_path('module', 'zmt_core');
   drupal_add_js($path . '/js/zmt.js');
   return array(
     'command' => 'zmt_ajax_redirect',
@@ -73,7 +73,7 @@ function zmt_ajax_command_redirect($url, $delay = 0, $options = array()) {
  * Force reload of the current page.
  */
 function zmt_ajax_command_reload() {
-  $path = drupal_get_path('module', 'zmt');
+  $path = drupal_get_path('module', 'zmt_core');
   drupal_add_js($path . '/js/zmt.js');
   return array(
     'command' => 'zmt_ajax_reload',
@@ -94,7 +94,7 @@ function zmt_password_encrypt($text) {
     return _zmt_openssl_encrypt($text, $key);
   }
   else {
-    module_load_include('inc', 'zmt', 'includes/zmt.aes');
+    module_load_include('inc', 'zmt_core', 'includes/zmt.aes');
     return AesCtr::encrypt($text, $key, 256);
   }
 }
@@ -112,7 +112,7 @@ function zmt_password_decrypt($data) {
     return _zmt_openssl_decrypt($data, $key);
   }
   else {
-    module_load_include('inc', 'zmt', 'includes/zmt.aes');
+    module_load_include('inc', 'zmt_core', 'includes/zmt.aes');
     return AesCtr::decrypt($data, $key, 256);
   }
 }

@@ -3,14 +3,14 @@
 /**
  * Implements hook_install().
  */ 
-function zmt_install() {
+function zmt_core_install() {
   zmt_add_role();
 }
 
 /**
  * Implements hook_uninstall().
  */ 
-function zmt_uninstall() {
+function zmt_core_uninstall() {
   $zimbra_rid = (int) variable_get('zmt_zimbra_role_id', 0);
   $tenant_rid = (int) variable_get('zmt_tenant_role_id', 0);
   $domain_rid = (int) variable_get('zmt_domain_role_id', 0);

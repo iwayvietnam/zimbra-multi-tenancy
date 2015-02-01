@@ -19,7 +19,7 @@ class ZmtUiTestCase extends DrupalWebTestCase {
   public function setUp() {
     parent::setUp(array(
       'entity',
-      'zmt',
+      'zmt_core',
       'zmt_server',
       'zmt_cos',
       'zmt_tenant',

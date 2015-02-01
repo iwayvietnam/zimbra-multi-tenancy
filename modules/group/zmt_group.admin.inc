@@ -390,7 +390,7 @@ function zmt_group_edit_form($form, &$form_state, $group){
 
   $form['#validate'][] = 'zmt_group_edit_form_validate';
 
-  $path = drupal_get_path('module', 'zmt');
+  $path = drupal_get_path('module', 'zmt_core');
   $form['#attached']['js'] = array(
     $path . '/js/zmt.js',
   );

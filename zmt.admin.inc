@@ -110,10 +110,10 @@ function zmt_server_pull_data_form($form, &$form_state) {
     '#suffix' => l(t('Cancel'), 'zmt/server') . '</div>',
   );
   $form['#attached']['js'] = array(
-    drupal_get_path('module', 'zmt') .'/js/zmt.js',
+    drupal_get_path('module', 'zmt_core') .'/js/zmt.js',
   );
   $form['#attached']['css'] = array(
-    drupal_get_path('module', 'zmt') .'/zmt.css',
+    drupal_get_path('module', 'zmt_core') .'/zmt.css',
   );
 
   return $form;
@@ -172,7 +172,7 @@ function zmt_ajax_pull_data_callback($form, &$form_state) {
   global $user;
   $commands = array();
   if (!form_set_error()) {
-    module_load_include('inc', 'zmt', 'includes/zmt.zimbra');
+    module_load_include('inc', 'zmt_core', 'includes/zmt.zimbra');
     $values = $form_state['values'];
     $server_id = (int) $values['server_id'];
     $tenant_id = (int) $values['tenant_id'];

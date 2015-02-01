@@ -6,7 +6,7 @@
  * It allows you to manage easily zimbra accounts, zimbra domains and zimbra servers.
  */
 
-module_load_include('inc', 'zmt', 'includes/zmt.zimbra.soap');
+module_load_include('inc', 'zmt_core', 'includes/zmt.zimbra.soap');
 
 /**
  * AdminInterface is a interface which allows to connect Zimbra API administration functions via SOAP
