@@ -135,14 +135,14 @@ function zmt_group_edit_form($form, &$form_state, $group){
   $values = &$form_state['values'];
   $group_id = isset($group->id) ? (int) $group->id : 0;
 
-  $form['name'] = array(
+  $form['group_name'] = array(
     '#title' => t('Name'),
     '#type' => 'textfield',
     '#default_value' => $group->name,
     '#required' => TRUE,
   );
   if ($group_id) {
-    $form['name']['#attributes']['readonly'] = TRUE;
+    $form['group_name']['#attributes']['readonly'] = TRUE;
   }
 
   $form['full_name'] = array(
@@ -431,12 +431,12 @@ function zmt_group_edit_form_validate($form, &$form_state) {
   $values = &$form_state['values'];
 
   $domain_id = (int) $values['domain_id'];
-  $name = check_plain(trim($values['name']));
+  $group_name = check_plain(trim($values['group_name']));
   $id = isset($group->id) ? (int) $group->id : 0;
 
-  $exists = zmt_group_exists($domain_id, $name, $id);
+  $exists = zmt_group_exists($domain_id, $group_name, $id);
   if ($exists) {
-    form_set_error('name', t('The mailbox name already exists in selected domain.'));
+    form_set_error('group_name', t('The mailbox name already exists in selected domain.'));
   }
 
   $domain_id = (int) $values['domain_id'];
@@ -518,7 +518,7 @@ function zmt_group_edit_form_submit($form, &$form_state) {
   }
 
   $group->domain_id = (int) $values['domain_id'];
-  $group->name = check_plain(trim($values['name']));
+  $group->name = check_plain(trim($values['group_name']));
   $group->full_name = check_plain(trim($values['full_name']));
   $domain = zmt_domain_load($group->domain_id);
 
