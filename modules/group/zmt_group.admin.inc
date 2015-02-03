@@ -135,7 +135,7 @@ function zmt_group_edit_form($form, &$form_state, $group){
   $values = &$form_state['values'];
   $group_id = isset($group->id) ? (int) $group->id : 0;
 
-  $form['name'] = array(
+  $form['group_name'] = array(
     '#title' => t('Name'),
     '#type' => 'textfield',
     '#default_value' => $group->name,
@@ -518,7 +518,7 @@ function zmt_group_edit_form_submit($form, &$form_state) {
   }
 
   $group->domain_id = (int) $values['domain_id'];
-  $group->name = check_plain(trim($values['name']));
+  $group->name = check_plain(trim($values['group_name']));
   $group->full_name = check_plain(trim($values['full_name']));
   $domain = zmt_domain_load($group->domain_id);
 
