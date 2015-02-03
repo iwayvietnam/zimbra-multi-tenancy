@@ -390,7 +390,7 @@ function zmt_account_import_form($form, &$form_state){
   );
 
   $form['#attached']['css'] = array(
-    drupal_get_path('module', 'zmt') .'/zmt.css',
+    drupal_get_path('module', 'zmt_core') .'/zmt.css',
   );
 
   $form['#validate'] = array('zmt_account_import_form_validate');

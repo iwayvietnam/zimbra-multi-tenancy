@@ -1,6 +1,6 @@
 <?php
 
-module_load_include('inc', 'zmt', 'includes/zmt.zimbra.soap');
+module_load_include('inc', 'zmt_core', 'includes/zmt.zimbra.soap');
 
 /**
  * Test case for Zmt tests.
@@ -21,7 +21,7 @@ class ZmtTestCase extends DrupalWebTestCase {
   public function setUp() {
     parent::setUp(array(
       'entity',
-      'zmt',
+      'zmt_core',
     ));
   }
 

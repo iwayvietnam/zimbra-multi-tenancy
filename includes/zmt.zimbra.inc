@@ -1,6 +1,6 @@
 <?php
 
-module_load_include('inc', 'zmt', 'includes/zmt.zimbra.api');
+module_load_include('inc', 'zmt_core', 'includes/zmt.zimbra.api');
 
 /**
  * Initialize Zimbra API
