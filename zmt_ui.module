@@ -321,7 +321,7 @@ function zmt_ui_group_edit_form_validate($form, &$form_state) {
     $server_id = !empty($domain->server_id) ? (int) $domain->server_id : 0;
     $api = zimbra_admin_api_by_server($server_id);
 
-    $mail_address = $values['name'] . '@' . $domain_name;
+    $mail_address = $values['group_name'] . '@' . $domain_name;
     if (empty($group->zimbra_id)) {
       $dl = zimbra_get_dl($api, $mail_address);
       if (!$dl) {
@@ -331,7 +331,7 @@ function zmt_ui_group_edit_form_validate($form, &$form_state) {
         ));
       }
       if ($dl instanceof Exception) {
-        form_set_error('name', t($dl->getMessage()));
+        form_set_error('group_name', t($dl->getMessage()));
       }
       else {
         $group->zimbra_id = isset($dl->id) ? $dl->id : '';
@@ -343,7 +343,7 @@ function zmt_ui_group_edit_form_validate($form, &$form_state) {
         'description' => $values['full_name'],
       ));
       if ($result instanceof Exception) {
-        form_set_error('name', t($result->getMessage()));
+        form_set_error('group_name', t($result->getMessage()));
       }
     }
 
