@@ -431,12 +431,12 @@ function zmt_group_edit_form_validate($form, &$form_state) {
   $values = &$form_state['values'];
 
   $domain_id = (int) $values['domain_id'];
-  $name = check_plain(trim($values['name']));
+  $group_name = check_plain(trim($values['group_name']));
   $id = isset($group->id) ? (int) $group->id : 0;
 
-  $exists = zmt_group_exists($domain_id, $name, $id);
+  $exists = zmt_group_exists($domain_id, $group_name, $id);
   if ($exists) {
-    form_set_error('name', t('The mailbox name already exists in selected domain.'));
+    form_set_error('group_name', t('The mailbox name already exists in selected domain.'));
   }
 
   $domain_id = (int) $values['domain_id'];
