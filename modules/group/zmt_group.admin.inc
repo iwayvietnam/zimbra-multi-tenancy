@@ -142,7 +142,7 @@ function zmt_group_edit_form($form, &$form_state, $group){
     '#required' => TRUE,
   );
   if ($group_id) {
-    $form['name']['#attributes']['readonly'] = TRUE;
+    $form['group_name']['#attributes']['readonly'] = TRUE;
   }
 
   $form['full_name'] = array(
