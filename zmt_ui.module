@@ -3,7 +3,7 @@
 /**
  * Implements hook_menu().
  */ 
-function zmt_menu() {
+function zmt_ui_menu() {
   $items = array();
 
   $items['admin/config/system/zmt'] = array(
