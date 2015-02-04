@@ -376,24 +376,19 @@ function zmt_group_zmt_alias_insert($alias) {
  * Implements hook_zmt_alias_update().
  */
 function zmt_group_zmt_alias_update($alias) {
-  global $user;
-  $group = zmt_group_load_by_user($user);
-  if ($group) {
-    $query = new EntityFieldQuery();
-    $result = $query->entityCondition('entity_type', 'zmt_group_member')
-      ->propertyCondition('group_id', $group->id)
-      ->propertyCondition('member_id', $alias->id)
-      ->propertyCondition('type', GROUP_MEMBER_ALIAS)
-      ->execute();
-    $ids = isset($result['zmt_group_member']) ? array_keys($result['zmt_group_member']) : array();
-    $member = zmt_group_member_load(reset($ids));
-    if ($member) {
-      $domain = zmt_domain_load($alias->domain_id);
-      $alias_name = $alias->name . '@' . $domain->name;
-      if ($member->name !== $alias_name) {
-        $member->name = $alias_name;
-        zmt_group_member_save($member);
-      }
+  $query = new EntityFieldQuery();
+  $result = $query->entityCondition('entity_type', 'zmt_group_member')
+    ->propertyCondition('member_id', $alias->id)
+    ->propertyCondition('type', GROUP_MEMBER_ALIAS)
+    ->execute();
+  $ids = isset($result['zmt_group_member']) ? array_keys($result['zmt_group_member']) : array();
+  $members = zmt_group_member_load_multiple($ids);
+  foreach ($members as $member) {
+    $domain = zmt_domain_load($alias->domain_id);
+    $alias_name = $alias->name . '@' . $domain->name;
+    if ($member->name !== $alias_name) {
+      $member->name = $alias_name;
+      zmt_group_member_save($member);
     }
   }
 }
