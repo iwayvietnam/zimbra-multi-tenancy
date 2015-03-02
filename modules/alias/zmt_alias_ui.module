@@ -43,6 +43,7 @@ function zmt_alias_ui_menu() {
     'page callback' => 'zmt_alias_list_all',
     'access callback' => 'zmt_alias_list_access',
     'file' => 'zmt_alias.admin.inc',
+    'type' => MENU_CALLBACK,
     '#weight' => 2,
   );
   return $items;

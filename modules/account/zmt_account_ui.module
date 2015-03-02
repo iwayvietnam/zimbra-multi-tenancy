@@ -56,13 +56,37 @@ function zmt_account_ui_menu() {
     'file' => 'zmt_account.admin.inc',
   );
   $items['zmt/account'] = array(
+    'title' => 'Mailboxes & Groups',
+    'page callback' => 'zmt_mailbox_group_list_all',
+    'access callback' => 'zmt_account_list_access',
+    'file' => 'zmt_account.admin.inc',
+    '#weight' => 1,
+  );
+  $items['zmt/account/add-group'] = array(
+    'title' => 'Add Group',
+    'page callback' => 'zmt_account_group_add_page',
+    'access callback' => 'zmt_account_group_add_access',
+    'type' => MENU_LOCAL_ACTION,
+    'file' => 'zmt_account.admin.inc',
+    '#weight' => -7,
+  );
+  $items['zmt/account/add-alias'] = array(
+    'title' => 'Add Alias',
+    'page callback' => 'zmt_account_alias_add_page',
+    'access callback' => 'zmt_account_alias_add_access',
+    'type' => MENU_LOCAL_ACTION,
+    'file' => 'zmt_account.admin.inc',
+    '#weight' => -6,
+  );
+/*
+  $items['zmt/account'] = array(
     'title' => 'Accounts',
     'page callback' => 'zmt_account_list_all',
     'access callback' => 'zmt_account_list_access',
     'file' => 'zmt_account.admin.inc',
     '#weight' => 1,
   );
-
+*/
   return $items;
 }
 

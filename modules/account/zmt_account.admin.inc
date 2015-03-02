@@ -1,8 +1,252 @@
 <?php
 
+
 /**
  * List all zimbra accounts page callback.
  */
+function zmt_mailbox_group_list_all() {
+  global $user;
+
+  drupal_set_title('Mailboxes & Groups');
+  $header = array();
+  $header[] = array('data' => t('No.'));
+  $header[] = array('data' => t('Name'), 'field' => 'za.name');
+  $header[] = array('data' => t('Full name'), 'field' => 'za.full_name');
+//  $header[] = array('data' => t('COS'), 'field' => 'zc.name');
+//  $header[] = array('data' => t('Status'), 'field' => 'za.status');
+  $header[] = array('data' => t('Type'));
+  $header[] = array('data' => t('Operations'));
+
+  $query = db_select('zmt_account', 'za')->extend('PagerDefault')->extend('TableSort');
+  $query->join('zmt_domain', 'zd', 'zd.id = za.domain_id');
+  $query->leftJoin('zmt_cos', 'zc', 'zc.id = za.cos_id');
+  $query->addField('zd', 'name', 'domain');
+  $query->addField('zc', 'name', 'cos');
+
+  $domain_ids = array();
+  if (!(user_access('administer zmt'))) {
+    if (user_access('administer any zmt_account')) {
+      $domains = zmt_domain_load_multiple_by_user($user);
+      $domain_ids = array_keys($domains);
+      if (empty($domain_ids)) {
+        $domain_ids = array(0);
+      }
+
+      $domain_id = isset($_SESSION['zmt_filter_domain_id']) ? (int) $_SESSION['zmt_filter_domain_id'] : 0;
+      if ($domain_id) {
+        $query->condition('za.domain_id', $domain_id);
+      }
+      else {
+        $query->condition('za.domain_id', $domain_ids);
+        $query->addTag('account_query_filter');
+      }
+    }
+    else {
+      $query->condition('za.uid', $user->uid);
+    }
+  }
+  else {
+    $domain_id = isset($_SESSION['zmt_filter_domain_id']) ? (int) $_SESSION['zmt_filter_domain_id'] : 0;
+    if ($domain_id) {
+      $query->condition('za.domain_id', $domain_id);
+    }
+  }
+
+  $item_per_page = 10;//variable_get('zimbra_item_per_page', 20);
+  $result = $query
+    ->fields('za')
+    ->orderByHeader($header)
+    ->limit($item_per_page)
+    ->execute();
+
+  global $pager_page_array;
+  $stt =intval($pager_page_array[0]) * $item_per_page;
+  $destination = drupal_get_destination();
+  $statuses = zmt_account_statuses();
+  $rows = array();
+  foreach ($result as $key => $account) {
+    $row = array();
+    $row[] = ++$stt;//$key + 1 + (pager_find_page() * $item_per_page);
+    $account_name = $account->name . '@' . $account->domain;
+    $row[] = l($account_name, 'zmt/account/' . $account->id . '/edit', array('query' => $destination));
+    $row[] = array('data' => $account->full_name,);
+
+//    $row[] = array('data' => $account->cos,);
+//    $row[] = array('data' => isset($statuses[$account->status]) ? $statuses[$account->status] : $account->status,);
+
+    $row[] = 'Mailbox';
+    $operations = l(t('edit'), 'zmt/account/' . $account->id . '/edit', array('query' => $destination));
+    $operations .= '&nbsp;&nbsp;&nbsp;' . l(t('delete'), 'zmt/account/' . $account->id . '/delete', array('query' => $destination));
+    $row[] = $operations;
+    $rows[] = $row;
+  }
+
+
+  //List data of Group table
+  $query_gr = db_select('zmt_group', 'zg')->extend('PagerDefault')->extend('TableSort');
+  $query_gr->leftJoin('zmt_domain', 'zd', 'zd.id = zg.domain_id');
+  $query_gr->addField('zd', 'name', 'domain');
+
+  $domain_ids = array();
+  if (!(user_access('administer zmt'))) {
+    if (user_access('administer any zmt_group')) {
+      $domains = zmt_domain_load_multiple_by_user($user);
+      $domain_ids = array_keys($domains);
+      if (empty($domain_ids)) {
+        $domain_ids = array(0);
+      }
+      $domain_id = isset($_SESSION['zmt_filter_domain_id']) ? (int) $_SESSION['zmt_filter_domain_id'] : 0;
+      if ($domain_id) {
+        $query_gr->condition('zg.domain_id', $domain_id);
+      }
+      else {
+        $query_gr->condition('zg.domain_id', $domain_ids);
+      }
+    }
+    else {
+      $query_gr->condition('zg.uid', $user->uid);
+    }
+  }
+  else {
+    $domain_id = isset($_SESSION['zmt_filter_domain_id']) ? (int) $_SESSION['zmt_filter_domain_id'] : 0;
+    if ($domain_id) {
+      $query_gr->condition('zg.domain_id', $domain_id);
+    }
+  }
+
+  $item_per_page = 10;//variable_get('zimbra_item_per_page', 20);
+  $result = $query_gr
+    ->fields('zg', array('id', 'name', 'full_name'))
+    ->orderByHeader($header)
+    ->limit($item_per_page)
+    ->execute();
+
+  $destination = drupal_get_destination();
+//  $rows = array();
+  foreach ($result as $key => $group) {
+    $row = array();
+    $row[] = ++$stt;//$key + 1 + (pager_find_page() * $item_per_page);
+    $group_name = $group->name . '@' . $group->domain;
+    $row[] = l($group_name, 'zmt/group/' . $group->id . '/edit', array('query' => $destination));
+
+    $row[] = array('data' => $group->full_name,);
+//    $row[] = array('data' => $group->total_member,);
+
+    $row[] = 'Group';
+    $operations = l(t('edit'), 'zmt/group/' . $group->id . '/edit', array('query' => $destination));
+    $operations .= '&nbsp;&nbsp;&nbsp;' . l(t('delete'), 'zmt/group/' . $group->id . '/delete', array('query' => $destination));
+    $row[] = $operations;
+    $rows[] = $row;
+  }
+
+  //List data of Alias table
+  $query_al = db_select('zmt_alias', 'za')->extend('PagerDefault')->extend('TableSort');
+  $query_al->leftJoin('zmt_domain', 'zd', 'zd.id = za.domain_id');
+  $query_al->leftJoin('zmt_account', 'zac', 'zac.id = za.account_id');
+  $query_al->addField('zd', 'name', 'domain');
+  $query_al->addField('zac', 'name', 'account');
+
+  $domain_ids = array();
+  if (!(user_access('administer zmt'))) {
+    if (user_access('administer any zmt_alias')) {
+      $domains = zmt_domain_load_multiple_by_user($user);
+      $domain_ids = array_keys($domains);
+      if (empty($domain_ids)) {
+        $domain_ids = array(0);
+      }
+
+      $domain_id = isset($_SESSION['zmt_filter_domain_id']) ? (int) $_SESSION['zmt_filter_domain_id'] : 0;
+      if ($domain_id) {
+        $query_al->condition('za.domain_id', $domain_id);
+      }
+      else {
+        $query_al->condition('za.domain_id', $domain_ids);
+        $query_al->addTag('alias_query_filter');
+      }
+    }
+    else {
+      $query_al->condition('za.uid', $user->uid);
+    }
+  }
+  else {
+    $domain_id = isset($_SESSION['zmt_filter_domain_id']) ? (int) $_SESSION['zmt_filter_domain_id'] : 0;
+    if ($domain_id) {
+      $query_al->condition('za.domain_id', $domain_id);
+    }
+  }
+
+  $item_per_page = 10;//variable_get('zimbra_item_per_page', 20);
+  $result = $query_al
+    ->fields('za')
+    ->orderByHeader($header)
+    ->limit($item_per_page)
+    ->execute();
+
+  $destination = drupal_get_destination();
+  //$rows = array();
+  foreach ($result as $key => $alias) {
+    $row = array();
+    $row[] = ++$stt;//$key + 1 + (pager_find_page() * $item_per_page);
+    $alias_name = $alias->name . '@' . $alias->domain;
+    $row[] = l($alias_name, 'zmt/alias/' . $alias->id . '/edit', array('query' => $destination));
+    $row[] = '';//array('data' => $alias->account . '@' . $alias->domain,);
+
+    $row[] = 'Alias';
+    $operations = l(t('edit'), 'zmt/alias/' . $alias->id . '/edit', array('query' => $destination));
+    $operations .= '&nbsp;&nbsp;&nbsp;' . l(t('delete'), 'zmt/alias/' . $alias->id . '/delete', array('query' => $destination));
+    $row[] = $operations;
+    $rows[] = $row;
+  }
+
+  if (empty($rows)) {
+    $rows[] = array(
+      array(
+        'data' => t('There are no accounts available.') . ' ' . l(t('Add one now'), 'zmt/account/add') . '.',
+        'colspan' => count($header)
+      ),
+    );
+  }
+
+  $build = array();
+  if (user_access('administer zmt')) {
+    $build['account_filter'] = drupal_get_form('zmt_filter_by_domain_form');
+  }
+  elseif (user_access('administer any zmt_account')) {
+    if (count($domain_ids) > 1) {
+      $build['account_filter'] = drupal_get_form('zmt_filter_by_domain_form');
+    }
+  }
+  $build['account_table']  = array(
+    '#theme' => 'table',
+    '#header' => $header,
+    '#rows' => $rows,
+  );
+  $build['account_pager'] = array('#theme' => 'pager');
+
+  return $build;
+}
+
+/**
+ * Add new zimbra Group page callback.
+ */
+function zmt_account_group_add_page() {
+  if(module_exists('zmt_group_ui')) drupal_goto('zmt/group/add');
+  return MENU_NOT_FOUND;
+}
+
+/**
+ * Add new zimbra Alias page callback.
+ */
+function zmt_account_alias_add_page() {
+  if(module_exists('zmt_alias_ui')) drupal_goto('zmt/alias/add');
+  return MENU_NOT_FOUND;
+}
+
+
+/**
+ * List all zimbra accounts page callback.
+ */
+/*
 function zmt_account_list_all() {
   global $user;
 
@@ -107,6 +351,7 @@ function zmt_account_list_all() {
 
   return $build;
 }
+*/
 
 /**
  * Add new zimbra account page callback.
