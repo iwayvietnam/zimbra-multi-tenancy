@@ -133,13 +133,6 @@ function zmt_account_edit_form($form, &$form_state, $account){
 
   $form_state['account'] = $account;
 
-  $form['name'] = array(
-    '#title' => t('Name'),
-    '#type' => 'textfield',
-    '#default_value' => $account->name,
-    '#required' => TRUE,
-  );
-
   $domain_id = isset($form_state['values']['domain_id']) ? (int) $form_state['values']['domain_id'] : (int) $account->domain_id;
   $options = array();
   if (!empty($account->id)) {
@@ -167,6 +160,17 @@ function zmt_account_edit_form($form, &$form_state, $account){
       $options[$domain->id] = $domain->name;
     }
   }
+
+  $form['name'] = array(
+    '#title' => t('Name'),
+    '#type' => 'textfield',
+    '#default_value' => $account->name,
+    '#required' => TRUE,
+    '#size' => 30,
+    '#theme_wrappers' => array(),
+    '#prefix' => '<div class="form-item field-mailbox-domain"><label>' .t('Name') .'</label><div class="field-content">',
+    '#suffix' => ' <span class="at-domain">@</span> ',
+  );
   $form['domain_id'] = array(
     '#type' => 'select',
     '#title' => t('Domain'),
@@ -177,8 +181,24 @@ function zmt_account_edit_form($form, &$form_state, $account){
       'callback' => 'zmt_account_ajax_domain_select_callback',
       'wrapper' => 'zmt-cos-wrap',
     ),
+    '#theme_wrappers' => array(),
+    '#suffix' => '</div><div class="description">' .t('Mailbox name') .'</div></div>',
+  );
+  
+  $form['full_name'] = array(
+    '#title' => t('Full name'),
+    '#type' => 'textfield',
+    '#default_value' => $account->full_name,
+    '#required' => TRUE,
+    '#description' => t('Display name of mailbox'),
   );
 
+  $form['password'] = array(
+    '#type' => 'password_confirm',
+    '#required' => !(isset($account->id) && (int) $account->id > 0),
+    '#size' => 30,
+  );
+    
   $options = array();
   if ($domain_id) {
     $mappings = zmt_domain_cos_load_multiple_by_domain(array($domain_id));
@@ -197,17 +217,6 @@ function zmt_account_edit_form($form, &$form_state, $account){
     '#suffix' => '</div>',
   );
 
-  $form['password'] = array(
-    '#type' => 'password_confirm',
-    '#required' => !(isset($account->id) && (int) $account->id > 0),
-    '#size' => 30,
-  );
-  $form['full_name'] = array(
-    '#title' => t('Full name'),
-    '#type' => 'textfield',
-    '#default_value' => $account->full_name,
-    '#required' => TRUE,
-  );
   $options = zmt_account_statuses();
   $form['status'] = array(
     '#type' => 'select',

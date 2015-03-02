@@ -43,6 +43,7 @@ function zmt_group_ui_menu() {
     'page callback' => 'zmt_group_list_all',
     'access callback' => 'zmt_group_list_access',
     'file' => 'zmt_group.admin.inc',
+    '#weight' => 3,
   );
   return $items;
 }

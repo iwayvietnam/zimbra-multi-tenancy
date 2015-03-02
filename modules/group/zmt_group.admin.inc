@@ -135,23 +135,6 @@ function zmt_group_edit_form($form, &$form_state, $group){
   $values = &$form_state['values'];
   $group_id = isset($group->id) ? (int) $group->id : 0;
 
-  $form['group_name'] = array(
-    '#title' => t('Name'),
-    '#type' => 'textfield',
-    '#default_value' => $group->name,
-    '#required' => TRUE,
-  );
-  if ($group_id) {
-    $form['group_name']['#attributes']['readonly'] = TRUE;
-  }
-
-  $form['full_name'] = array(
-    '#title' => t('Full name'),
-    '#type' => 'textfield',
-    '#default_value' => $group->full_name,
-    '#required' => TRUE,
-  );
-
   $options = array();
   if ($group_id > 0) {
     $domain = zmt_domain_load($group->domain_id);
@@ -178,6 +161,20 @@ function zmt_group_edit_form($form, &$form_state, $group){
     }
   }
 
+  $form['group_name'] = array(
+    '#title' => t('Name'),
+    '#type' => 'textfield',
+    '#default_value' => $group->name,
+    '#required' => TRUE,
+    '#size' => 30,
+    '#theme_wrappers' => array(),
+    '#prefix' => '<div class="form-item field-group-domain"><label>' .t('Name') .'</label><div class="field-content">',
+    '#suffix' => ' <span class="at-domain">@</span> ',
+  );
+  if ($group_id) {
+    $form['group_name']['#attributes']['readonly'] = TRUE;
+  }
+
   $form['domain_id'] = array(
     '#type' => 'select',
     '#title' => t('Domain'),
@@ -188,6 +185,16 @@ function zmt_group_edit_form($form, &$form_state, $group){
       'callback' => 'zmt_group_ajax_select_domain_callback',
       'wrapper' => 'member-container-wapper',
     ),
+    '#theme_wrappers' => array(),
+    '#suffix' => '</div><div class="description">' .t('Group name') .'</div></div>',
+  );
+
+  $form['full_name'] = array(
+    '#title' => t('Full name'),
+    '#type' => 'textfield',
+    '#default_value' => $group->full_name,
+    '#required' => TRUE,
+    '#description' => t('Full name'),
   );
 
   $domain_id = isset($values['domain_id']) ? (int) $values['domain_id'] : (int) $group->domain_id;
@@ -344,6 +351,7 @@ function zmt_group_edit_form($form, &$form_state, $group){
         'callback' => 'zmt_group_ajax_create_user_checked',
         'wrapper' => 'user-container',
       ),
+      '#access' => 0,
     );
   }
 

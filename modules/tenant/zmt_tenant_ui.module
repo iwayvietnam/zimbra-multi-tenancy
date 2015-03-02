@@ -66,6 +66,7 @@ function zmt_tenant_ui_menu() {
     'page callback' => 'zmt_tenant_list_all',
     'access callback' => 'zmt_tenant_list_access',
     'file' => 'zmt_tenant.admin.inc',
+    '#weight' => 5,
   );
   return $items;
 }

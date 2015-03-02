@@ -19,6 +19,7 @@ function zmt_account_ui_menu() {
     'access callback' => 'zmt_account_add_access',
     'type' => MENU_LOCAL_ACTION,
     'file' => 'zmt_account.admin.inc',
+    '#weight' => -9,
   );
   $items['zmt/account/import'] = array(
     'title' => 'Import Account',
@@ -26,6 +27,7 @@ function zmt_account_ui_menu() {
     'access callback' => 'zmt_account_add_access',
     'type' => MENU_LOCAL_ACTION,
     'file' => 'zmt_account.admin.inc',
+    '#weight' => -8,
   );
   $items['zmt/account/importing/progress/%'] = array(
     'title' => 'Importing progress bar',
@@ -58,7 +60,9 @@ function zmt_account_ui_menu() {
     'page callback' => 'zmt_account_list_all',
     'access callback' => 'zmt_account_list_access',
     'file' => 'zmt_account.admin.inc',
+    '#weight' => 1,
   );
+
   return $items;
 }
 
@@ -115,3 +119,20 @@ function zmt_account_edit_access($acc, $account = NULL) {
 function zmt_account_delete_access($acc, $account = NULL) {
   return zmt_account_edit_access($acc, $account);
 }
+
+
+
+/**
+ * Access callback: determines if the user can create group.
+ */
+function zmt_account_group_add_access($account = NULL) {
+  return zmt_account_access('create', NULL, $account);
+}
+
+/**
+ * Access callback: determines if the user can create alias.
+ */
+function zmt_account_alias_add_access($account = NULL) {
+  return zmt_account_access('create', NULL, $account);
+}
+

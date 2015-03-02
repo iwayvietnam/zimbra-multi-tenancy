@@ -66,6 +66,7 @@ function zmt_domain_ui_menu() {
     'page callback' => 'zmt_domain_list_all',
     'access callback' => 'zmt_domain_list_access',
     'file' => 'zmt_domain.admin.inc',
+    '#weight' => 4,
   );
   return $items;
 }

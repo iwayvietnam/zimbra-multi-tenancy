@@ -50,6 +50,7 @@ function zmt_cos_ui_menu() {
     'page callback' => 'zmt_cos_list_all',
     'access callback' => 'zmt_cos_list_access',
     'file' => 'zmt_cos.admin.inc',
+    '#weight' => 6,
   );
   return $items;
 }

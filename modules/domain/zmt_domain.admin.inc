@@ -127,6 +127,7 @@ function zmt_domain_edit_form($form, &$form_state, $domain) {
     '#default_value' => $domain->name,
     '#required' => TRUE,
     '#element_validate' => array('zmt_domain_name_element_validate'),
+    '#description' => t('Domain name'),
   );
   if ($domain_id) {
     $form['domain_name']['#attributes']['readonly'] = TRUE;

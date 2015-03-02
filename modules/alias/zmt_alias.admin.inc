@@ -124,13 +124,6 @@ function zmt_alias_edit_form($form, &$form_state, $alias){
 
   $form_state['#alias'] = $alias;
 
-  $form['name'] = array(
-    '#title' => t('Name'),
-    '#type' => 'textfield',
-    '#default_value' => $alias->name,
-    '#required' => TRUE,
-  );
-
   $options = array();
   if (isset($alias->id) && (int) $alias->id > 0) {
     $domain = zmt_domain_load($alias->domain_id);
@@ -156,6 +149,18 @@ function zmt_alias_edit_form($form, &$form_state, $alias){
       $options[$domain->id] = $domain->name;
     }
   }
+  
+  $form['name'] = array(
+    '#title' => t('Name'),
+    '#type' => 'textfield',
+    '#default_value' => $alias->name,
+    '#required' => TRUE,
+    '#size' => 30,
+    '#theme_wrappers' => array(),
+    '#prefix' => '<div class="form-item field-group-domain"><label>' .t('Name') .'</label><div class="field-content">',
+    '#suffix' => ' <span class="at-domain">@</span> ',
+  );
+
   $form['domain_id'] = array(
     '#type' => 'select',
     '#title' => t('Domain'),
@@ -166,9 +171,15 @@ function zmt_alias_edit_form($form, &$form_state, $alias){
       'callback' => 'ajax_alias_domain_select_callback',
       'wrapper' => 'dropdown-account-replace',
     ),
+    '#theme_wrappers' => array(),
+    '#suffix' => '</div><div class="description">' .t('Alias name') .'</div></div>',
   );
 
   $domain_id = isset($form_state['values']['domain_id']) ? (int) $form_state['values']['domain_id'] : (int) $alias->domain_id;
+
+  $domain_selected ='';
+  if(isset($options[$domain_id])) $domain_selected =' <span class="at-domain">@</span> ' .$options[$domain_id];
+
   $accounts = zmt_account_load_multiple_by_domain($domain_id);
   $options = array();
   foreach ($accounts as $account) {
@@ -181,8 +192,9 @@ function zmt_alias_edit_form($form, &$form_state, $alias){
     '#empty_option' => t('- None -'),
     '#default_value' => $alias->account_id,
     '#required' => TRUE,
-    '#prefix' => '<div id="dropdown-account-replace">',
-    '#suffix' => '</div>',
+    '#prefix' => '<div id="dropdown-account-replace" class="form-item field-account"><label>' .t('Account') .'</label>',
+    '#suffix' => $domain_selected .'</div>',
+    '#theme_wrappers' => array(),
   );
 
   $form['actions']['submit'] = array(
