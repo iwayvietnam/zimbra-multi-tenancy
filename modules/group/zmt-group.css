@@ -10,5 +10,14 @@
 #member-container-wapper .form-item {
   float: left;
   margin: 0;
-  padding: 0 25px 0 0;
+  padding: 0 5px 0 0;
+}
+#member-container-wapper .form-actions {
+  float: left;
+  width: 70px;
+  padding: 0 5px 0 0;
+  text-align: center;
+}
+#member-container-wapper .form-actions input {
+  margin: 3px auto;
 }
