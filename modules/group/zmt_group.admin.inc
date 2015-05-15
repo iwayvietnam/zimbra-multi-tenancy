@@ -468,7 +468,7 @@ function zmt_group_edit_form($form, &$form_state, $group){
 }
 
 /**
- * Group ajax move right member callback.
+ * Group move right member submit callback.
  */
 function zmt_group_move_right_member_callback($form, &$form_state) {
   $available_values = isset($_POST['available_members']) ? $_POST['available_members'] : array();
@@ -477,7 +477,7 @@ function zmt_group_move_right_member_callback($form, &$form_state) {
 }
 
 /**
- * Group ajax move left member callback.
+ * Group move left member submit callback.
  */
 function zmt_group_move_left_member_callback($form, &$form_state) {
   $member_values = isset($_POST['members']) ? $_POST['members'] : array();
@@ -486,21 +486,21 @@ function zmt_group_move_left_member_callback($form, &$form_state) {
 }
 
 /**
- * Group ajax select member callback.
+ * Group select member ajax callback.
  */
 function zmt_group_ajax_select_member_callback($form, $form_state) {
   return $form['member_container'];
 }
 
 /**
- * Group ajax create user check callback.
+ * Group create user check ajax callback.
  */
 function zmt_group_ajax_create_user_checked($form, $form_state) {
   return $form['group_user'];
 }
 
 /**
- * Group ajax domain selection callback.
+ * Group domain selection ajax callback.
  */
 function zmt_group_ajax_select_domain_callback($form, $form_state){
   return $form['member_container'];
