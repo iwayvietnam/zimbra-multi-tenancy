@@ -192,6 +192,7 @@ function zmt_alias_load_multiple_by_domain($domain) {
     $query = new EntityFieldQuery();
     $result = $query->entityCondition('entity_type', 'zmt_alias')
       ->propertyCondition('domain_id', $domain_id)
+      ->propertyOrderBy('name', 'ASC')
       ->execute();
     $ids = isset($result['zmt_alias']) ? array_keys($result['zmt_alias']) : array();
     $cache[$domain_id] = zmt_alias_load_multiple($ids);

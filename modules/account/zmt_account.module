@@ -228,6 +228,7 @@ function zmt_account_load_multiple_by_domain($domain) {
     }
     $result = $efq->entityCondition('entity_type', 'zmt_account')
       ->propertyCondition('domain_id', $domain_id)
+      ->propertyOrderBy('name', 'ASC')
       ->execute();
     $ids = isset($result['zmt_account']) ? array_keys($result['zmt_account']) : array();
     $cache[$domain_id] = zmt_account_load_multiple($ids);
