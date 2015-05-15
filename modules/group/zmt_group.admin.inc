@@ -476,7 +476,7 @@ function zmt_group_edit_form($form, &$form_state, $group){
 }
 
 /**
- * Group move right member submit callback.
+ * Group move member submit callback.
  */
 function zmt_group_move_member_callback($form, &$form_state) {
   $available_values = isset($_POST['available_members']) ? $_POST['available_members'] : array();
