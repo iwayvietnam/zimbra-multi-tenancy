@@ -263,40 +263,62 @@ function zmt_group_edit_form($form, &$form_state, $group){
     $form_state['available_members'] = $available_members;
   }
 
-  $available_values = isset($values['available_members']) ? $values['available_members'] : array();
-  if (!empty($available_values)) {
-    $members = array();
+  $op = isset($values['op']) ? $values['op'] : '';
+  if ($op === t('>>')) {
     $available_members = $form_state['available_members'];
-    $group_members = $form_state['group_members'];
-
-    foreach ($available_members as $key => $value) {
-      if (in_array($key, $available_values)) {
-        $group_members[$key] = $value;
-      }
-      else {
-        $members[$key] = $value;
+    if (!empty($available_members)) {
+      foreach ($available_members as $key => $value) {
+        $form_state['group_members'][$key] = $value;
       }
     }
-    $form_state['available_members'] = $members;
-    $form_state['group_members'] = $group_members;
+    $form_state['available_members'] = array();
   }
-
-  $member_values = isset($values['members']) ? $values['members'] : array();
-  if (!empty($member_values)) {
-    $members = array();
-    $available_members = $form_state['available_members'];
+  elseif ($op === t('<<')) {
     $group_members = $form_state['group_members'];
-
-    foreach ($group_members as $key => $value) {
-      if (in_array($key, $member_values)) {
-        $available_members[$key] = $value;
-      }
-      else {
-        $members[$key] = $value;
+    if (!empty($group_members)) {
+      foreach ($group_members as $key => $value) {
+        $form_state['available_members'][$key] = $value;
       }
     }
-    $form_state['available_members'] = $available_members;
-    $form_state['group_members'] = $members;
+    $form_state['group_members'] = array();
+  }
+  elseif ($op === t('>')) {
+    $available_values = !empty($form_state['available_values']) ? $form_state['available_values'] : array();
+    if (!empty($available_values)) {
+      $members = array();
+      $available_members = $form_state['available_members'];
+      $group_members = $form_state['group_members'];
+
+      foreach ($available_members as $key => $value) {
+        if (in_array($key, $available_values)) {
+          $group_members[$key] = $value;
+        }
+        else {
+          $members[$key] = $value;
+        }
+      }
+      $form_state['available_members'] = $members;
+      $form_state['group_members'] = $group_members;
+    }
+  }
+  elseif ($op === t('<')) {
+    $member_values = isset($form_state['member_values']) ? $form_state['member_values'] : array();
+    if (!empty($member_values)) {
+      $members = array();
+      $available_members = $form_state['available_members'];
+      $group_members = $form_state['group_members'];
+
+      foreach ($group_members as $key => $value) {
+        if (in_array($key, $member_values)) {
+          $available_members[$key] = $value;
+        }
+        else {
+          $members[$key] = $value;
+        }
+      }
+      $form_state['available_members'] = $available_members;
+      $form_state['group_members'] = $members;
+    }
   }
 
   $form['member_container'] = array(
@@ -313,6 +335,55 @@ function zmt_group_edit_form($form, &$form_state, $group){
       'multiple' => TRUE,
       'name' => 'available_members[]',
     ),
+    '#weight' => 0,
+  );
+
+  $form['member_container']['buttons'] = array(
+    '#type' => 'actions',
+    '#weight' => 1,
+  );
+  $form['member_container']['buttons']['move_right_all'] = array(
+    '#type' => 'button',
+    '#value' => t('>>'),
+    '#limit_validation_errors' => array(),
+    '#ajax' => array(
+      'callback' => 'zmt_group_ajax_select_member_callback',
+      'wrapper' => 'member-container-wapper',
+      'progress' => array(
+        'type' => 'none',
+      ),
+    ),
+  );
+  $form['member_container']['buttons']['move_right'] = array(
+    '#type' => 'submit',
+    '#value' => t('>'),
+    '#limit_validation_errors' => array(),
+    '#submit' => array('zmt_group_move_right_member_callback'),
+    '#ajax' => array(
+      'callback' => 'zmt_group_ajax_select_member_callback',
+      'wrapper' => 'member-container-wapper',
+      'progress' => array(
+        'type' => 'none',
+      ),
+    ),
+  );
+  $form['member_container']['buttons']['move_left'] = array(
+    '#type' => 'submit',
+    '#value' => t('<'),
+    '#limit_validation_errors' => array(),
+    '#submit' => array('zmt_group_move_left_member_callback'),
+    '#ajax' => array(
+      'callback' => 'zmt_group_ajax_select_member_callback',
+      'wrapper' => 'member-container-wapper',
+      'progress' => array(
+        'type' => 'none',
+      ),
+    ),
+  );
+  $form['member_container']['buttons']['move_left_all'] = array(
+    '#type' => 'button',
+    '#value' => t('<<'),
+    '#limit_validation_errors' => array(),
     '#ajax' => array(
       'callback' => 'zmt_group_ajax_select_member_callback',
       'wrapper' => 'member-container-wapper',
@@ -330,13 +401,7 @@ function zmt_group_edit_form($form, &$form_state, $group){
       'multiple' => TRUE,
       'name' => 'members[]',
     ),
-    '#ajax' => array(
-      'callback' => 'zmt_group_ajax_select_member_callback',
-      'wrapper' => 'member-container-wapper',
-      'progress' => array(
-        'type' => 'none',
-      ),
-    ),
+    '#weight' => 1,
   );
 
   $have_user = (int) ($account && (int) $account->uid > 0);
@@ -409,6 +474,27 @@ function zmt_group_edit_form($form, &$form_state, $group){
   return $form;
 }
 
+/**
+ * Group move right member submit callback.
+ */
+function zmt_group_move_right_member_callback($form, &$form_state) {
+  $available_values = isset($_POST['available_members']) ? $_POST['available_members'] : array();
+  $form_state['available_values'] = $available_values;
+  $form_state['rebuild'] = TRUE;
+}
+
+/**
+ * Group move left member submit callback.
+ */
+function zmt_group_move_left_member_callback($form, &$form_state) {
+  $member_values = isset($_POST['members']) ? $_POST['members'] : array();
+  $form_state['member_values'] = $member_values;
+  $form_state['rebuild'] = TRUE;
+}
+
+/**
+ * Group select member ajax callback.
+ */
 function zmt_group_ajax_select_member_callback($form, $form_state) {
   return $form['member_container'];
 }
