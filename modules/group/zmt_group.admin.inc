@@ -409,7 +409,7 @@ function zmt_group_edit_form($form, &$form_state, $group){
       'multiple' => TRUE,
       'name' => 'members[]',
     ),
-    '#weight' => 1,
+    '#weight' => 2,
   );
 
   $have_user = (int) ($account && (int) $account->uid > 0);
