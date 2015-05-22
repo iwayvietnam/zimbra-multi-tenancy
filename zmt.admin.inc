@@ -12,27 +12,46 @@ function zmt_setting_form_page() {
  * Zimbra multi tenancy setting form.
  */
 function zmt_setting_form($form, &$form_state) {
+  $config = config('zmt.settings');
   $form['zimbra_enable_debug'] = array(
     '#type' => 'checkbox',
     '#title' => t('Enable debug'),
-    '#default_value' => variable_get('zimbra_enable_debug', 0),
+    '#default_value' => (int) $config->get('zimbra_enable_debug'),
     '#weight' => -8,
   );
   $form['zimbra_item_per_page'] = array(
     '#type' => 'textfield',
     '#title' => t('Item per page'),
-    '#default_value' => variable_get('zimbra_item_per_page', 20),
+    '#default_value' => (int) $config->get('zimbra_item_per_page'),
     '#weight' => -7,
   );
   $form['zimbra_item_per_pull'] = array(
     '#type' => 'textfield',
     '#title' => t('Item per pull'),
-    '#default_value' => variable_get('zimbra_item_per_pull', 100),
+    '#default_value' => (int) $config->get('zimbra_item_per_pull'),
     '#weight' => -6,
   );
   
-  $form = system_settings_form($form);
+  $form['actions']['#type'] = 'actions';
+  $form['actions']['submit'] = array(
+    '#type' => 'submit',
+    '#value' => t('Save configuration'),
+  );
+
   return $form;
+}
+
+/**
+ * Zimbra multi tenancy setting form submit callback.
+ */
+function zmt_setting_form_submit($form, &$form_state) {
+  $config = config('zmt.settings');
+  $values = $form_state['values'];
+  $config->set('zimbra_enable_debug', (int) $values['zimbra_enable_debug']);
+  $config->set('zimbra_item_per_page', (int) $values['zimbra_item_per_page']);
+  $config->set('zimbra_item_per_pull', (int) $values['zimbra_item_per_pull']);
+  $config->save();
+  backdrop_set_message(t('The configuration options have been saved.'));
 }
 
 /**
