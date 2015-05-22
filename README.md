@@ -28,7 +28,7 @@ Copyright (C) 2013 [iWay Vietnam] (http://www.iwayvietnam.com/)
   * This project is contributed to fill this gap. All contributions are welcome.
 
 ###Technical background
-  * Based technologies: LAMP, using Drupal framework
+  * Based technologies: LAMP, using Backdrop framework
   * Programming language: PHP
 
 ##Functionality Details

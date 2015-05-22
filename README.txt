@@ -41,7 +41,7 @@ ________
 REQUIREMENTS
 ____________
 
-- Drupal 7.x (https://www.drupal.org/project/drupal);
+- Backdrop 1.x (https://www.drupal.org/project/drupal);
 - Entity module (https://drupal.org/project/entity)
 - Zimbra server (http://www.zimbra.com);
 

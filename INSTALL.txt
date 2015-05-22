@@ -2,15 +2,14 @@
 REQUIREMENTS
 ____________
 
-- Drupal 7.x (https://www.drupal.org/project/drupal);
-- Entity module (https://drupal.org/project/entity);
+- Backdrop 1.x (https://github.com/backdrop/backdrop/releases);
 - Zimbra mail server (http://www.zimbra.com)
 
 
 INSTALLATION
 ____________
 
-Add this module to the modules folder (sites/all/modules), enable it and configure to meet your needs.
+Add this module to the modules folder (modules), enable it and configure to meet your needs.
 
 
 AUTHOR
