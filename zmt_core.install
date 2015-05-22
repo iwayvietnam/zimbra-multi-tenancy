@@ -11,71 +11,58 @@ function zmt_core_install() {
  * Implements hook_uninstall().
  */ 
 function zmt_core_uninstall() {
-  $zimbra_rid = (int) variable_get('zmt_zimbra_role_id', 0);
-  $tenant_rid = (int) variable_get('zmt_tenant_role_id', 0);
-  $domain_rid = (int) variable_get('zmt_domain_role_id', 0);
-  $group_rid  = (int) variable_get('zmt_group_role_id',  0);
-  user_role_delete($zimbra_rid);
-  user_role_delete($tenant_rid);
-  user_role_delete($domain_rid);
-  user_role_delete($group_rid);
+  user_role_delete('zmt_zimbra');
+  user_role_delete('zmt_tenant');
+  user_role_delete('zmt_domaint');
+  user_role_delete('zmt_group');
 
-  variable_del('zmt_zimbra_role_id');
-  variable_del('zmt_tenant_role_id');
-  variable_del('zmt_domain_role_id');
-  variable_del('zmt_group_role_id');
+  $config = config('zmt.settings');
+  $config->set('zmt_zimbra_role', '');
+  $config->set('zmt_tenant_role', '');
+  $config->set('zmt_domain_role', '');
+  $config->set('zmt_group_role', '');
 }
 
 /**
  * Define user roles.
  */ 
 function zmt_add_role(){
-  $zimbra_role = 'Zmt Zimbra';
-  $tenant_role = 'Zmt Tenant';
-  $domain_role = 'Zmt Domain';
-  $group_role  = 'Zmt Group';
-
-  $new_roles = array(
-    $zimbra_role,
-    $tenant_role,
-    $domain_role,
-    $group_role,
+  $zimbra_role = array(
+    'label' => 'Zmt Zimbra',
+    'name' => 'zmt_zimbra',
+  );
+  $tenant_role = array(
+    'label' => 'Zmt Tenant',
+    'name' => 'zmt_tenant',
+  );
+  $domain_role = array(
+    'label' => 'Zmt Domain',
+    'name' => 'zmt_domaint',
+  );
+  $group_role = array(
+    'label' => 'Zmt Group',
+    'name' => 'zmt_group',
   );
 
-  $roles = user_roles();
+  $new_roles = array(
+    (object) $zimbra_role,
+    (object) $tenant_role,
+    (object) $domain_role,
+    (object) $group_role,
+  );
+
+  $roles = array_keys(user_roles());
   foreach ($new_roles as $role) {
-    if(!in_array($role, $roles)) {
-      $add_role = new stdClass();
-      $add_role->name = $role;
-      user_role_save($add_role);
+    if(!in_array($role->name, $roles)) {
+      user_role_save($role);
     }
   }
 
-  $roles = user_roles();
+  user_role_change_permissions('zmt_zimbra', array('administer zmt' => 1));
 
-  $zimbra_rid = 0;
-  $tenant_rid = 0;
-  $domain_rid = 0;
-  $group_rid  = 0;
-  foreach ($roles as $key => $role) {
-    if ($role == $zimbra_role) {
-      $zimbra_rid = $key;
-    }
-    if ($role == $tenant_role) {
-      $tenant_rid = $key;
-    }
-    if ($role == $domain_role) {
-      $domain_rid = $key;
-    }
-    if ($role == $group_role) {
-      $group_rid = $key;
-    }
-  }
-
-  user_role_change_permissions($zimbra_rid, array('administer zmt' => 1));
-
-  variable_set('zmt_zimbra_role_id', $zimbra_rid);
-  variable_set('zmt_tenant_role_id', $tenant_rid);
-  variable_set('zmt_domain_role_id', $domain_rid);
-  variable_set('zmt_group_role_id',  $group_rid);
+  $config = config('zmt.settings');
+  $config->set('zmt_zimbra_role', 'zmt_zimbra');
+  $config->set('zmt_tenant_role', 'zmt_tenant');
+  $config->set('zmt_domain_role', 'zmt_domaint');
+  $config->set('zmt_group_role', 'zmt_group');
 }
