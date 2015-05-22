@@ -381,7 +381,9 @@ function zmt_ui_zmt_group_member_presave($member) {
       $members = array($members);
     }
     if (!in_array($member->name, $members)) {
-      zimbra_add_dl_members($api, $dl->id, array($member->name));
+      if (isset($dl->id)) {
+        zimbra_add_dl_members($api, $dl->id, array($member->name));
+      }
       $account = zimbra_get_account($api, $member->name);
       if ($account) {
         $attrs = array(
