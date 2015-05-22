@@ -73,7 +73,7 @@ function zmt_server_ui_menu() {
  * Server view callback.
  */
 function zmt_server_view($server) {
-  drupal_set_title(entity_label('zmt_server', $server));
+  backdrop_set_title(entity_label('zmt_server', $server));
   return entity_view('zmt_server', array(entity_id('zmt_server', $server) => $server), 'full');
 }
 

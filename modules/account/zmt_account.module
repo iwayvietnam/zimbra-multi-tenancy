@@ -223,7 +223,7 @@ function zmt_account_load_multiple(array $ids = array(), array $conditions = arr
  * @see zmt_account_load_multiple()
  */
 function zmt_account_load_multiple_by_domain($domain) {
-  $cache = &drupal_static(__FUNCTION__, array());
+  $cache = &backdrop_static(__FUNCTION__, array());
   $domain_id = is_object($domain) ? $domain->id : $domain;
   if (!isset($cache[$domain_id])) {
     $efq = new EntityFieldQuery();
@@ -250,7 +250,7 @@ function zmt_account_load_multiple_by_domain($domain) {
  *   An account object or FALSE.
  */
 function zmt_account_load_by_name($domain, $name) {
-  $cache = &drupal_static(__FUNCTION__, array());
+  $cache = &backdrop_static(__FUNCTION__, array());
   $domain_id = is_object($domain) ? $domain->id : $domain;
   $cache_key = md5($domain_id . '-' . $name);
   if (!isset($cache[$cache_key])) {
@@ -276,7 +276,7 @@ function zmt_account_load_by_name($domain, $name) {
  *   Total number of account objects.
  */
 function zmt_account_count_by_domain($domain) {
-  $cache = &drupal_static(__FUNCTION__);
+  $cache = &backdrop_static(__FUNCTION__);
   $domain_id = is_object($domain) ? $domain->id : $domain;
   if (!isset($cache[$domain_id])) {
     $query = new EntityFieldQuery();
@@ -300,7 +300,7 @@ function zmt_account_count_by_domain($domain) {
  *   TRUE or FALSE.
  */
 function zmt_account_exists($domain, $name, $id = 0) {
-  $cache = &drupal_static(__FUNCTION__);
+  $cache = &backdrop_static(__FUNCTION__);
   $domain_id = is_object($domain) ? $domain->id : $domain;
   $cache_key = md5($domain_id . '-' . $name . '-' . $id);
   if (!isset($cache[$cache_key])) {

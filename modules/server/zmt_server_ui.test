@@ -1,6 +1,6 @@
 <?php
 
-class ZmtServerUITestCase extends DrupalWebTestCase {
+class ZmtServerUITestCase extends BackdropWebTestCase {
   public static function getInfo() {
     return array(
       'name' => t('Zmt Server UI Test Case'),
@@ -25,15 +25,15 @@ class ZmtServerUITestCase extends DrupalWebTestCase {
    * Test server operations is implemented.
    */
   public function testServerOperations() {
-    $user = $this->drupalCreateUser(array('administer zmt', 'administer any zmt_server'));
-    $this->drupalLogin($user);
+    $user = $this->backdropCreateUser(array('administer zmt', 'administer any zmt_server'));
+    $this->backdropLogin($user);
 
-    $this->drupalGet('zmt/server');
+    $this->backdropGet('zmt/server');
     $this->assertText(t('There are no servers available.'), t('No servers available after fresh installation.'));
     $this->assertLink(t('Add one now'));
     $this->assertLink(t('Add Zimbra Server'));
 
-    $this->drupalGet('zmt/server/add');
+    $this->backdropGet('zmt/server/add');
     $this->assertText(t('Add Zimbra Server'));
     $this->assertText(t('Server Name'));
     $this->assertText(t('Service Location'));

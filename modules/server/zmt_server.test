@@ -3,7 +3,7 @@
 /**
  * Tests the zmt server.
  */
-class ZmtServerTestCase extends DrupalWebTestCase {
+class ZmtServerTestCase extends BackdropWebTestCase {
   public static function getInfo() {
     return array(
       'name' => 'Zmt Server Test Case',
@@ -27,11 +27,11 @@ class ZmtServerTestCase extends DrupalWebTestCase {
    * Test the zmt server CRUD functions.
    */
   function testZmtServerCrud() {
-    $name = DrupalTestCase::randomName();
-    $service_location = DrupalTestCase::randomName();
-    $admin_user = DrupalTestCase::randomName();
-    $admin_password = DrupalTestCase::randomName();
-    $exclude_mailbox = DrupalTestCase::randomName();
+    $name = BackdropTestCase::randomName();
+    $service_location = BackdropTestCase::randomName();
+    $admin_user = BackdropTestCase::randomName();
+    $admin_password = BackdropTestCase::randomName();
+    $exclude_mailbox = BackdropTestCase::randomName();
     $delete_domain = mt_rand(0, 1);
     $delete_dl = mt_rand(0, 1);
     $delete_account = mt_rand(0, 1);

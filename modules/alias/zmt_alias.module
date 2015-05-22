@@ -222,7 +222,7 @@ function zmt_alias_load_multiple(array $ids = array(), array $conditions = array
  * @see zmt_alias_load_multiple()
  */
 function zmt_alias_load_multiple_by_domain($domain) {
-  $cache = &drupal_static(__FUNCTION__, array());
+  $cache = &backdrop_static(__FUNCTION__, array());
   $domain_id = is_object($domain) ? $domain->id : $domain;
   if (!isset($cache[$domain_id])) {
     $query = new EntityFieldQuery();
@@ -246,7 +246,7 @@ function zmt_alias_load_multiple_by_domain($domain) {
  *   An alias object or FALSE.
  */
 function zmt_alias_load_by_name($domain, $name) {
-  $cache = &drupal_static(__FUNCTION__, array());
+  $cache = &backdrop_static(__FUNCTION__, array());
   $domain_id = is_object($domain) ? $domain->id : $domain;
   $cache_key = md5($domain_id . '-' . $name);
   if (!isset($cache[$cache_key])) {
@@ -272,7 +272,7 @@ function zmt_alias_load_by_name($domain, $name) {
  *   Total number of alias objects.
  */
 function zmt_alias_count_by_domain($domain) {
-  $cache = &drupal_static(__FUNCTION__, array());
+  $cache = &backdrop_static(__FUNCTION__, array());
   $domain_id = is_object($domain) ? $domain->id : $domain;
   if (!isset($cache[$domain_id])) {
     $query = new EntityFieldQuery();
@@ -296,7 +296,7 @@ function zmt_alias_count_by_domain($domain) {
  *   TRUE or FALSE.
  */
 function zmt_alias_exists($domain, $name, $id = 0) {
-  $cache = &drupal_static(__FUNCTION__, array());
+  $cache = &backdrop_static(__FUNCTION__, array());
   $domain_id = is_object($domain) ? $domain->id : $domain;
   $cache_key = md5($domain_id . '-' . $name . '-' . $id);
   if (!isset($cache[$cache_key])) {

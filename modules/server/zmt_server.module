@@ -145,7 +145,7 @@ function zmt_server_load_multiple($ids = array(), array $conditions = array(), $
  * @see zmt_server_load_multiple()
  */
 function zmt_server_load_all($limit = 0, $offset = 0){
-  $cache = &drupal_static(__FUNCTION__, array());
+  $cache = &backdrop_static(__FUNCTION__, array());
   $cache_key = $limit + $offset;
   if (!isset($cache[$cache_key])) {
     $efq = new EntityFieldQuery();

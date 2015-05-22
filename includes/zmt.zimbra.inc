@@ -10,7 +10,7 @@ module_load_include('inc', 'zmt_core', 'includes/zmt.zimbra.api');
  * @return ZimbraAdminApi
  */
 function zimbra_admin_api($location = 'https://localhost:7071/service/admin/soap') {
-  $cache = &drupal_static(__FUNCTION__, NULL);
+  $cache = &backdrop_static(__FUNCTION__, NULL);
   if (!isset($cache[$location])) {
     $debug = (bool) variable_get('zimbra_enable_debug', FALSE);
     $cache[$location] = new ZimbraAdminApi($location, $debug);
@@ -84,7 +84,7 @@ function zimbra_admin_api_by_domain($domain_id) {
  * @return ZimbraAdminApi
  */
 function zimbra_admin_api_by_server($server_id) {
-  $cache = &drupal_static(__FUNCTION__, NULL);
+  $cache = &backdrop_static(__FUNCTION__, NULL);
   if (!isset($cache[$server_id])) {
     $server = zmt_server_load($server_id);
     $location = $server ? $server->service_location : 'https://localhost:7071/service/admin/soap';
@@ -97,8 +97,8 @@ function zimbra_admin_api_by_server($server_id) {
     if (!$authenticated) {
       $message = 'Connection or authentication to Zimbra server failed! <br />';
       $message .= 'Please contact to administrator to report this error.';
-      drupal_set_message(t($message), 'error');
-      drupal_access_denied();
+      backdrop_set_message(t($message), 'error');
+      backdrop_access_denied();
       exit;
     }
     $cache[$server_id] = $api;
@@ -118,7 +118,7 @@ function zimbra_admin_api_by_server($server_id) {
  * @return boolean
  */
 function zimbra_authentication(ZimbraAdminApi $api, $user, $password = '') {
-  $cache = &drupal_static(__FUNCTION__, NULL);
+  $cache = &backdrop_static(__FUNCTION__, NULL);
   $cache_key = md5($api->location() . $user . $password);
   if (!isset($cache[$cache_key])) {
     $authenticated = FALSE;
@@ -163,7 +163,7 @@ function zimbra_authentication(ZimbraAdminApi $api, $user, $password = '') {
  *   Number of objects.
  */
 function zimbra_count_objects(ZimbraAdminApi $api, $type, $domain = NULL) {
-  $cache = &drupal_static(__FUNCTION__, NULL);
+  $cache = &backdrop_static(__FUNCTION__, NULL);
   $cache_key = md5($api->location() . $type . $domain);
   if (!isset($cache[$cache_key])) {
     try {
@@ -192,7 +192,7 @@ function zimbra_count_objects(ZimbraAdminApi $api, $type, $domain = NULL) {
  *   An array of classes of service
  */
 function zimbra_get_all_cos(ZimbraAdminApi $api, $reset = FALSE) {
-  $cache = &drupal_static(__FUNCTION__, NULL);
+  $cache = &backdrop_static(__FUNCTION__, NULL);
   $cache_key = md5($api->location());
   if ($reset && isset($cache[$cache_key])) {
     unset($cache[$cache_key]);
@@ -226,7 +226,7 @@ function zimbra_get_all_cos(ZimbraAdminApi $api, $reset = FALSE) {
  * @return mix
  */
 function zimbra_get_cos(ZimbraAdminApi $api, $name, $reset = FALSE) {
-  $cache = &drupal_static(__FUNCTION__, NULL);
+  $cache = &backdrop_static(__FUNCTION__, NULL);
   $cache_key = md5($api->location() . $name);
   if ($reset && isset($cache[$cache_key])) {
     unset($cache[$cache_key]);
@@ -345,7 +345,7 @@ function zimbra_delete_cos(ZimbraAdminApi $api, $zimbra_id) {
  * @return mix
  */
 function zimbra_get_all_domain(ZimbraAdminApi $api, $reset = FALSE) {
-  $cache = &drupal_static(__FUNCTION__, array());
+  $cache = &backdrop_static(__FUNCTION__, array());
   $cache_key = md5($api->location());
   if ($reset && isset($cache[$cache_key])) {
     unset($cache[$cache_key]);
@@ -379,7 +379,7 @@ function zimbra_get_all_domain(ZimbraAdminApi $api, $reset = FALSE) {
  * @return mix
  */
 function zimbra_get_domain(ZimbraAdminApi $api, $name, $reset = FALSE) {
-  $cache = &drupal_static(__FUNCTION__, NULL);
+  $cache = &backdrop_static(__FUNCTION__, NULL);
   $cache_key = md5($api->location() . $name);
   if ($reset && isset($cache[$cache_key])) {
     unset($cache[$cache_key]);
@@ -478,7 +478,7 @@ function zimbra_delete_domain(ZimbraAdminApi $api, $zimbra_id) {
  * @return array of distribution lists
  */
 function zimbra_get_all_dl(ZimbraAdminApi $api, $domain = NULL, $reset = FALSE) {
-  $cache = &drupal_static(__FUNCTION__, array());
+  $cache = &backdrop_static(__FUNCTION__, array());
   $cache_key = md5($api->location() . $domain);
   if ($reset && isset($cache[$cache_key])) {
     unset($cache[$cache_key]);
@@ -521,7 +521,7 @@ function zimbra_get_all_dl(ZimbraAdminApi $api, $domain = NULL, $reset = FALSE) 
  * @return array of distribution lists
  */
 function zimbra_list_dl(ZimbraAdminApi $api, $domain = NULL, $limit = NULL, $offset = NULL, &$pager = array()) {
-  $cache = &drupal_static(__FUNCTION__, array());
+  $cache = &backdrop_static(__FUNCTION__, array());
   $cache_key = md5($api->location() . '-' . $domain . '-' . $limit . '-' . $offset);
   if (!isset($cache[$cache_key])) {
     $all_dls = array();
@@ -574,7 +574,7 @@ function zimbra_list_dl(ZimbraAdminApi $api, $domain = NULL, $limit = NULL, $off
  * @return mix
  */
 function zimbra_get_dl(ZimbraAdminApi $api, $name, $reset = FALSE) {
-  $cache = &drupal_static(__FUNCTION__, NULL);
+  $cache = &backdrop_static(__FUNCTION__, NULL);
   $cache_key = md5($api->location() . $name);
   if ($reset && isset($cache[$cache_key])) {
     unset($cache[$cache_key]);
@@ -602,7 +602,7 @@ function zimbra_get_dl(ZimbraAdminApi $api, $name, $reset = FALSE) {
  * @return array
  */
 function zimbra_get_dl_members(ZimbraAdminApi $api, $name) {
-  $cache = &drupal_static(__FUNCTION__, array());
+  $cache = &backdrop_static(__FUNCTION__, array());
   $cache_key = md5($api->location() . $name);
   if (!isset($cache[$cache_key])) {
     $dl = zimbra_get_dl($api, $name);
@@ -627,7 +627,7 @@ function zimbra_get_dl_members(ZimbraAdminApi $api, $name) {
  * @return mix
  */
 function zimbra_count_dl(ZimbraAdminApi $api, $domain = NULL) {
-  $cache = &drupal_static(__FUNCTION__);
+  $cache = &backdrop_static(__FUNCTION__);
   $cache_key = md5($api->location() . $domain);
   if (!isset($cache[$cache_key])) {
     try {
@@ -800,7 +800,7 @@ function zimbra_delete_dl(ZimbraAdminApi $api, $zimbra_id) {
  * @return mix
  */
 function zimbra_get_all_account(ZimbraAdminApi $api, $domain_name = '', $server_name = '', $reset = FALSE) {
-  $cache = &drupal_static(__FUNCTION__, NULL);
+  $cache = &backdrop_static(__FUNCTION__, NULL);
   $cache_key = md5($api->location() . $domain_name . '-' . $server_name);
   if ($reset && isset($cache[$cache_key])) {
     unset($cache[$cache_key]);
@@ -840,7 +840,7 @@ function zimbra_get_all_account(ZimbraAdminApi $api, $domain_name = '', $server_
  * @return mix
  */
 function zimbra_list_account(ZimbraAdminApi $api, $domain = NULL, $limit = NULL, $offset = NULL, &$pager = array()) {
-  $cache = &drupal_static(__FUNCTION__, array());
+  $cache = &backdrop_static(__FUNCTION__, array());
   $cache_key = md5($api->location() . '-' . $domain . '-' . $limit . '-' . $offset);
   if (!isset($cache[$cache_key])) {
     $all_accounts = array();
@@ -907,7 +907,7 @@ function zimbra_list_account(ZimbraAdminApi $api, $domain = NULL, $limit = NULL,
  * @return mix
  */
 function zimbra_get_account(ZimbraAdminApi $api, $name, $reset = FALSE) {
-  $cache = &drupal_static(__FUNCTION__, NULL);
+  $cache = &backdrop_static(__FUNCTION__, NULL);
   $cache_key = md5($api->location() . $name);
   if ($reset && isset($cache[$cache_key])) {
     unset($cache[$cache_key]);
@@ -935,7 +935,7 @@ function zimbra_get_account(ZimbraAdminApi $api, $name, $reset = FALSE) {
  * @return mix
  */
 function zimbra_count_account(ZimbraAdminApi $api, $domain = NULL) {
-  $cache = &drupal_static(__FUNCTION__);
+  $cache = &backdrop_static(__FUNCTION__);
   $cache_key = md5($api->location() . $domain);
   if (!isset($cache[$cache_key])) {
     try {
@@ -971,7 +971,7 @@ function zimbra_count_account(ZimbraAdminApi $api, $domain = NULL) {
  * @return mix
  */
 function zimbra_count_account_by_cos(ZimbraAdminApi $api, $domain) {
-  $cache = &drupal_static(__FUNCTION__, array());
+  $cache = &backdrop_static(__FUNCTION__, array());
   $cache_key = md5($api->location() . $type . $domain);
   if (!isset($cache[$cache_key])) {
     try {
@@ -1119,7 +1119,7 @@ function zimbra_delete_account(ZimbraAdminApi $api, $zimbra_id){
  * @return array
  */
 function zimbra_list_alias(ZimbraAdminApi $api, $domain = NULL, $limit = NULL, $offset = NULL, &$pager = array()) {
-  $cache = &drupal_static(__FUNCTION__, array());
+  $cache = &backdrop_static(__FUNCTION__, array());
   $cache_key = md5($api->location() . '-' . $domain);
   if (!isset($cache[$cache_key])) {
     $all_alias = array();
@@ -1183,7 +1183,7 @@ function zimbra_list_alias(ZimbraAdminApi $api, $domain = NULL, $limit = NULL, $
  * @return mix
  */
 function zimbra_count_alias(ZimbraAdminApi $api, $domain = NULL) {
-  $cache = &drupal_static(__FUNCTION__);
+  $cache = &backdrop_static(__FUNCTION__);
   $cache_key = md5($api->location() . $domain);
   if (!isset($cache[$cache_key])) {
     try {
@@ -1280,7 +1280,7 @@ function zimbra_set_password(ZimbraAdminApi $api, $id, $password) {
  * @return An array of skin
  */
 function zimbra_get_all_skins(ZimbraAdminApi $api, $reset = FALSE) {
-  $cache = &drupal_static(__FUNCTION__, NULL);
+  $cache = &backdrop_static(__FUNCTION__, NULL);
   $cache_key = md5($api->location());
   if ($reset && isset($cache[$cache_key])) {
     unset($cache[$cache_key]);
@@ -1313,7 +1313,7 @@ function zimbra_get_all_skins(ZimbraAdminApi $api, $reset = FALSE) {
  * @return mix
  */
 function zimbra_get_version_info(ZimbraAdminApi $api) {
-  $cache = &drupal_static(__FUNCTION__, NULL);
+  $cache = &backdrop_static(__FUNCTION__, NULL);
   $cache_key = md5($api->location());
   if (!isset($cache[$cache_key])) {
     try {
@@ -1340,7 +1340,7 @@ function zimbra_get_version_info(ZimbraAdminApi $api) {
  * @return mix
  */
 function zimbra_check_password_strength(ZimbraAdminApi $api, $id, $password) {
-  $cache = &drupal_static(__FUNCTION__, FALSE);
+  $cache = &backdrop_static(__FUNCTION__, FALSE);
   $cache_key = md5($api->location() . $id . $password);
   if (!isset($cache[$cache_key])) {
     try {

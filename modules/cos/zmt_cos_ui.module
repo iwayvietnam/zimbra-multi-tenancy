@@ -58,7 +58,7 @@ function zmt_cos_ui_menu() {
  * COS view callback.
  */
 function zmt_cos_view($cos) {
-  drupal_set_title(entity_label('zmt_cos', $cos));
+  backdrop_set_title(entity_label('zmt_cos', $cos));
   return entity_view('zmt_cos', array(entity_id('zmt_cos', $cos) => $cos), 'full');
 }
 

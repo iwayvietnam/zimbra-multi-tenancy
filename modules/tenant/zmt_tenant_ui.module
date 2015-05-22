@@ -74,7 +74,7 @@ function zmt_tenant_ui_menu() {
  * Tenant view callback.
  */
 function zmt_tenant_view($tenant) {
-  drupal_set_title(entity_label('zmt_tenant', $tenant));
+  backdrop_set_title(entity_label('zmt_tenant', $tenant));
   return entity_view('zmt_tenant', array(entity_id('zmt_tenant', $tenant) => $tenant), 'full');
 }
 

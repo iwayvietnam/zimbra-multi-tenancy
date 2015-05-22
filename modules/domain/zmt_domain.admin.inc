@@ -6,7 +6,7 @@
 function zmt_domain_list_all() {
   global $user;
 
-  drupal_set_title('Domains');
+  backdrop_set_title('Domains');
   $header = array();
   $header[] = array('data' => t('No.'));
   $header[] = array('data' => t('Name'), 'field' => 'zd.name');
@@ -44,7 +44,7 @@ function zmt_domain_list_all() {
     ->limit($item_per_page)
     ->execute();
 
-  $destination = drupal_get_destination();
+  $destination = backdrop_get_destination();
   $statuses = zmt_domain_statuses();
   $rows = array();
   foreach ($result as $key => $domain) {
@@ -80,7 +80,7 @@ function zmt_domain_list_all() {
 
   $build = array();
   if (user_access('administer zmt')) {
-    $build['domains_filter'] = drupal_get_form('zmt_filter_by_server_form');
+    $build['domains_filter'] = backdrop_get_form('zmt_filter_by_server_form');
   }
   $build['domains_table']  = array(
     '#theme' => 'table',
@@ -96,17 +96,17 @@ function zmt_domain_list_all() {
  * Add new zimbra domain page callback.
  */
 function zmt_domain_add_page() {
-  drupal_set_title('Add Domain');
+  backdrop_set_title('Add Domain');
   $domain = zmt_domain_new();
-  return drupal_get_form('zmt_domain_edit_form', $domain);
+  return backdrop_get_form('zmt_domain_edit_form', $domain);
 }
 
 /**
  * Edit exists zimbra domain page callback.
  */
 function zmt_domain_edit_page($domain) {
-  drupal_set_title('Edit Domain');
-  return drupal_get_form('zmt_domain_edit_form', $domain);
+  backdrop_set_title('Edit Domain');
+  return backdrop_get_form('zmt_domain_edit_form', $domain);
 }
 
 /**
@@ -117,7 +117,7 @@ function zmt_domain_edit_form($form, &$form_state, $domain) {
 
   $form_state['domain'] = $domain;
   $account = user_load($domain->domain_uid);
-  $form_state['user'] = ($account && (int) $account->uid > 0) ? $account : drupal_anonymous_user();
+  $form_state['user'] = ($account && (int) $account->uid > 0) ? $account : backdrop_anonymous_user();
   $values = &$form_state['values'];
   $domain_id = isset($domain->id) ? (int) $domain->id : 0;
 
@@ -455,7 +455,7 @@ function zmt_domain_edit_form_submit($form, &$form_state) {
     }
     $role_id = (int) variable_get('zmt_domain_role_id', 0);
     if ($role_id) {
-      $edit['roles'] = drupal_map_assoc(array($role_id));
+      $edit['roles'] = backdrop_map_assoc(array($role_id));
     }
     $account = user_save($account, $edit);
 
@@ -516,8 +516,8 @@ function zmt_domain_edit_form_submit($form, &$form_state) {
  * Delete exists zimbra domain page callback.
  */
 function zmt_domain_delete_page($domain) {
-  drupal_set_title('Delete Domain');
-  return drupal_get_form('zmt_domain_delete_form', $domain);
+  backdrop_set_title('Delete Domain');
+  return backdrop_get_form('zmt_domain_delete_form', $domain);
 }
 
 /**
@@ -569,6 +569,6 @@ function zmt_domain_delete_form_validate($form, &$form_state) {
 function zmt_domain_delete_form_submit($form, &$form_state) {
   $domain = $form_state['domain'];
   zmt_domain_delete($domain->id);
-  drupal_set_message(t('%name has been deleted.', array('%name' => $domain->name)));
+  backdrop_set_message(t('%name has been deleted.', array('%name' => $domain->name)));
   watchdog('zmt_domain', 'Deleted domain %name.', array('%name' => $domain->name), WATCHDOG_NOTICE);
 }

@@ -6,7 +6,7 @@
 function zmt_account_list_all() {
   global $user;
 
-  drupal_set_title('Accounts');
+  backdrop_set_title('Accounts');
   $header = array();
   $header[] = array('data' => t('No.'));
   $header[] = array('data' => t('Name'), 'field' => 'za.name');
@@ -57,7 +57,7 @@ function zmt_account_list_all() {
     ->limit($item_per_page)
     ->execute();
 
-  $destination = drupal_get_destination();
+  $destination = backdrop_get_destination();
   $statuses = zmt_account_statuses();
   $rows = array();
   foreach ($result as $key => $account) {
@@ -91,11 +91,11 @@ function zmt_account_list_all() {
 
   $build = array();
   if (user_access('administer zmt')) {
-    $build['account_filter'] = drupal_get_form('zmt_filter_by_domain_form');
+    $build['account_filter'] = backdrop_get_form('zmt_filter_by_domain_form');
   }
   elseif (user_access('administer any zmt_account')) {
     if (count($domain_ids) > 1) {
-      $build['account_filter'] = drupal_get_form('zmt_filter_by_domain_form');
+      $build['account_filter'] = backdrop_get_form('zmt_filter_by_domain_form');
     }
   }
   $build['account_table']  = array(
@@ -112,17 +112,17 @@ function zmt_account_list_all() {
  * Add new zimbra account page callback.
  */
 function zmt_account_add_page() {
-  drupal_set_title('Add Account');
+  backdrop_set_title('Add Account');
   $account = zmt_account_new();
-  return drupal_get_form('zmt_account_edit_form', $account);
+  return backdrop_get_form('zmt_account_edit_form', $account);
 }
 
 /**
  * Edit exists zimbra account page callback.
  */
 function zmt_account_edit_page($account) {
-  drupal_set_title('Edit Account');
-  return drupal_get_form('zmt_account_edit_form', $account);
+  backdrop_set_title('Edit Account');
+  return backdrop_get_form('zmt_account_edit_form', $account);
 }
 
 /**
@@ -310,8 +310,8 @@ function zmt_account_edit_form_submit($form, &$form_state) {
  * Import accounts page callback.
  */
 function zmt_account_import_page() {
-  drupal_set_title('Import Accounts');
-  return drupal_get_form('zmt_account_import_form');
+  backdrop_set_title('Import Accounts');
+  return backdrop_get_form('zmt_account_import_form');
 }
 
 /**
@@ -390,7 +390,7 @@ function zmt_account_import_form($form, &$form_state){
   );
 
   $form['#attached']['css'] = array(
-    drupal_get_path('module', 'zmt_core') .'/zmt.css',
+    backdrop_get_path('module', 'zmt_core') .'/zmt.css',
   );
 
   $form['#validate'] = array('zmt_account_import_form_validate');
@@ -423,7 +423,7 @@ function zmt_account_importing_progress($time) {
     $progress['percentage'] = $percentage;
   }
 
-  drupal_json_output($progress);
+  backdrop_json_output($progress);
 }
 
 /**
@@ -477,13 +477,13 @@ function zmt_account_import_form_validate($form, &$form_state) {
               }
             }
             else {
-              drupal_set_message(t('Row @count is empty name or password', array(
+              backdrop_set_message(t('Row @count is empty name or password', array(
                 '@count' => $count,
               )), 'error');
             }
           }
           else {
-            drupal_set_message(t('Row @count is invalid', array(
+            backdrop_set_message(t('Row @count is invalid', array(
               '@count' => $count,
             )), 'error');
           }
@@ -527,7 +527,7 @@ function zmt_account_ajax_import_form_callback($form, $form_state) {
         $count++;
         variable_set($progress_name, floor($count * 100 / $total_account));
       }
-      drupal_set_message(t('@count accounts were updated.', array('@count' => $count)));
+      backdrop_set_message(t('@count accounts were updated.', array('@count' => $count)));
       sleep(1);
       variable_del($message_name);
       variable_del($progress_name);
@@ -559,8 +559,8 @@ function zmt_account_prepare($record, $domain_id = 0) {
  * Delete exists zimbra account page callback.
  */
 function zmt_account_delete_page($account) {
-  drupal_set_title('Delete Account');
-  return drupal_get_form('zmt_account_delete_form', $account);
+  backdrop_set_title('Delete Account');
+  return backdrop_get_form('zmt_account_delete_form', $account);
 }
 
 /**
@@ -600,6 +600,6 @@ function zmt_account_delete_form($form, &$form_state, $account) {
 function zmt_account_delete_form_submit($form, &$form_state) {
   $account = $form_state['account'];
   zmt_account_delete($account->id);
-  drupal_set_message(t('%name has been deleted.', array('%name' => $account->name)));
+  backdrop_set_message(t('%name has been deleted.', array('%name' => $account->name)));
   watchdog('zmt_account', 'Deleted account %name.', array('%name' => $account->name), WATCHDOG_NOTICE);
 }

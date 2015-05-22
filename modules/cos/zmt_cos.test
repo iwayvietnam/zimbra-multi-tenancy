@@ -3,7 +3,7 @@
 /**
  * Tests the zmt cos.
  */
-class ZmtCOSTestCase extends DrupalWebTestCase {
+class ZmtCOSTestCase extends BackdropWebTestCase {
   public static function getInfo() {
     return array(
       'name' => 'Zmt COS Test Case',
@@ -28,12 +28,12 @@ class ZmtCOSTestCase extends DrupalWebTestCase {
    * Test the zmt cos CRUD functions.
    */
   function testZmtCOSCrud() {
-    $name = DrupalTestCase::randomName();
+    $name = BackdropTestCase::randomName();
     $server_id = mt_rand();
-    $description = DrupalTestCase::randomName();
+    $description = BackdropTestCase::randomName();
     $mail_quota = mt_rand();
     $max_account = mt_rand();
-    $zimbra_id = DrupalTestCase::randomName();
+    $zimbra_id = BackdropTestCase::randomName();
 
     $cos = zmt_cos_new($name);
     $this->assertTrue(isset($cos->name), t('New cos name exists.'));

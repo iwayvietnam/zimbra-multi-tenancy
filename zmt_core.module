@@ -60,8 +60,8 @@ function zmt_is_matches(array $patterns = array(), $subject = ''){
  * Force a client-side redirect.
  */
 function zmt_ajax_command_redirect($url, $delay = 0, $options = array()) {
-  $path = drupal_get_path('module', 'zmt_core');
-  drupal_add_js($path . '/js/zmt.js');
+  $path = backdrop_get_path('module', 'zmt_core');
+  backdrop_add_js($path . '/js/zmt.js');
   return array(
     'command' => 'zmt_ajax_redirect',
     'url'     => url($url, $options),
@@ -73,8 +73,8 @@ function zmt_ajax_command_redirect($url, $delay = 0, $options = array()) {
  * Force reload of the current page.
  */
 function zmt_ajax_command_reload() {
-  $path = drupal_get_path('module', 'zmt_core');
-  drupal_add_js($path . '/js/zmt.js');
+  $path = backdrop_get_path('module', 'zmt_core');
+  backdrop_add_js($path . '/js/zmt.js');
   return array(
     'command' => 'zmt_ajax_reload',
   );
@@ -84,7 +84,7 @@ function zmt_ajax_command_reload() {
  * Encrypt a plain string.
  */
 function zmt_password_encrypt($text) {
-  $key = md5(drupal_get_hash_salt());
+  $key = md5(backdrop_get_hash_salt());
   if (function_exists('mcrypt_encrypt')) {
     $ivsize = mcrypt_get_iv_size(MCRYPT_RIJNDAEL_256, MCRYPT_MODE_ECB);
     $iv  = mcrypt_create_iv(mcrypt_get_iv_size(MCRYPT_RIJNDAEL_256, MCRYPT_MODE_ECB), MCRYPT_RAND);
@@ -103,7 +103,7 @@ function zmt_password_encrypt($text) {
  * Decrypt an encrypted string.
  */
 function zmt_password_decrypt($data) {
-  $key = md5(drupal_get_hash_salt());
+  $key = md5(backdrop_get_hash_salt());
   if (function_exists('mcrypt_decrypt')) {
     $iv = mcrypt_create_iv(mcrypt_get_iv_size(MCRYPT_RIJNDAEL_256, MCRYPT_MODE_ECB), MCRYPT_RAND);
     return trim(mcrypt_decrypt(MCRYPT_RIJNDAEL_256, $key, base64_decode($data), MCRYPT_MODE_ECB, $iv));

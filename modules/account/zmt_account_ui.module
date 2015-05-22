@@ -66,7 +66,7 @@ function zmt_account_ui_menu() {
  * Account view callback.
  */
 function zmt_account_view($account) {
-  drupal_set_title(entity_label('zmt_account', $account));
+  backdrop_set_title(entity_label('zmt_account', $account));
   return entity_view('zmt_account', array(entity_id('zmt_account', $account) => $account), 'full');
 }
 

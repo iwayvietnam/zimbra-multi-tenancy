@@ -3,7 +3,7 @@
 /**
  * Test case for Zmt UI tests.
  */
-class ZmtUiTestCase extends DrupalWebTestCase {
+class ZmtUiTestCase extends BackdropWebTestCase {
 
   public static function getInfo() {
     return array(
@@ -42,19 +42,19 @@ class ZmtUiTestCase extends DrupalWebTestCase {
    * Test operations is implemented.
    */
   public function testZmtUiOperations() {
-    $user = $this->drupalCreateUser(array('administer zmt'));
-    $this->drupalLogin($user);
+    $user = $this->backdropCreateUser(array('administer zmt'));
+    $this->backdropLogin($user);
 
-    $this->drupalGet('admin/config/system/zmt');
+    $this->backdropGet('admin/config/system/zmt');
     $this->assertResponse(200, t('Zmt admin user can access the zmt configuration page'));
     $this->assertTitle(t('Zimbra multi-tenancy settings.'));
     $this->assertText(t('Enable debug'));
     $this->assertText(t('Item per page'));
     $this->assertText(t('Item per pull'));
 
-    $user = $this->drupalCreateUser(array('administer any zmt_server'));
-    $this->drupalLogin($user);
-    $this->drupalGet('zmt/server/pull');
+    $user = $this->backdropCreateUser(array('administer any zmt_server'));
+    $this->backdropLogin($user);
+    $this->backdropGet('zmt/server/pull');
     $this->assertResponse(200, t('Zmt admin user can access the zimbra pull page'));
     $this->assertTitle(t('Pull data from Zimbra Server'));
   }

@@ -7,7 +7,6 @@ function zmt_ui_install() {
   zmt_add_index_keys();
 }
 
-
 /**
  * Implements hook_uninstall().
  */ 

@@ -3,7 +3,7 @@
 /**
  * Tests the zmt tenant.
  */
-class ZmtTenantTestCase extends DrupalWebTestCase {
+class ZmtTenantTestCase extends BackdropWebTestCase {
   public static function getInfo() {
     return array(
       'name' => 'Zmt Tenant Test Case',
@@ -29,7 +29,7 @@ class ZmtTenantTestCase extends DrupalWebTestCase {
    * Test the zmt tenant CRUD functions.
    */
   function testZmtTenantCrud() {
-    $full_name = DrupalTestCase::randomName();
+    $full_name = BackdropTestCase::randomName();
     $tenant_uid = mt_rand();
     $server_id = mt_rand();
 

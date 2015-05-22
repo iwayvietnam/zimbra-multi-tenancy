@@ -166,7 +166,7 @@ function zmt_cos_load_multiple(array $ids = array(), array $conditions = array()
  * @see zmt_cos_load_multiple()
  */
 function zmt_cos_load_all($limit = 0, $offset = 0){
-  $cache = &drupal_static(__FUNCTION__, array());
+  $cache = &backdrop_static(__FUNCTION__, array());
   $cache_key = $limit + $offset;
   if (!isset($cache[$cache_key])) {
     $efq = new EntityFieldQuery();
@@ -191,7 +191,7 @@ function zmt_cos_load_all($limit = 0, $offset = 0){
  * @see zmt_cos_load_multiple()
  */
 function zmt_cos_load_multiple_by_server($server, $limit = 0, $offset = 0) {
-  $cache = &drupal_static(__FUNCTION__, array());
+  $cache = &backdrop_static(__FUNCTION__, array());
   $server_id = is_object($server) ? $server->id : $server;
   $cache_key = $server_id + $limit + $offset;
   if (!isset($cache[$cache_key])) {
@@ -217,7 +217,7 @@ function zmt_cos_load_multiple_by_server($server, $limit = 0, $offset = 0) {
  *   TRUE or FALSE.
  */
 function zmt_cos_exists($zimbra_id) {
-  $cache = &drupal_static(__FUNCTION__);
+  $cache = &backdrop_static(__FUNCTION__);
   if (!isset($cache[$zimbra_id])) {
     $query = new EntityFieldQuery();
     $result = $query->entityCondition('entity_type', 'zmt_cos')

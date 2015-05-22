@@ -6,7 +6,7 @@
 function zmt_server_list_all() {
   global $user;
 
-  drupal_set_title('Zimbra Servers');
+  backdrop_set_title('Zimbra Servers');
   $header = array();
   $header[] = array('data' => t('No.'));
   $header[] = array('data' => t('Name'), 'field' => 'zs.name');
@@ -26,7 +26,7 @@ function zmt_server_list_all() {
     ->limit($item_per_page)
     ->execute();
 
-  $destination = drupal_get_destination();
+  $destination = backdrop_get_destination();
 
   $rows = array();
   foreach ($result as $key => $server) {
@@ -68,17 +68,17 @@ function zmt_server_list_all() {
  * Add new zimbra server page callback.
  */
 function zmt_server_add_page() {
-  drupal_set_title('Add Zimbra Server');
+  backdrop_set_title('Add Zimbra Server');
   $server = zmt_server_new();
-  return drupal_get_form('zmt_server_edit_form', $server);
+  return backdrop_get_form('zmt_server_edit_form', $server);
 }
 
 /**
  * Edit exists zimbra server page callback.
  */
 function zmt_server_edit_page($server) {
-  drupal_set_title('Edit Zimbra Server');
-  return drupal_get_form('zmt_server_edit_form', $server);
+  backdrop_set_title('Edit Zimbra Server');
+  return backdrop_get_form('zmt_server_edit_form', $server);
 }
 
 /**
@@ -194,8 +194,8 @@ function zmt_server_edit_form_submit($form, &$form_state) {
  * Delete exists zimbra server page callback.
  */
 function zmt_server_delete_page($server) {
-  drupal_set_title('Delete Zimbra Server');
-  return drupal_get_form('zmt_server_delete_form', $server);
+  backdrop_set_title('Delete Zimbra Server');
+  return backdrop_get_form('zmt_server_delete_form', $server);
 }
 
 /**
@@ -241,6 +241,6 @@ function zmt_server_delete_form_validate($form, &$form_state) {
 function zmt_server_delete_form_submit($form, &$form_state) {
   $server = $form_state['server'];
   zmt_server_delete($server->id);
-  drupal_set_message(t('%name has been deleted.', array('%name' => $server->name)));
+  backdrop_set_message(t('%name has been deleted.', array('%name' => $server->name)));
   watchdog('zmt_server', 'Deleted zimbra server %name.', array('%name' => $server->name), WATCHDOG_NOTICE);
 }

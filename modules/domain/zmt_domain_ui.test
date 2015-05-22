@@ -1,6 +1,6 @@
 <?php
 
-class ZmtDomainUITestCase extends DrupalWebTestCase {
+class ZmtDomainUITestCase extends BackdropWebTestCase {
   public static function getInfo() {
     return array(
       'name' => t('Zmt Domain UI Test Case'),
@@ -31,15 +31,15 @@ class ZmtDomainUITestCase extends DrupalWebTestCase {
    * Test domain operations is implemented.
    */
   public function testDomainOperations() {
-    $user = $this->drupalCreateUser(array('administer zmt', 'administer any zmt_domain'));
-    $this->drupalLogin($user);
+    $user = $this->backdropCreateUser(array('administer zmt', 'administer any zmt_domain'));
+    $this->backdropLogin($user);
 
-    $this->drupalGet('zmt/domain');
+    $this->backdropGet('zmt/domain');
     $this->assertText(t('There are no domains available.'), t('No domains available after fresh installation.'));
     $this->assertLink(t('Add one now'));
     $this->assertLink(t('Add Domain'));
 
-    $this->drupalGet('zmt/domain/add');
+    $this->backdropGet('zmt/domain/add');
     $this->assertText(t('Add Domain'));
     $this->assertText(t('Name'));
     $this->assertText(t('Zimbra Server'));

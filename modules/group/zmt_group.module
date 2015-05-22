@@ -488,7 +488,7 @@ function zmt_group_load_multiple(array $ids = array(), array $conditions = array
  * @see zmt_group_load_multiple()
  */
 function zmt_group_load_multiple_by_domain($domain, $exclude = 0) {
-  $cache = &drupal_static(__FUNCTION__, array());
+  $cache = &backdrop_static(__FUNCTION__, array());
   $domain_id = is_object($domain) ? $domain->id : $domain;
   if (!isset($cache[$domain_id])) {
     $query = new EntityFieldQuery();
@@ -511,7 +511,7 @@ function zmt_group_load_multiple_by_domain($domain, $exclude = 0) {
  *   Total number of group objects.
  */
 function zmt_group_count_by_domain($domain) {
-  $cache = &drupal_static(__FUNCTION__, array());
+  $cache = &backdrop_static(__FUNCTION__, array());
   $domain_id = is_object($domain) ? $domain->id : $domain;
   if (!isset($cache[$domain_id])) {
     $query = new EntityFieldQuery();
@@ -533,7 +533,7 @@ function zmt_group_count_by_domain($domain) {
  * @see zmt_group_load_multiple()
  */
 function zmt_group_load_by_user($user) {
-  $cache = &drupal_static(__FUNCTION__, array());
+  $cache = &backdrop_static(__FUNCTION__, array());
   $uid = is_object($user) ? $user->uid : $user;
   if (!isset($cache[$uid])) {
     $query = new EntityFieldQuery();
@@ -558,7 +558,7 @@ function zmt_group_load_by_user($user) {
  *   An group object or FALSE.
  */
 function zmt_group_load_by_name($domain, $name) {
-  $cache = &drupal_static(__FUNCTION__, array());
+  $cache = &backdrop_static(__FUNCTION__, array());
   $domain_id = is_object($domain) ? $domain->id : $domain;
   $cache_key = md5($domain_id . '-' . $name);
   if (!isset($cache[$cache_key])) {
@@ -588,7 +588,7 @@ function zmt_group_load_by_name($domain, $name) {
  *   TRUE or FALSE.
  */
 function zmt_group_exists($domain, $name, $id = 0) {
-  $cache = &drupal_static(__FUNCTION__, array());
+  $cache = &backdrop_static(__FUNCTION__, array());
   $domain_id = is_object($domain) ? $domain->id : $domain;
   $cache_key = md5($domain_id . '-' . $name . '-' . $id);
   if (!isset($cache[$cache_key])) {
@@ -788,7 +788,7 @@ function zmt_group_member_load_multiple_by_group(array $group_ids = array()) {
  *   An array of group member objects indexed by id.
  */
 function zmt_group_member_load_multiple_by_group_user($uid) {
-  $cache = &drupal_static(__FUNCTION__, array());
+  $cache = &backdrop_static(__FUNCTION__, array());
   if (!isset($cache[$uid])) {
     $query = db_select('zmt_group_member', 'zgm');
     $query->leftJoin('zmt_group', 'zg', 'zg.id = zgm.group_id');

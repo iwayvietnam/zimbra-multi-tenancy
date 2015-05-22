@@ -1986,7 +1986,7 @@ class HttpSoapClient {
           'timeout'          => 30.0,
         ),
       ));
-      $response = drupal_http_request($this->_location, array(
+      $response = backdrop_http_request($this->_location, array(
         'headers' => $headers,
         'method' => 'POST',
         'data' => (string) $request,

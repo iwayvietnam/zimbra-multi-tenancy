@@ -1,6 +1,6 @@
 <?php
 
-class ZmtAccountUITestCase extends DrupalWebTestCase {
+class ZmtAccountUITestCase extends BackdropWebTestCase {
   public static function getInfo() {
     return array(
       'name' => t('Zmt Account UI Test Case'),
@@ -33,15 +33,15 @@ class ZmtAccountUITestCase extends DrupalWebTestCase {
    * Test account operations is implemented.
    */
   public function testAccountOperations() {
-    $user = $this->drupalCreateUser(array('administer zmt', 'administer any zmt_account'));
-    $this->drupalLogin($user);
+    $user = $this->backdropCreateUser(array('administer zmt', 'administer any zmt_account'));
+    $this->backdropLogin($user);
 
-    $this->drupalGet('zmt/account');
+    $this->backdropGet('zmt/account');
     $this->assertText(t('There are no accounts available.'), t('No accounts available after fresh installation.'));
     $this->assertLink(t('Add one now'));
     $this->assertLink(t('Add Account'));
 
-    $this->drupalGet('zmt/account/add');
+    $this->backdropGet('zmt/account/add');
     $this->assertText(t('Add Account'));
     $this->assertText(t('Name'));
     $this->assertText(t('Domain'));

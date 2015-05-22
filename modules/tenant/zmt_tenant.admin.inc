@@ -6,7 +6,7 @@
 function zmt_tenant_list_all() {
   global $user;
 
-  drupal_set_title('Tenants');
+  backdrop_set_title('Tenants');
   $header = array();
   $header[] = array('data' => t('No.'));
   $header[] = array('data' => t('Full name'), 'field' => 'zt.full_name');
@@ -47,7 +47,7 @@ function zmt_tenant_list_all() {
     ->limit($item_per_page)
     ->execute();
 
-  $destination = drupal_get_destination();
+  $destination = backdrop_get_destination();
 
   $rows = array();
   foreach ($result as $key => $tenant) {
@@ -92,7 +92,7 @@ function zmt_tenant_list_all() {
 
   $build = array();
   if (user_access('administer zmt')) {
-    $build['tenants_filter'] = drupal_get_form('zmt_filter_by_server_form');
+    $build['tenants_filter'] = backdrop_get_form('zmt_filter_by_server_form');
   }
   $build['tenants_table']  = array(
     '#theme' => 'table',
@@ -108,17 +108,17 @@ function zmt_tenant_list_all() {
  * Add new zimbra tenant page callback.
  */
 function zmt_tenant_add_page() {
-  drupal_set_title('Add Tenant');
+  backdrop_set_title('Add Tenant');
   $tenant = zmt_tenant_new();
-  return drupal_get_form('zmt_tenant_edit_form', $tenant);
+  return backdrop_get_form('zmt_tenant_edit_form', $tenant);
 }
 
 /**
  * Edit exists zimbra tenant page callback.
  */
 function zmt_tenant_edit_page($tenant) {
-  drupal_set_title('Edit Tenant');
-  return drupal_get_form('zmt_tenant_edit_form', $tenant);
+  backdrop_set_title('Edit Tenant');
+  return backdrop_get_form('zmt_tenant_edit_form', $tenant);
 }
 
 /**
@@ -127,7 +127,7 @@ function zmt_tenant_edit_page($tenant) {
 function zmt_tenant_edit_form($form, &$form_state, $tenant){
   $form_state['tenant'] = $tenant;
   $account = user_load($tenant->tenant_uid);
-  $form_state['user'] = ($account && (int) $account->uid > 0) ? $account : drupal_anonymous_user();
+  $form_state['user'] = ($account && (int) $account->uid > 0) ? $account : backdrop_anonymous_user();
   $langcode = entity_language('user', $form_state['user']);
   field_attach_form('user', $form_state['user'], $form, $form_state, $langcode);
 
@@ -323,7 +323,7 @@ function zmt_tenant_edit_form_submit($form, &$form_state) {
   }
   $role_id = (int) variable_get('zmt_tenant_role_id', 0);
   if ($role_id) {
-    $edit['roles'] = drupal_map_assoc(array($role_id));
+    $edit['roles'] = backdrop_map_assoc(array($role_id));
   }
   $account = user_save($account, $edit);
 
@@ -366,8 +366,8 @@ function zmt_tenant_edit_form_submit($form, &$form_state) {
  * Delete exists zimbra tenant page callback.
  */
 function zmt_tenant_delete_page($tenant) {
-  drupal_set_title('Delete Tenant');
-  return drupal_get_form('zmt_tenant_delete_form', $tenant);
+  backdrop_set_title('Delete Tenant');
+  return backdrop_get_form('zmt_tenant_delete_form', $tenant);
 }
 
 /**
@@ -416,6 +416,6 @@ function zmt_tenant_delete_form_submit($form, &$form_state) {
   $user = user_load($tenant->tenant_uid);
 
   zmt_tenant_delete($tenant->id);
-  drupal_set_message(t('%name has been deleted.', array('%name' => $user->name)));
+  backdrop_set_message(t('%name has been deleted.', array('%name' => $user->name)));
   watchdog('zmt_tenant', 'Deleted zimbra tenant %name.', array('%name' => $user->name), WATCHDOG_NOTICE);
 }

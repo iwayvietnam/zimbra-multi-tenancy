@@ -6,7 +6,7 @@
 function zmt_group_list_all() {
   global $user;
 
-  drupal_set_title('Groups');
+  backdrop_set_title('Groups');
   $header = array();
   $header[] = array('data' => t('No.'));
   $header[] = array('data' => t('Name'), 'field' => 'zg.name');
@@ -59,7 +59,7 @@ function zmt_group_list_all() {
     ->limit($item_per_page)
     ->execute();
 
-  $destination = drupal_get_destination();
+  $destination = backdrop_get_destination();
   $rows = array();
   foreach ($result as $key => $group) {
     $row = array();
@@ -89,11 +89,11 @@ function zmt_group_list_all() {
 
   $build = array();
   if (user_access('administer zmt')) {
-    $build['group_filter'] = drupal_get_form('zmt_filter_by_domain_form');
+    $build['group_filter'] = backdrop_get_form('zmt_filter_by_domain_form');
   }
   elseif (user_access('administer any zmt_account')) {
     if (count($domain_ids) > 1) {
-      $build['group_filter'] = drupal_get_form('zmt_filter_by_domain_form');
+      $build['group_filter'] = backdrop_get_form('zmt_filter_by_domain_form');
     }
   }
   $build['group_table']  = array(
@@ -110,17 +110,17 @@ function zmt_group_list_all() {
  * Add new zimbra group page callback.
  */
 function zmt_group_add_page() {
-  drupal_set_title('Add Group');
+  backdrop_set_title('Add Group');
   $group = zmt_group_new();
-  return drupal_get_form('zmt_group_edit_form', $group);
+  return backdrop_get_form('zmt_group_edit_form', $group);
 }
 
 /**
  * Edit exists zimbra group page callback.
  */
 function zmt_group_edit_page($group) {
-  drupal_set_title('Edit Group');
-  return drupal_get_form('zmt_group_edit_form', $group);
+  backdrop_set_title('Edit Group');
+  return backdrop_get_form('zmt_group_edit_form', $group);
 }
 
 /**
@@ -131,7 +131,7 @@ function zmt_group_edit_form($form, &$form_state, $group){
 
   $form_state['#group'] = $group;
   $account = user_load($group->group_uid);
-  $form_state['#user'] = ($account && (int) $account->uid > 0) ? $account : drupal_anonymous_user();
+  $form_state['#user'] = ($account && (int) $account->uid > 0) ? $account : backdrop_anonymous_user();
   $values = &$form_state['values'];
   $group_id = isset($group->id) ? (int) $group->id : 0;
 
@@ -204,7 +204,7 @@ function zmt_group_edit_form($form, &$form_state, $group){
         'id' => (int) $member->member_id,
         'type' => (int) $member->type,
       );
-      $key = drupal_json_encode($key);
+      $key = backdrop_json_encode($key);
       $group_members[$key] = $member->name;
     }
     $form_state['group_members'] = $group_members;
@@ -223,7 +223,7 @@ function zmt_group_edit_form($form, &$form_state, $group){
           'id' => (int) $acc->id,
           'type' => GROUP_MEMBER_ACCOUNT,
         );
-        $key = drupal_json_encode($key);
+        $key = backdrop_json_encode($key);
         if (!in_array($key, $group_member_values)) {
           $available_members[$key] = $mailbox;
         }
@@ -236,7 +236,7 @@ function zmt_group_edit_form($form, &$form_state, $group){
           'id' => (int) $alias->id,
           'type' => GROUP_MEMBER_ALIAS,
         );
-        $key = drupal_json_encode($key);
+        $key = backdrop_json_encode($key);
         if (!in_array($key, $group_member_values)) {
           $available_members[$key] = $mailbox;
         }
@@ -250,7 +250,7 @@ function zmt_group_edit_form($form, &$form_state, $group){
           'id' => (int) $gr->id,
           'type' => GROUP_MEMBER_DL,
         );
-        $key = drupal_json_encode($key);
+        $key = backdrop_json_encode($key);
         if (!in_array($key, $group_member_values)) {
           $available_members[$key] = $mailbox;
         }
@@ -463,11 +463,11 @@ function zmt_group_edit_form($form, &$form_state, $group){
 
   $form['#validate'][] = 'zmt_group_edit_form_validate';
 
-  $path = drupal_get_path('module', 'zmt_core');
+  $path = backdrop_get_path('module', 'zmt_core');
   $form['#attached']['js'] = array(
     $path . '/js/zmt.js',
   );
-  $path = drupal_get_path('module', 'zmt_group');
+  $path = backdrop_get_path('module', 'zmt_group');
   $form['#attached']['css'] = array(
     $path . '/zmt-group.css',
   );
@@ -601,7 +601,7 @@ function zmt_group_edit_form_submit($form, &$form_state) {
     }
     $role_id = (int) variable_get('zmt_group_role_id', 0);
     if ($role_id) {
-      $edit['roles'] = drupal_map_assoc(array($role_id));
+      $edit['roles'] = backdrop_map_assoc(array($role_id));
     }
     $account = user_save($account, $edit);
 
@@ -621,7 +621,7 @@ function zmt_group_edit_form_submit($form, &$form_state) {
   $selected_members = array();
   $member_names = array();
   foreach ($value_members as $member) {
-    $member = drupal_json_decode($member);
+    $member = backdrop_json_decode($member);
     if (isset($member['name'])) {
       $member_names[] = $member['name'];
       $selected_members[] = (object) $member;
@@ -652,8 +652,8 @@ function zmt_group_edit_form_submit($form, &$form_state) {
  * Delete exists zimbra group page callback.
  */
 function zmt_group_delete_page($group) {
-  drupal_set_title('Delete Group');
-  return drupal_get_form('zmt_group_delete_form', $group);
+  backdrop_set_title('Delete Group');
+  return backdrop_get_form('zmt_group_delete_form', $group);
 }
 
 /**
@@ -693,6 +693,6 @@ function zmt_group_delete_form($form, &$form_state, $group) {
 function zmt_group_delete_form_submit($form, &$form_state) {
   $group = $form_state['#group'];
   zmt_group_delete($group->id);
-  drupal_set_message(t('%name has been deleted.', array('%name' => $group->name)));
+  backdrop_set_message(t('%name has been deleted.', array('%name' => $group->name)));
   watchdog('zmt_group', 'Deleted group %name.', array('%name' => $group->name), WATCHDOG_NOTICE);
 }

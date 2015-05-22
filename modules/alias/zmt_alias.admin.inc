@@ -6,7 +6,7 @@
 function zmt_alias_list_all() {
   global $user;
 
-  drupal_set_title('Aliases');
+  backdrop_set_title('Aliases');
   $header = array();
   $header[] = array('data' => t('No.'));
   $header[] = array('data' => t('Name'), 'field' => 'za.name');
@@ -55,7 +55,7 @@ function zmt_alias_list_all() {
     ->limit($item_per_page)
     ->execute();
 
-  $destination = drupal_get_destination();
+  $destination = backdrop_get_destination();
   $rows = array();
   foreach ($result as $key => $alias) {
     $row = array();
@@ -82,11 +82,11 @@ function zmt_alias_list_all() {
 
   $build = array();
   if (user_access('administer zmt')) {
-    $build['alias_filter'] = drupal_get_form('zmt_filter_by_domain_form');
+    $build['alias_filter'] = backdrop_get_form('zmt_filter_by_domain_form');
   }
   elseif (user_access('administer any zmt_account')) {
     if (count($domain_ids) > 1) {
-      $build['alias_filter'] = drupal_get_form('zmt_filter_by_domain_form');
+      $build['alias_filter'] = backdrop_get_form('zmt_filter_by_domain_form');
     }
   }
   $build['alias_table']  = array(
@@ -103,17 +103,17 @@ function zmt_alias_list_all() {
  * Add new zimbra alias page callback.
  */
 function zmt_alias_add_page() {
-  drupal_set_title('Add Alias');
+  backdrop_set_title('Add Alias');
   $alias = zmt_alias_new();
-  return drupal_get_form('zmt_alias_edit_form', $alias);
+  return backdrop_get_form('zmt_alias_edit_form', $alias);
 }
 
 /**
  * Edit exists zimbra alias page callback.
  */
 function zmt_alias_edit_page($alias) {
-  drupal_set_title('Edit Alias');
-  return drupal_get_form('zmt_alias_edit_form', $alias);
+  backdrop_set_title('Edit Alias');
+  return backdrop_get_form('zmt_alias_edit_form', $alias);
 }
 
 /**
@@ -240,8 +240,8 @@ function zmt_alias_edit_form_submit($form, &$form_state) {
  * Delete exists zimbra alias page callback.
  */
 function zmt_alias_delete_page($alias) {
-  drupal_set_title('Delete Alias');
-  return drupal_get_form('zmt_alias_delete_form', $alias);
+  backdrop_set_title('Delete Alias');
+  return backdrop_get_form('zmt_alias_delete_form', $alias);
 }
 
 /**
@@ -281,6 +281,6 @@ function zmt_alias_delete_form($form, &$form_state, $alias) {
 function zmt_alias_delete_form_submit($form, &$form_state) {
   $alias = $form_state['#alias'];
   zmt_alias_delete($alias->id);
-  drupal_set_message(t('%name has been deleted.', array('%name' => $alias->name)));
+  backdrop_set_message(t('%name has been deleted.', array('%name' => $alias->name)));
   watchdog('zmt_alias', 'Deleted alias %name.', array('%name' => $alias->name), WATCHDOG_NOTICE);
 }

@@ -3,7 +3,7 @@
 /**
  * Tests the zmt group.
  */
-class ZmtGroupTestCase extends DrupalWebTestCase {
+class ZmtGroupTestCase extends BackdropWebTestCase {
   public static function getInfo() {
     return array(
       'name' => 'Zmt Group Test Case',
@@ -33,9 +33,9 @@ class ZmtGroupTestCase extends DrupalWebTestCase {
    * Test the zmt group CRUD functions.
    */
   function testZmtGroupCrud() {
-    $name = DrupalTestCase::randomName();
-    $full_name = DrupalTestCase::randomName();
-    $zimbra_id = DrupalTestCase::randomName();
+    $name = BackdropTestCase::randomName();
+    $full_name = BackdropTestCase::randomName();
+    $zimbra_id = BackdropTestCase::randomName();
     $domain_id = mt_rand();
     $group_uid = mt_rand();
 
@@ -68,8 +68,8 @@ class ZmtGroupTestCase extends DrupalWebTestCase {
    * Test the zmt group member CRUD functions.
    */
   function testZmtGroupMemberCrud() {
-    $name = DrupalTestCase::randomName();
-    $type = DrupalTestCase::randomName();
+    $name = BackdropTestCase::randomName();
+    $type = BackdropTestCase::randomName();
     $group_id = mt_rand();
     $member_id = mt_rand();
 

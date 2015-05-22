@@ -3,7 +3,7 @@
 /**
  * Tests the zmt account.
  */
-class ZmtAccountTestCase extends DrupalWebTestCase {
+class ZmtAccountTestCase extends BackdropWebTestCase {
   public static function getInfo() {
     return array(
       'name' => 'Zmt Account Test Case',
@@ -31,13 +31,13 @@ class ZmtAccountTestCase extends DrupalWebTestCase {
    * Test the zmt account CRUD functions.
    */
   function testZmtAccountCrud() {
-    $name = DrupalTestCase::randomName();
-    $title = DrupalTestCase::randomName();
-    $full_name = DrupalTestCase::randomName();
-    $telephone = DrupalTestCase::randomName();
-    $mobile = DrupalTestCase::randomName();
-    $company = DrupalTestCase::randomName();
-    $zimbra_id = DrupalTestCase::randomName();
+    $name = BackdropTestCase::randomName();
+    $title = BackdropTestCase::randomName();
+    $full_name = BackdropTestCase::randomName();
+    $telephone = BackdropTestCase::randomName();
+    $mobile = BackdropTestCase::randomName();
+    $company = BackdropTestCase::randomName();
+    $zimbra_id = BackdropTestCase::randomName();
     $status = mt_rand(0, 1);
     $domain_id = mt_rand();
     $cos_id = mt_rand();

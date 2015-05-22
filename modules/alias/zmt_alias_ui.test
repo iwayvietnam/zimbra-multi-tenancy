@@ -1,6 +1,6 @@
 <?php
 
-class ZmtAliasUITestCase extends DrupalWebTestCase {
+class ZmtAliasUITestCase extends BackdropWebTestCase {
   public static function getInfo() {
     return array(
       'name' => t('Zmt Alias UI Test Case'),
@@ -35,15 +35,15 @@ class ZmtAliasUITestCase extends DrupalWebTestCase {
    * Test alias operations is implemented.
    */
   public function testAliasOperations() {
-    $user = $this->drupalCreateUser(array('administer zmt', 'administer any zmt_alias'));
-    $this->drupalLogin($user);
+    $user = $this->backdropCreateUser(array('administer zmt', 'administer any zmt_alias'));
+    $this->backdropLogin($user);
 
-    $this->drupalGet('zmt/alias');
+    $this->backdropGet('zmt/alias');
     $this->assertText(t('There are no aliases available.'), t('No aliases available after fresh installation.'));
     $this->assertLink(t('Add one now'));
     $this->assertLink(t('Add Alias'));
 
-    $this->drupalGet('zmt/alias/add');
+    $this->backdropGet('zmt/alias/add');
     $this->assertText(t('Add Alias'));
     $this->assertText(t('Name'));
     $this->assertText(t('Domain'));

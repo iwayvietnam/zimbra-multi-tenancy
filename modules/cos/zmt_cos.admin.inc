@@ -6,7 +6,7 @@
 function zmt_cos_list_all() {
   global $user;
 
-  drupal_set_title('Class of Services');
+  backdrop_set_title('Class of Services');
   $header = array();
   $header[] = array('data' => t('No.'));
   $header[] = array('data' => t('Name'), 'field' => 'zc.name');
@@ -34,7 +34,7 @@ function zmt_cos_list_all() {
     ->limit($item_per_page)
     ->execute();
 
-  $destination = drupal_get_destination();
+  $destination = backdrop_get_destination();
 
   $rows = array();
   foreach ($result as $key => $cos) {
@@ -63,7 +63,7 @@ function zmt_cos_list_all() {
   }
 
   if (user_access('administer zmt')) {
-    $build['cos_filter'] = drupal_get_form('zmt_filter_by_server_form');
+    $build['cos_filter'] = backdrop_get_form('zmt_filter_by_server_form');
   }
   $build['cos_table']  = array(
     '#theme' => 'table',
@@ -79,8 +79,8 @@ function zmt_cos_list_all() {
  * Edit exists zimbra cos page callback.
  */
 function zmt_cos_edit_page($cos) {
-  drupal_set_title('Edit Service');
-  return drupal_get_form('zmt_cos_edit_form', $cos);
+  backdrop_set_title('Edit Service');
+  return backdrop_get_form('zmt_cos_edit_form', $cos);
 }
 
 /**

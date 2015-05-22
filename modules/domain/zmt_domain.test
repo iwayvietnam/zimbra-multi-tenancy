@@ -3,7 +3,7 @@
 /**
  * Tests the zmt domain.
  */
-class ZmtDomainTestCase extends DrupalWebTestCase {
+class ZmtDomainTestCase extends BackdropWebTestCase {
   public static function getInfo() {
     return array(
       'name' => 'Zmt Domain Test Case',
@@ -30,8 +30,8 @@ class ZmtDomainTestCase extends DrupalWebTestCase {
    * Test the zmt domain CRUD functions.
    */
   function testZmtDomainCrud() {
-    $name = DrupalTestCase::randomName();
-    $zimbra_id = DrupalTestCase::randomName();
+    $name = BackdropTestCase::randomName();
+    $zimbra_id = BackdropTestCase::randomName();
     $server_id = mt_rand();
     $tenant_id = mt_rand();
     $domain_uid = mt_rand();

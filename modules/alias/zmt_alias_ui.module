@@ -51,7 +51,7 @@ function zmt_alias_ui_menu() {
  * Alias view callback.
  */
 function zmt_alias_view($alias) {
-  drupal_set_title(entity_label('zmt_alias', $alias));
+  backdrop_set_title(entity_label('zmt_alias', $alias));
   return entity_view('zmt_alias', array(entity_id('zmt_alias', $alias) => $alias), 'full');
 }
 

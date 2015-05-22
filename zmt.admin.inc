@@ -4,8 +4,8 @@
  * Zimbra multi tenancy setting page callback.
  */
 function zmt_setting_form_page() {
-  drupal_set_title('Zimbra multi-tenancy settings.');
-  return drupal_get_form('zmt_setting_form');
+  backdrop_set_title('Zimbra multi-tenancy settings.');
+  return backdrop_get_form('zmt_setting_form');
 }
 
 /**
@@ -39,8 +39,8 @@ function zmt_setting_form($form, &$form_state) {
  * zmt server pull data page callback.
  */
 function zmt_server_pull_data_page() {
-  drupal_set_title('Pull data from Zimbra Server');
-  return drupal_get_form('zmt_server_pull_data_form');
+  backdrop_set_title('Pull data from Zimbra Server');
+  return backdrop_get_form('zmt_server_pull_data_form');
 }
 
 /**
@@ -110,10 +110,10 @@ function zmt_server_pull_data_form($form, &$form_state) {
     '#suffix' => l(t('Cancel'), 'zmt/server') . '</div>',
   );
   $form['#attached']['js'] = array(
-    drupal_get_path('module', 'zmt_core') .'/js/zmt.js',
+    backdrop_get_path('module', 'zmt_core') .'/js/zmt.js',
   );
   $form['#attached']['css'] = array(
-    drupal_get_path('module', 'zmt_core') .'/zmt.css',
+    backdrop_get_path('module', 'zmt_core') .'/zmt.css',
   );
 
   return $form;
@@ -162,7 +162,7 @@ function zmt_pulling_progress($time) {
     $progress['percentage'] = $percentage;
   }
 
-  drupal_json_output($progress);
+  backdrop_json_output($progress);
 }
 
 /**
@@ -288,7 +288,7 @@ function _zmt_ui_update_cos_data(array $zimbra_coses, $server_id = 0, $progress_
     $progress++;
     variable_set($progress_name, floor($progress * 100 / $total_cos));
   }
-  drupal_set_message($count . ' coses were updated.');
+  backdrop_set_message($count . ' coses were updated.');
   return $count;
 }
 
@@ -342,7 +342,7 @@ function _zmt_ui_update_domain_data(array $zimbra_domains, $server_id = 0, $tena
     $progress++;
     variable_set($progress_name, floor($progress * 100 / $total_domain));
   }
-  drupal_set_message($count . ' domains were updated.');
+  backdrop_set_message($count . ' domains were updated.');
   return $count;
 }
 
@@ -414,7 +414,7 @@ function _zmt_ui_update_account_data(ZimbraAdminApi $api, array $zimbra_domains,
       } while (isset($pager['more']) && $pager['more'] === TRUE);
     }
   }
-  drupal_set_message($count . ' accounts were updated.');
+  backdrop_set_message($count . ' accounts were updated.');
   return $count;
 }
 
@@ -466,7 +466,7 @@ function _zmt_ui_update_alias_data(ZimbraAdminApi $api, array $zimbra_domains, $
       } while (isset($pager['more']) && $pager['more'] === TRUE);
     }
   }
-  drupal_set_message($count . ' aliases were updated.');
+  backdrop_set_message($count . ' aliases were updated.');
   return $count;
 }
 
@@ -566,6 +566,6 @@ function _zmt_ui_update_group_data(ZimbraAdminApi $api, array $zimbra_domains, $
       }
     }
   }
-  drupal_set_message($count . ' groups were updated.');
+  backdrop_set_message($count . ' groups were updated.');
   return $count;
 }

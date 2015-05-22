@@ -261,7 +261,7 @@ function zmt_ui_zmt_account_import_form_validate($form, &$form_state) {
         if (!$zimbra_account) {
           $zimbra_account = zimbra_create_account($api, $mail_address, $account->password, $attrs);
           if ($zimbra_account instanceof Exception) {
-            drupal_set_message(t('Account @name is invalid. @message', array(
+            backdrop_set_message(t('Account @name is invalid. @message', array(
               '@name' => $account->name,
               '@message' => $zimbra_account->getMessage(),
             )), 'error');
@@ -275,7 +275,7 @@ function zmt_ui_zmt_account_import_form_validate($form, &$form_state) {
 
           $result = zimbra_check_password_strength($api, $zimbra_account->id, $password);
           if ($result instanceof Exception) {
-            drupal_set_message(t('Account @name is invalid. @message', array(
+            backdrop_set_message(t('Account @name is invalid. @message', array(
               '@name' => $account->name,
               '@message' => $result->getMessage(),
             )), 'error');
@@ -354,7 +354,7 @@ function zmt_ui_group_edit_form_validate($form, &$form_state) {
         $value_members = is_array($values['members']) ? array_values($values['members']) : array();
         $members = array();
         foreach ($value_members as $member) {
-          $member = drupal_json_decode($member);
+          $member = backdrop_json_decode($member);
           if (!empty($member['name'])) {
             $members[] = $member['name'];
           }

@@ -3,7 +3,7 @@
 /**
  * Tests the zmt alias.
  */
-class ZmtAliasTestCase extends DrupalWebTestCase {
+class ZmtAliasTestCase extends BackdropWebTestCase {
   public static function getInfo() {
     return array(
       'name' => 'Zmt Alias Test Case',
@@ -32,8 +32,8 @@ class ZmtAliasTestCase extends DrupalWebTestCase {
    * Test the zmt alias CRUD functions.
    */
   function testZmtAliasCrud() {
-    $name = DrupalTestCase::randomName();
-    $zimbra_target_id = DrupalTestCase::randomName();
+    $name = BackdropTestCase::randomName();
+    $zimbra_target_id = BackdropTestCase::randomName();
     $domain_id = mt_rand();
     $account_id = mt_rand();
 

@@ -5,7 +5,7 @@ module_load_include('inc', 'zmt_core', 'includes/zmt.zimbra.soap');
 /**
  * Test case for Zmt tests.
  */
-class ZmtTestCase extends DrupalWebTestCase {
+class ZmtTestCase extends BackdropWebTestCase {
 
   public static function getInfo() {
     return array(
@@ -29,7 +29,7 @@ class ZmtTestCase extends DrupalWebTestCase {
    * Test encrypt and decrypt.
    */
   public function testZmtCrypto() {
-    $plain_text = drupal_random_key();
+    $plain_text = backdrop_random_key();
     $encrypted = zmt_password_encrypt($plain_text);
     $decrypted = zmt_password_decrypt($encrypted);
     $this->assertEqual($plain_text, $decrypted, t('The value was successfully encrypted and decrypted.'));
@@ -70,7 +70,7 @@ class ZmtTestCase extends DrupalWebTestCase {
 /**
  * Test case for zimbra soap api tests.
  */
-class ZmtZimbraApiTestCase extends DrupalWebTestCase {
+class ZmtZimbraApiTestCase extends BackdropWebTestCase {
 
   public static function getInfo() {
     return array(
@@ -81,14 +81,14 @@ class ZmtZimbraApiTestCase extends DrupalWebTestCase {
   }
 
   public function testZmbraSoapStruct() {
-    $foo = DrupalTestCase::randomName();
-    $bar = DrupalTestCase::randomName();
+    $foo = BackdropTestCase::randomName();
+    $bar = BackdropTestCase::randomName();
 
-    $key = DrupalTestCase::randomName();
-    $value = DrupalTestCase::randomName();
+    $key = BackdropTestCase::randomName();
+    $value = BackdropTestCase::randomName();
 
-    $name = DrupalTestCase::randomName();
-    $by = DrupalTestCase::randomName();
+    $name = BackdropTestCase::randomName();
+    $by = BackdropTestCase::randomName();
 
     $kpv = new KeyValuePair($key, $value);
     $this->assertEqual($kpv->n, $key);
@@ -201,25 +201,25 @@ class ZmtZimbraApiTestCase extends DrupalWebTestCase {
 
   public function testZmbraSoapRequest() {
 
-    $id = DrupalTestCase::randomName();
-    $name = DrupalTestCase::randomName();
-    $type = DrupalTestCase::randomName();
-    $attrs = DrupalTestCase::randomName();
+    $id = BackdropTestCase::randomName();
+    $name = BackdropTestCase::randomName();
+    $type = BackdropTestCase::randomName();
+    $attrs = BackdropTestCase::randomName();
 
-    $password = DrupalTestCase::randomName();
-    $authToken = DrupalTestCase::randomName();
-    $virtualHost = DrupalTestCase::randomName();
+    $password = BackdropTestCase::randomName();
+    $authToken = BackdropTestCase::randomName();
+    $virtualHost = BackdropTestCase::randomName();
 
-    $member1 = DrupalTestCase::randomName();
-    $member2 = DrupalTestCase::randomName();
+    $member1 = BackdropTestCase::randomName();
+    $member2 = BackdropTestCase::randomName();
 
     $limit = mt_rand();
     $offset = mt_rand();
 
-    $key1 = DrupalTestCase::randomName();
-    $value1 = DrupalTestCase::randomName();
-    $key2 = DrupalTestCase::randomName();
-    $value2 = DrupalTestCase::randomName();
+    $key1 = BackdropTestCase::randomName();
+    $value1 = BackdropTestCase::randomName();
+    $key2 = BackdropTestCase::randomName();
+    $value2 = BackdropTestCase::randomName();
     $kpv1 = new KeyValuePair($key1, $value1);
     $kpv2 = new KeyValuePair($key2, $value2);
 
@@ -574,9 +574,9 @@ class ZmtZimbraApiTestCase extends DrupalWebTestCase {
       'applyConfig' => TRUE,
     )));
 
-    $query = DrupalTestCase::randomName();
-    $ldapSearchBase = DrupalTestCase::randomName();
-    $sortBy = DrupalTestCase::randomName();
+    $query = BackdropTestCase::randomName();
+    $ldapSearchBase = BackdropTestCase::randomName();
+    $sortBy = BackdropTestCase::randomName();
     $req = new GetLDAPEntriesRequest($query, $ldapSearchBase, $sortBy, TRUE, $limit, $offset);
     $this->assertEqual($req->query, $query);
     $this->assertEqual($req->ldapSearchBase, array(array('_content' => $ldapSearchBase)));
@@ -754,11 +754,11 @@ class ZmtZimbraApiTestCase extends DrupalWebTestCase {
       'new_dn' => $name,
     )));
 
-    $query = DrupalTestCase::randomName();
-    $domain = DrupalTestCase::randomName();
-    $types = DrupalTestCase::randomName();
-    $sortBy = DrupalTestCase::randomName();
-    $attrs = DrupalTestCase::randomName();
+    $query = BackdropTestCase::randomName();
+    $domain = BackdropTestCase::randomName();
+    $types = BackdropTestCase::randomName();
+    $sortBy = BackdropTestCase::randomName();
+    $attrs = BackdropTestCase::randomName();
     $maxResults = mt_rand();
     $req = new SearchDirectoryRequest(
       $query, $maxResults, $limit, $offset, $domain, TRUE, TRUE, $types, $sortBy, TRUE, TRUE, $attrs

@@ -276,7 +276,7 @@ function zmt_domain_load_multiple(array $ids = array(), array $conditions = arra
  */
 function zmt_domain_load_all($filter_by_user = FALSE, $limit = 0, $offset = 0) {
   global $user;
-  $cache = &drupal_static(__FUNCTION__, array());
+  $cache = &backdrop_static(__FUNCTION__, array());
   $cache_key = md5(var_export($filter_by_user, TRUE) . $limit . $limit);
   if (!isset($cache[$cache_key])) {
     $query = new EntityFieldQuery();
@@ -309,7 +309,7 @@ function zmt_domain_load_all($filter_by_user = FALSE, $limit = 0, $offset = 0) {
  */
 function zmt_domain_load_multiple_by_server($server, $filter_by_user = FALSE, $limit = 0, $offset = 0) {
   global $user;
-  $cache = &drupal_static(__FUNCTION__, array());
+  $cache = &backdrop_static(__FUNCTION__, array());
   $server_id = is_object($server) ? $server->id : $server;
   $cache_key = md5($server_id . var_export($filter_by_user, TRUE) . $limit . $limit);
   if (!isset($cache[$cache_key])) {
@@ -360,7 +360,7 @@ function zmt_domain_load_multiple_by_server($server, $filter_by_user = FALSE, $l
  * @see zmt_domain_load_multiple()
  */
 function zmt_domain_load_multiple_by_tenant($tenant, $limit = 0, $offset = 0) {
-  $cache = &drupal_static(__FUNCTION__, array());
+  $cache = &backdrop_static(__FUNCTION__, array());
   $tenant_id = is_object($tenant) ? (int) $tenant->id : (int) $tenant;
   $cache_key = $tenant_id + $limit + $offset;
   if (!isset($cache[$cache_key])) {
@@ -393,7 +393,7 @@ function zmt_domain_load_multiple_by_user($domain_user = NULL, $limit = 0, $offs
     $domain_user = $user;
   }
   $uid = (int) $domain_user->uid;
-  $cache = &drupal_static(__FUNCTION__, array());
+  $cache = &backdrop_static(__FUNCTION__, array());
   $cache_key = $uid + $limit + $offset;
   if (!isset($cache[$cache_key])) {
     $query = db_select('zmt_domain', 'd');
@@ -435,7 +435,7 @@ function zmt_domain_load_multiple_by_user($domain_user = NULL, $limit = 0, $offs
  *   A domain object or FALSE.
  */
 function zmt_domain_load_by_name($name) {
-  $cache = &drupal_static(__FUNCTION__, array());
+  $cache = &backdrop_static(__FUNCTION__, array());
   if (!isset($cache[$name])) {
     $query = new EntityFieldQuery();
     $result = $query->entityCondition('entity_type', 'zmt_domain')
@@ -550,7 +550,7 @@ function zmt_domain_domain_number_remain($id, $cos_id){
  *   TRUE or FALSE.
  */
 function zmt_domain_exists($name, $id = 0) {
-  $cache = &drupal_static(__FUNCTION__);
+  $cache = &backdrop_static(__FUNCTION__);
   $cache_key = md5($name . '-' . $id);
   if (!isset($cache[$cache_key])) {
     $query = new EntityFieldQuery();
@@ -714,7 +714,7 @@ function zmt_domain_cos_load_multiple($ids = array(), array $conditions = array(
  */
 function zmt_domain_cos_load_multiple_by_cos(array $cos_ids = array(), $domain_id = NULL) {
   if (empty($cos_ids)) {
-    $cache = &drupal_static(__FUNCTION__, array());
+    $cache = &backdrop_static(__FUNCTION__, array());
     $cache_key = md5(implode(',', $cos_ids) . $domain_id);
     if (!isset($cache[$cache_key])) {
       $efq = new EntityFieldQuery();
@@ -745,7 +745,7 @@ function zmt_domain_cos_load_multiple_by_cos(array $cos_ids = array(), $domain_i
  */
 function zmt_domain_cos_load_multiple_by_domain(array $domain_ids = array(), $cos_id = NULL) {
   if (!empty($domain_ids)) {
-    $cache = &drupal_static(__FUNCTION__, array());
+    $cache = &backdrop_static(__FUNCTION__, array());
     $cache_key = md5(implode(',', $domain_ids) . $cos_id);
     if (!isset($cache[$cache_key])) {
       $efq = new EntityFieldQuery();

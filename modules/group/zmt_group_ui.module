@@ -51,7 +51,7 @@ function zmt_group_ui_menu() {
  * Group view callback.
  */
 function zmt_group_view($group) {
-  drupal_set_title(entity_label('zmt_group', $group));
+  backdrop_set_title(entity_label('zmt_group', $group));
   return entity_view('zmt_group', array(entity_id('zmt_group', $group) => $group), 'full');
 }
 

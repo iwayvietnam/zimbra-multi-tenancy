@@ -74,7 +74,7 @@ function zmt_domain_ui_menu() {
  * Domain view callback.
  */
 function zmt_domain_view($domain) {
-  drupal_set_title(entity_label('zmt_domain', $domain));
+  backdrop_set_title(entity_label('zmt_domain', $domain));
   return entity_view('zmt_domain', array(entity_id('zmt_domain', $domain) => $domain), 'full');
 }
 
