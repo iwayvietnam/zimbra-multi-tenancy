@@ -1,6 +1,6 @@
 name = ZMT Tenant
 description = Defines the Tenant entity and associated features. 
 package = Zimbra Multi Tenancy
-core = 7.x
+backdrop = 1.x
 dependencies[] = zmt_cos
 files[] = zmt_tenant.test

@@ -1,6 +1,6 @@
 name = ZMT Account
 description = Defines the Account entity and associated features.
 package = Zimbra Multi Tenancy
-core = 7.x
+backdrop = 1.x
 dependencies[] = zmt_domain
 files[] = zmt_account.test

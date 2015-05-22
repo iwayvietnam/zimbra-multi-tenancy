@@ -1,6 +1,7 @@
 name = Zimbra Multi Tenancy UI
 description = Zimbra Multi Tenancy User Interface
 package = Zimbra Multi Tenancy
-core = 7.x
+backdrop = 1.x
 dependencies[] = zmt_group_ui
 files[] = zmt_ui.test
+configure = admin/config/system/zmt

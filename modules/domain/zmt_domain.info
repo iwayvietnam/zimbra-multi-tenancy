@@ -1,6 +1,6 @@
 name = ZMT Domain
 description = Defines the Domain entity and associated features.
 package = Zimbra Multi Tenancy
-core = 7.x
+backdrop = 1.x
 dependencies[] = zmt_tenant 
 files[] = zmt_domain.test
