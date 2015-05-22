@@ -1,0 +1,6 @@
+{
+  "_config_name": "zmt.settings",
+  "zimbra_enable_debug": 0,
+  "zimbra_item_per_page": 20,
+  "zimbra_item_per_pull": 100
+}
