@@ -328,7 +328,10 @@ function zmt_group_edit_form($form, &$form_state, $group){
     $form_state['available_members'] = $available_members;
     $form_state['group_members'] = $members;
   }
-
+  
+  asort($form_state['available_members']);
+  asort($form_state['group_members']);
+  
   $form['member_container'] = array(
     '#type' => 'container',
     '#prefix' => '<div id="member-container-wapper">',
