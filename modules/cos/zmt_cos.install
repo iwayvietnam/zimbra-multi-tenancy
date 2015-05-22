@@ -4,12 +4,13 @@
  * Implements hook_install().
  */
 function zmt_cos_install() {
-  $zimbra_rid = (int) variable_get('zmt_zimbra_role_id', 0);
-  if ($zimbra_rid > 0 ) {
+  $config = config('zmt.settings');
+  $zimbra_role = $config->get('zmt_zimbra_role');
+  if (!empty($zimbra_role)) {
     $zmt_perm = array(
       'administer any zmt_cos' => 1,
     );
-    user_role_change_permissions($zimbra_rid, $zmt_perm);
+    user_role_change_permissions($zimbra_role, $zmt_perm);
   }
 }
 

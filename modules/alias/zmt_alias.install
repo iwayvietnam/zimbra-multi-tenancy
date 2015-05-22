@@ -4,24 +4,26 @@
  * Implements hook_install().
  */ 
 function zmt_alias_install() {
-  $zimbra_rid  = (int) variable_get('zmt_zimbra_role_id',  0);
-  $tenant_rid = (int) variable_get('zmt_tenant_role_id', 0);
-  $domain_rid = (int) variable_get('zmt_domain_role_id', 0);
-  $group_rid  = (int) variable_get('zmt_group_role_id',  0);
+  $config = config('zmt.settings');
+  $zimbra_role = $config->get('zmt_zimbra_role');
+  $tenant_role = $config->get('zmt_tenant_role');
+  $domain_role = $config->get('zmt_domain_role');
+  $group_role = $config->get('zmt_group_role');
+
   $zmt_perm = array(
     'administer any zmt_alias' => 1,
   );
-  if ($zimbra_rid > 0 ) {
+  if (!empty($zimbra_role)) {
     user_role_change_permissions($zimbra_rid, $zmt_perm);
   }
-  if ($tenant_rid > 0 ) {
-    user_role_change_permissions($tenant_rid, $zmt_perm);
+  if (!empty($tenant_role)) {
+    user_role_change_permissions($tenant_role, $zmt_perm);
   }
-  if ($domain_rid > 0 ) {
-    user_role_change_permissions($domain_rid, $zmt_perm);
+  if (!empty($domain_role)) {
+    user_role_change_permissions($domain_role, $zmt_perm);
   }
-  if ($group_rid > 0 ) {
-    user_role_change_permissions($group_rid, $zmt_perm);
+  if (!empty($group_role)) {
+    user_role_change_permissions($group_role, $zmt_perm);
   }
 }
 
