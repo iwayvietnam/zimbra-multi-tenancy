@@ -2,5 +2,9 @@
   "_config_name": "zmt.settings",
   "zimbra_enable_debug": 0,
   "zimbra_item_per_page": 20,
-  "zimbra_item_per_pull": 100
+  "zimbra_item_per_pull": 100,
+  "zmt_zimbra_role": "zmt_zimbra",
+  "zmt_tenant_role": "zmt_tenant",
+  "zmt_domain_role": "zmt_domaint",
+  "zmt_group_role": "zmt_group"
 }
