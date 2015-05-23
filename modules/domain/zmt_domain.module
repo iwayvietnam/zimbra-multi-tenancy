@@ -7,8 +7,8 @@ function zmt_domain_entity_info() {
   $entity = array(
     'zmt_domain' => array(
       'label' => t('Domain'),
-      'entity class' => 'Entity',
-      'controller class' => 'EntityAPIControllerExportable',
+      'entity class' => 'ZmtDomainEntity',
+      'controller class' => 'EntityDatabaseStorageController',
       'base table' => 'zmt_domain',
       'fieldable' => FALSE,
       'entity keys' => array(
@@ -28,8 +28,8 @@ function zmt_domain_entity_info() {
     ),
     'zmt_domain_cos' => array(
       'label' => t('Class of Service for Domain'),
-      'entity class' => 'Entity',
-      'controller class' => 'EntityAPIControllerExportable',
+      'entity class' => 'ZmtDomainCosEntity',
+      'controller class' => 'EntityDatabaseStorageController',
       'base table' => 'zmt_domain_cos',
       'fieldable' => FALSE,
       'entity keys' => array(
@@ -901,5 +901,15 @@ function zmt_domain_statuses() {
     'locked' => t('Locked'),
     'suspended' => t('Suspended'),
     'maintenance' => t('Maintenance'),
+  );
+}
+
+/**
+ * Implements hook_autoload_info().
+ */
+function zmt_domain_autoload_info() {
+  return array(
+    'ZmtDomainEntity' => 'zmt_domain.entity.inc',
+    'ZmtDomainCosEntity' => 'zmt_domain.entity.inc',
   );
 }

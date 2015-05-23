@@ -117,9 +117,9 @@ function zmt_domain_edit_form($form, &$form_state, $domain) {
 
   $form_state['domain'] = $domain;
   $account = user_load($domain->domain_uid);
-  $form_state['user'] = ($account && (int) $account->uid > 0) ? $account : backdrop_anonymous_user();
+  $form_state['user'] = ($account && (int) $account->uid > 0) ? $account : entity_create('user', array());
   $values = &$form_state['values'];
-  $domain_id = isset($domain->id) ? (int) $domain->id : 0;
+  $domain_id = !empty($domain->id) ? (int) $domain->id : 0;
 
   $form['domain_name'] = array(
     '#title' => t('Name'),
@@ -363,7 +363,7 @@ function zmt_domain_edit_form_validate($form, &$form_state) {
     $mail = trim($values['mail']);
     form_set_value($form['domain_user']['mail'], $mail, $form_state);
     // Validate the e-mail address, and check if it is taken by an existing user.
-    if ($error = user_validate_mail($values['mail'])) {
+    if ($error = zmt_user_validate_mail($values['mail'])) {
       form_set_error('mail', $error);
     }
     else {
@@ -444,21 +444,20 @@ function zmt_domain_edit_form_submit($form, &$form_state) {
 
   $create_user = isset($values['create_user']) ? (int) $values['create_user'] : 0;
   if ($create_user) {
-    $edit = array(
-      'name' => check_plain(trim($values['name'])),
-      'mail' => check_plain(trim($values['mail'])),
-      'status' => (int) $values['status'],
-      'init' => 'email address',
-    );
-    if (isset($values['pass']) && !empty($values['pass'])) {
-      $edit['pass'] = trim($values['pass']);
+    $account->name = check_plain($values['name']);
+    $account->mail = check_plain($values['mail']);
+    $account->status = (int) $values['status'];
+    $account->init = 'email address';
+    if (!empty($values['pass'])) {
+      $account->pass = trim($values['pass']);
     }
-    $role_id = (int) variable_get('zmt_domain_role_id', 0);
-    if ($role_id) {
-      $edit['roles'] = backdrop_map_assoc(array($role_id));
-    }
-    $account = user_save($account, $edit);
 
+    $config = config('zmt.settings');
+    $domain_role = $config->get('zmt_domain_role');
+    if (!empty($domain_role)) {
+      $account->roles[] = $domain_role;
+    }
+    $account->save();
     $domain->domain_uid = $account->uid;
   }
 
