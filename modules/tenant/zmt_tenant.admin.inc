@@ -129,7 +129,6 @@ function zmt_tenant_edit_form($form, &$form_state, $tenant){
   $form_state['tenant'] = $tenant;
   $account = user_load($tenant->tenant_uid);
   $form_state['user'] = ($account && (int) $account->uid > 0) ? $account : entity_create('user', array());
-  field_attach_form('user', $form_state['user'], $form, $form_state, $language->langcode);
 
   $id = isset($tenant->id) ? (int) $tenant->id : 0;
 
