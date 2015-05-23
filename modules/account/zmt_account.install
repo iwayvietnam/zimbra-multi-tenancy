@@ -14,7 +14,7 @@ function zmt_account_install() {
     'administer any zmt_account' => 1,
   );
   if (!empty($zimbra_role)) {
-    user_role_change_permissions($zimbra_rid, $zmt_perm);
+    user_role_change_permissions($zimbra_role, $zmt_perm);
   }
   if (!empty($tenant_role)) {
     user_role_change_permissions($tenant_role, $zmt_perm);
