@@ -7,8 +7,8 @@ function zmt_alias_entity_info() {
   $entity = array(
     'zmt_alias' => array(
       'label' => t('Alias'),
-      'entity class' => 'Entity',
-      'controller class' => 'EntityAPIControllerExportable',
+      'entity class' => 'ZmtAliasEntity',
+      'controller class' => 'EntityDatabaseStorageController',
       'base table' => 'zmt_alias',
       'fieldable' => FALSE,
       'entity keys' => array(
@@ -425,7 +425,7 @@ function zmt_alias_delete_multiple_by_domain(array $ids = array()) {
  * Deletes multiple alias by accounts.
  *
  * @param $ids
- *   An array of account IDs.
+ *   An array of alias IDs.
  */
 function zmt_alias_delete_multiple_by_account(array $ids = array()) {
   if (!empty($ids)) {
@@ -436,4 +436,13 @@ function zmt_alias_delete_multiple_by_account(array $ids = array()) {
      $alias_ids = isset($result['zmt_alias']) ? array_keys($result['zmt_alias']) : array();
      zmt_alias_delete_multiple($alias_ids);
   }
+}
+
+/**
+ * Implements hook_autoload_info().
+ */
+function zmt_alias_autoload_info() {
+  return array(
+    'ZmtAliasEntity' => 'zmt_alias.entity.inc',
+  );
 }
