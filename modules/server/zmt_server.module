@@ -7,15 +7,14 @@ function zmt_server_entity_info() {
   $entity = array(
     'zmt_server' => array(
       'label' => t('Zimbra server'),
-      'entity class' => 'Entity',
-      'controller class' => 'EntityAPIControllerExportable',
+      'entity class' => 'ZmtServerEntity',
+      'controller class' => 'EntityDatabaseStorageController',
       'base table' => 'zmt_server',
       'fieldable' => FALSE,
       'entity keys' => array(
         'id' => 'id',
         'label' => 'name',
       ),
-      'bundles' => array(),
       'bundles' => array(),
       'view modes' => array(
         'full' => array(
@@ -289,5 +288,14 @@ function zmt_server_exclude_mailbox() {
     'ham\.*',
     'virus-quarantine\.*',
     'galsync\.*',
+  );
+}
+
+/**
+ * Implements hook_autoload_info().
+ */
+function zmt_server_autoload_info() {
+  return array(
+    'ZmtServerEntity' => 'zmt_server.entity.inc',
   );
 }

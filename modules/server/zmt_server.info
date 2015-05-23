@@ -3,4 +3,5 @@ description = Defines the Server entity and associated features.
 package = Zimbra Multi Tenancy
 backdrop = 1.x
 dependencies[] = zmt_core
+files[] = zmt_server.entity.inc
 files[] = zmt_server.test
