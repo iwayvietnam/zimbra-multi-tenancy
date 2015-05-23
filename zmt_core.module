@@ -44,6 +44,25 @@ function zmt_element_validate_integer_positive($element, &$form_state) {
 }
 
 /**
+ * Validates a user's email address.
+ */
+function zmt_user_validate_mail($mail) {
+  if (!$mail) {
+    return t('You must enter an e-mail address.');
+  }
+  if (!zmt_valid_email_address($mail)) {
+    return t('The e-mail address %mail is not valid.', array('%mail' => $mail));
+  }
+}
+
+/**
+ * Verifies the syntax of the given e-mail address.
+ */
+function zmt_valid_email_address($mail) {
+  return (bool) filter_var($mail, FILTER_VALIDATE_EMAIL);
+}
+
+/**
  * Check request is ajax.
  */
 function zmt_is_ajax_request() {

@@ -7,8 +7,8 @@ function zmt_tenant_entity_info() {
   $entity = array(
     'zmt_tenant' => array(
       'label' => t('Tenant'),
-      'entity class' => 'Entity',
-      'controller class' => 'EntityAPIControllerExportable',
+      'entity class' => 'ZmtTenantEntity',
+      'controller class' => 'EntityDatabaseStorageController',
       'base table' => 'zmt_tenant',
       'fieldable' => FALSE,
       'entity keys' => array(
@@ -28,8 +28,8 @@ function zmt_tenant_entity_info() {
     ),
     'zmt_tenant_cos' => array(
       'label' => t('Class of Service for Tenant'),
-      'entity class' => 'Entity',
-      'controller class' => 'EntityAPIControllerExportable',
+      'entity class' => 'ZmtTenantCosEntity',
+      'controller class' => 'EntityDatabaseStorageController',
       'base table' => 'zmt_tenant_cos',
       'fieldable' => FALSE,
       'entity keys' => array(
@@ -655,4 +655,14 @@ function zmt_tenant_cos_delete_multiple_by_tenant(array $tenant_ids = array()) {
     $ids = isset($result['zmt_tenant_cos']) ? array_keys($result['zmt_tenant_cos']) : array();
     zmt_tenant_cos_delete_multiple($ids);
   }
+}
+
+/**
+ * Implements hook_autoload_info().
+ */
+function zmt_tenant_autoload_info() {
+  return array(
+    'ZmtTenantEntity' => 'zmt_tenant.entity.inc',
+    'ZmtTenantCosEntity' => 'zmt_tenant.entity.inc',
+  );
 }
