@@ -7,8 +7,8 @@ function zmt_cos_entity_info() {
   $entity = array(
     'zmt_cos' => array(
       'label' => t('Class of Service'),
-      'entity class' => 'Entity',
-      'controller class' => 'EntityAPIControllerExportable',
+      'entity class' => 'ZmtCosEntity',
+      'controller class' => 'EntityDatabaseStorageController',
       'base table' => 'zmt_cos',
       'fieldable' => FALSE,
       'entity keys' => array(
@@ -330,4 +330,13 @@ function zmt_cos_delete_multiple_by_server(array $server_ids = array()) {
     $ids = isset($result['zmt_cos']) ? array_keys($result['zmt_cos']) : array();
     zmt_cos_delete_multiple($ids);
   }
+}
+
+/**
+ * Implements hook_autoload_info().
+ */
+function zmt_cos_autoload_info() {
+  return array(
+    'ZmtCosEntity' => 'zmt_cos.entity.inc',
+  );
 }

@@ -34,6 +34,16 @@ function zmt_access_permissions($entity_type, $entity_name) {
 }
 
 /**
+ * Form element validation handler for integer elements that must be positive.
+ */
+function zmt_element_validate_integer_positive($element, &$form_state) {
+  $value = $element ['#value'];
+  if ($value !== '' && (!is_numeric($value) || intval($value) != $value || $value <= 0)) {
+    form_error($element, t('%name must be a positive integer.', array('%name' => $element ['#title'])));
+  }
+}
+
+/**
  * Check request is ajax.
  */
 function zmt_is_ajax_request() {
