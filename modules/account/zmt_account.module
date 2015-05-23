@@ -7,8 +7,8 @@ function zmt_account_entity_info() {
   $entity = array(
     'zmt_account' => array(
       'label' => t('Account'),
-      'entity class' => 'Entity',
-      'controller class' => 'EntityAPIControllerExportable',
+      'entity class' => 'ZmtAccountEntity',
+      'controller class' => 'EntityDatabaseStorageController',
       'base table' => 'zmt_account',
       'fieldable' => FALSE,
       'entity keys' => array(
@@ -442,5 +442,13 @@ function zmt_account_statuses() {
     'locked' => t('Locked'),
     'pending' => t('Pending'),
     'maintenance' => t('Maintenance'),
+  );
+}
+/**
+ * Implements hook_autoload_info().
+ */
+function zmt_account_autoload_info() {
+  return array(
+    'ZmtAccountEntity' => 'zmt_account.entity.inc',
   );
 }
