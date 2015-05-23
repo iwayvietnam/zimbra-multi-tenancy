@@ -18,6 +18,16 @@ function zmt_ui_uninstall() {
  * Define index key for zimbra id.
  */ 
 function zmt_add_index_keys() {
+  db_delete('zmt_domain')
+    ->condition(db_or()->condition('zimbra_id', '')->isNull('zimbra_id'))
+    ->execute();
+  db_delete('zmt_account')
+    ->condition(db_or()->condition('zimbra_id', '')->isNull('zimbra_id'))
+    ->execute();
+  db_delete('zmt_group')
+    ->condition(db_or()->condition('zimbra_id', '')->isNull('zimbra_id'))
+    ->execute();
+
   db_add_unique_key('zmt_domain', 'zmt_domain_zimbra_id', array('zimbra_id'));
   db_add_unique_key('zmt_account', 'zmt_account_zimbra_id', array('zimbra_id'));
   db_add_unique_key('zmt_group', 'zmt_group_zimbra_id', array('zimbra_id'));
