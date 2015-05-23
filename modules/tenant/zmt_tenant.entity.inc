@@ -98,47 +98,47 @@ class ZmtTenantEntity extends Entity {
 }
 
 /**
- * Defines zmt temant cos mapping entity class.
+ * Defines zmt tenant cos mapping entity class.
  */
 class ZmtTenantCosEntity extends Entity {
 
   /**
-   * The ID of temant cos mapping.
+   * The ID of tenant cos mapping.
    *
    * @var integer
    */
   public $id;
 
   /**
-   * The {zmt_tenant}.id of temant cos mapping.
+   * The {zmt_tenant}.id of tenant cos mapping.
    *
    * @var integer
    */
   public $tenant_id;
 
   /**
-   * The {zmt_cos}.id of temant cos mapping.
+   * The {zmt_cos}.id of tenant cos mapping.
    *
    * @var integer
    */
   public $cos_id;
 
   /**
-   * The max account number of temant cos mapping.
+   * The max account number of tenant cos mapping.
    *
    * @var integer
    */
   public $max_account;
 
   /**
-   * The {users}.uid that created the temant cos mapping.
+   * The {users}.uid that created the tenant cos mapping.
    *
    * @var integer
    */
   public $uid = 0;
 
   /**
-   * The Unix timestamp when the temant cos mapping was created..
+   * The Unix timestamp when the tenant cos mapping was created..
    *
    * @var integer
    */
