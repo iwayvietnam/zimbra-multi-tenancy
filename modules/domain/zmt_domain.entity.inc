@@ -50,7 +50,7 @@ class ZmtDomainEntity extends Entity {
   /**
    * The {users}.uid representation of the domain.
    *
-   * @var string
+   * @var integer
    */
   public $domain_uid = 0;
 

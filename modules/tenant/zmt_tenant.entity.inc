@@ -22,7 +22,7 @@ class ZmtTenantEntity extends Entity {
   /**
    * The {users}.uid representation of the tenant.
    *
-   * @var string
+   * @var integer
    */
   public $tenant_uid = 0;
 
