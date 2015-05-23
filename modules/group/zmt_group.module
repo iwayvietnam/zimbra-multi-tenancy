@@ -22,8 +22,8 @@ function zmt_group_entity_info() {
   $entity = array(
     'zmt_group' => array(
       'label' => t('Group'),
-      'entity class' => 'Entity',
-      'controller class' => 'EntityAPIControllerExportable',
+      'entity class' => 'ZmtGroupEntity',
+      'controller class' => 'EntityDatabaseStorageController',
       'base table' => 'zmt_group',
       'fieldable' => FALSE,
       'entity keys' => array(
@@ -43,8 +43,8 @@ function zmt_group_entity_info() {
     ),
     'zmt_group_member' => array(
       'label' => t('Group member'),
-      'entity class' => 'Entity',
-      'controller class' => 'EntityAPIControllerExportable',
+      'entity class' => 'ZmtGroupMemberEntity',
+      'controller class' => 'EntityDatabaseStorageController',
       'base table' => 'zmt_group_member',
       'fieldable' => FALSE,
       'entity keys' => array(
@@ -938,4 +938,14 @@ function zmt_group_member_delete_multiple_by_alias($alias_id, $by_entity = TRUE)
     ->execute();
   $ids = isset($result['zmt_group_member']) ? array_keys($result['zmt_group_member']) : array();
   zmt_group_member_delete_multiple($ids, $by_entity);
+}
+
+/**
+ * Implements hook_autoload_info().
+ */
+function zmt_group_autoload_info() {
+  return array(
+    'ZmtGroupEntity' => 'zmt_group.entity.inc',
+    'ZmtGroupMemberEntity' => 'zmt_group.entity.inc',
+  );
 }
