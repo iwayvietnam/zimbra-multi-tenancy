@@ -13,14 +13,14 @@ class ZmtDomainEntity extends Entity {
   public $id;
 
   /**
-   * The {zmt_server}.id of zimbra server.
+   * The {zmt_server}.id of the domain.
    *
    * @var integer
    */
   public $server_id = 0;
 
   /**
-   * The {zmt_tenant}.id of zimbra server.
+   * The {zmt_tenant}.id of the domain.
    *
    * @var integer
    */
