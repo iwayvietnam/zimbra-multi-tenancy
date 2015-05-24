@@ -318,11 +318,12 @@ function zmt_account_import_page() {
  * Import accounts form
  */
 function zmt_account_import_form($form, &$form_state){
-  global $user;
-
   if (empty($form_state['time'])) {
     $form_state['time'] = REQUEST_TIME;
   }
+
+  $form['#prefix'] = '<div id="zmt-import-account-wrapper">';
+  $form['#suffix'] = '</div>';
 
   $form['file'] = array(
     '#type' => 'file',
@@ -330,24 +331,8 @@ function zmt_account_import_form($form, &$form_state){
     '#description' => t('Csv file fields: name,password,full_name,status,title,telephone,mobile,company'),
   );
 
-  $options = array();
-  if (!(user_access('administer zmt'))) {
-    $domains = zmt_domain_load_multiple_by_user($user);
-  }
-  else {
-    $domains = zmt_domain_load_all();
-  }
-  if (count($domains) !== 1) {
-    $options = array('' => t('- None -'));
-  }
-  foreach ($domains as $domain) {
-    $options[$domain->id] = $domain->name;
-  }
-
   $form['domain_id'] = array(
-    '#type' => 'select',
-    '#title' => t('Domain'),
-    '#options' => $options,
+    '#type' => 'zmt_domain_select',
     '#required' => TRUE,
     '#ajax' => array(
       'callback' => 'zmt_account_ajax_domain_select_callback',
@@ -378,6 +363,7 @@ function zmt_account_import_form($form, &$form_state){
     '#value' => t('Import'),
     '#ajax' => array(
       'callback' => 'zmt_account_ajax_import_form_callback',
+      'wrapper' => 'zmt-import-account-wrapper',
       'progress' => array(
         'type' => 'bar',
         'message' => t('Importing data..'),
@@ -508,11 +494,11 @@ function zmt_account_import_form_validate($form, &$form_state) {
  * Import accounts form callback
  */
 function zmt_account_ajax_import_form_callback($form, $form_state) {
-  $commands = array();
   if (form_set_error()) {
-    $commands[] = zmt_ajax_command_reload();
+    return $form;
   }
   else {
+    $commands = array();
     $accounts = $form_state['accounts'];
     if (!empty($accounts)) {
       $count = 0;
@@ -533,11 +519,11 @@ function zmt_account_ajax_import_form_callback($form, $form_state) {
       variable_del($progress_name);
     }
     $commands[] = zmt_ajax_command_redirect('zmt/account');
+    return array(
+      '#type' => 'ajax',
+      '#commands' => $commands,
+    );
   }
-  return array(
-    '#type' => 'ajax',
-    '#commands' => $commands,
-  );
 }
 
 /**

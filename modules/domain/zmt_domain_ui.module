@@ -116,7 +116,12 @@ function zmt_domain_select_expand($element) {
       $domains = zmt_domain_load_multiple_by_server($element['#server'], TRUE);
     }
     else {
-      $domains = zmt_domain_load_multiple_by_user();
+      if (!(user_access('administer zmt'))) {
+        $domains = zmt_domain_load_multiple_by_user();
+      }
+      else {
+        $domains = zmt_domain_load_all();
+      }
     }
     foreach ($domains as $domain) {
       $options[$domain->id] = $domain->name;
