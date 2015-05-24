@@ -69,15 +69,12 @@ function zmt_server_pull_data_form($form, &$form_state) {
   if (empty($form_state['time'])) {
     $form_state['time'] = REQUEST_TIME;
   }
-  $options = array();
-  $servers = zmt_server_load_all();
-  foreach ($servers as $key => $server) {
-    $options[$key] = $server->name;
-  }
+
+  $form['#prefix'] = '<div id="zmt-server-pull-data-wrapper">';
+  $form['#suffix'] = '</div>';
+
   $form['server_id'] = array(
-    '#type' => 'select',
-    '#title' => t('Server'),
-    '#options' => $options,
+    '#type' => 'zmt_server_select',
     '#required' => TRUE,
     '#ajax' => array(
       'callback' => 'zmt_ajax_server_select_callback',
@@ -99,16 +96,10 @@ function zmt_server_pull_data_form($form, &$form_state) {
   );
 
   $server_id = isset($form_state['values']['server_id']) ? (int) $form_state['values']['server_id'] : 0;
-  $options = array('' => t('- None -'));
-  $tenants = zmt_tenant_load_multiple_by_server($server_id);
-  foreach ($tenants as $tenant) {
-    $options[$tenant->id] = $tenant->name;
-  }
 
   $form['tenant_id'] = array(
-    '#type' => 'select',
-    '#title' => t('Tenant'),
-    '#options' => $options,
+    '#type' => 'zmt_tenant_select',
+    '#server' => $server_id,
     '#prefix' => '<div id="dropdown-tenant-replace">',
     '#suffix' => '</div>',
   );
@@ -118,6 +109,7 @@ function zmt_server_pull_data_form($form, &$form_state) {
     '#value' => t('Pull data'),
     '#ajax' => array(
       'callback' => 'zmt_ajax_pull_data_callback',
+      'wrapper' => 'zmt-server-pull-data-wrapper',
       'progress' => array(
         'type' => 'bar',
         'message' => t('Pulling data..'),
@@ -189,8 +181,8 @@ function zmt_pulling_progress($time) {
  */
 function zmt_ajax_pull_data_callback($form, &$form_state) {
   global $user;
-  $commands = array();
   if (!form_set_error()) {
+    $commands = array();
     module_load_include('inc', 'zmt_core', 'includes/zmt.zimbra');
     $values = $form_state['values'];
     $server_id = (int) $values['server_id'];
@@ -256,15 +248,14 @@ function zmt_ajax_pull_data_callback($form, &$form_state) {
     variable_del($progress_name);
 
     $commands[] = zmt_ajax_command_redirect('zmt/server');
+    return array(
+      '#type' => 'ajax',
+      '#commands' => $commands,
+    );
   }
   else {
-    $commands[] = zmt_ajax_command_redirect('zmt/server/pull');
+    return $form;
   }
-
-  return array(
-    '#type' => 'ajax',
-    '#commands' => $commands,
-  );
 }
 
 /**

@@ -324,6 +324,9 @@ function zmt_account_import_form($form, &$form_state){
     $form_state['time'] = REQUEST_TIME;
   }
 
+  $form['#prefix'] = '<div id="zmt-import-account-wrapper">';
+  $form['#suffix'] = '</div>';
+
   $form['file'] = array(
     '#type' => 'file',
     '#title' => t('Csv file'),
@@ -378,6 +381,7 @@ function zmt_account_import_form($form, &$form_state){
     '#value' => t('Import'),
     '#ajax' => array(
       'callback' => 'zmt_account_ajax_import_form_callback',
+      'wrapper' => 'zmt-import-account-wrapper',
       'progress' => array(
         'type' => 'bar',
         'message' => t('Importing data..'),
@@ -508,11 +512,11 @@ function zmt_account_import_form_validate($form, &$form_state) {
  * Import accounts form callback
  */
 function zmt_account_ajax_import_form_callback($form, $form_state) {
-  $commands = array();
   if (form_set_error()) {
-    $commands[] = zmt_ajax_command_reload();
+    return $form;
   }
   else {
+    $commands = array();
     $accounts = $form_state['accounts'];
     if (!empty($accounts)) {
       $count = 0;
@@ -533,11 +537,11 @@ function zmt_account_ajax_import_form_callback($form, $form_state) {
       variable_del($progress_name);
     }
     $commands[] = zmt_ajax_command_redirect('zmt/account');
+    return array(
+      '#type' => 'ajax',
+      '#commands' => $commands,
+    );
   }
-  return array(
-    '#type' => 'ajax',
-    '#commands' => $commands,
-  );
 }
 
 /**
