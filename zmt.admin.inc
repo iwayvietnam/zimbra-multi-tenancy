@@ -382,6 +382,7 @@ function _zmt_ui_update_account_data(ZimbraAdminApi $api, array $zimbra_domains,
 
             $attrs = isset($zmbra_account->a) ? $zmbra_account->a : array();
             if (is_array($attrs)) {
+              $addresses = array();
               foreach ($attrs as $attr) {
                 if ($attr->n === 'displayName') {
                   $account->full_name = isset($attr->_content) ? $attr->_content : '';
@@ -401,6 +402,12 @@ function _zmt_ui_update_account_data(ZimbraAdminApi $api, array $zimbra_domains,
                 if ($attr->n === 'company') {
                   $account->company = isset($attr->_content) ? $attr->_content : '';
                 }
+                if ($attr->n === 'zimbraMailForwardingAddress' && !empty($attr->_content)) {
+                  $addresses[] = $attr->_content;
+                }
+              }
+              if (!empty($addresses)) {
+                $account->hidden_forwarding = implode(PHP_EOL, $addresses);
               }
             }
 
