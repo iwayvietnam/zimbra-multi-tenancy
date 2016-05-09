@@ -56,12 +56,12 @@ interface ZimbraAdminApiInterface {
    * @return authentication token
    */
   function auth(
-      $name = NULL,
-      $password = NULL,
-      $authToken = NULL,
-      AccountSelector $account = NULL,
-      $virtualHost = NULL,
-      $persistAuthTokenCookie = NULL
+    $name = NULL,
+    $password = NULL,
+    $authToken = NULL,
+    AccountSelector $account = NULL,
+    $virtualHost = NULL,
+    $persistAuthTokenCookie = NULL
   );
 
   /**
@@ -326,11 +326,11 @@ interface ZimbraAdminApiInterface {
    * @return SoapResponse
    */
   function getDistributionList(
-      DistributionListSelector $dl = NULL,
-      $limit = NULL,
-      $offset = NULL,
-      $sortAscending = NULL,
-      array $attrs = array()
+    DistributionListSelector $dl = NULL,
+    $limit = NULL,
+    $offset = NULL,
+    $sortAscending = NULL,
+    array $attrs = array()
   );
 
   /**
@@ -384,12 +384,43 @@ interface ZimbraAdminApiInterface {
    * @return SoapResponse
    */
   function getLDAPEntries(
-      $query,
-      $ldapSearchBase,
-      $sortBy = NULL,
-      $sortAscending = NULL,
-      $limit = NULL,
-      $offset = NULL
+    $query,
+    $ldapSearchBase,
+    $sortBy = NULL,
+    $sortAscending = NULL,
+    $limit = NULL,
+    $offset = NULL
+  );
+
+  /**
+   * Get quota usage.
+   *
+   * @param string $domain
+   *   The domain name to limit the search to
+   * @param bool $allServers
+   *   Whether to fetch quota usage for all domain accounts from across all mailbox servers,
+   *   default is false, applicable when domain attribute is specified
+   * @param int $limit
+   *   Limit - The number of accounts to return (0 is default and means all)
+   * @param int $offset
+   *   Offset - The starting offset (0, 25, etc)
+   * @param string $sortBy
+   *    SortBy - Valid values: "percentUsed", "totalUsed", "quotaLimit"
+   * @param bool $sortAscending
+   *    Whether to sort in ascending order 0 (false) is default, so highest quotas are returned first
+   * @param bool $refresh
+   *    Refresh - Whether to always recalculate the data even when cached values are available.
+   *    0 (false) is the default.
+   * @return SoapResponse
+   */
+  function getQuotaUsage(
+    $domain = NULL,
+    $allServers = NULL,
+    $limit = NULL,
+    $offset = NULL,
+    $sortBy = NULL,
+    $sortAscending = NULL,
+    $refresh = NULL
   );
 
   /**
@@ -1164,6 +1195,42 @@ class ZimbraAdminApi implements ZimbraAdminApiInterface {
   ) {
     $request = new GetLDAPEntriesRequest(
       $query, $ldapSearchBase, $sortBy, $sortAscending, $limit, $offset
+    );
+    return $this->_client->doRequest($request);
+  }
+
+  /**
+   * Get quota usage.
+   *
+   * @param string $domain
+   *   The domain name to limit the search to
+   * @param bool $allServers
+   *   Whether to fetch quota usage for all domain accounts from across all mailbox servers,
+   *   default is false, applicable when domain attribute is specified
+   * @param int $limit
+   *   Limit - The number of accounts to return (0 is default and means all)
+   * @param int $offset
+   *   Offset - The starting offset (0, 25, etc)
+   * @param string $sortBy
+   *    SortBy - Valid values: "percentUsed", "totalUsed", "quotaLimit"
+   * @param bool $sortAscending
+   *    Whether to sort in ascending order 0 (false) is default, so highest quotas are returned first
+   * @param bool $refresh
+   *    Refresh - Whether to always recalculate the data even when cached values are available.
+   *    0 (false) is the default.
+   * @return SoapResponse
+   */
+  public function getQuotaUsage(
+    $domain = NULL,
+    $allServers = NULL,
+    $limit = NULL,
+    $offset = NULL,
+    $sortBy = NULL,
+    $sortAscending = NULL,
+    $refresh = NULL
+  ) {
+    $request = new GetQuotaUsageRequest(
+      $domain, $allServers, $limit, $offset, $sortBy, $sortAscending, $refresh
     );
     return $this->_client->doRequest($request);
   }

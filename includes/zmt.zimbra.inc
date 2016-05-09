@@ -1084,7 +1084,30 @@ function zimbra_get_all_skins(ZimbraAdminApi $api) {
 }
 
 /**
- * Get version information .
+ * Get quota usage.
+ * 
+ * @param  ZimbraAdminApi $api
+ *   Zimbra admin api.
+ * @return mix
+ */
+function zimbra_get_quota_usage(ZimbraAdminApi $api, $domain = NULL, $limit = NULL, $offset = NULL) {
+  $cache = &drupal_static(__FUNCTION__, NULL);
+  $cache_key = md5($api->location());
+  if (!isset($cache[$cache_key])) {
+    try {
+      $result = $api->getQuotaUsage($domain, NULL, $limit, $offset, 'totalUsed');
+      $cache[$cache_key] = isset($result->info) ? $result->info : $result;
+    }
+    catch (Exception $ex) {
+      watchdog('zimbra', $ex->__toString());
+      return NULL;
+    }
+  }
+  return $cache[$cache_key];
+}
+
+/**
+ * Get version information.
  * 
  * @param  ZimbraAdminApi $api
  *   Zimbra admin api.
