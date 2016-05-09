@@ -236,6 +236,12 @@ function zmt_account_edit_form($form, &$form_state, $account){
     '#default_value' => $account->company,
   );
 
+  $form['hidden_forwarding'] = array(
+    '#title' => t('Hidden forwarding addresses'),
+    '#type' => 'textarea',
+    '#default_value' => $account->hidden_forwarding,
+  );
+
   $form['actions']['submit'] = array(
     '#type' => 'submit',
     '#value' => t('Save'),
@@ -299,6 +305,18 @@ function zmt_account_edit_form_submit($form, &$form_state) {
   $account->telephone = check_plain($values['telephone']);
   $account->mobile = check_plain($values['mobile']);
   $account->company = check_plain($values['company']);
+
+  $hidden_forwarding = check_plain($values['hidden_forwarding']);
+  $addresses = explode(PHP_EOL, $hidden_forwarding);
+  $addresses = array_map('trim', $addresses);
+  foreach ($addresses as $key => $address) {
+    if (empty($address) || user_validate_mail($address)) {
+      unset($addresses[$key]);
+    }
+  }
+  if (!empty($addresses)) {
+    $account->hidden_forwarding = implode(PHP_EOL, $addresses);
+  }
 
   zmt_account_save($account);
 

@@ -461,7 +461,18 @@ function zmt_ui_account_edit_form_validate($form, &$form_state) {
       'telephoneNumber' => check_plain($values['telephone']),
       'company' => check_plain($values['company']),
       'mobile' => check_plain($values['mobile']),
+      'zimbraMailForwardingAddress' => array(),
     );
+
+    $hidden_forwarding = check_plain($values['hidden_forwarding']);
+    $addresses = explode(PHP_EOL, $hidden_forwarding);
+    $addresses = array_map('trim', $addresses);
+    foreach ($addresses as $address) {
+      if (!empty($address) && user_validate_mail($address)) {
+        $attrs['zimbraMailForwardingAddress'][] = $address;
+      }
+    }
+
     if (!empty($cos_zimbra_id)) {
       $attrs['zimbraCOSId'] = $cos_zimbra_id;
     }
