@@ -430,6 +430,7 @@ function zmt_account_import_form_callback($form, &$form_state) {
       drupal_set_message(t('@failed accounts were not imported, because they already existed.', array('@failed' => $failed)));
     }
   }
+  $form_state['redirect'] = 'zmt/account/import';
 }
 
 /**
@@ -442,6 +443,90 @@ function zmt_account_prepare($record, $domain_id = 0) {
     $account->$field = $value;
   }
   return $account;
+}
+
+/**
+ * Bulk delete accounts page callback.
+ */
+function zmt_account_bulk_delete_page() {
+  drupal_set_title('Bulk Delete Account');
+  return drupal_get_form('zmt_account_bulk_delete_form');
+}
+
+/**
+ * Bulk delete accounts form.
+ */
+function zmt_account_bulk_delete_form($form, &$form_state) {
+  global $user;
+  $form['file'] = array(
+    '#type' => 'file',
+    '#title' => t('Names file (.txt)'),
+    '#description' => t('Each name separated by comma (,)'),
+  );
+
+  $options = array();
+  if (!(user_access('administer zmt'))) {
+    $domains = zmt_domain_load_multiple_by_user($user);
+  }
+  else {
+    $domains = zmt_domain_load_all();
+  }
+  if (count($domains) !== 1) {
+    $options = array('' => t('- None -'));
+  }
+  foreach ($domains as $domain) {
+    $options[$domain->id] = $domain->name;
+  }
+
+  $form['domain_id'] = array(
+    '#type' => 'select',
+    '#title' => t('Domain'),
+    '#options' => $options,
+    '#required' => TRUE,
+  );
+
+  $form['bulk_delete'] = array(
+    '#type' => 'submit',
+    '#value' => t('Bulk Delete'),
+    '#submit' => array('zmt_account_bulk_delele_callback'),
+    '#suffix' => l(t('Cancel'), 'zmt/account'),
+  );
+
+  return $form;
+}
+
+/**
+ * Bulk delete accounts submit callback.
+ */
+function zmt_account_bulk_delele_callback($form, &$form_state) {
+  $destination = 'public://zmt/';
+  if (file_prepare_directory($destination, FILE_CREATE_DIRECTORY)) {
+    $file = file_save_upload(
+      'file',
+      array('file_validate_extensions' => array('txt')),
+      $destination
+    );
+    if ($file) {
+      $count = 0;
+      $domain_id = (int) $form_state['values']['domain_id'];
+      $aids = array();
+      $contents = file_get_contents($file->uri);
+      $names = explode(',', $contents);
+      $names = array_map('trim', $names);
+      foreach ($names as $name) {
+        $account = zmt_account_load_by_name($domain_id, check_plain($name));
+        if ($account) {
+          $aids[] = $account->id;
+          $count++;
+        }
+      }
+      if (!empty($aids)) {
+        zmt_account_delete_multiple($aids);
+        drupal_set_message(t('@count accounts were deleted.', array('@count' => $count)));
+      }
+    }
+  }
+  $form_state['redirect'] = 'zmt/account/bulk-delete';
 }
 
 /**

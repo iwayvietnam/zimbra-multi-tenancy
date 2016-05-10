@@ -45,6 +45,13 @@ function zmt_account_ui_menu() {
     'type' => MENU_CALLBACK,
     'file' => 'zmt_account.admin.inc',
   );
+  $items['zmt/account/bulk-delete'] = array(
+    'title' => 'Bulk Delete Account',
+    'page callback' => 'zmt_account_bulk_delete_page',
+    'access callback' => 'zmt_account_list_access',
+    'type' => MENU_LOCAL_ACTION,
+    'file' => 'zmt_account.admin.inc',
+  );
   $items['zmt/account'] = array(
     'title' => 'Accounts',
     'page callback' => 'zmt_account_list_all',
