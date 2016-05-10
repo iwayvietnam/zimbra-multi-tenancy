@@ -22,6 +22,14 @@ function zmt_menu() {
     'file' => 'zmt.admin.inc',
   );
 
+  $items['zmt/account/delist'] = array(
+    'title' => 'Delist Account',
+    'page callback' => 'zmt_account_delist_page',
+    'access callback' => 'zmt_account_list_access',
+    'type' => MENU_LOCAL_ACTION,
+    'file' => 'zmt.admin.inc',
+  );
+
   return $items;
 }
 

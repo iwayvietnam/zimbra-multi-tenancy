@@ -428,3 +428,107 @@ function _zmt_ui_update_group_data(ZimbraAdminApi $api, array $zimbra_domains) {
   drupal_set_message($count . ' groups were updated.');
   return $count;
 }
+
+
+/**
+ * Delist accounts page callback.
+ */
+function zmt_account_delist_page() {
+  drupal_set_title('Delist Account');
+  return drupal_get_form('zmt_account_delist_form');
+}
+
+/**
+ * Delist accounts form.
+ */
+function zmt_account_delist_form($form, &$form_state) {
+  global $user;
+  $options = array();
+  if (!(user_access('administer zmt'))) {
+    $domains = zmt_domain_load_multiple_by_user($user);
+  }
+  else {
+    $domains = zmt_domain_load_all();
+  }
+  if (count($domains) !== 1) {
+    $options = array('' => t('- None -'));
+  }
+  foreach ($domains as $domain) {
+    $options[$domain->id] = $domain->name;
+  }
+
+  $form['domain_id'] = array(
+    '#type' => 'select',
+    '#title' => t('Domain'),
+    '#options' => $options,
+    '#required' => TRUE,
+  );
+
+  $form['search'] = array(
+    '#type' => 'submit',
+    '#value' => t('Search'),
+    '#ajax' => array(
+      'callback' => 'zmt_account_delist_search_ajax',
+      'wrapper' => 'member-container-wapper',
+    ),
+  );
+
+  $form['delist'] = array(
+    '#type' => 'submit',
+    '#value' => t('Delist'),
+    '#submit' => array('zmt_account_delist_callback'),
+    '#suffix' => l(t('Cancel'), 'zmt/account'),
+  );
+
+  $form['member_container'] = array(
+    '#type' => 'container',
+    '#prefix' => '<div id="member-container-wapper">',
+    '#suffix' => '</div>',
+  );
+
+  return $form;
+}
+
+/**
+ * Delist accounts search ajax callback.
+ */
+function zmt_account_delist_search_ajax($form, $form_state) {
+  $values = $form_state['values'];
+  $domain_id = (int) $values['domain_id'];
+  $domain = zmt_domain_load($domain_id);
+  if ($domain) {
+    $aids = array();
+    $members = zmt_group_member_load_multiple_by_domain($domain->id, GROUP_MEMBER_ACCOUNT);
+    foreach ($members as $member) {
+      $aids = $member->member_id;
+    }
+    $accounts = zmt_account_load_multiple($aids);
+
+    $over_quotas = array();
+    $inactives = array();
+    foreach ($accounts as $account) {
+      if ($account->status !== 'active') {
+        $inactives[] = $account;
+      }
+    }
+
+    $api = zimbra_admin_api_by_server($domain->server_id);
+    $usage = zimbra_get_quota_usage($api, $domain->name);
+    if (!empty($usage->account)) {
+      foreach ($usage->account as $account) {
+        # code...
+      }
+    }
+  }
+
+  $commands = array();
+  return array('#type' => 'ajax', '#commands' => $commands);
+}
+
+/**
+ * Delist accounts submit callback.
+ */
+function zmt_account_delist_callback($form, &$form_state) {
+  $values = $form_state['values'];
+  $form_state['redirect'] = 'zmt/account/delist';
+}
