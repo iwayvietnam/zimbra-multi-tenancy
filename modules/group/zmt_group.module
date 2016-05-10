@@ -715,15 +715,45 @@ function zmt_group_member_load_multiple($ids = array(), array $conditions = arra
  */
 function zmt_group_member_load_multiple_by_group(array $group_ids = array()) {
   if (!empty($group_ids)) {
-    $query = new EntityFieldQuery();
-    $result = $query->entityCondition('entity_type', 'zmt_group_member')
-      ->propertyCondition('group_id', $group_ids)
-      ->propertyOrderBy('name', 'ASC')
-      ->execute();
-    $ids = isset($result['zmt_group_member']) ? array_keys($result['zmt_group_member']) : array();
-    return zmt_group_member_load_multiple($ids);
+    $cache = &drupal_static(__FUNCTION__, array());
+    $cache_key = md5(implode(',', $group_ids));
+    if (!isset($cache[$cache_key])) {
+      $query = new EntityFieldQuery();
+      $result = $query->entityCondition('entity_type', 'zmt_group_member')
+        ->propertyCondition('group_id', $group_ids)
+        ->propertyOrderBy('name', 'ASC')
+        ->execute();
+      $ids = isset($result['zmt_group_member']) ? array_keys($result['zmt_group_member']) : array();
+      $cache[$cache_key] = zmt_group_member_load_multiple($ids);
+    }
+    return $cache[$cache_key];
   }
   return array();
+}
+
+/**
+ * Loads multiple group member domain.
+ *
+ * @return
+ *   An array of group member objects indexed by id.
+ */
+function zmt_group_member_load_multiple_by_domain($domain, $type = NULL) {
+  $cache = &drupal_static(__FUNCTION__, array());
+  $domain_id = is_object($domain) ? $domain->id : $domain;
+  $cache_key = md5($domain_id . $type);
+  if (!isset($cache[$cache_key])) {
+    $query = db_select('zmt_group_member', 'zgm')
+      ->fields('zgm', array('id'));
+    $query->join('zmt_group', 'zg', 'zg.id = zgm.group_id');
+    $query->condition('zg.domain_id', $domain_id);
+    if (in_array($type, array(GROUP_MEMBER_ACCOUNT, GROUP_MEMBER_ALIAS, GROUP_MEMBER_DL))) {
+      $query->condition('zg.type', $type);
+    }
+
+    $ids = $query->execute()->fetchCol();
+    $cache[$cache_key] = zmt_group_member_load_multiple($ids);
+  }
+  return $cache[$cache_key];
 }
 
 /**
@@ -740,16 +770,13 @@ function zmt_group_member_load_multiple_by_group(array $group_ids = array()) {
 function zmt_group_member_load_multiple_by_group_user($uid) {
   $cache = &drupal_static(__FUNCTION__, array());
   if (!isset($cache[$uid])) {
-    $query = db_select('zmt_group_member', 'm');
-    $query->leftJoin('zmt_group', 'g', 'g.id = m.group_id');
-    $query->condition('g.group_uid', $uid);
-    $result = $query->fields('m')->execute();
+    $query = db_select('zmt_group_member', 'zgm')
+      ->fields('zgm', array('id'));
+    $query->leftJoin('zmt_group', 'zg', 'zg.id = zgm.group_id');
+    $query->condition('zg.group_uid', $uid);
 
-    $members = array();
-    foreach ($result as $member) {
-      $members[$member->id] = $member;
-    }
-    $cache[$uid] = $members;
+    $ids = $query->execute()->fetchCol();
+    $cache[$uid] = zmt_group_member_load_multiple($ids);
   }
   return $cache[$uid];
 }
