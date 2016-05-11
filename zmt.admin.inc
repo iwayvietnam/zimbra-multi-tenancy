@@ -527,6 +527,7 @@ function zmt_account_delist_search_ajax($form, $form_state) {
     }
 
     $quotas = array();
+    module_load_include('inc', 'zmt', 'includes/zmt.zimbra');
     $api = zimbra_admin_api_by_server($domain->server_id);
     $usages = zimbra_get_quota_usage($api, $domain->name);
     foreach ($usages as $usage) {
