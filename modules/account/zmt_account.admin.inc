@@ -548,8 +548,8 @@ function zmt_account_bulk_delele_upload_callback($form, &$form_state) {
       }
     }
   }
-  if (!empty($names)) {
-    $form_state['aids'] = $names;
+  if (!empty($aids)) {
+    $form_state['aids'] = $aids;
     $form_state['step'] = 'confirm';
   }
   $form_state['rebuild'] = TRUE;
