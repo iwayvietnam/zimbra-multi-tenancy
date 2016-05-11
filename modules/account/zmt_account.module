@@ -76,14 +76,14 @@ function zmt_account_get_properties($account, array $options, $name) {
 
 /**
  * Implements hook_permission().
- */ 
+ */
 function zmt_account_permission() {
   return zmt_access_permissions('zmt_account', 'Account');
 }
 
 /**
  * Implements hook_query_TAG_alter().
- */ 
+ */
 function zmt_account_query_ou_count_account_alter(QueryAlterableInterface $query) {
   $sub_query = db_select('zmt_account', 'a');
   $sub_query->leftJoin('users', 'u', 'u.uid = a.uid');
@@ -97,7 +97,7 @@ function zmt_account_query_ou_count_account_alter(QueryAlterableInterface $query
 
 /**
  * Implements hook_query_TAG_alter().
- */ 
+ */
 function zmt_account_query_domain_count_account_alter(QueryAlterableInterface $query) {
   $sub_query = db_select('zmt_account', 'a')
     ->fields('a', array('domain_id'))
@@ -109,7 +109,7 @@ function zmt_account_query_domain_count_account_alter(QueryAlterableInterface $q
 
 /**
  * Implements hook_query_TAG_alter().
- */ 
+ */
 function zmt_account_query_tenant_count_account_alter(QueryAlterableInterface $query) {
   $sub_query = db_select('zmt_account', 'a');
   $sub_query->leftJoin('zmt_domain', 'd', 'd.id = a.domain_id');
@@ -122,8 +122,19 @@ function zmt_account_query_tenant_count_account_alter(QueryAlterableInterface $q
 }
 
 /**
+ * Implements hook_query_TAG_alter().
+ */
+function zmt_account_query_zmt_account_load_multiple_alter(QueryAlterableInterface $query) {
+  $query->leftJoin('zmt_domain', 'zd', 'zd.id = base.domain_id');
+  $query->leftJoin('users', 'u', 'u.uid = base.uid');
+
+  $query->addField('zd', 'name', 'domain');
+  $query->addField('u', 'name', 'creator');
+}
+
+/**
  * Implements hook_zmt_domain_delete().
- */ 
+ */
 function zmt_account_zmt_domain_delete($domain){
   $id = $domain ? $domain->id : 0;
   zmt_account_delete_multiple_by_domain(array($id));
@@ -131,7 +142,7 @@ function zmt_account_zmt_domain_delete($domain){
 
 /**
  * Implements hook_mailbox_exists().
- */ 
+ */
 function zmt_account_mailbox_exists($domain_id, $name, $id) {
   return zmt_account_exists($domain_id, $name, $id);
 }
