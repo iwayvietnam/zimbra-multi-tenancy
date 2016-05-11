@@ -466,40 +466,6 @@ function zmt_account_bulk_delete_form($form, &$form_state) {
   $step_form = $form_state['step_information'][$step]['form'];
   $form = $step_form($form, $form_state);
 
-  // $form['file'] = array(
-  //   '#type' => 'file',
-  //   '#title' => t('Names file (.txt)'),
-  //   '#description' => t('Each name separated by comma (,)'),
-  // );
-
-  // $options = array();
-  // if (!(user_access('administer zmt'))) {
-  //   $domains = zmt_domain_load_multiple_by_user($user);
-  // }
-  // else {
-  //   $domains = zmt_domain_load_all();
-  // }
-  // if (count($domains) !== 1) {
-  //   $options = array('' => t('- None -'));
-  // }
-  // foreach ($domains as $domain) {
-  //   $options[$domain->id] = $domain->name;
-  // }
-
-  // $form['domain_id'] = array(
-  //   '#type' => 'select',
-  //   '#title' => t('Domain'),
-  //   '#options' => $options,
-  //   '#required' => TRUE,
-  // );
-
-  // $form['bulk_delete'] = array(
-  //   '#type' => 'submit',
-  //   '#value' => t('Bulk Delete'),
-  //   '#submit' => array('zmt_account_bulk_delele_callback'),
-  //   '#suffix' => l(t('Cancel'), 'zmt/account'),
-  // );
-
   return $form;
 }
 
