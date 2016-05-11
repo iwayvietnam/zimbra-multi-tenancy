@@ -259,7 +259,14 @@ function zimbra_create_cos(ZimbraAdminApi $api, $name, array $attrs = array()) {
   try {
     $a = array();
     foreach ($attrs as $key => $value) {
-      $a[] = new KeyValuePair($key, $value);
+      if (is_array($value)) {
+        foreach ($value as $v) {
+          $a[] = new KeyValuePair($key, $v);
+        }
+      }
+      else {
+        $a[] = new KeyValuePair($key, $value);
+      }
     }
     $result = $api->createCos($name, $a);
     return isset($result->cos[0]) ? $result->cos[0] : $result;
@@ -285,7 +292,14 @@ function zimbra_modify_cos(ZimbraAdminApi $api, $id, array $attrs = array()) {
   try {
     $a = array();
     foreach ($attrs as $key => $value) {
-      $a[] = new KeyValuePair($key, $value);
+      if (is_array($value)) {
+        foreach ($value as $v) {
+          $a[] = new KeyValuePair($key, $v);
+        }
+      }
+      else {
+        $a[] = new KeyValuePair($key, $value);
+      }
     }
     $result = $api->modifyCos($id, $a);
     return isset($result->cos[0]) ? $result->cos[0] : $result;
@@ -412,7 +426,14 @@ function zimbra_create_domain(ZimbraAdminApi $api, $name, array $attrs = array()
   try {
     $a = array();
     foreach ($attrs as $key => $value) {
-      $a[] = new KeyValuePair($key, $value);
+      if (is_array($value)) {
+        foreach ($value as $v) {
+          $a[] = new KeyValuePair($key, $v);
+        }
+      }
+      else {
+        $a[] = new KeyValuePair($key, $value);
+      }
     }
     $result = $api->createDomain($name, $a);
     return isset($result->domain[0]) ? $result->domain[0] : $result;
@@ -438,7 +459,14 @@ function zimbra_modify_domain(ZimbraAdminApi $api, $id, array $attrs = array()) 
   try {
     $a = array();
     foreach ($attrs as $key => $value) {
-      $a[] = new KeyValuePair($key, $value);
+      if (is_array($value)) {
+        foreach ($value as $v) {
+          $a[] = new KeyValuePair($key, $v);
+        }
+      }
+      else {
+        $a[] = new KeyValuePair($key, $value);
+      }
     }
     $result = $api->modifyDomain($id, $a);
     return isset($result->domain[0]) ? $result->domain[0] : $result;
@@ -668,7 +696,14 @@ function zimbra_create_dl(ZimbraAdminApi $api, $name, array $attrs = array()) {
   try {
     $a = array();
     foreach ($attrs as $key => $value) {
-      $a[] = new KeyValuePair($key, $value);
+      if (is_array($value)) {
+        foreach ($value as $v) {
+          $a[] = new KeyValuePair($key, $v);
+        }
+      }
+      else {
+        $a[] = new KeyValuePair($key, $value);
+      }
     }
     $result = $api->createDistributionList($name, NULL, $a);
     return isset($result->dl[0]) ? $result->dl[0] : $result;
@@ -694,7 +729,14 @@ function zimbra_modify_dl(ZimbraAdminApi $api, $zimbra_id, array $attrs = array(
   try {
     $a = array();
     foreach ($attrs as $key => $value) {
-      $a[] = new KeyValuePair($key, $value);
+      if (is_array($value)) {
+        foreach ($value as $v) {
+          $a[] = new KeyValuePair($key, $v);
+        }
+      }
+      else {
+        $a[] = new KeyValuePair($key, $value);
+      }
     }
     $result = $api->modifyDistributionList($zimbra_id, $a);
     return isset($result->dl[0]) ? $result->dl[0] : $result;
@@ -870,6 +912,7 @@ function zimbra_list_account(ZimbraAdminApi $api, $domain = NULL, $limit = NULL,
         'zimbraDomainType',
         'zimbraDomainName',
         'zimbraDomainStatus',
+        'zimbraMailForwardingAddress',
       );
       $result = $api->searchDirectory(
         '', NULL, $limit, $offset, $domain, NULL, NULL,
@@ -1003,7 +1046,14 @@ function zimbra_create_account(ZimbraAdminApi $api, $name, $password, array $att
   try {
     $a = array();
     foreach ($attrs as $key => $value) {
-      $a[] = new KeyValuePair($key, $value);
+      if (is_array($value)) {
+        foreach ($value as $v) {
+          $a[] = new KeyValuePair($key, $v);
+        }
+      }
+      else {
+        $a[] = new KeyValuePair($key, $value);
+      }
     }
     $result = $api->createAccount($name, $password, $a);
     return isset($result->account[0]) ? $result->account[0] : $result;
@@ -1029,7 +1079,14 @@ function zimbra_modify_account(ZimbraAdminApi $api, $id, array $attrs = array())
   try {
     $a = array();
     foreach ($attrs as $key => $value) {
-      $a[] = new KeyValuePair($key, $value);
+      if (is_array($value)) {
+        foreach ($value as $v) {
+          $a[] = new KeyValuePair($key, $v);
+        }
+      }
+      else {
+        $a[] = new KeyValuePair($key, $value);
+      }
     }
     $result = $api->modifyAccount($id, $a);
     return isset($result->account[0]) ? $result->account[0] : $result;
