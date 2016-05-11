@@ -545,66 +545,62 @@ function zmt_account_delist_search_ajax($form, $form_state) {
     }
 
     $quotas = array();
-    module_load_include('inc', 'zmt', 'includes/zmt.zimbra');
-    $api = zimbra_admin_api_by_server($domain->server_id);
-    $usages = zimbra_get_quota_usage($api, $domain->name);
-    foreach ($usages as $usage) {
-      $quotas[$usage->id] = $usage;
-      if (in_array('overquota', $filter)) {
-        if ($usage->limit > 0 && $usage->used >= $usage->limit) {
-          $account = !empty($zid_accounts[$usage->id]) ? $zid_accounts[$usage->id] : FALSE;
-          if ($account) {
-            $delist[$account->id] = $account;
-          }
-        }
-      }
-    }
+    // module_load_include('inc', 'zmt', 'includes/zmt.zimbra');
+    // $api = zimbra_admin_api_by_server($domain->server_id);
+    // $usages = zimbra_get_quota_usage($api, $domain->name);
+    // foreach ($usages as $usage) {
+    //   $quotas[$usage->id] = $usage;
+    //   if (in_array('overquota', $filter)) {
+    //     if ($usage->limit > 0 && $usage->used >= $usage->limit) {
+    //       $account = !empty($zid_accounts[$usage->id]) ? $zid_accounts[$usage->id] : FALSE;
+    //       if ($account) {
+    //         $delist[$account->id] = $account;
+    //       }
+    //     }
+    //   }
+    // }
   }
 
-  if (!empty($delist)) {
-    $header = array();
-    $header[] = array('data' => t('Name'));
-    $header[] = array('data' => t('Full Name'));
-    $header[] = array('data' => t('Group'));
-    $header[] = array('data' => t('Status'));
-    $header[] = array('data' => t('Quota Usage'));
+  $header = array();
+  $header[] = array('data' => t('Name'));
+  $header[] = array('data' => t('Full Name'));
+  $header[] = array('data' => t('Group'));
+  $header[] = array('data' => t('Status'));
+  $header[] = array('data' => t('Quota Usage'));
 
-    $mb = 1024 * 1024;
-    $statuses = zmt_account_statuses();
-    $rows = array();
-    foreach ($delist as $account) {
-      $row = array();
-      $form['account']['#value'] = $account->id;
-      $row[] = array(
-        'data' => $account->name . render($form['account']),
-      );
-      $row[] = array(
-        'data' => $account->full_name,
-      );
-      $row[] = array(
-        'data' => isset($mg_names[$account->id]) ? $mg_names[$account->id] : '',
-      );
-      $row[] = array(
-        'data' => isset($statuses[$account->status]) ? $statuses[$account->status] : $account->status,
-      );
-      $usage = isset($quotas[$account->zimbra_id]) ? $quotas[$account->zimbra_id] : FALSE;
-      $row[] = array(
-        'data' => $usage ? ($usage->used / $mb) . '/' . ($usage->limit / $mb) : '',
-      );
-      $rows[] = $row;
-    }
-
-    $table = array(
-      '#theme' => 'table',
-      '#header' => $header,
-      '#rows' => $rows,
+  $mb = 1024 * 1024;
+  $statuses = zmt_account_statuses();
+  $rows = array();
+  foreach ($delist as $account) {
+    $row = array();
+    $form['account']['#value'] = $account->id;
+    $row[] = array(
+      'data' => $account->name . render($form['account']),
     );
-    $html = drupal_render($table);
-    $commands[] = ajax_command_html('#member-container-wapper', $html);
+    $row[] = array(
+      'data' => $account->full_name,
+    );
+    $row[] = array(
+      'data' => isset($mg_names[$account->id]) ? $mg_names[$account->id] : '',
+    );
+    $row[] = array(
+      'data' => isset($statuses[$account->status]) ? $statuses[$account->status] : $account->status,
+    );
+    $usage = isset($quotas[$account->zimbra_id]) ? $quotas[$account->zimbra_id] : FALSE;
+    $row[] = array(
+      'data' => $usage ? ($usage->used / $mb) . '/' . ($usage->limit / $mb) : '',
+    );
+    $rows[] = $row;
   }
-  else {
-    $commands[] = ajax_command_html('#member-container-wapper', '');
-  }
+
+  $table = array(
+    '#theme' => 'table',
+    '#header' => $header,
+    '#rows' => $rows,
+    '#empty' => t('No results found.'),
+  );
+  $html = drupal_render($table);
+  $commands[] = ajax_command_html('#member-container-wapper', $html);
   return array('#type' => 'ajax', '#commands' => $commands);
 }
 
