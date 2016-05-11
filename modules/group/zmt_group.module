@@ -229,7 +229,7 @@ function zmt_group_query_zmt_group_member_load_multiple_alter(QueryAlterableInte
   $query->leftJoin('zmt_group', 'zg', 'zg.id = base.group_id');
   $query->leftJoin('zmt_domain', 'zd', 'zd.id = zg.domain_id');
 
-  $query->addField('zg', 'name', 'group');
+  $query->addField('zg', 'name', 'group_name');
   $query->addField('zd', 'name', 'domain');
 }
 

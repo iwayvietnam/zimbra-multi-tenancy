@@ -508,10 +508,10 @@ function zmt_account_delist_search_ajax($form, $form_state) {
     foreach ($members as $member) {
       $aids[] = $member->member_id;
       if (empty($mg_names[$member->member_id])) {
-        $mg_names[$member->member_id] = $member->group;
+        $mg_names[$member->member_id] = $member->group_name;
       }
       else {
-        $mg_names[$member->member_id] .= ', ' . $member->group;
+        $mg_names[$member->member_id] .= ', ' . $member->group_name;
       }
     }
     $accounts = zmt_account_load_multiple($aids);
