@@ -434,7 +434,7 @@ function _zmt_ui_update_group_data(ZimbraAdminApi $api, array $zimbra_domains) {
  * Delist accounts page callback.
  */
 function zmt_account_delist_page() {
-  drupal_set_title('Delist Account');
+  drupal_set_title('Delist Inactive Account');
   return drupal_get_form('zmt_account_delist_form');
 }
 
@@ -497,6 +497,7 @@ function zmt_account_delist_form($form, &$form_state) {
  * Delist accounts search ajax callback.
  */
 function zmt_account_delist_search_ajax($form, $form_state) {
+  $commands = array();
   $values = $form_state['values'];
   $domain_id = (int) $values['domain_id'];
   $domain = zmt_domain_load($domain_id);
@@ -541,7 +542,6 @@ function zmt_account_delist_search_ajax($form, $form_state) {
     }
   }
 
-  $commands = array();
   if (!empty($delist)) {
     $header = array();
     $header[] = array('data' => t('Name'));
@@ -576,6 +576,7 @@ function zmt_account_delist_search_ajax($form, $form_state) {
         'data' => $usage ? ($usage->used / $mb) . '/' . ($usage->limit / $mb) : '',
         'id' => $account->name,
       );
+      $rows[] = $row;
     }
 
     $table = array(

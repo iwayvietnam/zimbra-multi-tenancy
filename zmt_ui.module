@@ -15,7 +15,7 @@ function zmt_menu() {
   );
 
   $items['zmt/server/pull'] = array(
-    'title' => 'Pull data',
+    'title' => 'Pull Data',
     'page callback' => 'zmt_server_pull_data_page',
     'access callback' => 'zmt_server_add_access',
     'type' => MENU_LOCAL_ACTION,
@@ -23,7 +23,7 @@ function zmt_menu() {
   );
 
   $items['zmt/account/delist'] = array(
-    'title' => 'Delist Account',
+    'title' => 'Delist Inactive Account',
     'page callback' => 'zmt_account_delist_page',
     'access callback' => 'zmt_account_list_access',
     'type' => MENU_LOCAL_ACTION,
