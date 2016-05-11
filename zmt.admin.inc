@@ -545,20 +545,20 @@ function zmt_account_delist_search_ajax($form, $form_state) {
     }
 
     $quotas = array();
-    // module_load_include('inc', 'zmt', 'includes/zmt.zimbra');
-    // $api = zimbra_admin_api_by_server($domain->server_id);
-    // $usages = zimbra_get_quota_usage($api, $domain->name);
-    // foreach ($usages as $usage) {
-    //   $quotas[$usage->id] = $usage;
-    //   if (in_array('overquota', $filter)) {
-    //     if ($usage->limit > 0 && $usage->used >= $usage->limit) {
-    //       $account = !empty($zid_accounts[$usage->id]) ? $zid_accounts[$usage->id] : FALSE;
-    //       if ($account) {
-    //         $delist[$account->id] = $account;
-    //       }
-    //     }
-    //   }
-    // }
+    module_load_include('inc', 'zmt', 'includes/zmt.zimbra');
+    $api = zimbra_admin_api_by_server($domain->server_id);
+    $usages = zimbra_get_quota_usage($api, $domain->name);
+    foreach ($usages as $usage) {
+      $quotas[$usage->id] = $usage;
+      if (in_array('overquota', $filter)) {
+        if ($usage->limit > 0 && $usage->used >= $usage->limit) {
+          $account = !empty($zid_accounts[$usage->id]) ? $zid_accounts[$usage->id] : FALSE;
+          if ($account) {
+            $delist[$account->id] = $account;
+          }
+        }
+      }
+    }
   }
 
   $header = array();
