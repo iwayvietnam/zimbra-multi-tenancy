@@ -466,7 +466,7 @@ function zmt_account_delist_form($form, &$form_state) {
 
   $form['types'] = array(
     '#type' => 'checkboxes',
-    '#title' => t('Delist Type'),
+    '#title' => t('Filter By'),
     '#options' => array(
       'locked' => t('Locked'),
       'closed' => t('Closed'),
