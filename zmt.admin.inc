@@ -602,6 +602,9 @@ function zmt_account_delist_search_ajax($form, $form_state) {
     $html = drupal_render($table);
     $commands[] = ajax_command_html('#member-container-wapper', $html);
   }
+  else {
+    $commands[] = ajax_command_html('#member-container-wapper', '');
+  }
   return array('#type' => 'ajax', '#commands' => $commands);
 }
 
