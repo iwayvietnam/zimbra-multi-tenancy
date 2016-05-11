@@ -464,6 +464,16 @@ function zmt_account_delist_form($form, &$form_state) {
     '#required' => TRUE,
   );
 
+  $form['types'] = array(
+    '#type' => 'checkboxes',
+    '#title' => t('Delist Type'),
+    '#options' => array(
+      'locked' => t('Locked'),
+      'closed' => t('Closed'),
+      'overquota' => t('Over Quota'),
+    ),
+  );
+
   $form['account'] = array(
     '#type' => 'hidden',
     '#name' => 'account[]',
@@ -500,6 +510,7 @@ function zmt_account_delist_search_ajax($form, $form_state) {
   $commands = array();
   $values = $form_state['values'];
   $domain_id = (int) $values['domain_id'];
+  $types = array_values($values['types']);
   $domain = zmt_domain_load($domain_id);
   if ($domain) {
     $aids = array();
@@ -519,7 +530,10 @@ function zmt_account_delist_search_ajax($form, $form_state) {
     $zid_accounts = array();
     $delist = array();
     foreach ($accounts as $account) {
-      if ($account->status !== 'active') {
+      if ($account->status == 'locked' && in_array('locked', $types)) {
+        $delist[$account->id] = $account;
+      }
+      if ($account->status == 'closed' && in_array('closed', $types)) {
         $delist[$account->id] = $account;
       }
       if (!empty($account->zimbra_id)) {
@@ -533,10 +547,12 @@ function zmt_account_delist_search_ajax($form, $form_state) {
     $usages = zimbra_get_quota_usage($api, $domain->name);
     foreach ($usages as $usage) {
       $quotas[$usage->id] = $usage;
-      if ($usage->limit > 0 && $usage->used >= $usage->limit) {
-        $account = !empty($zid_accounts[$usage->id]) ? $zid_accounts[$usage->id] : FALSE;
-        if ($account) {
-          $delist[$account->id] = $account;
+      if (in_array('overquota', $types)) {
+        if ($usage->limit > 0 && $usage->used >= $usage->limit) {
+          $account = !empty($zid_accounts[$usage->id]) ? $zid_accounts[$usage->id] : FALSE;
+          if ($account) {
+            $delist[$account->id] = $account;
+          }
         }
       }
     }
