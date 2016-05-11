@@ -572,7 +572,7 @@ function zmt_account_delist_search_ajax($form, $form_state) {
       );
       $usage = isset($quotas[$account->zimbra_id]) ? $quotas[$account->zimbra_id] : FALSE;
       $row[] = array(
-        'data' => $usage ? ($usage->used / $mb) . '/' . ($usage->limit / $mb),
+        'data' => $usage ? ($usage->used / $mb) . '/' . ($usage->limit / $mb) : '',
         'id' => $account->name,
       );
     }
