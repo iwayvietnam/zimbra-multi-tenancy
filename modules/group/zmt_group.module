@@ -225,7 +225,7 @@ function zmt_group_query_zmt_group_load_multiple_alter(QueryAlterableInterface $
 /**
  * Implements hook_query_TAG_alter().
  */
-function zmt_group_member_query_zmt_group_member_load_multiple_alter(QueryAlterableInterface $query) {
+function zmt_group_query_zmt_group_member_load_multiple_alter(QueryAlterableInterface $query) {
   $query->leftJoin('zmt_group', 'zg', 'zg.id = base.group_id');
   $query->leftJoin('zmt_domain', 'zd', 'zd.id = zg.domain_id');
 
