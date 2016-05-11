@@ -464,12 +464,22 @@ function zmt_account_delist_form($form, &$form_state) {
     '#required' => TRUE,
   );
 
+  $form['account'] = array(
+    '#type' => 'hidden',
+    '#name' => 'account[]',
+  );
+
+  $form['member_container'] = array(
+    '#type' => 'container',
+    '#prefix' => '<div id="member-container-wapper">',
+    '#suffix' => '</div>',
+  );
+
   $form['search'] = array(
     '#type' => 'submit',
     '#value' => t('Search'),
     '#ajax' => array(
       'callback' => 'zmt_account_delist_search_ajax',
-      'wrapper' => 'member-container-wapper',
     ),
   );
 
@@ -478,12 +488,6 @@ function zmt_account_delist_form($form, &$form_state) {
     '#value' => t('Delist'),
     '#submit' => array('zmt_account_delist_callback'),
     '#suffix' => l(t('Cancel'), 'zmt/account'),
-  );
-
-  $form['member_container'] = array(
-    '#type' => 'container',
-    '#prefix' => '<div id="member-container-wapper">',
-    '#suffix' => '</div>',
   );
 
   return $form;
@@ -498,30 +502,88 @@ function zmt_account_delist_search_ajax($form, $form_state) {
   $domain = zmt_domain_load($domain_id);
   if ($domain) {
     $aids = array();
-    $members = zmt_group_member_load_multiple_by_domain($domain->id, GROUP_MEMBER_ACCOUNT);
+    $mg_names = array();
+    $members = zmt_group_member_load_multiple_by_domain(array($domain->id), GROUP_MEMBER_ACCOUNT);
     foreach ($members as $member) {
       $aids = $member->member_id;
+      if (empty($mg_names[$member->member_id])) {
+        $mg_names[$member->member_id] = $member->group;
+      }
+      else {
+        $mg_names[$member->member_id] .= ', ' . $member->group;
+      }
     }
     $accounts = zmt_account_load_multiple($aids);
 
-    $over_quotas = array();
-    $inactives = array();
+    $zid_accounts = array();
+    $delist = array();
     foreach ($accounts as $account) {
       if ($account->status !== 'active') {
-        $inactives[] = $account;
+        $delist[$account->id] = $account;
+      }
+      if (!empty($account->zimbra_id)) {
+        $zid_accounts[$account->zimbra_id] = $account;
       }
     }
 
+    $quotas = array();
     $api = zimbra_admin_api_by_server($domain->server_id);
-    $usage = zimbra_get_quota_usage($api, $domain->name);
-    if (!empty($usage->account)) {
-      foreach ($usage->account as $account) {
-        # code...
+    $usages = zimbra_get_quota_usage($api, $domain->name);
+    foreach ($usages as $usage) {
+      $quotas[$usage->id] = $usage;
+      if ($usage->limit > 0 && $usage->used >= $usage->limit) {
+        $account = !empty($zid_accounts[$usage->id]) ? $zid_accounts[$usage->id] : FALSE;
+        if ($account) {
+          $delist[$account->id] = $account;
+        }
       }
     }
   }
 
   $commands = array();
+  if (!empty($delist)) {
+    $header = array();
+    $header[] = array('data' => t('Name'));
+    $header[] = array('data' => t('Full Name'));
+    $header[] = array('data' => t('Group'));
+    $header[] = array('data' => t('Status'));
+    $header[] = array('data' => t('Quota Usage'));
+
+    $mb = 1024 * 1024;
+    $statuses = zmt_account_statuses();
+    $rows = array();
+    foreach ($delist as $account) {
+      $form['account']['#value'] = $account->id;
+      $row[] = array(
+        'data' => $account->name . render($form['account']),
+        'id' => $account->name,
+      );
+      $row[] = array(
+        'data' => $account->full_name,
+        'id' => $account->full_name,
+      );
+      $row[] = array(
+        'data' => isset($mg_names[$account->id]) ? $mg_names[$account->id] : '',
+        'id' => $account->name,
+      );
+      $row[] = array(
+        'data' => isset($statuses[$account->status]) ? $statuses[$account->status] : $account->status,
+        'id' => $account->status,
+      );
+      $usage = isset($quotas[$account->zimbra_id]) ? $quotas[$account->zimbra_id] : FALSE;
+      $row[] = array(
+        'data' => $usage ? ($usage->used / $mb) . '/' . ($usage->limit / $mb),
+        'id' => $account->name,
+      );
+    }
+
+    $table = array(
+      '#theme' => 'table',
+      '#header' => $header,
+      '#rows' => $rows,
+    );
+    $commands[] = ajax_command_html('member-container-wapper', drupal_render($table));
+  }
   return array('#type' => 'ajax', '#commands' => $commands);
 }
 
@@ -530,5 +592,11 @@ function zmt_account_delist_search_ajax($form, $form_state) {
  */
 function zmt_account_delist_callback($form, &$form_state) {
   $values = $form_state['values'];
+
+  if (!empty($values['account']) && is_array($values['account'])) {
+    $aids = $values['account'];
+    zmt_group_member_delete_multiple_by_account($aids);
+  }
+
   $form_state['redirect'] = 'zmt/account/delist';
 }
