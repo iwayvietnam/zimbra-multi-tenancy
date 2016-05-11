@@ -240,6 +240,7 @@ function zmt_account_edit_form($form, &$form_state, $account){
     '#title' => t('Hidden forwarding addresses'),
     '#type' => 'textarea',
     '#default_value' => $account->hidden_forwarding,
+    '#description' => t('Each address on a single line'),
   );
 
   $form['actions']['submit'] = array(
