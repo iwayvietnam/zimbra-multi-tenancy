@@ -505,7 +505,7 @@ function zmt_account_delist_search_ajax($form, $form_state) {
     $mg_names = array();
     $members = zmt_group_member_load_multiple_by_domain(array($domain->id), GROUP_MEMBER_ACCOUNT);
     foreach ($members as $member) {
-      $aids = $member->member_id;
+      $aids[] = $member->member_id;
       if (empty($mg_names[$member->member_id])) {
         $mg_names[$member->member_id] = $member->group;
       }
