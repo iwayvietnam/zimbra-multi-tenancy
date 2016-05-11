@@ -554,27 +554,23 @@ function zmt_account_delist_search_ajax($form, $form_state) {
     $statuses = zmt_account_statuses();
     $rows = array();
     foreach ($delist as $account) {
+      $row = array();
       $form['account']['#value'] = $account->id;
       $row[] = array(
         'data' => $account->name . render($form['account']),
-        'id' => $account->name,
       );
       $row[] = array(
         'data' => $account->full_name,
-        'id' => $account->full_name,
       );
       $row[] = array(
         'data' => isset($mg_names[$account->id]) ? $mg_names[$account->id] : '',
-        'id' => $account->name,
       );
       $row[] = array(
         'data' => isset($statuses[$account->status]) ? $statuses[$account->status] : $account->status,
-        'id' => $account->status,
       );
       $usage = isset($quotas[$account->zimbra_id]) ? $quotas[$account->zimbra_id] : FALSE;
       $row[] = array(
         'data' => $usage ? ($usage->used / $mb) . '/' . ($usage->limit / $mb) : '',
-        'id' => $account->name,
       );
       $rows[] = $row;
     }
@@ -584,7 +580,8 @@ function zmt_account_delist_search_ajax($form, $form_state) {
       '#header' => $header,
       '#rows' => $rows,
     );
-    $commands[] = ajax_command_html('member-container-wapper', drupal_render($table));
+    $html = drupal_render($table);
+    $commands[] = ajax_command_html('#member-container-wapper', $html);
   }
   return array('#type' => 'ajax', '#commands' => $commands);
 }
