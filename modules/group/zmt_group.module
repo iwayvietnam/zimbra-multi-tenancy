@@ -766,7 +766,7 @@ function zmt_group_member_load_multiple_by_domain(array $domain_ids = array(), $
       $query->join('zmt_group', 'zg', 'zg.id = zgm.group_id');
       $query->condition('zg.domain_id', $domain_ids);
       if (in_array($type, array(GROUP_MEMBER_ACCOUNT, GROUP_MEMBER_ALIAS, GROUP_MEMBER_DL))) {
-        $query->condition('zg.type', $type);
+        $query->condition('zgm.type', $type);
       }
 
       $ids = $query->execute()->fetchCol();
