@@ -530,10 +530,7 @@ function zmt_account_delist_search_ajax($form, $form_state) {
     $zid_accounts = array();
     $delist = array();
     foreach ($accounts as $account) {
-      if ($account->status == 'locked' && in_array('locked', $types)) {
-        $delist[$account->id] = $account;
-      }
-      if ($account->status == 'closed' && in_array('closed', $types)) {
+      if (in_array($account->status, $types)) {
         $delist[$account->id] = $account;
       }
       if (!empty($account->zimbra_id)) {
