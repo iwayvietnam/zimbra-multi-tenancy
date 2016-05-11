@@ -310,7 +310,7 @@ function zmt_account_edit_form_submit($form, &$form_state) {
   $addresses = explode(PHP_EOL, $hidden_forwarding);
   $addresses = array_map('trim', $addresses);
   foreach ($addresses as $key => $address) {
-    if (empty($address) || user_validate_mail($address)) {
+    if (empty($address) || valid_email_address($address)) {
       unset($addresses[$key]);
     }
   }

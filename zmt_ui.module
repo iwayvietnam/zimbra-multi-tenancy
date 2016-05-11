@@ -468,7 +468,7 @@ function zmt_ui_account_edit_form_validate($form, &$form_state) {
     $addresses = explode(PHP_EOL, $hidden_forwarding);
     $addresses = array_map('trim', $addresses);
     foreach ($addresses as $address) {
-      if (!empty($address) && user_validate_mail($address)) {
+      if (!empty($address) && valid_email_address($address)) {
         $attrs['zimbraMailForwardingAddress'][] = $address;
       }
     }
