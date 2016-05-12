@@ -126,9 +126,13 @@ function zmt_account_query_tenant_count_account_alter(QueryAlterableInterface $q
  */
 function zmt_account_query_zmt_account_load_multiple_alter(QueryAlterableInterface $query) {
   $query->leftJoin('zmt_domain', 'zd', 'zd.id = base.domain_id');
+  $query->leftJoin('zmt_cos', 'zc', 'zc.id = zd.cos_id');
+  $query->leftJoin('zmt_cos_server', 'zcs', 'zcs.cos_id = zd.cos_id');
   $query->leftJoin('users', 'u', 'u.uid = base.uid');
 
   $query->addField('zd', 'name', 'domain');
+  $query->addField('zc', 'name', 'cos');
+  $query->addField('zcs', 'zimbra_id', 'cos_zimbra_id');
   $query->addField('u', 'name', 'creator');
 }
 
