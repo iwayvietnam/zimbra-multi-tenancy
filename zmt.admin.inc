@@ -461,7 +461,6 @@ function zmt_account_delist_form($form, &$form_state) {
     '#type' => 'select',
     '#title' => t('Domain'),
     '#options' => $options,
-    '#required' => TRUE,
   );
 
   $form['types'] = array(
