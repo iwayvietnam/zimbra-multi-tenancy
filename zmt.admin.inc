@@ -561,6 +561,7 @@ function zmt_account_delist_search_ajax($form, $form_state) {
         }
       }
     }
+    watchdog('zimbra', drupal_json_encode($warn_percents));
 
     $usages = zimbra_get_quota_usage($api, $domain->name);
     foreach ($usages as $usage) {
@@ -568,6 +569,7 @@ function zmt_account_delist_search_ajax($form, $form_state) {
       if (in_array('threshold', $filter) && $usage->limit > 0) {
         $account = !empty($zid_accounts[$usage->id]) ? $zid_accounts[$usage->id] : FALSE;
         if ($account) {
+          watchdog('account', drupal_json_encode($account));
           $percent = !empty($warn_percents[$account->cos_zimbra_id]) ? $warn_percents[$account->cos_zimbra_id] : FALSE;
           if ($percent && ((100 * $usage->used / $usage->limit) >= $percent)) {
             $delist[$account->id] = $account;
