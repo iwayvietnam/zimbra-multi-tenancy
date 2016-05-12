@@ -500,9 +500,6 @@ function zmt_account_delist_form($form, &$form_state) {
     '#suffix' => l(t('Cancel'), 'zmt/account'),
   );
 
-  $form['#prefix'] = '<div id="delist-form-wapper">';
-  $form['#suffix'] = '</div>';
-
   return $form;
 }
 
@@ -510,123 +507,117 @@ function zmt_account_delist_form($form, &$form_state) {
  * Delist accounts search ajax callback.
  */
 function zmt_account_delist_search_ajax($form, $form_state) {
+  drupal_get_messages();
   $commands = array();
-  if (form_get_errors()) {
-    drupal_get_messages();
-    $html = drupal_render($form);
-    $commands[] = ajax_command_html('#delist-form-wapper', $html);
+  $values = $form_state['values'];
+  $domain_id = (int) $values['domain_id'];
+  $types = array_values($values['types']);
+  $filter = array();
+  foreach ($types as $type) {
+    if (!empty($type)) {
+      $filter[] = $type;
+    }
   }
-  else {
-    $values = $form_state['values'];
-    $domain_id = (int) $values['domain_id'];
-    $types = array_values($values['types']);
-    $filter = array();
-    foreach ($types as $type) {
-      if (!empty($type)) {
-        $filter[] = $type;
+  $domain = zmt_domain_load($domain_id);
+  if ($domain) {
+    $aids = array();
+    $mg_names = array();
+    $members = zmt_group_member_load_multiple_by_domain(array($domain->id), GROUP_MEMBER_ACCOUNT);
+    foreach ($members as $member) {
+      $aids[] = $member->member_id;
+      if (empty($mg_names[$member->member_id])) {
+        $mg_names[$member->member_id] = $member->group_name;
+      }
+      else {
+        $mg_names[$member->member_id] .= ', ' . $member->group_name;
       }
     }
-    $domain = zmt_domain_load($domain_id);
-    if ($domain) {
-      $aids = array();
-      $mg_names = array();
-      $members = zmt_group_member_load_multiple_by_domain(array($domain->id), GROUP_MEMBER_ACCOUNT);
-      foreach ($members as $member) {
-        $aids[] = $member->member_id;
-        if (empty($mg_names[$member->member_id])) {
-          $mg_names[$member->member_id] = $member->group_name;
-        }
-        else {
-          $mg_names[$member->member_id] .= ', ' . $member->group_name;
-        }
+    $accounts = zmt_account_load_multiple($aids);
+
+    $zid_accounts = array();
+    $delist = array();
+    foreach ($accounts as $account) {
+      if (in_array($account->status, $filter)) {
+        $delist[$account->id] = $account;
       }
-      $accounts = zmt_account_load_multiple($aids);
-
-      $zid_accounts = array();
-      $delist = array();
-      foreach ($accounts as $account) {
-        if (in_array($account->status, $filter)) {
-          $delist[$account->id] = $account;
-        }
-        if (!empty($account->zimbra_id)) {
-          $zid_accounts[$account->zimbra_id] = $account;
-        }
+      if (!empty($account->zimbra_id)) {
+        $zid_accounts[$account->zimbra_id] = $account;
       }
+    }
 
-      $quotas = array();
-      module_load_include('inc', 'zmt', 'includes/zmt.zimbra');
-      $api = zimbra_admin_api_by_server($domain->server_id);
+    $quotas = array();
+    module_load_include('inc', 'zmt', 'includes/zmt.zimbra');
+    $api = zimbra_admin_api_by_server($domain->server_id);
 
-      $warn_percents = array();
-      $all_cos = zimbra_get_all_cos($api);
-      foreach ($all_cos as $cos) {
-        $attrs = isset($cos->a) ? $cos->a : array();
-        if (is_array($attrs)) {
-          foreach ($attrs as $attr) {
-            if ($attr->n === 'zimbraQuotaWarnPercent' && !empty($attr->_content)) {
-              $warn_percents[$cos->id] = (int) $attr->_content;
-              break;
-            }
-          }
-        }
-      }
-
-      $usages = zimbra_get_quota_usage($api, $domain->name);
-      foreach ($usages as $usage) {
-        $quotas[$usage->id] = $usage;
-        if (in_array('threshold', $filter) && $usage->limit > 0) {
-          $account = !empty($zid_accounts[$usage->id]) ? $zid_accounts[$usage->id] : FALSE;
-          if ($account) {
-            $warn_percent = !empty($warn_percents[$account->cos_zimbra_id]) ? $warn_percents[$account->cos_zimbra_id] : FALSE;
-            if ($percent && ((100 * $usage->used / $usage->limit) >= $percent)) {
-              $delist[$account->id] = $account;
-            }
+    $warn_percents = array();
+    $all_cos = zimbra_get_all_cos($api);
+    foreach ($all_cos as $cos) {
+      $attrs = isset($cos->a) ? $cos->a : array();
+      if (is_array($attrs)) {
+        foreach ($attrs as $attr) {
+          if ($attr->n === 'zimbraQuotaWarnPercent' && !empty($attr->_content)) {
+            $warn_percents[$cos->id] = (int) $attr->_content;
+            break;
           }
         }
       }
     }
 
-    $header = array();
-    $header[] = array('data' => t('Name'));
-    $header[] = array('data' => t('Full Name'));
-    $header[] = array('data' => t('Group'));
-    $header[] = array('data' => t('Status'));
-    $header[] = array('data' => t('Quota Usage'));
-
-    $mb = 1024 * 1024;
-    $statuses = zmt_account_statuses();
-    $rows = array();
-    foreach ($delist as $account) {
-      $row = array();
-      $form['account']['#value'] = $account->id;
-      $row[] = array(
-        'data' => $account->name . render($form['account']),
-      );
-      $row[] = array(
-        'data' => $account->full_name,
-      );
-      $row[] = array(
-        'data' => isset($mg_names[$account->id]) ? $mg_names[$account->id] : '',
-      );
-      $row[] = array(
-        'data' => isset($statuses[$account->status]) ? $statuses[$account->status] : $account->status,
-      );
-      $usage = isset($quotas[$account->zimbra_id]) ? $quotas[$account->zimbra_id] : FALSE;
-      $row[] = array(
-        'data' => $usage ? ($usage->used / $mb) . '/' . ($usage->limit / $mb) : '',
-      );
-      $rows[] = $row;
+    $usages = zimbra_get_quota_usage($api, $domain->name);
+    foreach ($usages as $usage) {
+      $quotas[$usage->id] = $usage;
+      if (in_array('threshold', $filter) && $usage->limit > 0) {
+        $account = !empty($zid_accounts[$usage->id]) ? $zid_accounts[$usage->id] : FALSE;
+        if ($account) {
+          $warn_percent = !empty($warn_percents[$account->cos_zimbra_id]) ? $warn_percents[$account->cos_zimbra_id] : FALSE;
+          if ($percent && ((100 * $usage->used / $usage->limit) >= $percent)) {
+            $delist[$account->id] = $account;
+          }
+        }
+      }
     }
+  }
 
-    $table = array(
-      '#theme' => 'table',
-      '#header' => $header,
-      '#rows' => $rows,
-      '#empty' => t('No results found.'),
+  $header = array();
+  $header[] = array('data' => t('Name'));
+  $header[] = array('data' => t('Full Name'));
+  $header[] = array('data' => t('Group'));
+  $header[] = array('data' => t('Status'));
+  $header[] = array('data' => t('Quota Usage'));
+
+  $mb = 1024 * 1024;
+  $statuses = zmt_account_statuses();
+  $rows = array();
+  foreach ($delist as $account) {
+    $row = array();
+    $form['account']['#value'] = $account->id;
+    $row[] = array(
+      'data' => $account->name . render($form['account']),
     );
-    $html = drupal_render($table);
-    $commands[] = ajax_command_html('#member-container-wapper', $html);
+    $row[] = array(
+      'data' => $account->full_name,
+    );
+    $row[] = array(
+      'data' => isset($mg_names[$account->id]) ? $mg_names[$account->id] : '',
+    );
+    $row[] = array(
+      'data' => isset($statuses[$account->status]) ? $statuses[$account->status] : $account->status,
+    );
+    $usage = isset($quotas[$account->zimbra_id]) ? $quotas[$account->zimbra_id] : FALSE;
+    $row[] = array(
+      'data' => $usage ? ($usage->used / $mb) . '/' . ($usage->limit / $mb) : '',
+    );
+    $rows[] = $row;
   }
+
+  $table = array(
+    '#theme' => 'table',
+    '#header' => $header,
+    '#rows' => $rows,
+    '#empty' => t('No results found.'),
+  );
+  $html = drupal_render($table);
+  $commands[] = ajax_command_html('#member-container-wapper', $html);
   return array('#type' => 'ajax', '#commands' => $commands);
 }
 
