@@ -470,7 +470,7 @@ function zmt_account_delist_form($form, &$form_state) {
     '#options' => array(
       'locked' => t('Locked'),
       'closed' => t('Closed'),
-      'overquota' => t('Over Quota'),
+      'threshold' => t('Over Quota Threshold'),
     ),
   );
 
@@ -547,13 +547,29 @@ function zmt_account_delist_search_ajax($form, $form_state) {
     $quotas = array();
     module_load_include('inc', 'zmt', 'includes/zmt.zimbra');
     $api = zimbra_admin_api_by_server($domain->server_id);
+
+    $warn_percents = array()
+    $all_cos = zimbra_get_all_cos($api);
+    foreach ($all_cos as $cos) {
+      $attrs = isset($cos->a) ? $cos->a : array();
+      if (is_array($attrs)) {
+        foreach ($attrs as $attr) {
+          if ($attr->n === 'zimbraQuotaWarnPercent' && !empty($attr->_content)) {
+            $warn_percents[$cos->id] = (int) $attr->_content;
+            break;
+          }
+        }
+      }
+    }
+
     $usages = zimbra_get_quota_usage($api, $domain->name);
     foreach ($usages as $usage) {
       $quotas[$usage->id] = $usage;
-      if (in_array('overquota', $filter)) {
-        if ($usage->limit > 0 && $usage->used >= $usage->limit) {
-          $account = !empty($zid_accounts[$usage->id]) ? $zid_accounts[$usage->id] : FALSE;
-          if ($account) {
+      if (in_array('threshold', $filter) && $usage->limit > 0) {
+        $account = !empty($zid_accounts[$usage->id]) ? $zid_accounts[$usage->id] : FALSE;
+        if ($account) {
+          $warn_percent = !empty($warn_percents[$account->cos_zimbra_id]) ? $warn_percents[$account->cos_zimbra_id] : FALSE;
+          if ($percent && ((100 * $usage->used / $usage->limit) >= $percent)) {
             $delist[$account->id] = $account;
           }
         }
