@@ -550,7 +550,6 @@ function zmt_account_delist_search_ajax($form, $form_state) {
 
     $warn_percents = array();
     $all_cos = zimbra_get_all_cos($api);
-    watchdog('all_cos', drupal_json_encode($all_cos));
     foreach ($all_cos as $cos) {
       if (!empty($cos->a) && is_array($cos->a)) {
         foreach ($cos->a as $attr) {
@@ -561,7 +560,6 @@ function zmt_account_delist_search_ajax($form, $form_state) {
         }
       }
     }
-    watchdog('warn_percents', drupal_json_encode($warn_percents));
 
     $usages = zimbra_get_quota_usage($api, $domain->name);
     foreach ($usages as $usage) {
@@ -569,7 +567,6 @@ function zmt_account_delist_search_ajax($form, $form_state) {
       if (in_array('threshold', $filter) && $usage->limit > 0) {
         $account = !empty($zid_accounts[$usage->id]) ? $zid_accounts[$usage->id] : FALSE;
         if ($account) {
-          watchdog('cos_zimbra_id', $account->cos_zimbra_id);
           $percent = !empty($warn_percents[$account->cos_zimbra_id]) ? $warn_percents[$account->cos_zimbra_id] : FALSE;
           if ($percent && ((100 * $usage->used / $usage->limit) >= $percent)) {
             $delist[$account->id] = $account;
@@ -584,7 +581,7 @@ function zmt_account_delist_search_ajax($form, $form_state) {
   $header[] = array('data' => t('Full Name'));
   $header[] = array('data' => t('Group'));
   $header[] = array('data' => t('Status'));
-  $header[] = array('data' => t('Quota Usage'));
+  $header[] = array('data' => t('Quota Usage (MB)'));
 
   $mb = 1024 * 1024;
   $statuses = zmt_account_statuses();
@@ -606,7 +603,7 @@ function zmt_account_delist_search_ajax($form, $form_state) {
     );
     $usage = isset($quotas[$account->zimbra_id]) ? $quotas[$account->zimbra_id] : FALSE;
     $row[] = array(
-      'data' => $usage ? ($usage->used / $mb) . '/' . ($usage->limit / $mb) : '',
+      'data' => $usage ? number_format($usage->used / $mb, 2) . '/' . number_format($usage->limit / $mb, 2) : '',
     );
     $rows[] = $row;
   }
