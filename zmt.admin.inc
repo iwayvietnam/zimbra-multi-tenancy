@@ -579,6 +579,8 @@ function zmt_account_delist_search_ajax($form, $form_state) {
   $header = array();
   $header[] = array('data' => t('Name'));
   $header[] = array('data' => t('Full Name'));
+  $header[] = array('data' => t('Code'));
+  $header[] = array('data' => t('Category'));
   $header[] = array('data' => t('Group'));
   $header[] = array('data' => t('Status'));
   $header[] = array('data' => t('Quota Usage (MB)'));
@@ -594,6 +596,12 @@ function zmt_account_delist_search_ajax($form, $form_state) {
     );
     $row[] = array(
       'data' => $account->full_name,
+    );
+    $row[] = array(
+      'data' => $account->code,
+    );
+    $row[] = array(
+      'data' => $account->category,
     );
     $row[] = array(
       'data' => isset($mg_names[$account->id]) ? $mg_names[$account->id] : '',
