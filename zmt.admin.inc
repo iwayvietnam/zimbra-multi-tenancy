@@ -548,7 +548,7 @@ function zmt_account_delist_search_ajax($form, $form_state) {
     module_load_include('inc', 'zmt', 'includes/zmt.zimbra');
     $api = zimbra_admin_api_by_server($domain->server_id);
 
-    $warn_percents = array()
+    $warn_percents = array();
     $all_cos = zimbra_get_all_cos($api);
     foreach ($all_cos as $cos) {
       $attrs = isset($cos->a) ? $cos->a : array();
