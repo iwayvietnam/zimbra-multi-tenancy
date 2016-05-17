@@ -99,52 +99,6 @@ function zmt_domain_permission() {
 }
 
 /**
- * Implements hook_zmt_server_delete().
- */ 
-function zmt_domain_zmt_server_delete($server){
-  $id = $server ? $server->id : 0;
-  zmt_domain_delete_multiple_by_server(array($id));
-}
-
-/**
- * Implements hook_query_TAG_alter().
- */ 
-function zmt_domain_query_tenant_count_domain_alter(QueryAlterableInterface $query) {
-  $sub_query = db_select('zmt_domain', 'd')
-    ->fields('d', array('tenant_id'))
-    ->groupBy('d.tenant_id');
-  $sub_query->addExpression('COUNT(d.id)', 'total_domain');
-  $query->leftJoin($sub_query, 'd', 'd.tenant_id = t.id');
-  $query->addExpression('IFNULL(d.total_domain, 0)', 'total_domain');
-}
-
-/**
- * Implements hook_query_TAG_alter().
- */ 
-function zmt_domain_query_tenant_sum_account_alter(QueryAlterableInterface $query) {
-  $domain_id = (int) $query->getMetaData('domain_id');
-  $sub_query = db_select('zmt_domain', 'd')
-    ->fields('d', array('tenant_id'))
-    ->condition('d.id', $domain_id, '!=')
-    ->groupBy('d.tenant_id');
-  $sub_query->addExpression('SUM(d.account_max_number)', 'total_account');
-  $query->leftJoin($sub_query, 'd', 'd.tenant_id = t.id');
-  $query->addExpression('IFNULL(d.total_account, 0)', 'total_account');
-}
-
-/**
- * Implements hook_user_delete().
- */
-function zmt_domain_user_delete($account) {
-  db_update('zmt_domain')
-    ->fields(array(
-      'domain_uid' => 0,
-    ))
-    ->condition('domain_uid', $account->uid)
-    ->execute();
-}
-
-/**
  * Access callback for Zimbra Server.
  */
 function zmt_domain_access($op, $domain, $account = NULL, $entity_type = NULL) {
@@ -178,6 +132,68 @@ function zmt_domain_uri($domain) {
  */
 function zmt_domain_label($domain, $entity_type) {
   return t('Domain') . ' ' . $domain->name;
+}
+
+/**
+ * Implements hook_query_TAG_alter().
+ */ 
+function zmt_domain_query_tenant_count_domain_alter(QueryAlterableInterface $query) {
+  $sub_query = db_select('zmt_domain', 'd')
+    ->fields('d', array('tenant_id'))
+    ->groupBy('d.tenant_id');
+  $sub_query->addExpression('COUNT(d.id)', 'total_domain');
+  $query->leftJoin($sub_query, 'd', 'd.tenant_id = t.id');
+  $query->addExpression('IFNULL(d.total_domain, 0)', 'total_domain');
+}
+
+/**
+ * Implements hook_query_TAG_alter().
+ */ 
+function zmt_domain_query_tenant_sum_account_alter(QueryAlterableInterface $query) {
+  $domain_id = (int) $query->getMetaData('domain_id');
+  $sub_query = db_select('zmt_domain', 'd')
+    ->fields('d', array('tenant_id'))
+    ->condition('d.id', $domain_id, '!=')
+    ->groupBy('d.tenant_id');
+  $sub_query->addExpression('SUM(d.account_max_number)', 'total_account');
+  $query->leftJoin($sub_query, 'd', 'd.tenant_id = t.id');
+  $query->addExpression('IFNULL(d.total_account, 0)', 'total_account');
+}
+
+/**
+ * Implements hook_query_TAG_alter() for zmt_domain_load_multiple query tag.
+ */ 
+function zmt_domain_query_zmt_domain_load_multiple_alter(QueryAlterableInterface $query) {
+  $query->leftJoin('zmt_server', 'zs', 'zs.id = base.server_id');
+  $query->leftJoin('zmt_tenant', 'zt', 'zt.id = base.tenant_id');
+  $query->leftJoin('users', 'tu', 'tu.uid = zt.tenant_uid');
+  $query->leftJoin('users', 'du', 'du.uid = base.domain_uid');
+
+  $query->addField('zs', 'name', 'server');
+  $query->addField('zs', 'delete_domain');
+  $query->addField('tu', 'name', 'tenant');
+  $query->addField('du', 'mail', 'mail');
+  $query->addField('du', 'status', 'status');
+}
+
+/**
+ * Implements hook_zmt_server_delete().
+ */ 
+function zmt_domain_zmt_server_delete($server){
+  $id = $server ? $server->id : 0;
+  zmt_domain_delete_multiple_by_server(array($id));
+}
+
+/**
+ * Implements hook_user_delete().
+ */
+function zmt_domain_user_delete($account) {
+  db_update('zmt_domain')
+    ->fields(array(
+      'domain_uid' => 0,
+    ))
+    ->condition('domain_uid', $account->uid)
+    ->execute();
 }
 
 /**

@@ -90,6 +90,19 @@ function zmt_tenant_permission() {
 }
 
 /**
+ * Implements hook_query_TAG_alter() for zmt_tenant_load_multiple query tag.
+ */ 
+function zmt_tenant_query_zmt_tenant_load_multiple_alter(QueryAlterableInterface $query) {
+  $query->leftJoin('zmt_server', 'zs', 'zs.id = base.server_id');
+  $query->leftJoin('users', 'u', 'u.uid = base.tenant_uid');
+
+  $query->addField('zs', 'name', 'server');
+  $query->addField('u', 'name', 'name');
+  $query->addField('u', 'mail', 'mail');
+  $query->addField('u', 'status', 'status');
+}
+
+/**
  * Implements hook_user_load().
  */
 function zmt_tenant_user_load(array $users) {

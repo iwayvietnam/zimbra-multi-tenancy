@@ -637,6 +637,7 @@ function zmt_account_delist_callback($form, &$form_state) {
   if (!empty($values['account']) && is_array($values['account'])) {
     $aids = $values['account'];
     zmt_group_member_delete_multiple_by_account($aids);
+    drupal_set_message(t('@count accounts were delisted.', array('@count' => count($aids))));
   }
 
   $form_state['redirect'] = 'zmt/account/delist';
