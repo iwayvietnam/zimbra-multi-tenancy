@@ -200,7 +200,7 @@ function zmt_account_edit_form($form, &$form_state, $account){
   $form['password'] = array(
     '#type' => 'password_confirm',
     '#required' => !(isset($account->id) && (int) $account->id > 0),
-    '#size' => 30,
+    '#size' => 45,
   );
   $form['full_name'] = array(
     '#title' => t('Full name'),
@@ -237,10 +237,46 @@ function zmt_account_edit_form($form, &$form_state, $account){
   );
 
   $form['hidden_forwarding'] = array(
-    '#title' => t('Hidden forwarding addresses'),
-    '#type' => 'textarea',
-    '#default_value' => $account->hidden_forwarding,
-    '#description' => t('Each address on a single line'),
+    '#title' => t('Hidden forwarding'),
+    '#type' => 'fieldset',
+    '#prefix' => '<div id="hidden-forwarding-wrapper">',
+    '#suffix' => '</div>',
+  );
+
+  $addresses = drupal_json_decode($account->hidden_forwarding);
+  if (!empty($addresses)) {
+    foreach ($addresses as $key => $address) {
+      $form['hidden_forwarding'][$key]['address'] = array(
+        '#type' => 'textfield',
+        '#name' => 'address[]',
+        '#size' => 45,
+        '#default_value' => $address,
+        '#theme_wrappers' => array(),
+        '#prefix' => '<div class="form-item form-type-textfield">',
+        '#suffix' => ' <a href="#" class="zmt-remove-parent">' . t('Remove') . '</a></div>',
+      );
+    }
+  }
+  else {
+    $form['hidden_forwarding']['address'] = array(
+      '#type' => 'textfield',
+      '#name' => 'address[]',
+      '#size' => 45,
+      '#theme_wrappers' => array(),
+      '#prefix' => '<div class="form-item form-type-textfield">',
+      '#suffix' => ' <a href="#" class="zmt-remove-parent">' . t('Remove') . '</a></div>',
+    );
+  }
+
+  $form['hidden_forwarding']['add'] = array(
+    '#type' => 'button',
+    '#value' => t('Add address'),
+    '#limit_validation_errors' => array(),
+    '#ajax' => array(
+      'callback' => 'zmt_account_edit_ajax_add_address',
+      'event' => 'click',
+      'prevent' => 'submit click mousedown',
+    ),
   );
 
   $form['actions']['submit'] = array(
@@ -251,6 +287,10 @@ function zmt_account_edit_form($form, &$form_state, $account){
   );
 
   $form['#validate'][] = 'zmt_account_edit_form_validate';
+  $path = drupal_get_path('module', 'zmt_core');
+  $form['#attached']['js'] = array(
+    $path . '/js/zmt.js',
+  );
 
   return $form;
 }
@@ -280,6 +320,19 @@ function zmt_account_edit_form_validate($form, &$form_state) {
       form_set_error('name', t('The domain has reached the maximum number of accounts.'));
     }
   }
+
+  $hidden_forwarding = array();
+  $addresses = !empty($_POST['address']) ? $_POST['address'] : array();
+  $addresses = array_map('trim', $addresses);
+  foreach ($addresses as $address) {
+    $address = check_plain($address);
+    if (!empty($address) && valid_email_address($address)) {
+      $hidden_forwarding[] = $address;
+    }
+  }
+  if (!empty($hidden_forwarding)) {
+    $form_state['hidden_forwarding'] = $hidden_forwarding;
+  }
 }
 
 /**
@@ -287,6 +340,24 @@ function zmt_account_edit_form_validate($form, &$form_state) {
  */
 function zmt_account_ajax_domain_select_callback($form, $form_state) {
   return $form['cos_id'];
+}
+
+/**
+ * Zimbra account ajax add address callback.
+ */
+function zmt_account_edit_ajax_add_address($form, $form_state) {
+  $commands = array();
+  $address = array(
+    '#type' => 'textfield',
+    '#name' => 'address[]',
+    '#size' => 45,
+    '#theme_wrappers' => array(),
+    '#prefix' => '<div class="form-item form-type-textfield">',
+    '#suffix' => ' <a href="#" class="zmt-remove-parent">' . t('Remove') . '</a></div>',
+  );
+  $selector = '#edit-add';
+  $commands[] = ajax_command_before($selector, drupal_render($address));
+  return array('#type' => 'ajax', '#commands' => $commands);
 }
 
 /**
@@ -307,16 +378,8 @@ function zmt_account_edit_form_submit($form, &$form_state) {
   $account->mobile = check_plain($values['mobile']);
   $account->company = check_plain($values['company']);
 
-  $hidden_forwarding = check_plain($values['hidden_forwarding']);
-  $addresses = explode(PHP_EOL, $hidden_forwarding);
-  $addresses = array_map('trim', $addresses);
-  foreach ($addresses as $key => $address) {
-    if (empty($address) || valid_email_address($address)) {
-      unset($addresses[$key]);
-    }
-  }
-  if (!empty($addresses)) {
-    $account->hidden_forwarding = implode(PHP_EOL, $addresses);
+  if (!empty($form_state['hidden_forwarding'])) {
+    $account->hidden_forwarding = drupal_json_encode($form_state['hidden_forwarding']);
   }
 
   zmt_account_save($account);

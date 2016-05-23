@@ -2,6 +2,7 @@
 
   Drupal.behaviors.zmt = {
     attach: function(context, settings) {
+      // alert($('#edit-hidden-forwarding .fieldset-wrapper div').append('abc').append('abc').html());
       $('#zmt-group-edit-form').once('submit', function () {
         $(this).submit(function(){
           $('select[id^="edit-members"] option').each(function() {
@@ -35,6 +36,12 @@
         });
       });
 
+      $('.zmt-remove-parent').once('click', function () {
+        $(this).click(function(){
+          $(this).parent().remove();
+          return false;
+        });
+      });
     }
   };
 
