@@ -330,9 +330,7 @@ function zmt_account_edit_form_validate($form, &$form_state) {
       $hidden_forwarding[] = $address;
     }
   }
-  if (!empty($hidden_forwarding)) {
-    $form_state['hidden_forwarding'] = $hidden_forwarding;
-  }
+  $form_state['hidden_forwarding'] = $hidden_forwarding;
 }
 
 /**
@@ -377,10 +375,7 @@ function zmt_account_edit_form_submit($form, &$form_state) {
   $account->telephone = check_plain($values['telephone']);
   $account->mobile = check_plain($values['mobile']);
   $account->company = check_plain($values['company']);
-
-  if (!empty($form_state['hidden_forwarding'])) {
-    $account->hidden_forwarding = drupal_json_encode($form_state['hidden_forwarding']);
-  }
+  $account->hidden_forwarding = drupal_json_encode($form_state['hidden_forwarding']);
 
   zmt_account_save($account);
 
