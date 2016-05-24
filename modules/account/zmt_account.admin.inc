@@ -246,7 +246,7 @@ function zmt_account_edit_form($form, &$form_state, $account){
   $addresses = drupal_json_decode($account->hidden_forwarding);
   if (!empty($addresses)) {
     foreach ($addresses as $key => $address) {
-      $form['hidden_forwarding'][$key]['address'] = array(
+      $form['hidden_forwarding']['address_' . $key] = array(
         '#type' => 'textfield',
         '#name' => 'address[]',
         '#size' => 45,
