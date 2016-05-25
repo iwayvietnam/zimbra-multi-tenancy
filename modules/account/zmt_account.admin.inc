@@ -239,8 +239,6 @@ function zmt_account_edit_form($form, &$form_state, $account){
   $form['hidden_forwarding'] = array(
     '#title' => t('Hidden forwarding'),
     '#type' => 'fieldset',
-    '#prefix' => '<div id="hidden-forwarding-wrapper">',
-    '#suffix' => '</div>',
   );
 
   $addresses = drupal_json_decode($account->hidden_forwarding);
