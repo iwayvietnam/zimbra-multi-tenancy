@@ -256,7 +256,7 @@ function zmt_account_edit_form($form, &$form_state, $account){
     }
   }
   else {
-    $form['hidden_forwarding']['address'] = array(
+    $form['hidden_forwarding']['address_0'] = array(
       '#type' => 'textfield',
       '#name' => 'address[]',
       '#size' => 45,
