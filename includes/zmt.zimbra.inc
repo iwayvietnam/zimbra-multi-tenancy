@@ -260,8 +260,13 @@ function zimbra_create_cos(ZimbraAdminApi $api, $name, array $attrs = array()) {
     $a = array();
     foreach ($attrs as $key => $value) {
       if (is_array($value)) {
-        foreach ($value as $v) {
-          $a[] = new KeyValuePair($key, $v);
+        if (empty($value)) {
+          $a[] = new KeyValuePair($key, '');
+        }
+        else {
+          foreach ($value as $v) {
+            $a[] = new KeyValuePair($key, $v);
+          }
         }
       }
       else {
@@ -293,8 +298,13 @@ function zimbra_modify_cos(ZimbraAdminApi $api, $id, array $attrs = array()) {
     $a = array();
     foreach ($attrs as $key => $value) {
       if (is_array($value)) {
-        foreach ($value as $v) {
-          $a[] = new KeyValuePair($key, $v);
+        if (empty($value)) {
+          $a[] = new KeyValuePair($key, '');
+        }
+        else {
+          foreach ($value as $v) {
+            $a[] = new KeyValuePair($key, $v);
+          }
         }
       }
       else {
@@ -427,8 +437,13 @@ function zimbra_create_domain(ZimbraAdminApi $api, $name, array $attrs = array()
     $a = array();
     foreach ($attrs as $key => $value) {
       if (is_array($value)) {
-        foreach ($value as $v) {
-          $a[] = new KeyValuePair($key, $v);
+        if (empty($value)) {
+          $a[] = new KeyValuePair($key, '');
+        }
+        else {
+          foreach ($value as $v) {
+            $a[] = new KeyValuePair($key, $v);
+          }
         }
       }
       else {
@@ -460,8 +475,13 @@ function zimbra_modify_domain(ZimbraAdminApi $api, $id, array $attrs = array()) 
     $a = array();
     foreach ($attrs as $key => $value) {
       if (is_array($value)) {
-        foreach ($value as $v) {
-          $a[] = new KeyValuePair($key, $v);
+        if (empty($value)) {
+          $a[] = new KeyValuePair($key, '');
+        }
+        else {
+          foreach ($value as $v) {
+            $a[] = new KeyValuePair($key, $v);
+          }
         }
       }
       else {
@@ -697,8 +717,13 @@ function zimbra_create_dl(ZimbraAdminApi $api, $name, array $attrs = array()) {
     $a = array();
     foreach ($attrs as $key => $value) {
       if (is_array($value)) {
-        foreach ($value as $v) {
-          $a[] = new KeyValuePair($key, $v);
+        if (empty($value)) {
+          $a[] = new KeyValuePair($key, '');
+        }
+        else {
+          foreach ($value as $v) {
+            $a[] = new KeyValuePair($key, $v);
+          }
         }
       }
       else {
@@ -730,8 +755,13 @@ function zimbra_modify_dl(ZimbraAdminApi $api, $zimbra_id, array $attrs = array(
     $a = array();
     foreach ($attrs as $key => $value) {
       if (is_array($value)) {
-        foreach ($value as $v) {
-          $a[] = new KeyValuePair($key, $v);
+        if (empty($value)) {
+          $a[] = new KeyValuePair($key, '');
+        }
+        else {
+          foreach ($value as $v) {
+            $a[] = new KeyValuePair($key, $v);
+          }
         }
       }
       else {
@@ -1047,8 +1077,13 @@ function zimbra_create_account(ZimbraAdminApi $api, $name, $password, array $att
     $a = array();
     foreach ($attrs as $key => $value) {
       if (is_array($value)) {
-        foreach ($value as $v) {
-          $a[] = new KeyValuePair($key, $v);
+        if (empty($value)) {
+          $a[] = new KeyValuePair($key, '');
+        }
+        else {
+          foreach ($value as $v) {
+            $a[] = new KeyValuePair($key, $v);
+          }
         }
       }
       else {
@@ -1080,8 +1115,13 @@ function zimbra_modify_account(ZimbraAdminApi $api, $id, array $attrs = array())
     $a = array();
     foreach ($attrs as $key => $value) {
       if (is_array($value)) {
-        foreach ($value as $v) {
-          $a[] = new KeyValuePair($key, $v);
+        if (empty($value)) {
+          $a[] = new KeyValuePair($key, '');
+        }
+        else {
+          foreach ($value as $v) {
+            $a[] = new KeyValuePair($key, $v);
+          }
         }
       }
       else {
