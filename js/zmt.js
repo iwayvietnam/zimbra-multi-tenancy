@@ -42,6 +42,59 @@
           return false;
         });
       });
+
+      $('.from-date-picker').once('date-picker', function() {
+        var $this = $(this);
+        var format = $this.data('format');
+        var min = $this.data('min');
+        var defaultDate = $this.data('default');
+        var rel = $this.data('rel');
+        var isSelect = false;
+
+        $(this).datepicker({
+          defaultDate: defaultDate,
+          minDate: min,
+          dateFormat: format,
+          onSelect: function(date, ui) {
+            $this.datepicker('setDate', date);
+            if ($(rel).val().length == 0) {
+              $(rel).datepicker('setDate', date);
+            };
+            isSelect = true;
+          },
+          onClose: function(date, ui) {
+            if (date.length > 0 && isSelect) {
+              $(rel).datepicker('option', 'minDate', date);
+              $(rel).focus();
+              isSelect = false;
+            }
+            $(this).trigger('date-picker-change', date);
+          }
+        });
+      });
+
+      $('.to-date-picker').once('date-picker', function() {
+        var $this = $(this);
+        var format = $this.data('format');
+        var min = $this.data('min');
+        var defaultDate = $this.data('default');
+        var rel = $this.data('rel');
+
+        $(this).datepicker({
+          defaultDate: defaultDate,
+          minDate: min,
+          dateFormat: format,
+          onSelect: function(date, ui) {
+            $this.datepicker('setDate', date);
+            if ($(rel).val().length == 0) {
+              $(rel).datepicker('setDate', date);
+            };
+          },
+          onClose: function(date) {
+            $(this).trigger('date-picker-change', date);
+          }
+        });
+      });
     }
   };
 
