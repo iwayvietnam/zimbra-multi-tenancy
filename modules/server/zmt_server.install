@@ -87,6 +87,10 @@ function zmt_server_schema() {
           'not null' => TRUE,
           'default' => 0,
         ),
+        'auth_token' => array(
+          'description' => 'The auth token of the server.',
+          'type' => 'text',
+        ),
         'uid' => array(
           'description' => 'The {users}.uid that created the server.',
           'type' => 'int',
@@ -120,4 +124,14 @@ function zmt_server_schema() {
       ),
     ),
   );
+}
+
+/**
+ * Add auth token field to server.
+ */
+function zmt_server_update_7000() {
+  db_add_field('zmt_server', 'auth_token', array(
+    'description' => 'The auth token of the server.',
+    'type' => 'text',
+  ));
 }
