@@ -27,27 +27,15 @@ function zimbra_admin_api($location = 'https://localhost:7071/service/admin/soap
  *   Zimbra admin user.
  * @param string $password
  *   Zimbra admin password.
- * @return bool
+ * @return authentication token
  */
 function zimbra_test_connection(
   $location = 'https://localhost:7071/service/admin/soap',
   $user = '',
   $password = ''
 ) {
-  $authenticated = FALSE;
   $api = zimbra_admin_api($location);
-  try {
-    $authToken = $api->authByName($user, $password);
-    $authenticated = !empty($authToken);
-    if ($authenticated) {
-      $sessKey = md5($api->location() . $user . $password) . 'authToken';
-      $_SESSION[$sessKey] = $authToken;
-    }
-  }
-  catch (Exception $ex) {
-    watchdog('zimbra', $ex->__toString());
-  }
-  return $authenticated;
+  return zimbra_authentication_by_name($api, $user, $password);
 }
 
 /**
@@ -88,13 +76,11 @@ function zimbra_admin_api_by_server($server_id) {
   if (!isset($cache[$server_id])) {
     $server = zmt_server_load($server_id);
     $location = $server ? $server->service_location : 'https://localhost:7071/service/admin/soap';
-    $user = $server ? $server->admin_user : '';
-    $password = $server ? $server->admin_password : '';
-    $password = zmt_password_decrypt($server->admin_password);
-
     $api = zimbra_admin_api($location);
-    $authenticated = zimbra_authentication($api, $user, $password);
-    if (!$authenticated) {
+
+    $auth_token = zimbra_authentication_by_server($api, $server_id);
+
+    if (empty($auth_token)) {
       $message = 'Connection or authentication to Zimbra server failed! <br />';
       $message .= 'Please contact to administrator to report this error.';
       drupal_set_message(t($message), 'error');
@@ -107,7 +93,40 @@ function zimbra_admin_api_by_server($server_id) {
 }
 
 /**
- * Zimbra authentication
+ * Zimbra authentication by server
+ *
+ * @param ZimbraAdminApi $api
+ *   Zimbra admin api.
+ * @param string $server_id
+ *   Server id.
+ * @return authentication token
+ */
+function zimbra_authentication_by_server(ZimbraAdminApi $api, $server_id) {
+  $cache = &drupal_static(__FUNCTION__, NULL);
+  $cache_key = md5($api->location() . $server_id);
+  if (!isset($cache[$cache_key])) {
+    $auth_token = FALSE;
+    $server = zmt_server_load($server_id);
+    if ($server) {
+      if (!empty($server->auth_token)) {
+        $auth_token = zimbra_authentication_by_token($api, $server->auth_token);
+      }
+      if (empty($auth_token)) {
+        $password = zmt_password_decrypt($server->admin_password);
+        $auth_token = zimbra_authentication_by_name($api, $server->admin_user, $password);
+      }
+      if (!empty($auth_token) && $server->auth_token !== $auth_token) {
+        $server->auth_token = $auth_token;
+        zmt_server_save($server);
+      }
+    }
+    $cache[$cache_key] = $auth_token;
+  }
+  return $cache[$cache_key];
+}
+
+/**
+ * Zimbra authentication by name
  *
  * @param ZimbraAdminApi $api
  *   Zimbra admin api.
@@ -115,37 +134,47 @@ function zimbra_admin_api_by_server($server_id) {
  *   Zimbra admin user.
  * @param string $password
  *   Zimbra admin password.
- * @return boolean
+ * @return authentication token
  */
-function zimbra_authentication(ZimbraAdminApi $api, $user, $password = '') {
+function zimbra_authentication_by_name(ZimbraAdminApi $api, $user, $password) {
   $cache = &drupal_static(__FUNCTION__, NULL);
   $cache_key = md5($api->location() . $user . $password);
   if (!isset($cache[$cache_key])) {
-    $authenticated = FALSE;
-    $sessKey = $cache_key . 'authToken';
-    $sessAuthToken = isset($_SESSION[$sessKey]) ? $_SESSION[$sessKey] : '';
-    if (!empty($sessAuthToken)) {
+    $auth_token = FALSE;
+    try {
+      $auth_token = $api->authByName($user, $password);
+    }
+    catch (Exception $ex) {
+      watchdog('zimbra', $ex->__toString());
+    }
+    $cache[$cache_key] = $auth_token;
+  }
+  return $cache[$cache_key];
+}
+
+/**
+ * Zimbra authentication by token
+ *
+ * @param ZimbraAdminApi $api
+ *   Zimbra admin api.
+ * @param string $token
+ *   Zimbra authentication token.
+ * @return authentication token
+ */
+function zimbra_authentication_by_token(ZimbraAdminApi $api, $token = '') {
+  $cache = &drupal_static(__FUNCTION__, NULL);
+  $cache_key = md5($api->location() . $token);
+  if (!isset($cache[$cache_key])) {
+    $auth_token = FALSE;
+    if (!empty($token)) {
       try {
-        $authToken = $api->authByToken($user, $sessAuthToken);
-        $authenticated = ($authToken === $sessAuthToken);
+        $auth_token = $api->authByToken($user, $token);
       }
       catch (Exception $ex) {
         watchdog('zimbra', $ex->__toString());
       }
     }
-    if(!$authenticated) {
-      try {
-        $authToken = $api->authByName($user, $password);
-        $authenticated = !empty($authToken);
-        if ($authenticated) {
-          $_SESSION[$sessKey] = $authToken;
-        }
-      }
-      catch (Exception $ex) {
-        watchdog('zimbra', $ex->__toString());
-      }
-    }
-    $cache[$cache_key] = $authenticated;
+    $cache[$cache_key] = ($auth_token === $token) ? $auth_token : FALSE;
   }
   return $cache[$cache_key];
 }
