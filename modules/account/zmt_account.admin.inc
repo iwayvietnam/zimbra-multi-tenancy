@@ -1,5 +1,8 @@
 <?php
 
+/**
+ * Zimbra account stats filter form.
+ */
 function zmt_account_stats_form($form, &$form_state) {
   $form['container'] = array(
     '#type' => 'fieldset',
@@ -66,6 +69,9 @@ function zmt_account_stats_form($form, &$form_state) {
   return $form;
 }
 
+/**
+ * Zimbra account stats ajax callback.
+ */
 function zmt_account_stats_form_ajax($form, $form_state) {
   drupal_get_messages();
   $commands = array();
@@ -132,6 +138,9 @@ function zmt_account_stats_form_ajax($form, $form_state) {
   return array('#type' => 'ajax', '#commands' => $commands);
 }
 
+/**
+ * zimbra account stats page callback.
+ */
 function zmt_account_stats_page() {
   drupal_set_title('Account Statistics');
 
