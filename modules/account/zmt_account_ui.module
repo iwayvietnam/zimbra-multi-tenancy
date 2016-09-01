@@ -27,6 +27,13 @@ function zmt_account_ui_menu() {
     'type' => MENU_LOCAL_ACTION,
     'file' => 'zmt_account.admin.inc',
   );
+  $items['zmt/account/stats'] = array(
+    'title' => 'Account Statistics',
+    'page callback' => 'zmt_account_stats_page',
+    'access callback' => 'zmt_account_stats_access',
+    'type' => MENU_LOCAL_ACTION,
+    'file' => 'zmt_account.admin.inc',
+  );
   $items['zmt/account/importing/progress/%'] = array(
     'title' => 'Importing progress bar',
     'page callback' => 'zmt_account_importing_progress',
@@ -82,6 +89,13 @@ function zmt_account_list_access($account = NULL) {
  */
 function zmt_account_add_access($account = NULL) {
   return zmt_account_access('create', NULL, $account);
+}
+
+/**
+ * Access callback: determines if the user can view account statistics.
+ */
+function zmt_account_stats_access($account = NULL) {
+  return zmt_account_access('stats', NULL, $account);
 }
 
 /**

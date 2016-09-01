@@ -1,0 +1,8 @@
+#zmt-account-stats-form input[type="text"] {
+  width: 75%;
+}
+#zmt-account-stats-form .form-item-from-date,
+#zmt-account-stats-form .form-item-to-date {
+  width: 50%;
+  float: left; 
+}

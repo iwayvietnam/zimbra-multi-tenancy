@@ -1,5 +1,158 @@
 <?php
 
+function zmt_account_stats_form($form, &$form_state) {
+  $form['container'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Filters'),
+  );
+
+  $form['container']['from_date'] = array(
+    '#type' => 'textfield',
+    '#title' => t('From date'),
+    '#attributes' => array(
+      'class' => array('from-date-picker'),
+      'readonly' => 'readonly',
+      'data-format' => 'yy-mm-dd',
+      'data-min' => '0',
+      'data-default' => '0',
+      'data-rel' => '#edit-to-date',
+    ),
+  );
+  $form['container']['to_date'] = array(
+    '#type' => 'textfield',
+    '#title' => t('To date'),
+    '#attributes' => array(
+      'class' => array('to-date-picker'),
+      'readonly' => 'readonly',
+      'data-format' => 'yy-mm-dd',
+      'data-min' => '0',
+      'data-default' => '0',
+      'data-rel' => '#edit-from-date',
+    ),
+  );
+
+  $options = array();
+  $domains = zmt_domain_load_all();
+  foreach ($domains as $zmt_domain) {
+    $options[$zmt_domain->id] = $zmt_domain->name;
+  }
+  $form['container']['domain_id'] = array(
+    '#type' => 'select',
+    '#title' => t('Domain'),
+    '#options' => $options,
+    '#empty_option' => t('- None -'),
+  );
+
+  $form['container']['actions'] = array('#type' => 'actions');
+  $form['container']['actions']['submit'] = array(
+    '#type' => 'submit',
+    '#value' => t('Statistics'),
+    '#ajax' => array(
+      'callback' => 'zmt_account_stats_form_ajax',
+    ),
+  );
+
+  $form['#attached']['library'] = array(
+    array('system', 'ui.datepicker'),
+  );
+  $path = drupal_get_path('module', 'zmt_core');
+  $form['#attached']['js'] = array(
+    $path . '/js/zmt.js',
+  );
+  $path = drupal_get_path('module', 'zmt_account');
+  $form['#attached']['css'] = array(
+    $path . '/zmt-account.css',
+  );
+  return $form;
+}
+
+function zmt_account_stats_form_ajax($form, $form_state) {
+  drupal_get_messages();
+  $commands = array();
+  $values = $form_state['values'];
+
+  $from_date = strtotime($values['from_date']);
+  $to_date = strtotime($values['to_date']);
+  $domain_id = (int) $values['domain_id'];
+
+  $filters = array(
+    'domain_id' => $domain_id,
+    'from_date' => $from_date,
+    'to_date' => $to_date,
+  );
+  $all_account_query = zmt_account_stats_count_query($filters);
+  $active_account_query = zmt_account_stats_count_query($filters + array('active' => 1));
+  $inactive_account_query = zmt_account_stats_count_query($filters + array('inactive' => 1));
+
+  $query = db_select('zmt_domain', 'zd')->fields('zd');
+  if (!empty($domain_id)) {
+    $query->condition('zd.id', $domain_id);
+  }
+  $query->leftJoin($all_account_query, 'all_query', 'all_query.domain_id = zd.id');
+  $query->leftJoin($active_account_query, 'active_query', 'active_query.domain_id = zd.id');
+  $query->leftJoin($inactive_account_query, 'inactive_query', 'inactive_query.domain_id = zd.id');
+
+  $query->addExpression('IFNULL(all_query.total_account, 0)', 'total_account');
+  $query->addExpression('IFNULL(active_query.total_account, 0)', 'total_active_account');
+  $query->addExpression('IFNULL(inactive_query.total_account, 0)', 'total_inactive_account');
+
+  $result = $query->execute();
+
+  $rows = array();
+  foreach ($result as $key => $domain) {
+    $row = array();
+    $row[] = array(
+      'data' => $domain->name,
+    );
+    $row[] = array(
+      'data' => $domain->total_account,
+    );
+    $row[] = array(
+      'data' => $domain->total_active_account,
+    );
+    $row[] = array(
+      'data' => $domain->total_inactive_account,
+    );
+    $rows[] = $row;
+  }
+
+  $header = array();
+  $header[] = array('data' => t('Domain'));
+  $header[] = array('data' => t('Total account'));
+  $header[] = array('data' => t('Total active account'));
+  $header[] = array('data' => t('Total inactive account'));
+  $table = array(
+    '#theme' => 'table',
+    '#header' => $header,
+    '#rows' => $rows,
+    '#empty' => t('No results found.'),
+  );
+  $html = drupal_render($table);
+  $commands[] = ajax_command_html('#stats-container-wapper', $html);
+  return array('#type' => 'ajax', '#commands' => $commands);
+}
+
+function zmt_account_stats_page() {
+  drupal_set_title('Account Statistics');
+
+  $header = array();
+  $header[] = array('data' => t('Domain'));
+  $header[] = array('data' => t('Total account'));
+  $header[] = array('data' => t('Total active account'));
+  $header[] = array('data' => t('Total inactive account'));
+
+  $build = array();
+  $build['stats_form'] = drupal_get_form('zmt_account_stats_form');
+  $build['account_table']  = array(
+    '#theme' => 'table',
+    '#header' => $header,
+    '#rows' => array(),
+    '#prefix' => '<div id="stats-container-wapper">',
+    '#suffix' => '</div>',
+  );
+  return $build;
+}
+
 /**
  * List all zimbra accounts page callback.
  */

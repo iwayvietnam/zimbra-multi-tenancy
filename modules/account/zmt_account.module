@@ -87,7 +87,13 @@ function zmt_account_get_properties($account, array $options, $name) {
  * Implements hook_permission().
  */
 function zmt_account_permission() {
-  return zmt_access_permissions('zmt_account', 'Account');
+  $permissions = zmt_access_permissions('zmt_account', 'Account');
+  $permissions['stats zmt_account'] = array(
+    'title' => t('Statistics Account'),
+    'description' => t('Allows users to statistics on account.'),
+    'restrict access' => TRUE,
+  );
+  return $permissions;
 }
 
 /**
@@ -318,6 +324,32 @@ function zmt_account_exists($domain, $name, $id = 0) {
     $cache[$cache_key] = $result > 0;
   }
   return $cache[$cache_key];
+}
+
+/**
+ * Statistics count account by domain.
+ */
+function zmt_account_stats_count_query(array $filters = array()) {
+  $query = db_select('zmt_account', 'za')
+    ->fields('za', array('domain_id'))
+    ->groupBy('za.domain_id');
+  $query->addExpression('COUNT(za.id)', 'total_account');
+  if (!empty($filters['domain_id'])) {
+    $query->condition('za.domain_id', $filters['domain_id']);
+  }
+  if (!empty($filters['from_date'])) {
+    $query->condition('za.created', $filters['from_date'], '>');
+  }
+  if (!empty($filters['to_date'])) {
+    $query->condition('za.created', $filters['to_date'], '>');
+  }
+  if (!empty($filters['active'])) {
+    $query->condition('za.status', 'active');
+  }
+  else if (!empty($filters['inactive'])) {
+    $query->condition('za.status', 'active', '!=');
+  }
+  return $query;
 }
 
 /**
