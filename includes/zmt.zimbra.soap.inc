@@ -1985,6 +1985,9 @@ class HttpSoapClient {
           'protocol_version' => 1.1,
           'timeout'          => 30.0,
         ),
+        'ssl' => array(
+          'allow_self_signed' => TRUE,
+        ),
       ));
       $response = drupal_http_request($this->_location, array(
         'headers' => $headers,
