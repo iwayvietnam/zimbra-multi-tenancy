@@ -49,7 +49,9 @@ function zmt_account_stats_form($form, &$form_state) {
     '#value' => t('Statistics'),
     '#ajax' => array(
       'callback' => 'zmt_account_stats_form_ajax',
+      'event' => 'click',
     ),
+    '#suffix' => ' <input type="reset" value="' . t('Reset') . '" class="form-submit" />',
   );
 
   $form['#attached']['library'] = array(
