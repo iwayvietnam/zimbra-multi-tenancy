@@ -109,7 +109,7 @@ function zimbra_authentication_by_server(ZimbraAdminApi $api, $server_id) {
     $server = zmt_server_load($server_id);
     if ($server) {
       if (!empty($server->auth_token)) {
-        $auth_token = zimbra_authentication_by_token($api, $server->auth_token);
+        $auth_token = zimbra_authentication_by_token($api, $server->admin_user, $server->auth_token);
       }
       if (empty($auth_token)) {
         $password = zmt_password_decrypt($server->admin_password);
@@ -157,11 +157,13 @@ function zimbra_authentication_by_name(ZimbraAdminApi $api, $user, $password) {
  *
  * @param ZimbraAdminApi $api
  *   Zimbra admin api.
+ * @param string $user
+ *   Zimbra admin user.
  * @param string $token
  *   Zimbra authentication token.
  * @return authentication token
  */
-function zimbra_authentication_by_token(ZimbraAdminApi $api, $token = '') {
+function zimbra_authentication_by_token(ZimbraAdminApi $api, $user, $token = '') {
   $cache = &drupal_static(__FUNCTION__, NULL);
   $cache_key = md5($api->location() . $token);
   if (!isset($cache[$cache_key])) {
