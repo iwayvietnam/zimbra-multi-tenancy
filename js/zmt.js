@@ -1,6 +1,6 @@
 (function($){
 
-  Drupal.behaviors.zmt = {
+  Backdrop.behaviors.zmt = {
     attach: function(context, settings) {
       $('#zmt-group-edit-form').once('submit', function () {
         $(this).submit(function(){
@@ -40,7 +40,7 @@
 
   $(function() {
 
-    Drupal.ajax.prototype.commands.zmt_ajax_redirect = function(ajax, response, status) {
+    Backdrop.ajax.prototype.commands.zmt_ajax_redirect = function(ajax, response, status) {
       if (response.delay > 0) {
         setTimeout(function () {
           window.location.href = response.url;
@@ -51,7 +51,7 @@
       }
     };
 
-    Drupal.ajax.prototype.commands.zmt_ajax_reload = function(ajax, response, status) {
+    Backdrop.ajax.prototype.commands.zmt_ajax_reload = function(ajax, response, status) {
       window.location = window.location;
     };
 
