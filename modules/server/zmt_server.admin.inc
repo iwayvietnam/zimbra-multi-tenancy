@@ -6,7 +6,7 @@
 function zmt_server_list_all() {
   global $user;
 
-  backdrop_set_title('Zimbra Servers');
+  backdrop_set_title(t('Zimbra Servers'));
   $header = array();
   $header[] = array('data' => t('No.'));
   $header[] = array('data' => t('Name'), 'field' => 'zs.name');
@@ -68,7 +68,7 @@ function zmt_server_list_all() {
  * Add new zimbra server page callback.
  */
 function zmt_server_add_page() {
-  backdrop_set_title('Add Zimbra Server');
+  backdrop_set_title(t('Add Zimbra Server'));
   $server = zmt_server_new();
   return backdrop_get_form('zmt_server_edit_form', $server);
 }
@@ -77,7 +77,7 @@ function zmt_server_add_page() {
  * Edit exists zimbra server page callback.
  */
 function zmt_server_edit_page($server) {
-  backdrop_set_title('Edit Zimbra Server');
+  backdrop_set_title(t('Edit Zimbra Server'));
   return backdrop_get_form('zmt_server_edit_form', $server);
 }
 
@@ -194,7 +194,7 @@ function zmt_server_edit_form_submit($form, &$form_state) {
  * Delete exists zimbra server page callback.
  */
 function zmt_server_delete_page($server) {
-  backdrop_set_title('Delete Zimbra Server');
+  backdrop_set_title(t('Delete Zimbra Server'));
   return backdrop_get_form('zmt_server_delete_form', $server);
 }
 

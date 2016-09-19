@@ -4,7 +4,7 @@
  * Zimbra multi tenancy setting page callback.
  */
 function zmt_setting_form_page() {
-  backdrop_set_title('Zimbra multi-tenancy settings.');
+  backdrop_set_title(t('Zimbra multi-tenancy settings.'));
   return backdrop_get_form('zmt_setting_form');
 }
 
@@ -58,7 +58,7 @@ function zmt_setting_form_submit($form, &$form_state) {
  * zmt server pull data page callback.
  */
 function zmt_server_pull_data_page() {
-  backdrop_set_title('Pull data from Zimbra Server');
+  backdrop_set_title(t('Pull data from Zimbra Server'));
   return backdrop_get_form('zmt_server_pull_data_form');
 }
 

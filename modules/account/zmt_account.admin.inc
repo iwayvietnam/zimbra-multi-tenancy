@@ -6,7 +6,7 @@
 function zmt_account_list_all() {
   global $user;
 
-  backdrop_set_title('Accounts');
+  backdrop_set_title(t('Accounts'));
   $header = array();
   $header[] = array('data' => t('No.'));
   $header[] = array('data' => t('Name'), 'field' => 'za.name');
@@ -112,7 +112,7 @@ function zmt_account_list_all() {
  * Add new zimbra account page callback.
  */
 function zmt_account_add_page() {
-  backdrop_set_title('Add Account');
+  backdrop_set_title(t('Add Account'));
   $account = zmt_account_new();
   return backdrop_get_form('zmt_account_edit_form', $account);
 }
@@ -121,7 +121,7 @@ function zmt_account_add_page() {
  * Edit exists zimbra account page callback.
  */
 function zmt_account_edit_page($account) {
-  backdrop_set_title('Edit Account');
+  backdrop_set_title(t('Edit Account'));
   return backdrop_get_form('zmt_account_edit_form', $account);
 }
 
@@ -310,7 +310,7 @@ function zmt_account_edit_form_submit($form, &$form_state) {
  * Import accounts page callback.
  */
 function zmt_account_import_page() {
-  backdrop_set_title('Import Accounts');
+  backdrop_set_title(t('Import Accounts'));
   return backdrop_get_form('zmt_account_import_form');
 }
 
@@ -563,7 +563,7 @@ function zmt_account_prepare($record, $domain_id = 0) {
  * Delete exists zimbra account page callback.
  */
 function zmt_account_delete_page($account) {
-  backdrop_set_title('Delete Account');
+  backdrop_set_title(t('Delete Account'));
   return backdrop_get_form('zmt_account_delete_form', $account);
 }
 

@@ -6,7 +6,7 @@
 function zmt_cos_list_all() {
   global $user;
 
-  backdrop_set_title('Class of Services');
+  backdrop_set_title(t('Class of Services'));
   $header = array();
   $header[] = array('data' => t('No.'));
   $header[] = array('data' => t('Name'), 'field' => 'zc.name');
@@ -79,7 +79,7 @@ function zmt_cos_list_all() {
  * Edit exists zimbra cos page callback.
  */
 function zmt_cos_edit_page($cos) {
-  backdrop_set_title('Edit Service');
+  backdrop_set_title(t('Edit Service'));
   return backdrop_get_form('zmt_cos_edit_form', $cos);
 }
 

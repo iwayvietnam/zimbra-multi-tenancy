@@ -37,14 +37,14 @@ function zmt_domain_ui_menu() {
     'access arguments' => array('view', 'zmt_domain', 2),
   );
   $items['zmt/domain/add'] = array(
-    'title' => 'Add Domain',
+    'title' => t('Add Domain'),
     'page callback' => 'zmt_domain_add_page',
     'access callback' => 'zmt_domain_add_access',
     'type' => MENU_LOCAL_ACTION,
     'file' => 'zmt_domain.admin.inc',
   );
   $items['zmt/domain/%zmt_domain/edit'] = array(
-    'title' => 'Edit Domain',
+    'title' => t('Edit Domain'),
     'page callback' => 'zmt_domain_edit_page',
     'page arguments' => array(2),
     'access callback' => 'zmt_domain_edit_access',
@@ -53,7 +53,7 @@ function zmt_domain_ui_menu() {
     'file' => 'zmt_domain.admin.inc',
   );
   $items['zmt/domain/%zmt_domain/delete'] = array(
-    'title' => 'Delete Domain',
+    'title' => t('Delete Domain'),
     'page callback' => 'zmt_domain_delete_page',
     'page arguments' => array(2),
     'access callback' => 'zmt_domain_delete_access',
@@ -62,7 +62,7 @@ function zmt_domain_ui_menu() {
     'file' => 'zmt_domain.admin.inc',
   );
   $items['zmt/domain'] = array(
-    'title' => 'Domains',
+    'title' => t('Domains'),
     'page callback' => 'zmt_domain_list_all',
     'access callback' => 'zmt_domain_list_access',
     'file' => 'zmt_domain.admin.inc',

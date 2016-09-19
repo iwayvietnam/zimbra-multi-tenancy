@@ -37,14 +37,14 @@ function zmt_tenant_ui_menu() {
     'access arguments' => array('view', 'zmt_tenant', 2),
   );
   $items['zmt/tenant/add'] = array(
-    'title' => 'Add Tenant',
+    'title' => t('Add Tenant'),
     'page callback' => 'zmt_tenant_add_page',
     'access callback' => 'zmt_tenant_add_access',
     'type' => MENU_LOCAL_ACTION,
     'file' => 'zmt_tenant.admin.inc',
   );
   $items['zmt/tenant/%zmt_tenant/edit'] = array(
-    'title' => 'Edit Tenant',
+    'title' => t('Edit Tenant'),
     'page callback' => 'zmt_tenant_edit_page',
     'page arguments' => array(2),
     'access callback' => 'zmt_tenant_edit_access',
@@ -53,7 +53,7 @@ function zmt_tenant_ui_menu() {
     'file' => 'zmt_tenant.admin.inc',
   );
   $items['zmt/tenant/%zmt_tenant/delete'] = array(
-    'title' => 'Delete Tenant',
+    'title' => t('Delete Tenant'),
     'page callback' => 'zmt_tenant_delete_page',
     'page arguments' => array(2),
     'access callback' => 'zmt_tenant_delete_access',
@@ -62,7 +62,7 @@ function zmt_tenant_ui_menu() {
     'file' => 'zmt_tenant.admin.inc',
   );
   $items['zmt/tenant'] = array(
-    'title' => 'Tenants',
+    'title' => t('Tenants'),
     'page callback' => 'zmt_tenant_list_all',
     'access callback' => 'zmt_tenant_list_access',
     'file' => 'zmt_tenant.admin.inc',
