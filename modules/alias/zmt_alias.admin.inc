@@ -6,7 +6,7 @@
 function zmt_alias_list_all() {
   global $user;
 
-  drupal_set_title('Aliases');
+  drupal_set_title(t('Aliases'));
   $header = array();
   $header[] = array('data' => t('No.'));
   $header[] = array('data' => t('Name'), 'field' => 'za.name');
@@ -103,7 +103,7 @@ function zmt_alias_list_all() {
  * Add new zimbra alias page callback.
  */
 function zmt_alias_add_page() {
-  drupal_set_title('Add Alias');
+  drupal_set_title(t('Add Alias'));
   $alias = zmt_alias_new();
   return drupal_get_form('zmt_alias_edit_form', $alias);
 }
@@ -112,7 +112,7 @@ function zmt_alias_add_page() {
  * Edit exists zimbra alias page callback.
  */
 function zmt_alias_edit_page($alias) {
-  drupal_set_title('Edit Alias');
+  drupal_set_title(t('Edit Alias'));
   return drupal_get_form('zmt_alias_edit_form', $alias);
 }
 
@@ -240,7 +240,7 @@ function zmt_alias_edit_form_submit($form, &$form_state) {
  * Delete exists zimbra alias page callback.
  */
 function zmt_alias_delete_page($alias) {
-  drupal_set_title('Delete Alias');
+  drupal_set_title(t('Delete Alias'));
   return drupal_get_form('zmt_alias_delete_form', $alias);
 }
 
