@@ -1370,12 +1370,8 @@ function zimbra_check_password_strength(ZimbraAdminApi $api, $id, $password) {
 function zimbra_get_quota_usage(
   ZimbraAdminApi $api,
   $domain = null,
-  $allServers = null,
   $limit = null,
   $offset = null,
-  $sortBy = null,
-  $sortAscending = null,
-  $refresh = null
   &$pager = array()
 ) {
   $cache = &drupal_static(__FUNCTION__, array());
@@ -1384,7 +1380,7 @@ function zimbra_get_quota_usage(
     $quota_usage = array();
     try {
       $result = $api->getQuotaUsage(
-        $domain, $allServers, $limit, $offset, $sortBy, $sortAscending, $refresh
+        $domain, null, $limit, $offset, null, null, null
       );
       $pager = array(
         'more' => isset($result->more) ? (bool) $result->more : false,
