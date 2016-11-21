@@ -369,6 +369,35 @@ interface ZimbraAdminApiInterface {
       $sortAscending = NULL,
       array $attrs = array()
   );
+  
+  /**
+   * Get Quota Usage
+   * 
+   * @param  string $domain
+   *   Domain - the domain name to limit the search to
+   * @param  bool $allServers
+   *   whether to fetch quota usage for all domain accounts from across all mailbox servers, default is false, applicable when domain attribute is specified
+   * @param  int $limit
+   *   Limit - the number of accounts to return (0 is default and means all)
+   * @param  int $offset
+   *  Offset - the starting offset (0, 25, etc)
+   * @param  string $sortBy
+   *   SortBy - valid values: "percentUsed", "totalUsed", "quotaLimit"
+   * @param bool $sortAscending
+   *   Whether to sort in ascending order 0 (false) is default, so highest quotas are returned first
+   * @param bool $refresh
+   *   Refresh - whether to always recalculate the data even when cached values are available. 0 (false) is the default.
+   * @return SoapResponse
+   */ 
+  function getQuotaUsage(
+    $domain = '',
+    $allServers = FALSE,
+    $limit = NULL,
+    $offset = NULL,
+    $sortBy = NULL,
+    $sortAscending = NULL,
+    $refresh = NULL
+  );
 
   /**
    * Get information about a domain.
@@ -1177,6 +1206,40 @@ class ZimbraAdminApi implements ZimbraAdminApiInterface {
   ) {
     $req = new GetDistributionListRequest(
       $dl, $limit, $offset, $sortAscending, $attrs
+    );
+    return $this->_client->doRequest($req);
+  }
+  
+   /**
+   * Get Quota Usage
+   * 
+   * @param  string $domain
+   *   Domain - the domain name to limit the search to
+   * @param  bool $allServers
+   *   whether to fetch quota usage for all domain accounts from across all mailbox servers, default is false, applicable when domain attribute is specified
+   * @param  int $limit
+   *   Limit - the number of accounts to return (0 is default and means all)
+   * @param  int $offset
+   *  Offset - the starting offset (0, 25, etc)
+   * @param  string $sortBy
+   *   SortBy - valid values: "percentUsed", "totalUsed", "quotaLimit"
+   * @param bool $sortAscending
+   *   Whether to sort in ascending order 0 (false) is default, so highest quotas are returned first
+   * @param bool $refresh
+   *   Refresh - whether to always recalculate the data even when cached values are available. 0 (false) is the default.
+   * @return SoapResponse
+   */ 
+  function getQuotaUsage(
+    $domain = '',
+    $allServers = FALSE,
+    $limit = NULL,
+    $offset = NULL,
+    $sortBy = NULL,
+    $sortAscending = NULL,
+    $refresh = NULL
+  ) {
+    $req = new GetQuotaUsageRequest(
+      $domain, $allServers, $limit, $offset, $sortBy, $sortAscending, $refresh
     );
     return $this->_client->doRequest($req);
   }
