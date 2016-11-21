@@ -14,14 +14,14 @@ function zmt_group_ui_menu() {
     'access arguments' => array('view', 'zmt_group', 2),
   );
   $items['zmt/group/add'] = array(
-    'title' => 'Add Group',
+    'title' => t('Add Group'),
     'page callback' => 'zmt_group_add_page',
     'access callback' => 'zmt_group_add_access',
     'type' => MENU_LOCAL_ACTION,
     'file' => 'zmt_group.admin.inc',
   );
   $items['zmt/group/%zmt_group/edit'] = array(
-    'title' => 'Edit Group',
+    'title' => t('Edit Group'),
     'page callback' => 'zmt_group_edit_page',
     'page arguments' => array(2),
     'access callback' => 'zmt_group_edit_access',
@@ -30,7 +30,7 @@ function zmt_group_ui_menu() {
     'file' => 'zmt_group.admin.inc',
   );
   $items['zmt/group/%zmt_group/delete'] = array(
-    'title' => 'Delete Group',
+    'title' => t('Delete Group'),
     'page callback' => 'zmt_group_delete_page',
     'page arguments' => array(2),
     'access callback' => 'zmt_group_delete_access',
@@ -39,7 +39,7 @@ function zmt_group_ui_menu() {
     'file' => 'zmt_group.admin.inc',
   );
   $items['zmt/group'] = array(
-    'title' => 'Groups',
+    'title' => t('Groups'),
     'page callback' => 'zmt_group_list_all',
     'access callback' => 'zmt_group_list_access',
     'file' => 'zmt_group.admin.inc',

@@ -14,21 +14,21 @@ function zmt_account_ui_menu() {
     'access arguments' => array('view', 'zmt_account', 2),
   );
   $items['zmt/account/add'] = array(
-    'title' => 'Add Account',
+    'title' => t('Add Account'),
     'page callback' => 'zmt_account_add_page',
     'access callback' => 'zmt_account_add_access',
     'type' => MENU_LOCAL_ACTION,
     'file' => 'zmt_account.admin.inc',
   );
   $items['zmt/account/import'] = array(
-    'title' => 'Import Account',
+    'title' => t('Import Account'),
     'page callback' => 'zmt_account_import_page',
     'access callback' => 'zmt_account_add_access',
     'type' => MENU_LOCAL_ACTION,
     'file' => 'zmt_account.admin.inc',
   );
   $items['zmt/account/importing/progress/%'] = array(
-    'title' => 'Importing progress bar',
+    'title' => t('Importing Progress Bar'),
     'page callback' => 'zmt_account_importing_progress',
     'page arguments' => array(4),
     'access callback' => 'zmt_account_add_access',
@@ -36,7 +36,7 @@ function zmt_account_ui_menu() {
     'file' => 'zmt_account.admin.inc',
   );
   $items['zmt/account/%zmt_account/edit'] = array(
-    'title' => 'Edit Account',
+    'title' => t('Edit Account'),
     'page callback' => 'zmt_account_edit_page',
     'page arguments' => array(2),
     'access callback' => 'zmt_account_edit_access',
@@ -45,7 +45,7 @@ function zmt_account_ui_menu() {
     'file' => 'zmt_account.admin.inc',
   );
   $items['zmt/account/%zmt_account/delete'] = array(
-    'title' => 'Delete Account',
+    'title' => t('Delete Account'),
     'page callback' => 'zmt_account_delete_page',
     'page arguments' => array(2),
     'access callback' => 'zmt_account_delete_access',
@@ -54,7 +54,7 @@ function zmt_account_ui_menu() {
     'file' => 'zmt_account.admin.inc',
   );
   $items['zmt/account'] = array(
-    'title' => 'Accounts',
+    'title' => t('Accounts'),
     'page callback' => 'zmt_account_list_all',
     'access callback' => 'zmt_account_list_access',
     'file' => 'zmt_account.admin.inc',

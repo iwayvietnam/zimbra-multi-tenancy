@@ -36,14 +36,14 @@ function zmt_server_ui_menu() {
     'access arguments' => array('view', 'zmt_server', 2),
   );
   $items['zmt/server/add'] = array(
-    'title' => 'Add Zimbra Server',
+    'title' => t('Add Zimbra Server'),
     'page callback' => 'zmt_server_add_page',
     'access callback' => 'zmt_server_add_access',
     'type' => MENU_LOCAL_ACTION,
     'file' => 'zmt_server.admin.inc',
   );
   $items['zmt/server/%zmt_server/edit'] = array(
-    'title' => 'Edit Zimbra Server',
+    'title' => t('Edit Zimbra Server'),
     'page callback' => 'zmt_server_edit_page',
     'page arguments' => array(2),
     'access callback' => 'zmt_server_edit_access',
@@ -52,7 +52,7 @@ function zmt_server_ui_menu() {
     'file' => 'zmt_server.admin.inc',
   );
   $items['zmt/server/%zmt_server/delete'] = array(
-    'title' => 'Delete Zimbra Server',
+    'title' => t('Delete Zimbra Server'),
     'page callback' => 'zmt_server_delete_page',
     'page arguments' => array(2),
     'access callback' => 'zmt_server_delete_access',
@@ -61,7 +61,7 @@ function zmt_server_ui_menu() {
     'file' => 'zmt_server.admin.inc',
   );
   $items['zmt/server'] = array(
-    'title' => 'Zimbra Servers',
+    'title' => t('Zimbra Servers'),
     'page callback' => 'zmt_server_list_all',
     'access callback' => 'zmt_server_list_access',
     'file' => 'zmt_server.admin.inc',

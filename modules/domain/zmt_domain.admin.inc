@@ -6,7 +6,7 @@
 function zmt_domain_list_all() {
   global $user;
 
-  drupal_set_title('Domains');
+  drupal_set_title(t('Domains'));
   $header = array();
   $header[] = array('data' => t('No.'));
   $header[] = array('data' => t('Name'), 'field' => 'zd.name');
@@ -96,7 +96,7 @@ function zmt_domain_list_all() {
  * Add new zimbra domain page callback.
  */
 function zmt_domain_add_page() {
-  drupal_set_title('Add Domain');
+  drupal_set_title(t('Add Domain'));
   $domain = zmt_domain_new();
   return drupal_get_form('zmt_domain_edit_form', $domain);
 }
@@ -105,7 +105,7 @@ function zmt_domain_add_page() {
  * Edit exists zimbra domain page callback.
  */
 function zmt_domain_edit_page($domain) {
-  drupal_set_title('Edit Domain');
+  drupal_set_title(t('Edit Domain'));
   return drupal_get_form('zmt_domain_edit_form', $domain);
 }
 
@@ -516,7 +516,7 @@ function zmt_domain_edit_form_submit($form, &$form_state) {
  * Delete exists zimbra domain page callback.
  */
 function zmt_domain_delete_page($domain) {
-  drupal_set_title('Delete Domain');
+  drupal_set_title(t('Delete Domain'));
   return drupal_get_form('zmt_domain_delete_form', $domain);
 }
 

@@ -2039,6 +2039,8 @@ class HttpSoapClient {
         ),
         'ssl' => array(
           'allow_self_signed' => TRUE,
+          'verify_peer' => FALSE,
+          'verify_peer_name' => FALSE,
         ),
       ));
       $response = drupal_http_request($this->_location, array(
