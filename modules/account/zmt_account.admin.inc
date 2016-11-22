@@ -683,7 +683,8 @@ function zmt_account_quota_usage() {
   $server_id = isset($_SESSION['zmt_filter_server_id']) ? (int) $_SESSION['zmt_filter_server_id'] : 0;
   $result = array();
   $rows = array();
-  $item_per_page = variable_get('zimbra_item_per_page', 20);
+  $item_per_page = variable_get('zimbra_item_per_page', 10);
+  $total = 0;
   if ($server_id > 0) {
     $api = zimbra_admin_api_by_server($server_id);
     $domain = zmt_domain_load($domain_id);
