@@ -1087,6 +1087,58 @@ class GetCosRequest extends SoapRequest {
 }
 
 /**
+ * Get Quota Usage
+ */ 
+class GetQuotaUsageRequest extends SoapRequest {
+  /**
+   * Constructor method for GetQuotaUsageRequest
+   * @param  string $domain
+   *   Domain - the domain name to limit the search to
+   * @param  bool $allServers
+   *   whether to fetch quota usage for all domain accounts from across all mailbox servers, default is false, applicable when domain attribute is specified
+   * @param  int $limit
+   *   Limit - the number of accounts to return (0 is default and means all)
+   * @param  int $offset
+   *  Offset - the starting offset (0, 25, etc)
+   * @param  string $sortBy
+   *   SortBy - valid values: "percentUsed", "totalUsed", "quotaLimit"
+   * @param bool $sortAscending
+   *   Whether to sort in ascending order 0 (false) is default, so highest quotas are returned first
+   * @param bool $refresh
+   *   Refresh - whether to always recalculate the data even when cached values are available. 0 (false) is the default.
+   * @return self
+   */
+  public function __construct(
+    $domain = '',
+    $allServers = FALSE,
+    $limit = NULL,
+    $offset = NULL,
+    $sortBy = NULL,
+    $sortAscending = NULL,
+    $refresh = NULL
+  ) {
+    parent::__construct();
+    $this->domain = $domain;
+    $this->allServers = $allServers;
+    if (NULL !== $limit) {
+      $this->limit = (int) $limit;
+    }
+    if (NULL !== $offset) {
+      $this->offset = (int) $offset;
+    }
+    if (NULL !== $sortBy) {
+      $this->sortBy =  $sortBy;
+    }
+    if (NULL !== $sortAscending) {
+      $this->sortAscending = (bool) $sortAscending;
+    }
+    if (NULL !== $refresh) {
+	  $this->refresh = (bool) $refresh;
+	}
+  }
+}
+
+/**
  * GetDistributionList request class
  * Get a Distribution List.
  */
