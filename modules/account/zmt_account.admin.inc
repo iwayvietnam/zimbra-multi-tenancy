@@ -692,33 +692,33 @@ function zmt_account_quota_usage() {
     $limit = 0;
     $offset = 0;
     if ($domain) {
-	  $result = zimbra_get_quota_usage($api, $domain->name ,$limit, $offset, $pager);
-	  $total = $pager['total'];
-	  if($total > 0) {
-	    $page = isset($_GET['page']) ? $_GET['page'] : 0;
+      $result = zimbra_get_quota_usage($api, $domain->name ,$limit, $offset, $pager);
+      $total = $pager['total'];
+      if($total > 0) {
+        $page = isset($_GET['page']) ? $_GET['page'] : 0;
         $records_page = array_slice($result, $item_per_page * $page, $item_per_page);
         pager_default_initialize($total, $item_per_page, $element = 0);
-	    $mb = 1024*1024;   
+        $mb = 1024 * 1024;   
         $key = 0;
         if($records_page) {
-        foreach ($records_page as $account) {
-          $row = array();
-          $row[] = $key + 1 + $page * $item_per_page ;
-          $row[] = array(
-            'data' => $account->name,
-          );
-          $row[] = array(
-            'data' => $account->used / $mb,
-          );
-          $row[] = array(
-            'data' => $account->limit / $mb,
-          );
-          $rows[] = $row;
-          $key ++ ;
-         }
-	   }
-   }
-	 }
+          foreach ($records_page as $account) {
+            $row = array();
+            $row[] = $key + 1 + $page * $item_per_page ;
+            $row[] = array(
+              'data' => $account->name,
+            );
+            $row[] = array(
+              'data' => $account->used / $mb,
+            );
+            $row[] = array(
+              'data' => $account->limit / $mb,
+            );
+            $rows[] = $row;
+            $key ++ ;
+          }
+        }
+      }
+    }
   }
    
   if (empty($rows)) {

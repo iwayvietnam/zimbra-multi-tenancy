@@ -87,7 +87,8 @@ function zmt_account_get_properties($account, array $options, $name) {
  * Implements hook_permission().
  */
 function zmt_account_permission() {
-  return zmt_access_permissions('zmt_account', 'Account');
+  $permissions =  zmt_access_permissions('zmt_account', 'Account');
+  return $permissions;
 }
 
 /**

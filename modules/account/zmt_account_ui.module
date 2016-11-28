@@ -63,6 +63,7 @@ function zmt_account_ui_menu() {
     'title' => 'Mailbox Quota',
     'page callback' => 'zmt_account_quota_usage',
     'access callback' => 'zmt_account_quota_usage_access',
+    'type' => MENU_LOCAL_ACTION,
     'file' => 'zmt_account.admin.inc',
   );
   return $items;
@@ -126,11 +127,5 @@ function zmt_account_delete_access($acc, $account = NULL) {
  * Quota Usage Callback
  */
 function zmt_account_quota_usage_access($account = NULL) {
-  global $user;
-  if (NULL === $account) {
-    $account = $user;
-  }
-  if (user_access('administer zmt', $account)) {
-    return TRUE;
-  }
+  return zmt_account_access('list', NULL, $account);
 }
