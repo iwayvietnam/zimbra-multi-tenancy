@@ -680,14 +680,20 @@ function zmt_account_quota_usage() {
   $header[] = array('data' => t('Quota limit (MB)'));
 
   $domain_id = isset($_SESSION['zmt_filter_domain_id']) ? (int) $_SESSION['zmt_filter_domain_id'] : 0;
-  $server_id = isset($_SESSION['zmt_filter_server_id']) ? (int) $_SESSION['zmt_filter_server_id'] : 0;
+  $domain = zmt_domain_load($domain_id);
+  if ($domain) {
+    $server_id = (int) $domain->server_id;
+  }
+  else {
+    $server_id = isset($_SESSION['zmt_filter_server_id']) ? (int) $_SESSION['zmt_filter_server_id'] : 0;
+  }
+
   $result = array();
   $rows = array();
   $item_per_page = variable_get('zimbra_item_per_page', 20);
   $total = 0;
   if ($server_id > 0) {
     $api = zimbra_admin_api_by_server($server_id);
-    $domain = zmt_domain_load($domain_id);
     $pager = array();
     $limit = 0;
     $offset = 0;
