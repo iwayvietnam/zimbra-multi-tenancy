@@ -708,10 +708,10 @@ function zmt_account_quota_usage() {
               'data' => $account->name,
             );
             $row[] = array(
-              'data' => $account->used / $mb,
+              'data' => number_format($account->used / $mb, 2),
             );
             $row[] = array(
-              'data' => $account->limit / $mb,
+              'data' => number_format($account->limit / $mb, 2),
             );
             $rows[] = $row;
             $key ++ ;
