@@ -192,20 +192,20 @@ function zmt_domain_query_tenant_count_domain_alter(QueryAlterableInterface $que
 /**
  * Access callback for Domain.
  */
-function zmt_domain_access($op, $domain, $domain = NULL, $entity_type = NULL) {
+function zmt_domain_access($op, $domain, $account = NULL, $entity_type = NULL) {
   global $user;
-  if (NULL === $domain) {
-    $domain = $user;
+  if (NULL === $account) {
+    $account = $user;
   }
-  if (user_access('administer zmt', $domain) || user_access('administer any zmt_domain', $domain)) {
+  if (user_access('administer zmt', $account) || user_access('administer any zmt_domain', $account)) {
     return TRUE;
   }
   if ($op === 'list' || $op === 'create') {
-    return user_access('administer own zmt_domain', $domain);
+    return user_access('administer own zmt_domain', $account);
   }
   else {
-    $is_own = isset($domain->uid) && $domain->uid == $domain->uid;
-    return user_access('administer own zmt_domain', $domain) && $is_own;
+    $is_own = isset($domain->uid) && $domain->uid == $account->uid;
+    return user_access('administer own zmt_domain', $account) && $is_own;
   }
 }
 
