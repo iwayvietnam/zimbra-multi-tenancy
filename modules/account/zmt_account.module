@@ -278,7 +278,6 @@ function zmt_account_load_by_name($domain, $name) {
  */
 function zmt_account_load_by_zimbra_id($zimbra_id) {
   $cache = &drupal_static(__FUNCTION__, array());
-  $domain_id = is_object($domain) ? $domain->id : $domain;
   if (!isset($cache[$zimbra_id])) {
     $query = new EntityFieldQuery();
     $result = $query->entityCondition('entity_type', 'zmt_account')
