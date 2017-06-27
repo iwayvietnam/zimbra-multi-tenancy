@@ -312,15 +312,15 @@ function _zmt_ui_update_domain_data(array $zimbra_domains, $server_id = 0, $tena
     if ($domain && !zmt_domain_exists($zimbra_domain->name)) {
       $domain->name = $zimbra_domain->name;
     }
-    else {
+    if (!$domain) {
       $domain = zmt_domain_load_by_name($zimbra_domain->name);
     }
     if (!$domain) {
       $domain = zmt_domain_new($zimbra_domain->name);
       $domain->server_id = $server_id;
+      $domain->zimbra_id = $zimbra_id;
     }
 
-    $domain->zimbra_id = $zimbra_id;
     $attrs = isset($zimbra_domain->a) ? $zimbra_domain->a : array();
     if (is_array($attrs)) {
       foreach ($attrs as $attr) {
@@ -377,11 +377,20 @@ function _zmt_ui_update_account_data(ZimbraAdminApi $api, array $zimbra_domains,
         foreach ($zmbra_accounts as $zimbra_id => $zmbra_account) {
           $account_name = substr($zmbra_account->name, 0, (int) strpos($zmbra_account->name, '@'));
           $match = zmt_is_matches($excludes, $account_name);
-          $exists = zmt_account_exists($domain->id, $account_name);
-          if (!$exists && !$match) {
-            $account = zmt_account_new($account_name);
-            $account->domain_id = $domain->id;
-            $account->zimbra_id = $zimbra_id;
+
+          if (!$match) {
+            $account = zmt_account_load_by_zimbra_id($zimbra_id);
+            if ($account && !zmt_account_exists($domain->id, $account_name)) {
+              $account->name = $account_name;
+            }
+            if (!$account) {
+              $account = zmt_account_load_by_name($domain->id, $account_name);
+            }
+            if (!$account) {
+              $account = zmt_account_new($account_name);
+              $account->domain_id = $domain->id;
+              $account->zimbra_id = $zimbra_id;
+            }
 
             $attrs = isset($zmbra_account->a) ? $zmbra_account->a : array();
             if (is_array($attrs)) {
