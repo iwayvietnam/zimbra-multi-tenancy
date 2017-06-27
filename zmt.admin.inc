@@ -501,8 +501,7 @@ function _zmt_ui_update_alias_data(ZimbraAdminApi $api, array $zimbra_domains, $
  */
 function _zmt_ui_update_group_data(ZimbraAdminApi $api, array $zimbra_domains, $server_id = 0, $progress_name = 'zmt_pulling_progress') {
   $count = 0;
-  $progress = 0;
-  variable_set($progress_name, $progress);
+  variable_set($progress_name, $count);
   $total_dl = (int) zimbra_count_dl($api);
   foreach ($zimbra_domains as $zimbra_domain) {
     $domain_name = $zimbra_domain->name;
@@ -511,77 +510,83 @@ function _zmt_ui_update_group_data(ZimbraAdminApi $api, array $zimbra_domains, $
       $zimbra_dls = zimbra_get_all_dl($api, $domain_name);
       foreach ($zimbra_dls as $zimbra_id => $dl) {
         $group_name = substr($dl->name, 0, (int) strpos($dl->name, '@'));
-        $exists = zmt_group_exists($domain->id, $group_name);
-        if (!$exists) {
+        $group = zmt_group_load_by_zimbra_id($zimbra_id);
+        if ($group && !zmt_group_exists($domain->id, $group_name)) {
+          $group->name = $group_name;
+        }
+        if (!$group) {
+          $group = zmt_group_load_by_name($domain->id, $group_name);
+        }
+        if (!$group) {
           $group = zmt_group_new($group_name);
           $group->full_name = $group_name;
           $group->domain_id = $domain->id;
           $group->zimbra_id = $zimbra_id;
-          $attrs = isset($dl->a) ? $dl->a : array();
-          if (is_array($attrs)) {
-            foreach ($attrs as $attr) {
-              if ($attr->n === 'displayName') {
-                $group->full_name = isset($attr->_content) ? $attr->_content : '';
-              }
-            }
-          }
-          zmt_group_save($group, FALSE);
-
-          $members = !empty($dl->dlm) ? $dl->dlm : zimbra_get_dl_members($api, $dl->name);
-          if (!is_array($members)) {
-            $members = array($members);
-          }
-
-          if (!empty($members)) {
-            $zmt_members = array();
-            $accounts = zmt_account_load_multiple_by_domain($domain);
-            foreach ($accounts as $account) {
-              $mailbox = $account->name . '@' . $domain->name;
-              $member = array(
-                'name' => $mailbox,
-                'id' => (int) $account->id,
-                'type' => GROUP_MEMBER_ACCOUNT,
-              );
-              $zmt_members[$mailbox] = (object) $member;
-            }
-            $aliases = zmt_alias_load_multiple_by_domain($domain);
-            foreach ($aliases as $alias) {
-              $mailbox = $alias->name . '@' . $domain->name;
-              $member = array(
-                'name' => $mailbox,
-                'id' => (int) $alias->id,
-                'type' => GROUP_MEMBER_ALIAS,
-              );
-              $zmt_members[$mailbox] = (object) $member;
-            }
-            $groups = zmt_group_load_multiple_by_domain($domain, $group->id);
-            foreach ($groups as $gr) {
-              $mailbox = $gr->name . '@' . $domain->name;
-              $member = array(
-                'name' => $mailbox,
-                'id' => (int) $gr->id,
-                'type' => GROUP_MEMBER_DL,
-              );
-              $zmt_members[$mailbox] = (object) $member;
-            }
-
-            foreach ($members as $member) {
-              $member_name = isset($member->_content) ? $member->_content : $member;
-              $zmt_member = isset($zmt_members[$member_name]) ? $zmt_members[$member_name] : NULL;
-              if ($zmt_member) {
-                $group_member = zmt_group_member_new($member_name);
-                $group_member->group_id = $group->id;
-                $group_member->member_id = $zmt_member->id;
-                $group_member->type = $zmt_member->type;
-                zmt_group_member_save($group_member, FALSE);
-              }
-            }
-          }
-          $count++;
         }
 
-        $progress++;
-        variable_set($progress_name, floor($progress * 100 / $total_dl));
+        $attrs = isset($dl->a) ? $dl->a : array();
+        if (is_array($attrs)) {
+          foreach ($attrs as $attr) {
+            if ($attr->n === 'displayName') {
+              $group->full_name = isset($attr->_content) ? $attr->_content : '';
+            }
+          }
+        }
+        zmt_group_save($group, FALSE);
+
+        $members = !empty($dl->dlm) ? $dl->dlm : zimbra_get_dl_members($api, $dl->name);
+        if (!is_array($members)) {
+          $members = array($members);
+        }
+
+        if (!empty($members)) {
+          $zmt_members = array();
+          $accounts = zmt_account_load_multiple_by_domain($domain);
+          foreach ($accounts as $account) {
+            $mailbox = $account->name . '@' . $domain->name;
+            $member = array(
+              'name' => $mailbox,
+              'id' => (int) $account->id,
+              'type' => GROUP_MEMBER_ACCOUNT,
+            );
+            $zmt_members[$mailbox] = (object) $member;
+          }
+          $aliases = zmt_alias_load_multiple_by_domain($domain);
+          foreach ($aliases as $alias) {
+            $mailbox = $alias->name . '@' . $domain->name;
+            $member = array(
+              'name' => $mailbox,
+              'id' => (int) $alias->id,
+              'type' => GROUP_MEMBER_ALIAS,
+            );
+            $zmt_members[$mailbox] = (object) $member;
+          }
+          $groups = zmt_group_load_multiple_by_domain($domain, $group->id);
+          foreach ($groups as $gr) {
+            $mailbox = $gr->name . '@' . $domain->name;
+            $member = array(
+              'name' => $mailbox,
+              'id' => (int) $gr->id,
+              'type' => GROUP_MEMBER_DL,
+            );
+            $zmt_members[$mailbox] = (object) $member;
+          }
+
+          foreach ($members as $member) {
+            $member_name = isset($member->_content) ? $member->_content : $member;
+            $zmt_member = isset($zmt_members[$member_name]) ? $zmt_members[$member_name] : NULL;
+            if ($zmt_member) {
+              $group_member = zmt_group_member_new($member_name);
+              $group_member->group_id = $group->id;
+              $group_member->member_id = $zmt_member->id;
+              $group_member->type = $zmt_member->type;
+              zmt_group_member_save($group_member, FALSE);
+            }
+          }
+        }
+
+        $count++;
+        variable_set($progress_name, floor($count * 100 / $total_dl));
       }
     }
   }
