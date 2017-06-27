@@ -333,7 +333,6 @@ function _zmt_ui_update_domain_data(array $zimbra_domains, $server_id = 0, $tena
     $tenant = zmt_tenant_load($tenant_id);
     if ($tenant) {
       $domain->tenant_id = $tenant->id;
-      $domain->cos_id = $tenant->cos_id;
       $tenant_user = user_load($tenant->tenant_uid);
       if ($tenant_user && (int) $tenant_user->uid > 0) {
         $domain->uid = (int) $tenant_user->uid;
