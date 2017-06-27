@@ -305,45 +305,49 @@ function _zmt_ui_update_cos_data(array $zimbra_coses, $server_id = 0, $progress_
  *   Total number of updated domains.
  */
 function _zmt_ui_update_domain_data(array $zimbra_domains, $server_id = 0, $tenant_id = 0, $progress_name = 'zmt_pulling_progress') {
-  $count = 0;
   $progress = 0;
   variable_set($progress_name, $progress);
   $total_domain = count($zimbra_domains);
   foreach ($zimbra_domains as $zimbra_id => $zimbra_domain) {
-    $exists = zmt_domain_exists($zimbra_domain->name);
-    if (!$exists) {
+    $domain = zmt_domain_load_by_zimbra_id($zimbra_id);
+    if ($domain && !zmt_domain_exists($zimbra_domain->name)) {
+      $domain->name = $zimbra_domain->name;
+    }
+    else {
+      $domain = zmt_domain_load_by_name($zimbra_domain->name);
+    }
+    if (!$domain) {
       $domain = zmt_domain_new($zimbra_domain->name);
       $domain->server_id = $server_id;
-      $domain->zimbra_id = $zimbra_id;
-
-      $attrs = isset($zimbra_domain->a) ? $zimbra_domain->a : array();
-      if (is_array($attrs)) {
-        foreach ($attrs as $attr) {
-          if ($attr->n === 'zimbraDomainStatus') {
-            $domain->status = isset($attr->_content) ? $attr->_content : '';
-          }
-        }
-      }
-
-      $tenant = zmt_tenant_load($tenant_id);
-      if ($tenant) {
-        $domain->tenant_id = $tenant->id;
-        $domain->cos_id = $tenant->cos_id;
-        $tenant_user = user_load($tenant->tenant_uid);
-        if ($tenant_user && (int) $tenant_user->uid > 0) {
-          $domain->uid = (int) $tenant_user->uid;
-        }
-      }
-
-      zmt_domain_save($domain, FALSE);
-      $count++;
     }
+
+    $domain->zimbra_id = $zimbra_id;
+    $attrs = isset($zimbra_domain->a) ? $zimbra_domain->a : array();
+    if (is_array($attrs)) {
+      foreach ($attrs as $attr) {
+        if ($attr->n === 'zimbraDomainStatus') {
+          $domain->status = isset($attr->_content) ? $attr->_content : '';
+        }
+      }
+    }
+
+    $tenant = zmt_tenant_load($tenant_id);
+    if ($tenant) {
+      $domain->tenant_id = $tenant->id;
+      $domain->cos_id = $tenant->cos_id;
+      $tenant_user = user_load($tenant->tenant_uid);
+      if ($tenant_user && (int) $tenant_user->uid > 0) {
+        $domain->uid = (int) $tenant_user->uid;
+      }
+    }
+
+    zmt_domain_save($domain, FALSE);
 
     $progress++;
     variable_set($progress_name, floor($progress * 100 / $total_domain));
   }
-  drupal_set_message($count . ' domains were updated.');
-  return $count;
+  drupal_set_message($progress . ' domains were updated.');
+  return $progress;
 }
 
 /**
