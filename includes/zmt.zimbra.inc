@@ -880,8 +880,8 @@ function zimbra_list_account(ZimbraAdminApi $api, $domain = NULL, $limit = NULL,
         'zimbraMailForwardingAddress',
       );
       $result = $api->searchDirectory(
-        '', NULL, $limit, $offset, $domain, NULL, NULL,
-        'accounts', NULL, NULL, NULL, implode(',', $attrs)
+        '(&(!(zimbraIsSystemAccount=TRUE)))', NULL, $limit, $offset, $domain, FALSE, FALSE,
+        'accounts', 'name', TRUE, NULL, implode(',', $attrs)
       );
       $pager = array(
         'num' => isset($result->num) ? (int) $result->num : 0,
@@ -948,7 +948,7 @@ function zimbra_count_account(ZimbraAdminApi $api, $domain = NULL) {
   if (!isset($cache[$cache_key])) {
     try {
       $result = $api->searchDirectory(
-        '', NULL, 1, 0, $domain, NULL, NULL,
+        '', NULL, NULL, NULL, $domain, NULL, NULL,
         'accounts', NULL, NULL, TRUE, 'zimbraId'
       );
       if (!empty($result->num)) {
@@ -1153,7 +1153,7 @@ function zimbra_list_alias(ZimbraAdminApi $api, $domain = NULL, $limit = NULL, $
           $mail_alias->id = $alias->id;
           $mail_alias->name = $alias->name;
           $mail_alias->account_id = '';
-          $mail_alias->account_name = $alias->targetName;
+          $mail_alias->account_name = !empty($alias->targetName) ? $alias->targetName : '';
           $mail_alias->domain = $domain;
           $attrs = isset($alias->a) ? $alias->a : array();
           foreach ($attrs as $attr) {
@@ -1188,7 +1188,7 @@ function zimbra_count_alias(ZimbraAdminApi $api, $domain = NULL) {
   if (!isset($cache[$cache_key])) {
     try {
       $result = $api->searchDirectory(
-        '', NULL, 1, 0, $domain, NULL, NULL,
+        '', NULL, NULL, NULL, $domain, NULL, NULL,
         'aliases', NULL, NULL, TRUE, 'zimbraId'
       );
       if (!empty($result->num)) {
