@@ -209,6 +209,27 @@ function zmt_cos_load_multiple_by_server($server, $limit = 0, $offset = 0) {
 }
 
 /**
+ * Loads a cos by zimbra id.
+ * @param $zimbra_id
+ *   The cos zimbra id.
+ * @return
+ *   A cos object or FALSE.
+ */
+function zmt_cos_load_by_zimbra_id($zimbra_id) {
+  $cache = &drupal_static(__FUNCTION__, array());
+  if (!isset($cache[$zimbra_id])) {
+    $query = new EntityFieldQuery();
+    $result = $query->entityCondition('entity_type', 'zmt_cos')
+      ->propertyCondition('zimbra_id', $zimbra_id)
+      ->execute();
+    $ids = isset($result['zmt_cos']) ? array_keys($result['zmt_cos']) : array();
+    $coses = zmt_cos_load_multiple($ids);
+    $cache[$zimbra_id] = $coses ? reset($coses) : FALSE;
+  }
+  return $cache[$zimbra_id];
+}
+
+/**
  * Checks cos exists by zimbra id.
  *
  * @param $zimbra_id
