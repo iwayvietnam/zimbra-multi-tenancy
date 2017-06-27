@@ -260,33 +260,32 @@ function zmt_ajax_pull_data_callback($form, &$form_state) {
  */
 function _zmt_ui_update_cos_data(array $zimbra_coses, $server_id = 0, $progress_name = 'zmt_pulling_progress') {
   $count = 0;
-  $progress = 0;
-  variable_set($progress_name, $progress);
+  variable_set($progress_name, $count);
   $total_cos = count($zimbra_coses);
   $mb = 1024 * 1024;
   foreach ($zimbra_coses as $zimbra_id => $zimbra_cos) {
-    $exists = zmt_cos_exists($zimbra_id);
-    if (!$exists) {
+    $cos = zmt_cos_load_by_zimbra_id($zimbra_id);
+    if (!$cos) {
       $cos = zmt_cos_new($zimbra_cos->name);
-      $cos->server_id = $server_id;
-      $attrs = !empty($zimbra_cos->a) ? $zimbra_cos->a : array();
-      if (is_array($attrs)) {
-        foreach ($attrs as $attr) {
-          if ($attr->n === 'description') {
-            $cos->description = $attr->_content;
-          }
-          if ($attr->n === 'zimbraMailQuota') {
-            $cos->mail_quota = (int) $attr->_content / $mb;
-          }
-        }
-      }
-      $cos->zimbra_id = $zimbra_id;
-      zmt_cos_save($cos, FALSE);
-      $count++;
     }
 
-    $progress++;
-    variable_set($progress_name, floor($progress * 100 / $total_cos));
+    $cos->server_id = $server_id;
+    $attrs = !empty($zimbra_cos->a) ? $zimbra_cos->a : array();
+    if (is_array($attrs)) {
+      foreach ($attrs as $attr) {
+        if ($attr->n === 'description') {
+          $cos->description = $attr->_content;
+        }
+        if ($attr->n === 'zimbraMailQuota') {
+          $cos->mail_quota = (int) $attr->_content / $mb;
+        }
+      }
+    }
+    $cos->zimbra_id = $zimbra_id;
+    zmt_cos_save($cos, FALSE);
+
+    $count++;
+    variable_set($progress_name, floor($count * 100 / $total_cos));
   }
   drupal_set_message($count . ' coses were updated.');
   return $count;
@@ -305,8 +304,8 @@ function _zmt_ui_update_cos_data(array $zimbra_coses, $server_id = 0, $progress_
  *   Total number of updated domains.
  */
 function _zmt_ui_update_domain_data(array $zimbra_domains, $server_id = 0, $tenant_id = 0, $progress_name = 'zmt_pulling_progress') {
-  $progress = 0;
-  variable_set($progress_name, $progress);
+  $count = 0;
+  variable_set($progress_name, $count);
   $total_domain = count($zimbra_domains);
   foreach ($zimbra_domains as $zimbra_id => $zimbra_domain) {
     $domain = zmt_domain_load_by_zimbra_id($zimbra_id);
@@ -343,11 +342,11 @@ function _zmt_ui_update_domain_data(array $zimbra_domains, $server_id = 0, $tena
 
     zmt_domain_save($domain, FALSE);
 
-    $progress++;
-    variable_set($progress_name, floor($progress * 100 / $total_domain));
+    $count++;
+    variable_set($progress_name, floor($count * 100 / $total_domain));
   }
-  drupal_set_message($progress . ' domains were updated.');
-  return $progress;
+  drupal_set_message($count . ' domains were updated.');
+  return $count;
 }
 
 /**
