@@ -6,7 +6,7 @@
 function zmt_tenant_list_all() {
   global $user;
 
-  drupal_set_title('Tenants');
+  drupal_set_title(t('Tenants'));
   $header = array();
   $header[] = array('data' => t('No.'));
   $header[] = array('data' => t('Full name'), 'field' => 'zt.full_name');
@@ -108,7 +108,7 @@ function zmt_tenant_list_all() {
  * Add new zimbra tenant page callback.
  */
 function zmt_tenant_add_page() {
-  drupal_set_title('Add Tenant');
+  drupal_set_title(t('Add Tenant'));
   $tenant = zmt_tenant_new();
   return drupal_get_form('zmt_tenant_edit_form', $tenant);
 }
@@ -117,7 +117,7 @@ function zmt_tenant_add_page() {
  * Edit exists zimbra tenant page callback.
  */
 function zmt_tenant_edit_page($tenant) {
-  drupal_set_title('Edit Tenant');
+  drupal_set_title(t('Edit Tenant'));
   return drupal_get_form('zmt_tenant_edit_form', $tenant);
 }
 
@@ -366,7 +366,7 @@ function zmt_tenant_edit_form_submit($form, &$form_state) {
  * Delete exists zimbra tenant page callback.
  */
 function zmt_tenant_delete_page($tenant) {
-  drupal_set_title('Delete Tenant');
+  drupal_set_title(t('Delete Tenant'));
   return drupal_get_form('zmt_tenant_delete_form', $tenant);
 }
 

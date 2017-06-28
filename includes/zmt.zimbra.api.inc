@@ -56,12 +56,12 @@ interface ZimbraAdminApiInterface {
    * @return authentication token
    */
   function auth(
-      $name = NULL,
-      $password = NULL,
-      $authToken = NULL,
-      AccountSelector $account = NULL,
-      $virtualHost = NULL,
-      $persistAuthTokenCookie = NULL
+    $name = NULL,
+    $password = NULL,
+    $authToken = NULL,
+    AccountSelector $account = NULL,
+    $virtualHost = NULL,
+    $persistAuthTokenCookie = NULL
   );
 
   /**
@@ -363,13 +363,13 @@ interface ZimbraAdminApiInterface {
    * @return SoapResponse
    */
   function getDistributionList(
-      DistributionListSelector $dl = NULL,
-      $limit = NULL,
-      $offset = NULL,
-      $sortAscending = NULL,
-      array $attrs = array()
+    DistributionListSelector $dl = NULL,
+    $limit = NULL,
+    $offset = NULL,
+    $sortAscending = NULL,
+    array $attrs = array()
   );
-
+  
   /**
    * Get information about a domain.
    * 
@@ -421,12 +421,34 @@ interface ZimbraAdminApiInterface {
    * @return SoapResponse
    */
   function getLDAPEntries(
-      $query,
-      $ldapSearchBase,
-      $sortBy = NULL,
-      $sortAscending = NULL,
-      $limit = NULL,
-      $offset = NULL
+    $query,
+    $ldapSearchBase,
+    $sortBy = NULL,
+    $sortAscending = NULL,
+    $limit = NULL,
+    $offset = NULL
+  );
+
+  /**
+   * Get Quota Usage
+   * 
+   * @param string $domain Domain - the domain name to limit the search to
+   * @param bool $allServers Ưhether to fetch quota usage for all domain accounts from across all mailbox servers, default is false, applicable when domain attribute is specified
+   * @param int $limit Limit - the number of accounts to return (0 is default and means all)
+   * @param int $offset Offset - the starting offset (0, 25, etc)
+   * @param $sortBy SortBy - valid values: "percentUsed", "totalUsed", "quotaLimit"
+   * @param bool $sortAscending Whether to sort in ascending order 0 (false) is default, so highest quotas are returned first
+   * @param bool $refresh Refresh - whether to always recalculate the data even when cached values are available. 0 (false) is the default.
+   * @return SoapResponse
+   */
+  function getQuotaUsage(
+    $domain = null,
+    $allServers = null,
+    $limit = null,
+    $offset = null,
+    $sortBy = null,
+    $sortAscending = null,
+    $refresh = null
   );
 
   /**
@@ -610,18 +632,18 @@ interface ZimbraAdminApiInterface {
    * @return SoapResponse
    */
   function searchDirectory(
-      $query = NULL,
-      $maxResults = NULL,
-      $limit = NULL,
-      $offset = NULL,
-      $domain = NULL,
-      $applyCos = NULL,
-      $applyConfig = NULL,
-      $types = NULL,
-      $sortBy = NULL,
-      $sortAscending = NULL,
-      $countOnly = NULL,
-      $attrs = NULL
+    $query = NULL,
+    $maxResults = NULL,
+    $limit = NULL,
+    $offset = NULL,
+    $domain = NULL,
+    $applyCos = NULL,
+    $applyConfig = NULL,
+    $types = NULL,
+    $sortBy = NULL,
+    $sortAscending = NULL,
+    $countOnly = NULL,
+    $attrs = NULL
   );
 
   /**
@@ -1169,11 +1191,11 @@ class ZimbraAdminApi implements ZimbraAdminApiInterface {
    * @return SoapResponse
    */
   function getDistributionList(
-      DistributionListSelector $dl = NULL,
-      $limit = NULL,
-      $offset = NULL,
-      $sortAscending = NULL,
-      array $attrs = array()
+    DistributionListSelector $dl = NULL,
+    $limit = NULL,
+    $offset = NULL,
+    $sortAscending = NULL,
+    array $attrs = array()
   ) {
     $req = new GetDistributionListRequest(
       $dl, $limit, $offset, $sortAscending, $attrs
@@ -1195,9 +1217,9 @@ class ZimbraAdminApi implements ZimbraAdminApiInterface {
    * @return SoapResponse
    */
   function getDomain(
-      DomainSelector $domain = NULL,
-      $applyConfig = NULL,
-      $attrs = NULL
+    DomainSelector $domain = NULL,
+    $applyConfig = NULL,
+    $attrs = NULL
   ) {
     $req = new GetDomainRequest(
       $domain, $applyConfig, $attrs
@@ -1245,15 +1267,42 @@ class ZimbraAdminApi implements ZimbraAdminApiInterface {
    * @return SoapResponse
    */
   public function getLDAPEntries(
-      $query,
-      $ldapSearchBase,
-      $sortBy = NULL,
-      $sortAscending = NULL,
-      $limit = NULL,
-      $offset = NULL
+    $query,
+    $ldapSearchBase,
+    $sortBy = NULL,
+    $sortAscending = NULL,
+    $limit = NULL,
+    $offset = NULL
   ) {
     $req = new GetLDAPEntriesRequest(
       $query, $ldapSearchBase, $sortBy, $sortAscending, $limit, $offset
+    );
+    return $this->_client->doRequest($req);
+  }
+
+  /**
+   * Get Quota Usage
+   * 
+   * @param string $domain Domain - the domain name to limit the search to
+   * @param bool $allServers Ưhether to fetch quota usage for all domain accounts from across all mailbox servers, default is false, applicable when domain attribute is specified
+   * @param int $limit Limit - the number of accounts to return (0 is default and means all)
+   * @param int $offset Offset - the starting offset (0, 25, etc)
+   * @param $sortBy SortBy - valid values: "percentUsed", "totalUsed", "quotaLimit"
+   * @param bool $sortAscending Whether to sort in ascending order 0 (false) is default, so highest quotas are returned first
+   * @param bool $refresh Refresh - whether to always recalculate the data even when cached values are available. 0 (false) is the default.
+   * @return SoapResponse
+   */
+  public function getQuotaUsage(
+    $domain = null,
+    $allServers = null,
+    $limit = null,
+    $offset = null,
+    $sortBy = null,
+    $sortAscending = null,
+    $refresh = null
+  ) {
+    $req = new GetQuotaUsageRequest(
+      $domain, $allServers, $limit, $offset, $sortBy, $sortAscending, $refresh
     );
     return $this->_client->doRequest($req);
   }
@@ -1496,18 +1545,18 @@ class ZimbraAdminApi implements ZimbraAdminApiInterface {
    * @return SoapResponse
    */
   public function searchDirectory(
-      $query = NULL,
-      $maxResults = NULL,
-      $limit = NULL,
-      $offset = NULL,
-      $domain = NULL,
-      $applyCos = NULL,
-      $applyConfig = NULL,
-      $types = NULL,
-      $sortBy = NULL,
-      $sortAscending = NULL,
-      $countOnly = NULL,
-      $attrs = NULL
+    $query = NULL,
+    $maxResults = NULL,
+    $limit = NULL,
+    $offset = NULL,
+    $domain = NULL,
+    $applyCos = NULL,
+    $applyConfig = NULL,
+    $types = NULL,
+    $sortBy = NULL,
+    $sortAscending = NULL,
+    $countOnly = NULL,
+    $attrs = NULL
   ) {
     $req = new SearchDirectoryRequest(
       $query, $maxResults, $limit, $offset, $domain, $applyCos,

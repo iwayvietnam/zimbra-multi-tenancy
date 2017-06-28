@@ -127,20 +127,20 @@ function zmt_tenant_query_zmt_tenant_cos_load_multiple_alter(QueryAlterableInter
 /**
  * Access callback for tenant.
  */
-function zmt_tenant_access($op, $tenant, $tenant = NULL, $entity_type = NULL) {
+function zmt_tenant_access($op, $tenant, $account = NULL, $entity_type = NULL) {
   global $user;
-  if (NULL === $tenant) {
-    $tenant = $user;
+  if (NULL === $account) {
+    $account = $user;
   }
-  if (user_access('administer zmt', $tenant) || user_access('administer any zmt_tenant', $tenant)) {
+  if (user_access('administer zmt', $account) || user_access('administer any zmt_tenant', $account)) {
     return TRUE;
   }
   if ($op === 'list' || $op === 'create') {
-    return user_access('administer own zmt_tenant', $tenant);
+    return user_access('administer own zmt_tenant', $account);
   }
   else {
-    $is_own = isset($tenant->uid) && $tenant->uid == $tenant->uid;
-    return user_access('administer own zmt_tenant', $tenant) && $is_own;
+    $is_own = isset($tenant->uid) && $tenant->uid == $account->uid;
+    return user_access('administer own zmt_tenant', $account) && $is_own;
   }
 }
 

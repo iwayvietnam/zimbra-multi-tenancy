@@ -37,7 +37,7 @@ function zmt_cos_ui_menu() {
     'access arguments' => array('view', 'zmt_cos', 2),
   );
   $items['zmt/cos/%zmt_cos/edit'] = array(
-    'title' => 'Edit Class of Service',
+    'title' => t('Edit Class of Service'),
     'page callback' => 'zmt_cos_edit_page',
     'page arguments' => array(2),
     'access callback' => 'zmt_cos_edit_access',
@@ -46,7 +46,7 @@ function zmt_cos_ui_menu() {
     'file' => 'zmt_cos.admin.inc',
   );
   $items['zmt/cos'] = array(
-    'title' => 'Class of Services',
+    'title' => t('Class of Services'),
     'page callback' => 'zmt_cos_list_all',
     'access callback' => 'zmt_cos_list_access',
     'file' => 'zmt_cos.admin.inc',

@@ -6,7 +6,7 @@
 function zmt_group_list_all() {
   global $user;
 
-  drupal_set_title('Groups');
+  drupal_set_title(t('Groups'));
   $header = array();
   $header[] = array('data' => t('No.'));
   $header[] = array('data' => t('Name'), 'field' => 'zg.name');
@@ -110,7 +110,7 @@ function zmt_group_list_all() {
  * Add new zimbra group page callback.
  */
 function zmt_group_add_page() {
-  drupal_set_title('Add Group');
+  drupal_set_title(t('Add Group'));
   $group = zmt_group_new();
   return drupal_get_form('zmt_group_edit_form', $group);
 }
@@ -119,7 +119,7 @@ function zmt_group_add_page() {
  * Edit exists zimbra group page callback.
  */
 function zmt_group_edit_page($group) {
-  drupal_set_title('Edit Group');
+  drupal_set_title(t('Edit Group'));
   return drupal_get_form('zmt_group_edit_form', $group);
 }
 
@@ -652,7 +652,7 @@ function zmt_group_edit_form_submit($form, &$form_state) {
  * Delete exists zimbra group page callback.
  */
 function zmt_group_delete_page($group) {
-  drupal_set_title('Delete Group');
+  drupal_set_title(t('Delete Group'));
   return drupal_get_form('zmt_group_delete_form', $group);
 }
 

@@ -274,6 +274,29 @@ function zmt_account_load_by_name($domain, $name) {
 }
 
 /**
+ * Load an account by zimbra id.
+ *
+ * @param $zimbra_id
+ *   The account zimbra id.
+ * @return
+ *   An account object or FALSE.
+ */
+function zmt_account_load_by_zimbra_id($zimbra_id) {
+  $cache = &drupal_static(__FUNCTION__, array());
+  if (!isset($cache[$zimbra_id])) {
+    $query = new EntityFieldQuery();
+    $result = $query->entityCondition('entity_type', 'zmt_account')
+      ->propertyCondition('zimbra_id', $zimbra_id)
+      ->execute();
+
+    $ids = isset($result['zmt_account']) ? array_keys($result['zmt_account']) : array();
+    $accounts = zmt_account_load_multiple($ids);
+    $cache[$zimbra_id] = $accounts ? reset($accounts) : FALSE;
+  }
+  return $cache[$zimbra_id];
+}
+
+/**
  * Counts account by domain.
  *
  * @param $domain

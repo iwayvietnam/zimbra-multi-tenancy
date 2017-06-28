@@ -548,7 +548,7 @@ function zmt_group_load_by_user($user) {
 }
 
 /**
- * Load a group by name.
+ * Loads a group by name.
  *
  * @param $domain
  *   The domain to load group for, or its id.
@@ -573,6 +573,29 @@ function zmt_group_load_by_name($domain, $name) {
     $cache[$cache_key] = $groups ? reset($groups) : FALSE;
   }
   return $cache[$cache_key];
+}
+
+/**
+ * Loads a group by zimbra id.
+ *
+ * @param $zimbra_id
+ *   The group zimbra id.
+ * @return
+ *   An group object or FALSE.
+ */
+function zmt_group_load_by_zimbra_id($zimbra_id) {
+  $cache = &drupal_static(__FUNCTION__, array());
+  if (!isset($cache[$zimbra_id])) {
+    $query = new EntityFieldQuery();
+    $result = $query->entityCondition('entity_type', 'zmt_group')
+      ->propertyCondition('zimbra_id', $zimbra_id)
+      ->execute();
+
+    $ids = isset($result['zmt_group']) ? array_keys($result['zmt_group']) : array();
+    $groups = zmt_group_load_multiple($ids);
+    $cache[$zimbra_id] = $groups ? reset($groups) : FALSE;
+  }
+  return $cache[$zimbra_id];
 }
 
 /**

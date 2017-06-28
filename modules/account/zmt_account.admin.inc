@@ -168,7 +168,7 @@ function zmt_account_stats_page() {
 function zmt_account_list_all() {
   global $user;
 
-  drupal_set_title('Accounts');
+  drupal_set_title(t('Accounts'));
   $header = array();
   $header[] = array('data' => t('No.'));
   $header[] = array('data' => t('Name'), 'field' => 'za.name');
@@ -274,7 +274,7 @@ function zmt_account_list_all() {
  * Add new zimbra account page callback.
  */
 function zmt_account_add_page() {
-  drupal_set_title('Add Account');
+  drupal_set_title(t('Add Account'));
   $account = zmt_account_new();
   return drupal_get_form('zmt_account_edit_form', $account);
 }
@@ -283,7 +283,7 @@ function zmt_account_add_page() {
  * Edit exists zimbra account page callback.
  */
 function zmt_account_edit_page($account) {
-  drupal_set_title('Edit Account');
+  drupal_set_title(t('Edit Account'));
   return drupal_get_form('zmt_account_edit_form', $account);
 }
 
@@ -547,7 +547,7 @@ function zmt_account_edit_form_submit($form, &$form_state) {
  * Import accounts page callback.
  */
 function zmt_account_import_page() {
-  drupal_set_title('Import Accounts');
+  drupal_set_title(t('Import Accounts'));
   return drupal_get_form('zmt_account_import_form');
 }
 
@@ -782,7 +782,7 @@ function zmt_account_prepare($record, $domain_id = 0) {
  * Delete exists zimbra account page callback.
  */
 function zmt_account_delete_page($account) {
-  drupal_set_title('Delete Account');
+  drupal_set_title(t('Delete Account'));
   return drupal_get_form('zmt_account_delete_form', $account);
 }
 
@@ -825,4 +825,87 @@ function zmt_account_delete_form_submit($form, &$form_state) {
   zmt_account_delete($account->id);
   drupal_set_message(t('%name has been deleted.', array('%name' => $account->name)));
   watchdog('zmt_account', 'Deleted account %name.', array('%name' => $account->name), WATCHDOG_NOTICE);
+}
+
+/**
+ * Mailbox Quota page 
+ */ 
+function zmt_account_quota_usage() {
+  global $user;
+  module_load_include('inc', 'zmt_core', 'includes/zmt.zimbra');
+   
+  drupal_set_title('Mailbox Quota');
+  $header = array();
+  $header[] = array('data' => t('No.'));
+  $header[] = array('data' => t('Account name'));
+  $header[] = array('data' => t('Used quota (MB)'));
+  $header[] = array('data' => t('Quota limit (MB)'));
+
+  $domain_id = isset($_SESSION['zmt_filter_domain_id']) ? (int) $_SESSION['zmt_filter_domain_id'] : 0;
+  $domain = zmt_domain_load($domain_id);
+  if ($domain) {
+    $server_id = (int) $domain->server_id;
+  }
+  else {
+    $server_id = isset($_SESSION['zmt_filter_server_id']) ? (int) $_SESSION['zmt_filter_server_id'] : 0;
+  }
+
+  $result = array();
+  $rows = array();
+  $item_per_page = variable_get('zimbra_item_per_page', 20);
+  $total = 0;
+  if ($server_id > 0) {
+    $api = zimbra_admin_api_by_server($server_id);
+    $pager = array();
+    $limit = 0;
+    $offset = 0;
+    if ($domain) {
+      $result = zimbra_get_quota_usage($api, $domain->name ,$limit, $offset, $pager);
+      $total = $pager['total'];
+      if($total > 0) {
+        $page = isset($_GET['page']) ? $_GET['page'] : 0;
+        $records_page = array_slice($result, $item_per_page * $page, $item_per_page);
+        pager_default_initialize($total, $item_per_page, $element = 0);
+        $mb = 1024 * 1024;   
+        $key = 0;
+        if($records_page) {
+          foreach ($records_page as $account) {
+            $row = array();
+            $row[] = $key + 1 + $page * $item_per_page ;
+            $row[] = array(
+              'data' => $account->name,
+            );
+            $row[] = array(
+              'data' => number_format($account->used / $mb, 2, '.', ' '),
+            );
+            $row[] = array(
+              'data' => number_format($account->limit / $mb, 2, '.', ' '),
+            );
+            $rows[] = $row;
+            $key ++ ;
+          }
+        }
+      }
+    }
+  }
+   
+  if (empty($rows)) {
+    $rows[] = array(
+      array(
+        'data' => t('There are no accounts available.') ,
+        'colspan' => count($header)
+      ),
+    );
+  }
+
+  $build = array();
+  $build['account_quota_filter'] = drupal_get_form('zmt_filter_by_domain_form');
+  $build['account_quota_table']  = array(
+    '#theme' => 'table',
+    '#header' => $header,
+    '#rows' => $rows,
+  );
+  $build['account_quota_pager'] = array('#theme' => 'pager','#quantity' => $total,);
+
+  return $build;
 }

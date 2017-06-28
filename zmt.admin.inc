@@ -4,7 +4,7 @@
  * Zimbra multi tenancy setting page callback.
  */
 function zmt_setting_form_page() {
-  drupal_set_title('Zimbra multi-tenancy settings.');
+  drupal_set_title(t('Zimbra multi-tenancy settings.'));
   return drupal_get_form('zmt_setting_form');
 }
 
@@ -39,7 +39,7 @@ function zmt_setting_form($form, &$form_state) {
  * zmt server pull data page callback.
  */
 function zmt_server_pull_data_page() {
-  drupal_set_title('Pull data from Zimbra Server');
+  drupal_set_title(t('Pull data from Zimbra Server'));
   return drupal_get_form('zmt_server_pull_data_form');
 }
 
@@ -260,33 +260,32 @@ function zmt_ajax_pull_data_callback($form, &$form_state) {
  */
 function _zmt_ui_update_cos_data(array $zimbra_coses, $server_id = 0, $progress_name = 'zmt_pulling_progress') {
   $count = 0;
-  $progress = 0;
-  variable_set($progress_name, $progress);
+  variable_set($progress_name, $count);
   $total_cos = count($zimbra_coses);
   $mb = 1024 * 1024;
   foreach ($zimbra_coses as $zimbra_id => $zimbra_cos) {
-    $exists = zmt_cos_exists($zimbra_id);
-    if (!$exists) {
+    $cos = zmt_cos_load_by_zimbra_id($zimbra_id);
+    if (!$cos) {
       $cos = zmt_cos_new($zimbra_cos->name);
-      $cos->server_id = $server_id;
-      $attrs = !empty($zimbra_cos->a) ? $zimbra_cos->a : array();
-      if (is_array($attrs)) {
-        foreach ($attrs as $attr) {
-          if ($attr->n === 'description') {
-            $cos->description = $attr->_content;
-          }
-          if ($attr->n === 'zimbraMailQuota') {
-            $cos->mail_quota = (int) $attr->_content / $mb;
-          }
-        }
-      }
-      $cos->zimbra_id = $zimbra_id;
-      zmt_cos_save($cos, FALSE);
-      $count++;
     }
 
-    $progress++;
-    variable_set($progress_name, floor($progress * 100 / $total_cos));
+    $cos->server_id = $server_id;
+    $attrs = !empty($zimbra_cos->a) ? $zimbra_cos->a : array();
+    if (is_array($attrs)) {
+      foreach ($attrs as $attr) {
+        if ($attr->n === 'description') {
+          $cos->description = $attr->_content;
+        }
+        if ($attr->n === 'zimbraMailQuota') {
+          $cos->mail_quota = (int) $attr->_content / $mb;
+        }
+      }
+    }
+    $cos->zimbra_id = $zimbra_id;
+    zmt_cos_save($cos, FALSE);
+
+    $count++;
+    variable_set($progress_name, floor($count * 100 / $total_cos));
   }
   drupal_set_message($count . ' coses were updated.');
   return $count;
@@ -306,41 +305,44 @@ function _zmt_ui_update_cos_data(array $zimbra_coses, $server_id = 0, $progress_
  */
 function _zmt_ui_update_domain_data(array $zimbra_domains, $server_id = 0, $tenant_id = 0, $progress_name = 'zmt_pulling_progress') {
   $count = 0;
-  $progress = 0;
-  variable_set($progress_name, $progress);
+  variable_set($progress_name, $count);
   $total_domain = count($zimbra_domains);
   foreach ($zimbra_domains as $zimbra_id => $zimbra_domain) {
-    $exists = zmt_domain_exists($zimbra_domain->name);
-    if (!$exists) {
+    $domain = zmt_domain_load_by_zimbra_id($zimbra_id);
+    if ($domain && !zmt_domain_exists($zimbra_domain->name)) {
+      $domain->name = $zimbra_domain->name;
+    }
+    if (!$domain) {
+      $domain = zmt_domain_load_by_name($zimbra_domain->name);
+    }
+    if (!$domain) {
       $domain = zmt_domain_new($zimbra_domain->name);
       $domain->server_id = $server_id;
       $domain->zimbra_id = $zimbra_id;
-
-      $attrs = isset($zimbra_domain->a) ? $zimbra_domain->a : array();
-      if (is_array($attrs)) {
-        foreach ($attrs as $attr) {
-          if ($attr->n === 'zimbraDomainStatus') {
-            $domain->status = isset($attr->_content) ? $attr->_content : '';
-          }
-        }
-      }
-
-      $tenant = zmt_tenant_load($tenant_id);
-      if ($tenant) {
-        $domain->tenant_id = $tenant->id;
-        $domain->cos_id = $tenant->cos_id;
-        $tenant_user = user_load($tenant->tenant_uid);
-        if ($tenant_user && (int) $tenant_user->uid > 0) {
-          $domain->uid = (int) $tenant_user->uid;
-        }
-      }
-
-      zmt_domain_save($domain, FALSE);
-      $count++;
     }
 
-    $progress++;
-    variable_set($progress_name, floor($progress * 100 / $total_domain));
+    $attrs = isset($zimbra_domain->a) ? $zimbra_domain->a : array();
+    if (is_array($attrs)) {
+      foreach ($attrs as $attr) {
+        if ($attr->n === 'zimbraDomainStatus') {
+          $domain->status = isset($attr->_content) ? $attr->_content : '';
+        }
+      }
+    }
+
+    $tenant = zmt_tenant_load($tenant_id);
+    if ($tenant) {
+      $domain->tenant_id = $tenant->id;
+      $tenant_user = user_load($tenant->tenant_uid);
+      if ($tenant_user && (int) $tenant_user->uid > 0) {
+        $domain->uid = (int) $tenant_user->uid;
+      }
+    }
+
+    zmt_domain_save($domain, FALSE);
+
+    $count++;
+    variable_set($progress_name, floor($count * 100 / $total_domain));
   }
   drupal_set_message($count . ' domains were updated.');
   return $count;
@@ -374,11 +376,20 @@ function _zmt_ui_update_account_data(ZimbraAdminApi $api, array $zimbra_domains,
         foreach ($zmbra_accounts as $zimbra_id => $zmbra_account) {
           $account_name = substr($zmbra_account->name, 0, (int) strpos($zmbra_account->name, '@'));
           $match = zmt_is_matches($excludes, $account_name);
-          $exists = zmt_account_exists($domain->id, $account_name);
-          if (!$exists && !$match) {
-            $account = zmt_account_new($account_name);
-            $account->domain_id = $domain->id;
-            $account->zimbra_id = $zimbra_id;
+
+          if (!$match) {
+            $account = zmt_account_load_by_zimbra_id($zimbra_id);
+            if ($account && !zmt_account_exists($domain->id, $account_name)) {
+              $account->name = $account_name;
+            }
+            if (!$account) {
+              $account = zmt_account_load_by_name($domain->id, $account_name);
+            }
+            if (!$account) {
+              $account = zmt_account_new($account_name);
+              $account->domain_id = $domain->id;
+              $account->zimbra_id = $zimbra_id;
+            }
 
             $attrs = isset($zmbra_account->a) ? $zmbra_account->a : array();
             if (is_array($attrs)) {
@@ -489,8 +500,7 @@ function _zmt_ui_update_alias_data(ZimbraAdminApi $api, array $zimbra_domains, $
  */
 function _zmt_ui_update_group_data(ZimbraAdminApi $api, array $zimbra_domains, $server_id = 0, $progress_name = 'zmt_pulling_progress') {
   $count = 0;
-  $progress = 0;
-  variable_set($progress_name, $progress);
+  variable_set($progress_name, $count);
   $total_dl = (int) zimbra_count_dl($api);
   foreach ($zimbra_domains as $zimbra_domain) {
     $domain_name = $zimbra_domain->name;
@@ -499,60 +509,70 @@ function _zmt_ui_update_group_data(ZimbraAdminApi $api, array $zimbra_domains, $
       $zimbra_dls = zimbra_get_all_dl($api, $domain_name);
       foreach ($zimbra_dls as $zimbra_id => $dl) {
         $group_name = substr($dl->name, 0, (int) strpos($dl->name, '@'));
-        $exists = zmt_group_exists($domain->id, $group_name);
-        if (!$exists) {
+        $group = zmt_group_load_by_zimbra_id($zimbra_id);
+        if ($group && !zmt_group_exists($domain->id, $group_name)) {
+          $group->name = $group_name;
+        }
+        if (!$group) {
+          $group = zmt_group_load_by_name($domain->id, $group_name);
+        }
+        if (!$group) {
           $group = zmt_group_new($group_name);
           $group->full_name = $group_name;
           $group->domain_id = $domain->id;
           $group->zimbra_id = $zimbra_id;
-          $attrs = isset($dl->a) ? $dl->a : array();
-          if (is_array($attrs)) {
-            foreach ($attrs as $attr) {
-              if ($attr->n === 'displayName') {
-                $group->full_name = isset($attr->_content) ? $attr->_content : '';
-              }
+        }
+
+        $attrs = isset($dl->a) ? $dl->a : array();
+        if (is_array($attrs)) {
+          foreach ($attrs as $attr) {
+            if ($attr->n === 'displayName') {
+              $group->full_name = isset($attr->_content) ? $attr->_content : '';
             }
           }
-          zmt_group_save($group, FALSE);
+        }
+        zmt_group_save($group, FALSE);
 
-          $members = !empty($dl->dlm) ? $dl->dlm : zimbra_get_dl_members($api, $dl->name);
-          if (!is_array($members)) {
-            $members = array($members);
+        $members = !empty($dl->dlm) ? $dl->dlm : zimbra_get_dl_members($api, $dl->name);
+        if (!is_array($members)) {
+          $members = array($members);
+        }
+
+        if (!empty($members)) {
+          $zmt_members = array();
+          $accounts = zmt_account_load_multiple_by_domain($domain);
+          foreach ($accounts as $account) {
+            $mailbox = $account->name . '@' . $domain->name;
+            $member = array(
+              'name' => $mailbox,
+              'id' => (int) $account->id,
+              'type' => GROUP_MEMBER_ACCOUNT,
+            );
+            $zmt_members[$mailbox] = (object) $member;
+          }
+          $aliases = zmt_alias_load_multiple_by_domain($domain);
+          foreach ($aliases as $alias) {
+            $mailbox = $alias->name . '@' . $domain->name;
+            $member = array(
+              'name' => $mailbox,
+              'id' => (int) $alias->id,
+              'type' => GROUP_MEMBER_ALIAS,
+            );
+            $zmt_members[$mailbox] = (object) $member;
+          }
+          $groups = zmt_group_load_multiple_by_domain($domain, $group->id);
+          foreach ($groups as $gr) {
+            $mailbox = $gr->name . '@' . $domain->name;
+            $member = array(
+              'name' => $mailbox,
+              'id' => (int) $gr->id,
+              'type' => GROUP_MEMBER_DL,
+            );
+            $zmt_members[$mailbox] = (object) $member;
           }
 
           if (!empty($members)) {
-            $zmt_members = array();
-            $accounts = zmt_account_load_multiple_by_domain($domain);
-            foreach ($accounts as $account) {
-              $mailbox = $account->name . '@' . $domain->name;
-              $member = array(
-                'name' => $mailbox,
-                'id' => (int) $account->id,
-                'type' => GROUP_MEMBER_ACCOUNT,
-              );
-              $zmt_members[$mailbox] = (object) $member;
-            }
-            $aliases = zmt_alias_load_multiple_by_domain($domain);
-            foreach ($aliases as $alias) {
-              $mailbox = $alias->name . '@' . $domain->name;
-              $member = array(
-                'name' => $mailbox,
-                'id' => (int) $alias->id,
-                'type' => GROUP_MEMBER_ALIAS,
-              );
-              $zmt_members[$mailbox] = (object) $member;
-            }
-            $groups = zmt_group_load_multiple_by_domain($domain, $group->id);
-            foreach ($groups as $gr) {
-              $mailbox = $gr->name . '@' . $domain->name;
-              $member = array(
-                'name' => $mailbox,
-                'id' => (int) $gr->id,
-                'type' => GROUP_MEMBER_DL,
-              );
-              $zmt_members[$mailbox] = (object) $member;
-            }
-
+            zmt_group_member_delete_multiple_by_group(array($group->id));
             foreach ($members as $member) {
               $member_name = isset($member->_content) ? $member->_content : $member;
               $zmt_member = isset($zmt_members[$member_name]) ? $zmt_members[$member_name] : NULL;
@@ -565,11 +585,10 @@ function _zmt_ui_update_group_data(ZimbraAdminApi $api, array $zimbra_domains, $
               }
             }
           }
-          $count++;
         }
 
-        $progress++;
-        variable_set($progress_name, floor($progress * 100 / $total_dl));
+        $count++;
+        variable_set($progress_name, floor($count * 100 / $total_dl));
       }
     }
   }

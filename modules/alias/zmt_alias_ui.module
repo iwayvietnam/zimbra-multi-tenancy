@@ -14,14 +14,14 @@ function zmt_alias_ui_menu() {
     'access arguments' => array('view', 'zmt_alias', 2),
   );
   $items['zmt/alias/add'] = array(
-    'title' => 'Add Alias',
+    'title' => t('Add Alias'),
     'page callback' => 'zmt_alias_add_page',
     'access callback' => 'zmt_alias_add_access',
     'type' => MENU_LOCAL_ACTION,
     'file' => 'zmt_alias.admin.inc',
   );
   $items['zmt/alias/%zmt_alias/edit'] = array(
-    'title' => 'Edit Alias',
+    'title' => t('Edit Alias'),
     'page callback' => 'zmt_alias_edit_page',
     'page arguments' => array(2),
     'access callback' => 'zmt_alias_edit_access',
@@ -30,7 +30,7 @@ function zmt_alias_ui_menu() {
     'file' => 'zmt_alias.admin.inc',
   );
   $items['zmt/alias/%zmt_alias/delete'] = array(
-    'title' => 'Delete Alias',
+    'title' => t('Delete Alias'),
     'page callback' => 'zmt_alias_delete_page',
     'page arguments' => array(2),
     'access callback' => 'zmt_alias_delete_access',
@@ -39,7 +39,7 @@ function zmt_alias_ui_menu() {
     'file' => 'zmt_alias.admin.inc',
   );
   $items['zmt/alias'] = array(
-    'title' => 'Aliases',
+    'title' => t('Aliases'),
     'page callback' => 'zmt_alias_list_all',
     'access callback' => 'zmt_alias_list_access',
     'file' => 'zmt_alias.admin.inc',

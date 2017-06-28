@@ -192,20 +192,20 @@ function zmt_domain_query_tenant_count_domain_alter(QueryAlterableInterface $que
 /**
  * Access callback for Domain.
  */
-function zmt_domain_access($op, $domain, $domain = NULL, $entity_type = NULL) {
+function zmt_domain_access($op, $domain, $account = NULL, $entity_type = NULL) {
   global $user;
-  if (NULL === $domain) {
-    $domain = $user;
+  if (NULL === $account) {
+    $account = $user;
   }
-  if (user_access('administer zmt', $domain) || user_access('administer any zmt_domain', $domain)) {
+  if (user_access('administer zmt', $account) || user_access('administer any zmt_domain', $account)) {
     return TRUE;
   }
   if ($op === 'list' || $op === 'create') {
-    return user_access('administer own zmt_domain', $domain);
+    return user_access('administer own zmt_domain', $account);
   }
   else {
-    $is_own = isset($domain->uid) && $domain->uid == $domain->uid;
-    return user_access('administer own zmt_domain', $domain) && $is_own;
+    $is_own = isset($domain->uid) && $domain->uid == $account->uid;
+    return user_access('administer own zmt_domain', $account) && $is_own;
   }
 }
 
@@ -449,6 +449,27 @@ function zmt_domain_load_by_name($name) {
 }
 
 /**
+ * Loads a domain by zimbra id.
+ * @param $zimbra_id
+ *   The domain zimbra id.
+ * @return
+ *   A domain object or FALSE.
+ */
+function zmt_domain_load_by_zimbra_id($zimbra_id) {
+  $cache = &drupal_static(__FUNCTION__, array());
+  if (!isset($cache[$zimbra_id])) {
+    $query = new EntityFieldQuery();
+    $result = $query->entityCondition('entity_type', 'zmt_domain')
+      ->propertyCondition('zimbra_id', $zimbra_id)
+      ->execute();
+    $ids = isset($result['zmt_domain']) ? array_keys($result['zmt_domain']) : array();
+    $domains = zmt_domain_load_multiple($ids);
+    $cache[$zimbra_id] = $domains ? reset($domains) : FALSE;
+  }
+  return $cache[$zimbra_id];
+}
+
+/**
  * Get server of domain.
  *
  * @param $id
@@ -540,7 +561,7 @@ function zmt_domain_domain_number_remain($id, $cos_id){
 }
 
 /**
- * Checks domain exists by server.
+ * Checks domain exists by name.
  *
  * @param $name
  *   The domain name.

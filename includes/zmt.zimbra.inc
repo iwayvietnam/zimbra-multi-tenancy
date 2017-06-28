@@ -109,7 +109,7 @@ function zimbra_authentication_by_server(ZimbraAdminApi $api, $server_id) {
     $server = zmt_server_load($server_id);
     if ($server) {
       if (!empty($server->auth_token)) {
-        $auth_token = zimbra_authentication_by_token($api, $server->auth_token);
+        $auth_token = zimbra_authentication_by_token($api, $server->admin_user, $server->auth_token);
       }
       if (empty($auth_token)) {
         $password = zmt_password_decrypt($server->admin_password);
@@ -157,11 +157,13 @@ function zimbra_authentication_by_name(ZimbraAdminApi $api, $user, $password) {
  *
  * @param ZimbraAdminApi $api
  *   Zimbra admin api.
+ * @param string $user
+ *   Zimbra admin user.
  * @param string $token
  *   Zimbra authentication token.
  * @return authentication token
  */
-function zimbra_authentication_by_token(ZimbraAdminApi $api, $token = '') {
+function zimbra_authentication_by_token(ZimbraAdminApi $api, $user, $token = '') {
   $cache = &drupal_static(__FUNCTION__, NULL);
   $cache_key = md5($api->location() . $token);
   if (!isset($cache[$cache_key])) {
@@ -878,8 +880,8 @@ function zimbra_list_account(ZimbraAdminApi $api, $domain = NULL, $limit = NULL,
         'zimbraMailForwardingAddress',
       );
       $result = $api->searchDirectory(
-        '', NULL, $limit, $offset, $domain, NULL, NULL,
-        'accounts', NULL, NULL, NULL, implode(',', $attrs)
+        '(&(!(zimbraIsSystemAccount=TRUE)))', NULL, $limit, $offset, $domain, FALSE, FALSE,
+        'accounts', 'name', TRUE, NULL, implode(',', $attrs)
       );
       $pager = array(
         'num' => isset($result->num) ? (int) $result->num : 0,
@@ -946,7 +948,7 @@ function zimbra_count_account(ZimbraAdminApi $api, $domain = NULL) {
   if (!isset($cache[$cache_key])) {
     try {
       $result = $api->searchDirectory(
-        '', NULL, 1, 0, $domain, NULL, NULL,
+        '', NULL, NULL, NULL, $domain, NULL, NULL,
         'accounts', NULL, NULL, TRUE, 'zimbraId'
       );
       if (!empty($result->num)) {
@@ -1151,7 +1153,7 @@ function zimbra_list_alias(ZimbraAdminApi $api, $domain = NULL, $limit = NULL, $
           $mail_alias->id = $alias->id;
           $mail_alias->name = $alias->name;
           $mail_alias->account_id = '';
-          $mail_alias->account_name = $alias->targetName;
+          $mail_alias->account_name = !empty($alias->targetName) ? $alias->targetName : '';
           $mail_alias->domain = $domain;
           $attrs = isset($alias->a) ? $alias->a : array();
           foreach ($attrs as $attr) {
@@ -1186,7 +1188,7 @@ function zimbra_count_alias(ZimbraAdminApi $api, $domain = NULL) {
   if (!isset($cache[$cache_key])) {
     try {
       $result = $api->searchDirectory(
-        '', NULL, 1, 0, $domain, NULL, NULL,
+        '', NULL, NULL, NULL, $domain, NULL, NULL,
         'aliases', NULL, NULL, TRUE, 'zimbraId'
       );
       if (!empty($result->num)) {
@@ -1348,6 +1350,51 @@ function zimbra_check_password_strength(ZimbraAdminApi $api, $id, $password) {
       watchdog('zimbra', $ex->__toString());
       $cache[$cache_key] = $ex;
     }
+  }
+  return $cache[$cache_key];
+}
+
+/**
+ * Get Quota Usage
+ *
+ * @param ZimbraAdminApi $api Zimbra admin api.
+ * @param string $domain Domain - the domain name to limit the search to
+ * @param int $limit Limit - the number of accounts to return (0 is default and means all)
+ * @param int $offset Offset - the starting offset (0, 25, etc)
+ * @return mix
+ */
+function zimbra_get_quota_usage(
+  ZimbraAdminApi $api,
+  $domain = null,
+  $limit = null,
+  $offset = null,
+  &$pager = array()
+) {
+  $cache = &drupal_static(__FUNCTION__, array());
+  $cache_key = md5($api->location() . '-' . $domain . '-' . $limit . '-' . $offset);
+  if (!isset($cache[$cache_key])) {
+    $quota_usage = array();
+    try {
+      $result = $api->getQuotaUsage(
+        $domain, null, $limit, $offset, null, null, null
+      );
+      $pager = array(
+        'more' => isset($result->more) ? (bool) $result->more : false,
+        'total' => isset($result->searchTotal) ? (int) $result->searchTotal : 0,
+        'limit' => (int) $limit,
+        'offset' => (int) $offset,
+      );
+      if(isset($result->account)) {
+        $accounts = is_array($result->account) ? $result->account : array($result->account);
+        foreach ($accounts as $account) {
+          $quota_usage[$account->id] = $account;
+        }
+      }
+    }
+    catch (Exception $ex) {
+      watchdog('zimbra', $ex->__toString());
+    }
+    $cache[$cache_key] = $quota_usage;
   }
   return $cache[$cache_key];
 }
