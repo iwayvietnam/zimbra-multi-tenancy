@@ -370,11 +370,10 @@ function _zmt_ui_update_account_data(ZimbraAdminApi $api, array $zimbra_domains,
     $domain = zmt_domain_load_by_name($domain_name);
     if ($domain && $domain->server_id = $server_id) {
       $pager = array();
+      $total = zimbra_count_account($api, $domain_name);
       $limit = variable_get('zimbra_item_per_pull', 100);
-      $offset = 0;
-      do {
+      for ($offset = 0; $i < $total; $offset += $limit) { 
         $zmbra_accounts = zimbra_list_account($api, $domain_name, $limit, $offset, $pager);
-        $offset += $limit;
         foreach ($zmbra_accounts as $zimbra_id => $zmbra_account) {
           $account_name = substr($zmbra_account->name, 0, (int) strpos($zmbra_account->name, '@'));
           $match = zmt_is_matches($excludes, $account_name);
@@ -431,7 +430,7 @@ function _zmt_ui_update_account_data(ZimbraAdminApi $api, array $zimbra_domains,
           $progress++;
           variable_set($progress_name, floor($progress * 100 / $total_account));
         }
-      } while (isset($pager['more']) && $pager['more'] === TRUE);
+      }
     }
   }
   drupal_set_message($count . ' accounts were updated.');
