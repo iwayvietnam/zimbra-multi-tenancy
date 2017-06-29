@@ -370,7 +370,7 @@ function _zmt_ui_update_account_data(ZimbraAdminApi $api, array $zimbra_domains,
       $pager = array();
       $total = zimbra_count_account($api, $domain_name);
       $limit = variable_get('zimbra_item_per_pull', 100);
-      for ($offset = 0; $i < $total; $offset += $limit) { 
+      for ($offset = 0; $offset < $total; $offset += $limit) { 
         $zmbra_accounts = zimbra_list_account($api, $domain_name, $limit, $offset, $pager);
         foreach ($zmbra_accounts as $zimbra_id => $zmbra_account) {
           $account_name = substr($zmbra_account->name, 0, (int) strpos($zmbra_account->name, '@'));
