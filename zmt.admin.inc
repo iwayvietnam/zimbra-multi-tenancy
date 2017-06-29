@@ -39,6 +39,8 @@ function zmt_setting_form($form, &$form_state) {
  * zmt server pull data page callback.
  */
 function zmt_server_pull_data_page() {
+  set_time_limit(900);
+  ini_set('memory_limit','256M');
   drupal_set_title(t('Pull data from Zimbra Server'));
   return drupal_get_form('zmt_server_pull_data_form');
 }
