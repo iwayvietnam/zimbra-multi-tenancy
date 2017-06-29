@@ -53,7 +53,9 @@ function zmt_is_matches(array $patterns = array(), $subject = ''){
   $is_match = FALSE;
   if (!empty($patterns)) {
     $pattern = implode('|', $patterns);
-    $is_match = preg_match('/'.$pattern.'/msS', $subject);
+    if (!empty($pattern)) {
+      $is_match = preg_match('/'.$pattern.'/msS', $subject);
+    }
   }
   return $is_match;
 }
