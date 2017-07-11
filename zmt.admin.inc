@@ -594,3 +594,77 @@ function _zmt_ui_update_group_data(ZimbraAdminApi $api, array $zimbra_domains, $
   drupal_set_message($count . ' groups were updated.');
   return $count;
 }
+
+/**
+ * Mailbox Quota page 
+ */ 
+function zmt_account_quota_usage() {
+  module_load_include('inc', 'zmt_core', 'includes/zmt.zimbra');
+
+  drupal_set_title('Mailbox Quota');
+  $header = array();
+  $header[] = array('data' => t('No.'));
+  $header[] = array('data' => t('Account name'));
+  $header[] = array('data' => t('Used quota (MB)'));
+  $header[] = array('data' => t('Quota limit (MB)'));
+
+  $domain_id = isset($_SESSION['zmt_filter_domain_id']) ? (int) $_SESSION['zmt_filter_domain_id'] : 0;
+  $domain = zmt_domain_load($domain_id);
+  if ($domain) {
+    $server_id = (int) $domain->server_id;
+  }
+  else {
+    $server_id = isset($_SESSION['zmt_filter_server_id']) ? (int) $_SESSION['zmt_filter_server_id'] : 0;
+  }
+
+  $result = array();
+  $rows = array();
+  $item_per_page = variable_get('zimbra_item_per_page', 20);
+  $total = 0;
+  if ($server_id > 0) {
+    $api = zimbra_admin_api_by_server($server_id);
+    $pager = array();
+    $limit = 0;
+    $offset = 0;
+    if ($domain) {
+      $result = zimbra_get_quota_usage($api, $domain->name ,$limit, $offset, $pager);
+      $total = $pager['total'];
+      if($total > 0) {
+        $page = isset($_GET['page']) ? $_GET['page'] : 0;
+        $records_page = array_slice($result, $item_per_page * $page, $item_per_page);
+        pager_default_initialize($total, $item_per_page, $element = 0);
+        $mb = 1024 * 1024;   
+        $key = 1;
+        if($records_page) {
+          foreach ($records_page as $account) {
+            $row = array();
+            $row[] = $key + $page * $item_per_page ;
+            $row[] = array(
+              'data' => $account->name,
+            );
+            $row[] = array(
+              'data' => number_format($account->used / $mb, 2, '.', ' '),
+            );
+            $row[] = array(
+              'data' => number_format($account->limit / $mb, 2, '.', ' '),
+            );
+            $rows[] = $row;
+            $key ++ ;
+          }
+        }
+      }
+    }
+  }
+
+  $build = array();
+  $build['account_quota_filter'] = drupal_get_form('zmt_filter_by_domain_form');
+  $build['account_quota_table']  = array(
+    '#theme' => 'table',
+    '#header' => $header,
+    '#rows' => $rows,
+    '#empty' => t('There are no accounts available.') ,
+  );
+  $build['account_quota_pager'] = array('#theme' => 'pager','#quantity' => $total,);
+
+  return $build;
+}

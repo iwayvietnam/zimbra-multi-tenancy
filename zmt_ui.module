@@ -31,6 +31,14 @@ function zmt_ui_menu() {
     'file' => 'zmt.admin.inc',
   );
 
+  $items['zmt/account/quota'] = array(
+    'title' => 'Mailbox Quota',
+    'page callback' => 'zmt_account_quota_usage',
+    'access callback' => 'zmt_account_list_access',
+    'type' => MENU_LOCAL_ACTION,
+    'file' => 'zmt.admin.inc',
+  );
+
   return $items;
 }
 
