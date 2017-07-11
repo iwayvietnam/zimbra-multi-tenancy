@@ -32,6 +32,15 @@ function zmt_account_entity_info() {
 }
 
 /**
+ * Implements hook_entity_info_alter().
+ */
+function zmt_account_entity_info_alter(&$info) {
+  if (module_exists('entitycache')) {
+    $info['zmt_account']['entity cache'] = TRUE;
+  }
+}
+
+/**
  * Implements hook_entity_property_info_alter().
  */
 function zmt_account_entity_property_info_alter(&$info) {
@@ -108,29 +117,44 @@ function zmt_account_query_zmt_account_load_multiple_alter(QueryAlterableInterfa
 }
 
 /**
- * Implements hook_query_TAG_alter() for domain_count_account query tag.
- */
-function zmt_account_query_domain_count_account_alter(QueryAlterableInterface $query) {
-  $count_account_query = db_select('zmt_account', 'za')
-    ->fields('za', array('domain_id'))
-    ->groupBy('za.domain_id');
-  $count_account_query->addExpression('COUNT(za.id)', 'total_account');
-  $query->leftJoin($count_account_query, 'cacq', 'cacq.domain_id = zd.id');
-  $query->addExpression('IFNULL(cacq.total_account, 0)', 'total_account');
-}
-
-/**
- * Implements hook_query_TAG_alter() for tenant_count_account query tag.
- */
-function zmt_account_query_tenant_count_account_alter(QueryAlterableInterface $query) {
+ * Implements hook_query_TAG_alter() for zmt_tenant_load_multiple query tag.
+ */ 
+function zmt_account_query_zmt_tenant_load_multiple_alter(QueryAlterableInterface $query) {
   $count_account_query = db_select('zmt_account', 'za');
   $count_account_query->leftJoin('zmt_domain', 'zd', 'zd.id = za.domain_id');
   $count_account_query->addField('zd', 'tenant_id', 'tenant_id');
   $count_account_query->addExpression('COUNT(za.id)', 'total_account');
   $count_account_query->groupBy('zd.tenant_id');
 
-  $query->leftJoin($count_account_query, 'cacq', 'cacq.tenant_id = zt.id');
+  $query->leftJoin($count_account_query, 'cacq', 'cacq.tenant_id = base.id');
   $query->addExpression('IFNULL(cacq.total_account, 0)', 'total_account');
+}
+
+/**
+ * Implements hook_query_TAG_alter() for zmt_tenant_load_multiple query tag.
+ */ 
+function zmt_account_query_zmt_domain_load_multiple_alter(QueryAlterableInterface $query) {
+  $count_account_query = db_select('zmt_account', 'za')
+    ->fields('za', array('domain_id'))
+    ->groupBy('za.domain_id');
+  $count_account_query->addExpression('COUNT(za.id)', 'total_account');
+  $query->leftJoin($count_account_query, 'cacq', 'cacq.domain_id = base.id');
+  $query->addExpression('IFNULL(cacq.total_account, 0)', 'total_account');
+}
+
+/**
+ * Implements hook_query_TAG_alter() for mailbox_exists query tag.
+ */
+function zmt_account_query_mailbox_exists_alter(QueryAlterableInterface $query) {
+  $domain_id = (int) $query->getMetaData('domain_id');
+  $name = $query->getMetaData('mailbox_name');
+
+  $account_query = db_select('zmt_account', 'za')
+    ->fields('za', array('id'))
+    ->condition('za.domain_id', $domain_id)
+    ->condition('za.name', $name);
+
+  $account_query->union($group_query);
 }
 
 /**
@@ -334,12 +358,13 @@ function zmt_account_exists($domain, $name, $id = 0) {
       ->condition('zac.name', $name)
       ->condition('zac.id', (int) $id, '!=');
 
-    $query->addTag('account_mailbox_exists')
+    $query->addTag('group_mailbox_exists')
+      ->addTag('alias_mailbox_exists')
       ->addMetaData('domain_id', $domain_id)
       ->addMetaData('mailbox_name', $name);
 
-    $result = (int) $query->countQuery()->execute()->fetchField();
-    $cache[$cache_key] = $result > 0;
+    $total = (int) $query->countQuery()->execute()->fetchField();
+    $cache[$cache_key] = $total > 0;
   }
   return $cache[$cache_key];
 }
