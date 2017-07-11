@@ -12,25 +12,14 @@ function zmt_tenant_list_all() {
   $header[] = array('data' => t('Full name'), 'field' => 'zt.full_name');
   $header[] = array('data' => t('User name'), 'field' => 'u.name');
   $header[] = array('data' => t('Status'), 'field' => 'u.status');
-  if (module_exists('zmt_domain')) {
-    $header[] = array('data' => t('Total domains'), 'field' => 'd.total_domain');
-  }
-  if (module_exists('zmt_account')) {
-    $header[] = array('data' => t('Total accounts'), 'field' => 'a.total_account');
-  }
-  $header[] = array('data' => t('Server'), 'field' => 's.name');
+  $header[] = array('data' => t('Total domains'));
+  $header[] = array('data' => t('Total accounts'));
+  $header[] = array('data' => t('Server'), 'field' => 'zs.name');
   $header[] = array('data' => t('Operations'));
 
   $query = db_select('zmt_tenant', 'zt')->extend('PagerDefault')->extend('TableSort');
   $query->join('users', 'u', 'u.uid = zt.tenant_uid');
   $query->join('zmt_server', 'zs', 'zs.id = zt.server_id');
-
-  $query->addTag('tenant_count_account')
-    ->addTag('tenant_count_domain');
-
-  $query->addField('u', 'name', 'name');
-  $query->addField('u', 'status', 'status');
-  $query->addField('zs', 'name', 'server');
 
   if (!(user_access('administer zmt') || user_access('administer any zmt_tenant'))) {
     $query->condition('t.uid', $user->uid);
@@ -40,19 +29,21 @@ function zmt_tenant_list_all() {
     $query->condition('zt.server_id', $server_id);
   }
 
+  $destination = drupal_get_destination();
   $item_per_page = variable_get('zimbra_item_per_page', 20);
-  $result = $query
-    ->fields('zt', array('id', 'full_name'))
+  $ids = $query
+    ->fields('zt', array('id'))
     ->orderByHeader($header)
     ->limit($item_per_page)
-    ->execute();
+    ->execute()
+    ->fetchCol();
+  $tenants = zmt_tenant_load_multiple($ids);
 
-  $destination = drupal_get_destination();
-
+  $key = 1;
   $rows = array();
-  foreach ($result as $key => $tenant) {
+  foreach ($tenants as $key => $tenant) {
     $row = array();
-    $row[] = $key + 1 + (pager_find_page() * $item_per_page);
+    $row[] = $key + (pager_find_page() * $item_per_page);
     $row[] = l($tenant->full_name, 'zmt/tenant/' . $tenant->id . '/edit', array('query' => $destination));
     $row[] = array(
       'data' => $tenant->name,
@@ -60,34 +51,22 @@ function zmt_tenant_list_all() {
     $row[] = array(
       'data' => ((int) $tenant->status > 0) ? t('Active') : t('Blocked'),
     );
-    if (module_exists('zmt_domain')) {
-      $total_domain = isset($tenant->total_domain) ? $tenant->total_domain : 0;
-      $row[] = array(
-        'data' => $total_domain,
-      );
-    }
-    if (module_exists('zmt_account')) {
-      $total_account = isset($tenant->total_account) ? $tenant->total_account : 0;
-      $row[] = array(
-        'data' => $total_account,
-      );
-    }
+    $row[] = array(
+      'data' => !empty($tenant->total_domain) ? (int) $tenant->total_domain : 0,
+    );
+    $row[] = array(
+      'data' => !empty($tenant->total_account) ? (int) $tenant->total_account : 0,
+    );
     $row[] = array(
       'data' => $tenant->server,
     );
+    $row[] = implode('&nbsp;&nbsp;&nbsp;', array(
+      l(t('edit'), 'zmt/tenant/' . $tenant->id . '/edit', array('query' => $destination)),
+      l(t('delete'), 'zmt/tenant/' . $tenant->id . '/delete', array('query' => $destination)),
+    ));
 
-    $operations = l(t('edit'), 'zmt/tenant/' . $tenant->id . '/edit', array('query' => $destination));
-    $operations .= '&nbsp;&nbsp;&nbsp;' . l(t('delete'), 'zmt/tenant/' . $tenant->id . '/delete', array('query' => $destination));
-    $row[] = $operations;
     $rows[] = $row;
-  }
-  if (empty($rows)) {
-    $rows[] = array(
-      array(
-        'data' => t('There are no tenants available.') . ' ' . l(t('Add one now'), 'zmt/tenant/add') . '.',
-        'colspan' => count($header)
-      ),
-    );
+    $key++;
   }
 
   $build = array();
@@ -98,6 +77,7 @@ function zmt_tenant_list_all() {
     '#theme' => 'table',
     '#header' => $header,
     '#rows' => $rows,
+    '#empty' => t('There are no tenants available.') . ' ' . l(t('Add one now.'), 'zmt/tenant/add'),
   );
   $build['tenants_pager'] = array('#theme' => 'pager');
 
@@ -221,8 +201,8 @@ function zmt_tenant_edit_form($form, &$form_state, $tenant){
         $ids[] = $cos_id;
       }
     }
-    $services = zmt_cos_load_multiple($ids);
-    foreach ($services as $cos) {
+    $coses = zmt_cos_load_multiple($ids);
+    foreach ($coses as $cos) {
       if ($server_id === (int) $cos->server_id) {
         $max_account = isset($max_accounts[$cos->id]) ? $max_accounts[$cos->id] : (int) $cos->max_account;
         $form['cos']['max_account_' . $cos->id] = array(
@@ -402,8 +382,8 @@ function zmt_tenant_delete_form($form, &$form_state, $tenant) {
  */
 function zmt_tenant_delete_form_validate($form, &$form_state) {
   $tenant = $form_state['tenant'];
-  $mailbox_number = zmt_ternant_count_domain($tenant->id);
-  if ($mailbox_number) {
+  $total_domain = !empty($tenant->total_domain) ? (int) $tenant->total_domain : 0;
+  if ($total_domain) {
     form_set_error('actions', t('Please delete all domains of this tenant before delete this tenant.'));
   }
 }
