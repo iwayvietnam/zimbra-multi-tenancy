@@ -32,6 +32,15 @@ function zmt_cos_entity_info() {
 }
 
 /**
+ * Implements hook_entity_info_alter().
+ */
+function zmt_cos_entity_info_alter(&$info) {
+  if (module_exists('entitycache')) {
+    $info['zmt_cos']['entity cache'] = TRUE;
+  }
+}
+
+/**
  * Implements hook_entity_property_info_alter().
  */
 function zmt_cos_entity_property_info_alter(&$info) {
@@ -132,8 +141,8 @@ function zmt_cos_load($id, $reset = FALSE) {
     return FALSE;
   }
 
-  $services = zmt_cos_load_multiple(array($id), array(), $reset);
-  return $services ? reset($services) : FALSE;
+  $coses = zmt_cos_load_multiple(array($id), array(), $reset);
+  return $coses ? reset($coses) : FALSE;
 }
 
 /**
@@ -167,7 +176,7 @@ function zmt_cos_load_multiple(array $ids = array(), array $conditions = array()
  */
 function zmt_cos_load_all($limit = 0, $offset = 0){
   $cache = &drupal_static(__FUNCTION__, array());
-  $cache_key = $limit + $offset;
+  $cache_key = $limit . '-' . $offset;
   if (!isset($cache[$cache_key])) {
     $efq = new EntityFieldQuery();
     if ((int) $limit > 0) {
@@ -193,7 +202,7 @@ function zmt_cos_load_all($limit = 0, $offset = 0){
 function zmt_cos_load_multiple_by_server($server, $limit = 0, $offset = 0) {
   $cache = &drupal_static(__FUNCTION__, array());
   $server_id = is_object($server) ? $server->id : $server;
-  $cache_key = $server_id + $limit + $offset;
+  $cache_key = $server_id . '-' . $limit . '-' . $offset;
   if (!isset($cache[$cache_key])) {
     $efq = new EntityFieldQuery();
     if ((int) $limit > 0) {
