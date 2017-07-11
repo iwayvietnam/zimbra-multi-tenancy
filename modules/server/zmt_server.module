@@ -34,6 +34,15 @@ function zmt_server_entity_info() {
 }
 
 /**
+ * Implements hook_entity_info_alter().
+ */
+function zmt_server_entity_info_alter(&$info) {
+  if (module_exists('entitycache')) {
+    $info['zmt_server']['entity cache'] = TRUE;
+  }
+}
+
+/**
  * Implements hook_entity_property_info_alter().
  */
 function zmt_server_entity_property_info_alter(&$info) {
@@ -146,7 +155,7 @@ function zmt_server_load_multiple($ids = array(), array $conditions = array(), $
  */
 function zmt_server_load_all($limit = 0, $offset = 0){
   $cache = &drupal_static(__FUNCTION__, array());
-  $cache_key = $limit + $offset;
+  $cache_key = $limit . '-' . $offset;
   if (!isset($cache[$cache_key])) {
     $efq = new EntityFieldQuery();
     if ((int) $limit > 0) {
@@ -157,31 +166,6 @@ function zmt_server_load_all($limit = 0, $offset = 0){
     $cache[$cache_key] = zmt_server_load_multiple($ids);
   }
   return $cache[$cache_key];
-}
-
-/**
- * Count number of domains in server.
- *
- * @param $id
- *   The server ID.
- * @return
- *   Total number of domains.
- */
-function zmt_server_count_domain($id) {
-  static $total_domain = NULL;
-  if (NULL === $total_domain) {
-    $total_domain = 0;
-    $query = db_select('zmt_server', 'zs')
-      ->fields('zs', array('id'))
-      ->condition('zs.id', (int) $id)
-      ->range(0, 1)
-      ->addTag('server_count_domain');
-    $result = $query->execute()->fetchObject();
-    if (!empty($result->total_domain)) {
-      $total_domain += (int) $result->total_domain;
-    }
-  }
-  return (int) $total_domain;
 }
 
 /**

@@ -571,7 +571,7 @@ function _zmt_ui_update_group_data(ZimbraAdminApi $api, array $zimbra_domains, $
           }
 
           if (!empty($members)) {
-            zmt_group_member_delete_multiple_by_group(array($group->id));
+            zmt_group_member_delete_multiple_by_group(array($group->id), FALSE);
             foreach ($members as $member) {
               $member_name = isset($member->_content) ? $member->_content : $member;
               $zmt_member = isset($zmt_members[$member_name]) ? $zmt_members[$member_name] : NULL;

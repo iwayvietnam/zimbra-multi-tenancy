@@ -44,6 +44,16 @@ function zmt_domain_entity_info() {
 }
 
 /**
+ * Implements hook_entity_info_alter().
+ */
+function zmt_domain_entity_info_alter(&$info) {
+  if (module_exists('entitycache')) {
+    $info['zmt_domain']['entity cache'] = TRUE;
+    $info['zmt_domain_cos']['entity cache'] = TRUE;
+  }
+}
+
+/**
  * Implements hook_entity_property_info_alter().
  */
 function zmt_domain_entity_property_info_alter(&$info) {
@@ -166,26 +176,26 @@ function zmt_domain_query_zmt_domain_cos_load_multiple_alter(QueryAlterableInter
 }
 
 /**
- * Implements hook_query_TAG_alter() for server_count_domain query tag.
+ * Implements hook_query_TAG_alter() for zmt_tenant_load_multiple query tag.
  */ 
-function zmt_domain_query_server_count_domain_alter(QueryAlterableInterface $query) {
+function zmt_domain_query_zmt_server_load_multiple_alter(QueryAlterableInterface $query) {
   $count_domain_query = db_select('zmt_domain', 'zd')
     ->fields('zd', array('server_id'))
     ->groupBy('zd.server_id');
   $count_domain_query->addExpression('COUNT(zd.id)', 'total_domain');
-  $query->leftJoin($count_domain_query, 'cdq', 'cdq.server_id = zs.id');
+  $query->leftJoin($count_domain_query, 'cdq', 'cdq.server_id = base.id');
   $query->addExpression('IFNULL(cdq.total_domain, 0)', 'total_domain');
 }
 
 /**
- * Implements hook_query_TAG_alter() for tenant_count_domain query tag.
+ * Implements hook_query_TAG_alter() for zmt_tenant_load_multiple query tag.
  */ 
-function zmt_domain_query_tenant_count_domain_alter(QueryAlterableInterface $query) {
+function zmt_domain_query_zmt_tenant_load_multiple_alter(QueryAlterableInterface $query) {
   $count_domain_query = db_select('zmt_domain', 'zd')
     ->fields('zd', array('tenant_id'))
     ->groupBy('zd.tenant_id');
   $count_domain_query->addExpression('COUNT(zd.id)', 'total_domain');
-  $query->leftJoin($count_domain_query, 'cdq', 'cdq.tenant_id = zt.id');
+  $query->leftJoin($count_domain_query, 'cdq', 'cdq.tenant_id = base.id');
   $query->addExpression('IFNULL(cdq.total_domain, 0)', 'total_domain');
 }
 
@@ -362,7 +372,7 @@ function zmt_domain_load_multiple_by_server($server, $filter_by_user = FALSE, $l
 function zmt_domain_load_multiple_by_tenant($tenant, $limit = 0, $offset = 0) {
   $cache = &drupal_static(__FUNCTION__, array());
   $tenant_id = is_object($tenant) ? (int) $tenant->id : (int) $tenant;
-  $cache_key = $tenant_id + $limit + $offset;
+  $cache_key = $tenant_id . '-' . $limit . '-' . $offset;
   if (!isset($cache[$cache_key])) {
     $query = new EntityFieldQuery();
     if ((int) $limit > 0) {
@@ -394,7 +404,7 @@ function zmt_domain_load_multiple_by_user($domain_user = NULL, $limit = 0, $offs
   }
   $uid = (int) $domain_user->uid;
   $cache = &drupal_static(__FUNCTION__, array());
-  $cache_key = $uid + $limit + $offset;
+  $cache_key = $uid . '-' . $limit . '-' . $offset;
   if (!isset($cache[$cache_key])) {
     $query = db_select('zmt_domain', 'd');
     $query->leftJoin('zmt_tenant', 't', 't.id = d.tenant_id');
@@ -481,83 +491,6 @@ function zmt_domain_get_server($id) {
   $domain = zmt_domain_load($id);
   $server_id = $domain ? $domain->server_id : 0;
   return zmt_server_load($server_id);
-}
-
-/**
- * Count number of domains in domain.
- *
- * @param $id
- *   The domain ID.
- * @return
- *   Total number of domains.
- */
-function zmt_domain_count_accounts($id) {
-  static $total_account = NULL;
-  if (NULL === $total_account) {
-    $total_account = 0;
-    $query = db_select('zmt_domain', 'zd')
-      ->fields('zd', array('id'))
-      ->condition('zd.id', (int) $id)
-      ->range(0, 1)
-      ->addTag('domain_count_account');
-    $result = $query->execute()->fetchObject();
-    if (!empty($result->total_domain)) {
-      $total_account = (int) $result->total_domain;
-    }
-  }
-  return (int) $total_account;
-}
-
-/**
- * Count number of mailboxes in domain.
- *
- * @param $id
- *   The domain ID.
- * @return
- *   Total number of mailboxes.
- */
-function zmt_domain_count_mailboxes($id) {
-  static $total_mailboxes = NULL;
-  if (NULL === $total_mailboxes) {
-    $total_mailboxes = 0;
-    $query = db_select('zmt_domain', 'zd')
-      ->fields('zd', array('id'))
-      ->condition('zd.id', (int) $id)
-      ->range(0, 1)
-      ->addTag('domain_count_account')
-      ->addTag('domain_count_alias')
-      ->addTag('domain_count_group');
-    $result = $query->execute()->fetchObject();
-    if (!empty($result->total_account)) {
-      $total_mailboxes += (int) $result->total_account;
-    }
-    if (!empty($result->total_alias)) {
-      $total_mailboxes += (int) $result->total_alias;
-    }
-    if (!empty($result->total_group)) {
-      $total_mailboxes += (int) $result->total_group;
-    }
-  }
-  return (int) $total_mailboxes;
-}
-
-/**
- * Gets remain number of domains.
- *
- * @param $id
- *   The domain ID.
- * @return
- *   Remain number of accouns.
- */
-function zmt_domain_domain_number_remain($id, $cos_id){
-  $domain_remain = 0;
-  $domain = zmt_domain_load($id);
-  if ($domain) {
-    $max_account = isset($domain->max_account) ? (int) $domain->max_account : 0;
-    $total_domain = zmt_domain_count_accounts($id);
-    $domain_remain = $max_account - $total_domain;
-  }
-  return $domain_remain;
 }
 
 /**
@@ -688,7 +621,7 @@ function zmt_domain_delete_multiple_by_server(array $ids = array()) {
 }
 
 /**
- * Loads a domain cos mapping by ID.
+ * Loads a domain cos entity by ID.
  */
 function zmt_domain_cos_load($id) {
   if (empty($id)) {
@@ -700,12 +633,12 @@ function zmt_domain_cos_load($id) {
 }
 
 /**
- * Loads multiple domain cos mapping by ID or based on a set of matching conditions.
+ * Loads multiple domain cos entity by ID or based on a set of matching conditions.
  *
  * @see entity_load()
  *
  * @param $ids
- *   An array of domain cos mapping IDs.
+ *   An array of domain cos entity IDs.
  * @param $conditions
  *   An array of conditions on the {zmt_domain_cos} table in the form
  *     'field' => $value.
@@ -713,7 +646,7 @@ function zmt_domain_cos_load($id) {
  *   Whether to reset the internal domain cos loading cache.
  *
  * @return
- *   An array of domain cos mapping objects indexed by id.
+ *   An array of domain cos entity objects indexed by id.
  */
 function zmt_domain_cos_load_multiple($ids = array(), array $conditions = array(), $reset = FALSE) {
   if (empty($ids) && empty($conditions)) {
@@ -723,7 +656,7 @@ function zmt_domain_cos_load_multiple($ids = array(), array $conditions = array(
 }
 
 /**
- * Loads multiple domain cos mapping by cos ids.
+ * Loads multiple domain cos entity by cos ids.
  *
  * @see entity_load()
  *
@@ -731,7 +664,7 @@ function zmt_domain_cos_load_multiple($ids = array(), array $conditions = array(
  *   An array of cos IDs.
  *
  * @return
- *   An array of mapping objects indexed by id.
+ *   An array of entity objects indexed by id.
  */
 function zmt_domain_cos_load_multiple_by_cos(array $cos_ids = array(), $domain_id = NULL) {
   if (empty($cos_ids)) {
@@ -754,7 +687,7 @@ function zmt_domain_cos_load_multiple_by_cos(array $cos_ids = array(), $domain_i
 }
 
 /**
- * Loads multiple domain cos mapping by domain ids.
+ * Loads multiple domain cos entity by domain ids.
  *
  * @see entity_load()
  *
@@ -762,7 +695,7 @@ function zmt_domain_cos_load_multiple_by_cos(array $cos_ids = array(), $domain_i
  *   An array of domain IDs.
  *
  * @return
- *   An array of mapping objects indexed by id.
+ *   An array of entity objects indexed by id.
  */
 function zmt_domain_cos_load_multiple_by_domain(array $domain_ids = array(), $cos_id = NULL) {
   if (!empty($domain_ids)) {
@@ -785,7 +718,7 @@ function zmt_domain_cos_load_multiple_by_domain(array $domain_ids = array(), $co
 }
 
 /**
- * Loads a domain cos mapping by id of cos and domain.
+ * Loads a domain cos entity by id of cos and domain.
  */
 function zmt_domain_cos_load_single($domain_id, $cos_id) {
   $efq = new EntityFieldQuery();
@@ -799,7 +732,7 @@ function zmt_domain_cos_load_single($domain_id, $cos_id) {
 }
 
 /**
- * Returns an initialized domain cos mapping object.
+ * Returns an initialized domain cos entity object.
  *
  * @param $domain_id
  *   The domain id.
@@ -807,7 +740,7 @@ function zmt_domain_cos_load_single($domain_id, $cos_id) {
  *   The cos id.
  *
  * @return
- *   A domain cos mapping object with all default fields initialized.
+ *   A domain cos entity object with all default fields initialized.
  */
 function zmt_domain_cos_new($domain_id = 0, $cos_id = 0) {
   global $user;
@@ -822,64 +755,63 @@ function zmt_domain_cos_new($domain_id = 0, $cos_id = 0) {
 }
 
 /**
- * Saves a domain cos mapping.
+ * Saves a domain cos entity.
  *
  * @param $cs
- *   The full domain cos mapping object to save.
+ *   The full domain cos entity object to save.
  *
  * @return
  *   SAVED_NEW or SAVED_UPDATED depending on the operation performed.
  */
-function zmt_domain_cos_save($mapping, $by_entity = TRUE) {
+function zmt_domain_cos_save($entity, $by_entity = TRUE) {
   if ($by_entity === TRUE) {
-    return entity_get_controller('zmt_domain_cos')->save($mapping);
+    return entity_get_controller('zmt_domain_cos')->save($entity);
   }
   else {
     $fields = array(
-      'domain_id' => $mapping->domain_id,
-      'cos_id' => $mapping->cos_id,
-      'max_account' => (int) $mapping->max_account,
-      'uid' => $mapping->uid,
-      'created' => $mapping->created,
+      'domain_id' => $entity->domain_id,
+      'cos_id' => $entity->cos_id,
+      'max_account' => (int) $entity->max_account,
+      'uid' => $entity->uid,
+      'created' => $entity->created,
     );
-    if (!isset($mapping->id) || (int) $mapping->id == 0) {
-      $mapping->id = db_insert('zmt_domain_cos')->fields($fields)->execute();
+    if (!isset($entity->id) || (int) $entity->id == 0) {
+      $entity->id = db_insert('zmt_domain_cos')->fields($fields)->execute();
       return SAVED_NEW;
     }
     else {
       db_update('zmt_domain_cos')
         ->fields($fields)
-        ->condition('id', $mapping->id)
+        ->condition('id', $entity->id)
         ->execute();
-      entity_get_controller('zmt_domain_cos')->resetCache(array($mapping->id));
+      entity_get_controller('zmt_domain_cos')->resetCache(array($entity->id));
       return SAVED_UPDATED;
     }
   }
 }
 
 /**
- * Deletes a domain cos mapping by ID.
+ * Deletes a domain cos entity by ID.
  *
  * @param $id
- *   The ID of the domain cos mapping to delete.
+ *   The ID of the domain cos entity to delete.
  */
 function zmt_domain_cos_delete($id) {
   return zmt_domain_cos_delete_multiple(array($id));
 }
 
 /**
- * Deletes multiple domain cos mapping by ID.
+ * Deletes multiple domain cos entity by ID.
  *
  * @param $ids
- *   An array of domain cos mapping IDs to delete.
+ *   An array of domain cos entity IDs to delete.
  */
 function zmt_domain_cos_delete_multiple(array $ids = array()) {
-  $services = zmt_domain_cos_load_multiple($ids);
   entity_get_controller('zmt_domain_cos')->delete($ids);
 }
 
 /**
- * Deletes multiple domain cos mapping by cos.
+ * Deletes multiple domain cos entity by cos.
  *
  * @param $cos_ids
  *   An array of cos IDs.
@@ -896,7 +828,7 @@ function zmt_domain_cos_delete_multiple_by_cos(array $cos_ids = array()) {
 }
 
 /**
- * Deletes multiple domain cos mapping by domain.
+ * Deletes multiple domain cos entity by domain.
  *
  * @param $domain_ids
  *   An array of domain IDs.

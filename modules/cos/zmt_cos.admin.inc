@@ -17,7 +17,6 @@ function zmt_cos_list_all() {
 
   $query = db_select('zmt_cos', 'zc')->extend('PagerDefault')->extend('TableSort');
   $query->join('zmt_server', 'zs', 'zs.id = zc.server_id');
-  $query->addField('zs', 'name', 'server');
 
   if (!(user_access('administer zmt') || user_access('administer any zmt_cos'))) {
     $query->condition('zc.uid', $user->uid);
@@ -27,19 +26,21 @@ function zmt_cos_list_all() {
     $query->condition('zc.server_id', $server_id);
   }
 
+  $destination = drupal_get_destination();
   $item_per_page = variable_get('zimbra_item_per_page', 20);
-  $result = $query
-    ->fields('zc')
+  $ids = $query
+    ->fields('zc', array('id'))
     ->orderByHeader($header)
     ->limit($item_per_page)
-    ->execute();
+    ->execute()
+    ->fetchCol();
+  $coses = zmt_cos_load_multiple($ids);
 
-  $destination = drupal_get_destination();
-
+  $key = 1;
   $rows = array();
-  foreach ($result as $key => $cos) {
+  foreach ($coses as $cos) {
     $row = array();
-    $row[] = $key + 1 + (pager_find_page() * $item_per_page);
+    $row[] = $key + (pager_find_page() * $item_per_page);
     $row[] = l($cos->name, 'zmt/cos/' . $cos->id . '/edit', array('query' => $destination));
     $row[] = array(
       'data' => $cos->mail_quota . ' MB',
@@ -52,14 +53,7 @@ function zmt_cos_list_all() {
     );
     $row[] = l(t('edit'), 'zmt/cos/' . $cos->id . '/edit', array('query' => $destination));
     $rows[] = $row;
-  }
-  if (empty($rows)) {
-    $rows[] = array(
-      array(
-        'data' => t('There are no COS available.'),
-        'colspan' => count($header)
-      ),
-    );
+    $key++;
   }
 
   if (user_access('administer zmt')) {
@@ -69,6 +63,7 @@ function zmt_cos_list_all() {
     '#theme' => 'table',
     '#header' => $header,
     '#rows' => $rows,
+    '#empty' => t('There are no COS available.'),
   );
   $build['cos_pager'] = array('#theme' => 'pager');
 

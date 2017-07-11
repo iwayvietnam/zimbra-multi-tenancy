@@ -180,8 +180,6 @@ function zmt_account_list_all() {
   $query = db_select('zmt_account', 'za')->extend('PagerDefault')->extend('TableSort');
   $query->join('zmt_domain', 'zd', 'zd.id = za.domain_id');
   $query->leftJoin('zmt_cos', 'zc', 'zc.id = za.cos_id');
-  $query->addField('zd', 'name', 'domain');
-  $query->addField('zc', 'name', 'cos');
 
   $domain_ids = array();
   if (!(user_access('administer zmt'))) {
@@ -212,19 +210,22 @@ function zmt_account_list_all() {
     }
   }
 
+  $statuses = zmt_account_statuses();
+  $destination = drupal_get_destination();
   $item_per_page = variable_get('zimbra_item_per_page', 20);
-  $result = $query
-    ->fields('za')
+  $ids = $query
+    ->fields('za', array('id'))
     ->orderByHeader($header)
     ->limit($item_per_page)
-    ->execute();
+    ->execute()
+    ->fetchCol();
+  $accounts = zmt_account_load_multiple($ids);
 
-  $destination = drupal_get_destination();
-  $statuses = zmt_account_statuses();
+  $key = 1;
   $rows = array();
-  foreach ($result as $key => $account) {
+  foreach ($accounts as $account) {
     $row = array();
-    $row[] = $key + 1 + (pager_find_page() * $item_per_page);
+    $row[] = $key + (pager_find_page() * $item_per_page);
     $account_name = $account->name . '@' . $account->domain;
     $row[] = l($account_name, 'zmt/account/' . $account->id . '/edit', array('query' => $destination));
     $row[] = array(
@@ -236,19 +237,13 @@ function zmt_account_list_all() {
     $row[] = array(
       'data' => isset($statuses[$account->status]) ? $statuses[$account->status] : $account->status,
     );
+    $row[] = implode('&nbsp;&nbsp;&nbsp;', array(
+      l(t('edit'), 'zmt/account/' . $account->id . '/edit', array('query' => $destination)),
+      l(t('delete'), 'zmt/account/' . $account->id . '/delete', array('query' => $destination)),
+    ));
 
-    $operations = l(t('edit'), 'zmt/account/' . $account->id . '/edit', array('query' => $destination));
-    $operations .= '&nbsp;&nbsp;&nbsp;' . l(t('delete'), 'zmt/account/' . $account->id . '/delete', array('query' => $destination));
-    $row[] = $operations;
     $rows[] = $row;
-  }
-  if (empty($rows)) {
-    $rows[] = array(
-      array(
-        'data' => t('There are no accounts available.') . ' ' . l(t('Add one now'), 'zmt/account/add') . '.',
-        'colspan' => count($header)
-      ),
-    );
+    $key++;
   }
 
   $build = array();
@@ -264,6 +259,7 @@ function zmt_account_list_all() {
     '#theme' => 'table',
     '#header' => $header,
     '#rows' => $rows,
+    '#empty' => t('There are no accounts available.') . ' ' . l(t('Add one now.'), 'zmt/account/add'),
   );
   $build['account_pager'] = array('#theme' => 'pager');
 
@@ -831,9 +827,8 @@ function zmt_account_delete_form_submit($form, &$form_state) {
  * Mailbox Quota page 
  */ 
 function zmt_account_quota_usage() {
-  global $user;
   module_load_include('inc', 'zmt_core', 'includes/zmt.zimbra');
-   
+
   drupal_set_title('Mailbox Quota');
   $header = array();
   $header[] = array('data' => t('No.'));
@@ -867,11 +862,11 @@ function zmt_account_quota_usage() {
         $records_page = array_slice($result, $item_per_page * $page, $item_per_page);
         pager_default_initialize($total, $item_per_page, $element = 0);
         $mb = 1024 * 1024;   
-        $key = 0;
+        $key = 1;
         if($records_page) {
           foreach ($records_page as $account) {
             $row = array();
-            $row[] = $key + 1 + $page * $item_per_page ;
+            $row[] = $key + $page * $item_per_page ;
             $row[] = array(
               'data' => $account->name,
             );
@@ -888,15 +883,6 @@ function zmt_account_quota_usage() {
       }
     }
   }
-   
-  if (empty($rows)) {
-    $rows[] = array(
-      array(
-        'data' => t('There are no accounts available.') ,
-        'colspan' => count($header)
-      ),
-    );
-  }
 
   $build = array();
   $build['account_quota_filter'] = drupal_get_form('zmt_filter_by_domain_form');
@@ -904,6 +890,7 @@ function zmt_account_quota_usage() {
     '#theme' => 'table',
     '#header' => $header,
     '#rows' => $rows,
+    '#empty' => t('There are no accounts available.') ,
   );
   $build['account_quota_pager'] = array('#theme' => 'pager','#quantity' => $total,);
 
