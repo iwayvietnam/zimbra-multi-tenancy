@@ -120,7 +120,7 @@ function zmt_group_edit_form($form, &$form_state, $group){
 
   $form_state['#group'] = $group;
   $account = user_load($group->group_uid);
-  $form_state['#user'] = ($account && (int) $account->uid > 0) ? $account : backdrop_anonymous_user();
+  $form_state['#user'] = ($account && (int) $account->uid > 0) ? $account : entity_create('user', array());
   $values = &$form_state['values'];
   $group_id = isset($group->id) ? (int) $group->id : 0;
 
@@ -579,21 +579,17 @@ function zmt_group_edit_form_submit($form, &$form_state) {
 
   $create_user = isset($values['create_user']) ? (int) $values['create_user'] : 0;
   if ($create_user) {
-    $edit = array(
-      'name' => check_plain(trim($values['name'])),
-      'mail' => check_plain(trim($values['mail'])),
-      'status' => (int) $values['status'],
-      'init' => 'email address',
-    );
+    $account->name = check_plain(trim($values['name']));
+    $account->mail = $account->init = check_plain(trim($values['mail']));
+    $account->status = (int) $values['status'];
     if (isset($values['pass']) && !empty($values['pass'])) {
-      $edit['pass'] = trim($values['pass']);
+      $account->pass = trim($values['pass']);
     }
     $group_role = config_get('zmt.settings', 'zmt_group_role');
     if ($group_role) {
-      $edit['roles'] = backdrop_map_assoc(array($group_role));
+      $account->roles = backdrop_map_assoc(array($group_role));
     }
-    $account = user_save($account, $edit);
-
+    $account->save();
     $group->group_uid = $account->uid;
   }
 
