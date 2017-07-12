@@ -130,7 +130,7 @@ function zmt_server_schema() {
 /**
  * Add auth token field to server.
  */
-function zmt_server_update_7000() {
+function zmt_server_update_1001() {
   db_add_field('zmt_server', 'auth_token', array(
     'description' => 'The auth token of the server.',
     'type' => 'text',

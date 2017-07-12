@@ -161,7 +161,7 @@ function zmt_account_schema() {
 /**
  * Add hidden forwarding field to account.
  */
-function zmt_account_update_7000() {
+function zmt_account_update_1001() {
   db_add_field('zmt_account', 'hidden_forwarding', array(
     'description' => 'Hidden forwarding addresses of the account.',
     'type' => 'text',
