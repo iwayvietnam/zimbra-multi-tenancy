@@ -291,13 +291,12 @@ function zmt_tenant_edit_form_submit($form, &$form_state) {
   $account = $form_state['user'];
   $values = &$form_state['values'];
 
-  $account->name = check_plain($values['name']);
-  $account->mail = $account->init = check_plain($values['mail']);
+  $account->name = check_plain(trim($values['name']));
+  $account->mail = $account->init = check_plain(trim($values['mail']));
   $account->status = (int) $values['status'];
   if (isset($values['pass']) && !empty($values['pass'])) {
     $account->pass = trim($values['pass']);
   }
-
   $tenant_role = config_get('zmt.settings', 'zmt_tenant_role');
   if ($tenant_role) {
     $account->roles = backdrop_map_assoc(array($tenant_role));
