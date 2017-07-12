@@ -13,8 +13,8 @@ function zmt_domain_install() {
   if (!empty($zimbra_role)) {
     user_role_change_permissions($zimbra_role, $zmt_perm);
   }
-  if (!empty($zimbra_role)) {
-    user_role_change_permissions($zimbra_role, $zmt_perm);
+  if (!empty($tenant_role)) {
+    user_role_change_permissions($tenant_role, $zmt_perm);
   }
 }
 
