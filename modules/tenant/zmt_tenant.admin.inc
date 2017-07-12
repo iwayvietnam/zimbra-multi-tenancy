@@ -107,7 +107,7 @@ function zmt_tenant_edit_page($tenant) {
 function zmt_tenant_edit_form($form, &$form_state, $tenant){
   $form_state['tenant'] = $tenant;
   $account = user_load($tenant->tenant_uid);
-  $form_state['user'] = ($account && (int) $account->uid > 0) ? $account : backdrop_anonymous_user();
+  $form_state['user'] = ($account && (int) $account->uid > 0) ? $account : entity_create('user', array());
   field_attach_form('user', $form_state['user'], $form, $form_state);
 
   $id = isset($tenant->id) ? (int) $tenant->id : 0;
@@ -291,21 +291,18 @@ function zmt_tenant_edit_form_submit($form, &$form_state) {
   $account = $form_state['user'];
   $values = &$form_state['values'];
 
-  $edit = array(
-    'name' => check_plain($values['name']),
-    'mail' => check_plain($values['mail']),
-    'status' => (int) $values['status'],
-    'init' => 'email address',
-  );
+  $account->name = check_plain($values['name']);
+  $account->mail = $account->init = check_plain($values['mail']);
+  $account->status = (int) $values['status'];
   if (isset($values['pass']) && !empty($values['pass'])) {
-    $edit['pass'] = trim($values['pass']);
+    $account->pass = trim($values['pass']);
   }
 
   $tenant_role = config_get('zmt.settings', 'zmt_tenant_role');
   if ($tenant_role) {
-    $edit['roles'] = backdrop_map_assoc(array($tenant_role));
+    $account->roles = backdrop_map_assoc(array($tenant_role));
   }
-  $account = user_save($account, $edit);
+  $account->save();
 
   $tenant->full_name = check_plain($values['full_name']);
   $tenant->tenant_uid = $account->uid;
