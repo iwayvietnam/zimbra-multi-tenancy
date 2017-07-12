@@ -1,21 +1,6 @@
 <?php
 
 /**
- * Group member is account.
- */
-define('GROUP_MEMBER_ACCOUNT', 0);
-
-/**
- * Group member is alias.
- */
-define('GROUP_MEMBER_ALIAS', 1);
-
-/**
- * Group member is distribution list.
- */
-define('GROUP_MEMBER_DL', 2);
-
-/**
  * Implements hook_entity_info().
  */
 function zmt_group_entity_info() {
@@ -233,7 +218,7 @@ function zmt_group_query_account_query_filter_alter(QueryAlterableInterface $que
     $sub_query = db_select('zmt_group_member', 'zgm');
     $sub_query->leftJoin('zmt_group', 'zg', 'zg.id = zgm.group_id');
     $sub_query->fields('zgm', array('member_id'))
-      ->condition('zgm.type', GROUP_MEMBER_ACCOUNT)
+      ->condition('zgm.type', ZmtGroupMemberEntity::GROUP_MEMBER_ACCOUNT)
       ->condition('zg.group_uid', $user->uid);
     $query->condition('za.id', $sub_query, 'IN');
   }
@@ -248,7 +233,7 @@ function zmt_group_query_account_entity_filter_alter(QueryAlterableInterface $qu
     $sub_query = db_select('zmt_group_member', 'zgm');
     $sub_query->leftJoin('zmt_group', 'zg', 'zg.id = zgm.group_id');
     $sub_query->fields('zgm', array('member_id'))
-      ->condition('zgm.type', GROUP_MEMBER_ACCOUNT)
+      ->condition('zgm.type', ZmtGroupMemberEntity::GROUP_MEMBER_ACCOUNT)
       ->condition('zg.group_uid', $user->uid);
     $query->condition('zmt_account.id', $sub_query, 'IN');
   }
@@ -263,7 +248,7 @@ function zmt_group_query_alias_query_filter_alter(QueryAlterableInterface $query
     $sub_query = db_select('zmt_group_member', 'zgm');
     $sub_query->leftJoin('zmt_group', 'zg', 'zg.id = zgm.group_id');
     $sub_query->fields('zgm', array('member_id'))
-      ->condition('zgm.type', GROUP_MEMBER_ALIAS)
+      ->condition('zgm.type', ZmtGroupMemberEntity::GROUP_MEMBER_ALIAS)
       ->condition('zg.group_uid', $user->uid);
     $query->condition('za.id', $sub_query, 'IN');
   }
@@ -278,7 +263,7 @@ function zmt_group_zmt_account_edit_access($account) {
     $query = db_select('zmt_group_member', 'zgm');
     $query->leftJoin('zmt_group', 'zg', 'zg.id = zgm.group_id');
     $query->fields('zgm', array('member_id'))
-      ->condition('zgm.type', GROUP_MEMBER_ACCOUNT)
+      ->condition('zgm.type', ZmtGroupMemberEntity::GROUP_MEMBER_ACCOUNT)
       ->condition('zg.group_uid', $user->uid);
     $result = $query->execute();
     $member_ids = array();
@@ -299,7 +284,7 @@ function zmt_group_zmt_alias_edit_access($alias) {
     $query = db_select('zmt_group_member', 'zgm');
     $query->leftJoin('zmt_group', 'zg', 'zg.id = zgm.group_id');
     $query->fields('zgm', array('member_id'))
-      ->condition('zgm.type', GROUP_MEMBER_ALIAS)
+      ->condition('zgm.type', ZmtGroupMemberEntity::GROUP_MEMBER_ALIAS)
       ->condition('zg.group_uid', $user->uid);
     $result = $query->execute();
     $member_ids = array();
@@ -322,7 +307,7 @@ function zmt_group_zmt_account_insert($account) {
     $member = zmt_group_member_new($account->name . '@' . $domain->name);
     $member->group_id = $group->id;
     $member->member_id = $account->id;
-    $member->type = GROUP_MEMBER_ACCOUNT;
+    $member->type = ZmtGroupMemberEntity::GROUP_MEMBER_ACCOUNT;
     zmt_group_member_save($member);
   }
 }
@@ -334,7 +319,7 @@ function zmt_group_zmt_account_update($account) {
   $query = new EntityFieldQuery();
   $result = $query->entityCondition('entity_type', 'zmt_group_member')
     ->propertyCondition('member_id', $account->id)
-    ->propertyCondition('type', GROUP_MEMBER_ACCOUNT)
+    ->propertyCondition('type', ZmtGroupMemberEntity::GROUP_MEMBER_ACCOUNT)
     ->execute();
   $ids = isset($result['zmt_group_member']) ? array_keys($result['zmt_group_member']) : array();
   $members = zmt_group_member_load_multiple($ids);
@@ -359,7 +344,7 @@ function zmt_group_zmt_alias_insert($alias) {
     $member = zmt_group_member_new($alias->name . '@' . $domain->name);
     $member->group_id = $group->id;
     $member->member_id = $alias->id;
-    $member->type = GROUP_MEMBER_ALIAS;
+    $member->type = ZmtGroupMemberEntity::GROUP_MEMBER_ALIAS;
     zmt_group_member_save($member);
   }
 }
@@ -371,7 +356,7 @@ function zmt_group_zmt_alias_update($alias) {
   $query = new EntityFieldQuery();
   $result = $query->entityCondition('entity_type', 'zmt_group_member')
     ->propertyCondition('member_id', $alias->id)
-    ->propertyCondition('type', GROUP_MEMBER_ALIAS)
+    ->propertyCondition('type', ZmtGroupMemberEntity::GROUP_MEMBER_ALIAS)
     ->execute();
   $ids = isset($result['zmt_group_member']) ? array_keys($result['zmt_group_member']) : array();
   $members = zmt_group_member_load_multiple($ids);
@@ -834,7 +819,7 @@ function zmt_group_member_new($name = '') {
     'name' => $name,
     'group_id' => 0,
     'member_id' => 0,
-    'type' => GROUP_MEMBER_ACCOUNT,
+    'type' => ZmtGroupMemberEntity::GROUP_MEMBER_ACCOUNT,
     'uid' => $user->uid,
     'created' => REQUEST_TIME,
   );
@@ -933,7 +918,7 @@ function zmt_group_member_delete_multiple_by_account($account_id, $by_entity = T
   $query = new EntityFieldQuery();
   $result = $query->entityCondition('entity_type', 'zmt_group_member')
     ->propertyCondition('member_id', $account_id)
-    ->propertyCondition('type', GROUP_MEMBER_ACCOUNT)
+    ->propertyCondition('type', ZmtGroupMemberEntity::GROUP_MEMBER_ACCOUNT)
     ->execute();
   $ids = isset($result['zmt_group_member']) ? array_keys($result['zmt_group_member']) : array();
   zmt_group_member_delete_multiple($ids, $by_entity);
@@ -949,7 +934,7 @@ function zmt_group_member_delete_multiple_by_alias($alias_id, $by_entity = TRUE)
   $query = new EntityFieldQuery();
   $result = $query->entityCondition('entity_type', 'zmt_group_member')
     ->propertyCondition('member_id', $alias_id)
-    ->propertyCondition('type', GROUP_MEMBER_ALIAS)
+    ->propertyCondition('type', ZmtGroupMemberEntity::GROUP_MEMBER_ALIAS)
     ->execute();
   $ids = isset($result['zmt_group_member']) ? array_keys($result['zmt_group_member']) : array();
   zmt_group_member_delete_multiple($ids, $by_entity);

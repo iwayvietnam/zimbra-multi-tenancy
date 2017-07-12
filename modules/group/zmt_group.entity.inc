@@ -117,6 +117,21 @@ class ZmtGroupEntity extends Entity {
 class ZmtGroupMemberEntity extends Entity {
 
   /**
+   * Group member is account.
+   */
+  const GROUP_MEMBER_ACCOUNT = 0;
+
+  /**
+   * Group member is alias.
+   */
+  const GROUP_MEMBER_ALIAS = 1;
+
+  /**
+   * Group member is distribution list.
+   */
+  const GROUP_MEMBER_DL = 2;
+
+  /**
    * The ID of group member.
    *
    * @var integer
@@ -135,21 +150,21 @@ class ZmtGroupMemberEntity extends Entity {
    *
    * @var integer
    */
-  public $group_id;
+  public $group_id = 0;
 
   /**
    * The member id of the group member.
    *
    * @var integer
    */
-  public $member_id;
+  public $member_id = 0;
 
   /**
    * The member type of the group member.
    *
    * @var integer
    */
-  public $type;
+  public $type = 0;
 
   /**
    * The {users}.uid that created the group member.

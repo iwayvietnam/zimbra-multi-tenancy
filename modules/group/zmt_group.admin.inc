@@ -210,7 +210,7 @@ function zmt_group_edit_form($form, &$form_state, $group){
         $key = array(
           'name' => $mailbox,
           'id' => (int) $acc->id,
-          'type' => GROUP_MEMBER_ACCOUNT,
+          'type' => ZmtGroupMemberEntity::GROUP_MEMBER_ACCOUNT,
         );
         $key = backdrop_json_encode($key);
         if (!in_array($key, $group_member_values)) {
@@ -223,7 +223,7 @@ function zmt_group_edit_form($form, &$form_state, $group){
         $key = array(
           'name' => $mailbox,
           'id' => (int) $alias->id,
-          'type' => GROUP_MEMBER_ALIAS,
+          'type' => ZmtGroupMemberEntity::GROUP_MEMBER_ALIAS,
         );
         $key = backdrop_json_encode($key);
         if (!in_array($key, $group_member_values)) {
@@ -237,7 +237,7 @@ function zmt_group_edit_form($form, &$form_state, $group){
         $key = array(
           'name' => $mailbox,
           'id' => (int) $gr->id,
-          'type' => GROUP_MEMBER_DL,
+          'type' => ZmtGroupMemberEntity::GROUP_MEMBER_DL,
         );
         $key = backdrop_json_encode($key);
         if (!in_array($key, $group_member_values)) {
