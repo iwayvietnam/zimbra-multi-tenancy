@@ -138,6 +138,13 @@ function zmt_group_query_zmt_group_load_multiple_alter(QueryAlterableInterface $
   $query->addField('zs', 'name', 'server');
   $query->addField('zs', 'delete_dl');
   $query->addField('zs', 'id', 'server_id');
+
+  $group_member_query = db_select('zmt_group_member', 'zgm')
+    ->fields('zgm', array('group_id'))
+    ->groupBy('zgm.group_id');
+  $group_member_query->addExpression('COUNT(zgm.id)', 'total_member');
+  $query->leftJoin($group_member_query, 'gmq', 'gmq.group_id = base.id');
+  $query->addExpression('IFNULL(gmq.total_member, 0)', 'total_member');
 }
 
 /**
@@ -156,36 +163,21 @@ function zmt_group_query_zmt_group_member_load_multiple_alter(QueryAlterableInte
 }
 
 /**
- * Implements hook_query_TAG_alter() for domain_count_group query tag.
- */
-function zmt_group_query_domain_count_group_alter(QueryAlterableInterface $query) {
+ * Implements hook_query_TAG_alter() for zmt_tenant_load_multiple query tag.
+ */ 
+function zmt_group_query_zmt_domain_load_multiple_alter(QueryAlterableInterface $query) {
   $count_group_query = db_select('zmt_group', 'zg')
     ->fields('zg', array('domain_id'))
     ->groupBy('zg.domain_id');
   $count_group_query->addExpression('COUNT(zg.id)', 'total_group');
-  $query->leftJoin($count_group_query, 'cgq', 'cgq.domain_id = zd.id');
+  $query->leftJoin($count_group_query, 'cgq', 'cgq.domain_id = base.id');
   $query->addExpression('IFNULL(cgq.total_group, 0)', 'total_group');
 }
 
 /**
- * Implements hook_query_TAG_alter() for account_mailbox_exists query tag.
+ * Implements hook_query_TAG_alter() for group_mailbox_exists query tag.
  */
-function zmt_group_query_account_mailbox_exists_alter(QueryAlterableInterface $query) {
-  $domain_id = (int) $query->getMetaData('domain_id');
-  $name = $query->getMetaData('mailbox_name');
-
-  $group_query = db_select('zmt_group', 'zg')
-    ->fields('zg', array('id'))
-    ->condition('zg.domain_id', $domain_id)
-    ->condition('zg.name', $name);
-
-  $query->union($group_query);
-}
-
-/**
- * Implements hook_query_TAG_alter() for alias_mailbox_exists query tag.
- */
-function zmt_group_query_alias_mailbox_exists_alter(QueryAlterableInterface $query) {
+function zmt_group_query_group_mailbox_exists_alter(QueryAlterableInterface $query) {
   $domain_id = (int) $query->getMetaData('domain_id');
   $name = $query->getMetaData('mailbox_name');
 
@@ -548,7 +540,7 @@ function zmt_group_load_by_user($user) {
 }
 
 /**
- * Load a group by name.
+ * Loads a group by name.
  *
  * @param $domain
  *   The domain to load group for, or its id.
@@ -573,6 +565,29 @@ function zmt_group_load_by_name($domain, $name) {
     $cache[$cache_key] = $groups ? reset($groups) : FALSE;
   }
   return $cache[$cache_key];
+}
+
+/**
+ * Loads a group by zimbra id.
+ *
+ * @param $zimbra_id
+ *   The group zimbra id.
+ * @return
+ *   An group object or FALSE.
+ */
+function zmt_group_load_by_zimbra_id($zimbra_id) {
+  $cache = &backdrop_static(__FUNCTION__, array());
+  if (!isset($cache[$zimbra_id])) {
+    $query = new EntityFieldQuery();
+    $result = $query->entityCondition('entity_type', 'zmt_group')
+      ->propertyCondition('zimbra_id', $zimbra_id)
+      ->execute();
+
+    $ids = isset($result['zmt_group']) ? array_keys($result['zmt_group']) : array();
+    $groups = zmt_group_load_multiple($ids);
+    $cache[$zimbra_id] = $groups ? reset($groups) : FALSE;
+  }
+  return $cache[$zimbra_id];
 }
 
 /**

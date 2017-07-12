@@ -35,6 +35,12 @@
         });
       });
 
+      $('.zmt-remove-parent').once('click', function () {
+        $(this).click(function(){
+          $(this).parent().remove();
+          return false;
+        });
+      });
     }
   };
 

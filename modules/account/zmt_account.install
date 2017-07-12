@@ -102,6 +102,10 @@ function zmt_account_schema() {
           'not null' => TRUE,
           'default' => '',
         ),
+        'hidden_forwarding' => array(
+          'description' => 'Hidden forwarding addresses of the account.',
+          'type' => 'text',
+        ),
         'zimbra_id' => array(
           'description' => 'The zimbra identify of the account.',
           'type' => 'varchar',
@@ -152,4 +156,14 @@ function zmt_account_schema() {
       ),
     ),
   );
+}
+
+/**
+ * Add hidden forwarding field to account.
+ */
+function zmt_account_update_7000() {
+  db_add_field('zmt_account', 'hidden_forwarding', array(
+    'description' => 'Hidden forwarding addresses of the account.',
+    'type' => 'text',
+  ));
 }

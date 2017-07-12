@@ -97,21 +97,21 @@ function zmt_alias_query_zmt_alias_load_multiple_alter(QueryAlterableInterface $
 }
 
 /**
- * Implements hook_query_TAG_alter() for domain_count_alias query tag.
- */
-function zmt_alias_query_domain_count_alias_alter(QueryAlterableInterface $query) {
+ * Implements hook_query_TAG_alter() for zmt_tenant_load_multiple query tag.
+ */ 
+function zmt_alias_query_zmt_domain_load_multiple_alter(QueryAlterableInterface $query) {
   $count_alias_query = db_select('zmt_alias', 'zal')
     ->fields('zal', array('domain_id'))
     ->groupBy('zal.domain_id');
   $count_alias_query->addExpression('COUNT(zal.id)', 'total_alias');
-  $query->leftJoin($count_alias_query, 'calq', 'calq.domain_id = zd.id');
+  $query->leftJoin($count_alias_query, 'calq', 'calq.domain_id = base.id');
   $query->addExpression('IFNULL(calq.total_alias, 0)', 'total_alias');
 }
 
 /**
- * Implements hook_query_TAG_alter() for account_mailbox_exists query tag.
+ * Implements hook_query_TAG_alter() for alias_mailbox_exists query tag.
  */
-function zmt_alias_query_account_mailbox_exists_alter(QueryAlterableInterface $query) {
+function zmt_alias_query_alias_mailbox_exists_alter(QueryAlterableInterface $query) {
   $domain_id = (int) $query->getMetaData('domain_id');
   $name = $query->getMetaData('mailbox_name');
 
@@ -312,7 +312,7 @@ function zmt_alias_exists($domain, $name, $id = 0) {
       ->condition('zac.name', $name);
 
     $query->union($account_query)
-      ->addTag('alias_mailbox_exists')
+      ->addTag('group_mailbox_exists')
       ->addMetaData('domain_id', $domain_id)
       ->addMetaData('mailbox_name', $name);
 
@@ -425,7 +425,7 @@ function zmt_alias_delete_multiple_by_domain(array $ids = array()) {
  * Deletes multiple alias by accounts.
  *
  * @param $ids
- *   An array of alias IDs.
+ *   An array of account IDs.
  */
 function zmt_alias_delete_multiple_by_account(array $ids = array()) {
   if (!empty($ids)) {

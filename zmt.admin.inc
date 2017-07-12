@@ -12,26 +12,25 @@ function zmt_setting_form_page() {
  * Zimbra multi tenancy setting form.
  */
 function zmt_setting_form($form, &$form_state) {
-  $config = config('zmt.settings');
   $form['zimbra_enable_debug'] = array(
     '#type' => 'checkbox',
     '#title' => t('Enable debug'),
-    '#default_value' => (int) $config->get('zimbra_enable_debug'),
+    '#default_value' => (int) config_get('zmt.settings', 'zimbra_enable_debug'),
     '#weight' => -8,
   );
   $form['zimbra_item_per_page'] = array(
     '#type' => 'textfield',
     '#title' => t('Item per page'),
-    '#default_value' => (int) $config->get('zimbra_item_per_page'),
+    '#default_value' => (int) config_get('zmt.settings', 'zimbra_item_per_page'),
     '#weight' => -7,
   );
   $form['zimbra_item_per_pull'] = array(
     '#type' => 'textfield',
     '#title' => t('Item per pull'),
-    '#default_value' => (int) $config->get('zimbra_item_per_pull'),
+    '#default_value' => (int) config_get('zmt.settings', 'zimbra_item_per_pull'),
     '#weight' => -6,
   );
-  
+
   $form['actions']['#type'] = 'actions';
   $form['actions']['submit'] = array(
     '#type' => 'submit',
@@ -45,14 +44,13 @@ function zmt_setting_form($form, &$form_state) {
  * Zimbra multi tenancy setting form submit callback.
  */
 function zmt_setting_form_submit($form, &$form_state) {
-  $config = config('zmt.settings');
   $values = $form_state['values'];
-  $config->set('zimbra_enable_debug', (int) $values['zimbra_enable_debug']);
-  $config->set('zimbra_item_per_page', (int) $values['zimbra_item_per_page']);
-  $config->set('zimbra_item_per_pull', (int) $values['zimbra_item_per_pull']);
-  $config->save();
+  config_set('zmt.settings', 'zimbra_enable_debug', (int) $values['zimbra_enable_debug']);
+  config_set('zmt.settings', 'zimbra_item_per_page', (int) $values['zimbra_item_per_page']);
+  config_set('zmt.settings', 'zimbra_item_per_pull', (int) $values['zimbra_item_per_pull']);
   backdrop_set_message(t('The configuration options have been saved.'));
 }
+
 
 /**
  * zmt server pull data page callback.
@@ -69,12 +67,15 @@ function zmt_server_pull_data_form($form, &$form_state) {
   if (empty($form_state['time'])) {
     $form_state['time'] = REQUEST_TIME;
   }
-
-  $form['#prefix'] = '<div id="zmt-server-pull-data-wrapper">';
-  $form['#suffix'] = '</div>';
-
+  $options = array();
+  $servers = zmt_server_load_all();
+  foreach ($servers as $key => $server) {
+    $options[$key] = $server->name;
+  }
   $form['server_id'] = array(
-    '#type' => 'zmt_server_select',
+    '#type' => 'select',
+    '#title' => t('Server'),
+    '#options' => $options,
     '#required' => TRUE,
     '#ajax' => array(
       'callback' => 'zmt_ajax_server_select_callback',
@@ -96,10 +97,16 @@ function zmt_server_pull_data_form($form, &$form_state) {
   );
 
   $server_id = isset($form_state['values']['server_id']) ? (int) $form_state['values']['server_id'] : 0;
+  $options = array('' => t('- None -'));
+  $tenants = zmt_tenant_load_multiple_by_server($server_id);
+  foreach ($tenants as $tenant) {
+    $options[$tenant->id] = $tenant->name;
+  }
 
   $form['tenant_id'] = array(
-    '#type' => 'zmt_tenant_select',
-    '#server' => $server_id,
+    '#type' => 'select',
+    '#title' => t('Tenant'),
+    '#options' => $options,
     '#prefix' => '<div id="dropdown-tenant-replace">',
     '#suffix' => '</div>',
   );
@@ -109,7 +116,6 @@ function zmt_server_pull_data_form($form, &$form_state) {
     '#value' => t('Pull data'),
     '#ajax' => array(
       'callback' => 'zmt_ajax_pull_data_callback',
-      'wrapper' => 'zmt-server-pull-data-wrapper',
       'progress' => array(
         'type' => 'bar',
         'message' => t('Pulling data..'),
@@ -165,8 +171,8 @@ function zmt_pulling_progress($time) {
     'percentage' => -1,
   );
 
-  $message = variable_get('zmt_pulling_message_' . $time, t('Pulling data...'));
-  $percentage = variable_get('zmt_pulling_progress_' . $time, 0);
+  $message = state_get('zmt_pulling_message_' . $time, t('Pulling data...'));
+  $percentage = state_get('zmt_pulling_progress_' . $time, 0);
 
   if ($percentage) {
     $progress['message'] = $message;
@@ -181,8 +187,8 @@ function zmt_pulling_progress($time) {
  */
 function zmt_ajax_pull_data_callback($form, &$form_state) {
   global $user;
+  $commands = array();
   if (!form_set_error()) {
-    $commands = array();
     module_load_include('inc', 'zmt_core', 'includes/zmt.zimbra');
     $values = $form_state['values'];
     $server_id = (int) $values['server_id'];
@@ -205,14 +211,14 @@ function zmt_ajax_pull_data_callback($form, &$form_state) {
           case 'cos':
             $zimbra_coses = zimbra_get_all_cos($api);
             if (!empty($zimbra_coses)) {
-              variable_set($message_name, t('Pulling COS data...'));
+              state_set($message_name, t('Pulling COS data...'));
               _zmt_ui_update_cos_data($zimbra_coses, $server->id, $progress_name);
               sleep(1);
             }
             break;
           case 'domain':
             if (!empty($zimbra_domains)) {
-              variable_set($message_name, t('Pulling domain data...'));
+              state_set($message_name, t('Pulling domain data...'));
               _zmt_ui_update_domain_data($zimbra_domains, $server->id, $tenant_id, $progress_name);
               sleep(1);
             }
@@ -220,7 +226,7 @@ function zmt_ajax_pull_data_callback($form, &$form_state) {
           case 'account':
             $total_account = (int) zimbra_count_account($api);
             if (!empty($zimbra_domains) && $total_account) {
-              variable_set($message_name, t('Pulling account data...'));
+              state_set($message_name, t('Pulling account data...'));
               _zmt_ui_update_account_data($api, $zimbra_domains, $server->id, $excludes, $progress_name);
               sleep(1);
             }
@@ -228,7 +234,7 @@ function zmt_ajax_pull_data_callback($form, &$form_state) {
           case 'alias':
             $total_alias = (int) zimbra_count_alias($api);
             if (!empty($zimbra_domains) && $total_alias) {
-              variable_set($message_name, t('Pulling alias data...'));
+              state_set($message_name, t('Pulling alias data...'));
               _zmt_ui_update_alias_data($api, $zimbra_domains, $server->id, $excludes, $progress_name);
               sleep(1);
             }
@@ -236,7 +242,7 @@ function zmt_ajax_pull_data_callback($form, &$form_state) {
           case 'group':
             $total_dl = (int) zimbra_count_dl($api);
             if (!empty($zimbra_domains) && $total_dl) {
-              variable_set($message_name, t('Pulling group data...'));
+              state_set($message_name, t('Pulling group data...'));
               _zmt_ui_update_group_data($api, $zimbra_domains, $server->id, $progress_name);
               sleep(1);
             }
@@ -244,18 +250,19 @@ function zmt_ajax_pull_data_callback($form, &$form_state) {
         }
       }
     }
-    variable_del($message_name);
-    variable_del($progress_name);
+    state_del($message_name);
+    state_del($progress_name);
 
     $commands[] = zmt_ajax_command_redirect('zmt/server');
-    return array(
-      '#type' => 'ajax',
-      '#commands' => $commands,
-    );
   }
   else {
-    return $form;
+    $commands[] = zmt_ajax_command_redirect('zmt/server/pull');
   }
+
+  return array(
+    '#type' => 'ajax',
+    '#commands' => $commands,
+  );
 }
 
 /**
@@ -270,33 +277,32 @@ function zmt_ajax_pull_data_callback($form, &$form_state) {
  */
 function _zmt_ui_update_cos_data(array $zimbra_coses, $server_id = 0, $progress_name = 'zmt_pulling_progress') {
   $count = 0;
-  $progress = 0;
-  variable_set($progress_name, $progress);
+  state_set($progress_name, $count);
   $total_cos = count($zimbra_coses);
   $mb = 1024 * 1024;
   foreach ($zimbra_coses as $zimbra_id => $zimbra_cos) {
-    $exists = zmt_cos_exists($zimbra_id);
-    if (!$exists) {
+    $cos = zmt_cos_load_by_zimbra_id($zimbra_id);
+    if (!$cos) {
       $cos = zmt_cos_new($zimbra_cos->name);
-      $cos->server_id = $server_id;
-      $attrs = !empty($zimbra_cos->a) ? $zimbra_cos->a : array();
-      if (is_array($attrs)) {
-        foreach ($attrs as $attr) {
-          if ($attr->n === 'description') {
-            $cos->description = $attr->_content;
-          }
-          if ($attr->n === 'zimbraMailQuota') {
-            $cos->mail_quota = (int) $attr->_content / $mb;
-          }
-        }
-      }
-      $cos->zimbra_id = $zimbra_id;
-      zmt_cos_save($cos, FALSE);
-      $count++;
     }
 
-    $progress++;
-    variable_set($progress_name, floor($progress * 100 / $total_cos));
+    $cos->server_id = $server_id;
+    $attrs = !empty($zimbra_cos->a) ? $zimbra_cos->a : array();
+    if (is_array($attrs)) {
+      foreach ($attrs as $attr) {
+        if ($attr->n === 'description') {
+          $cos->description = $attr->_content;
+        }
+        if ($attr->n === 'zimbraMailQuota') {
+          $cos->mail_quota = (int) $attr->_content / $mb;
+        }
+      }
+    }
+    $cos->zimbra_id = $zimbra_id;
+    zmt_cos_save($cos, FALSE);
+
+    $count++;
+    state_set($progress_name, floor($count * 100 / $total_cos));
   }
   backdrop_set_message($count . ' coses were updated.');
   return $count;
@@ -316,41 +322,44 @@ function _zmt_ui_update_cos_data(array $zimbra_coses, $server_id = 0, $progress_
  */
 function _zmt_ui_update_domain_data(array $zimbra_domains, $server_id = 0, $tenant_id = 0, $progress_name = 'zmt_pulling_progress') {
   $count = 0;
-  $progress = 0;
-  variable_set($progress_name, $progress);
+  state_set($progress_name, $count);
   $total_domain = count($zimbra_domains);
   foreach ($zimbra_domains as $zimbra_id => $zimbra_domain) {
-    $exists = zmt_domain_exists($zimbra_domain->name);
-    if (!$exists) {
+    $domain = zmt_domain_load_by_zimbra_id($zimbra_id);
+    if ($domain && !zmt_domain_exists($zimbra_domain->name)) {
+      $domain->name = $zimbra_domain->name;
+    }
+    if (!$domain) {
+      $domain = zmt_domain_load_by_name($zimbra_domain->name);
+    }
+    if (!$domain) {
       $domain = zmt_domain_new($zimbra_domain->name);
       $domain->server_id = $server_id;
       $domain->zimbra_id = $zimbra_id;
-
-      $attrs = isset($zimbra_domain->a) ? $zimbra_domain->a : array();
-      if (is_array($attrs)) {
-        foreach ($attrs as $attr) {
-          if ($attr->n === 'zimbraDomainStatus') {
-            $domain->status = isset($attr->_content) ? $attr->_content : '';
-          }
-        }
-      }
-
-      $tenant = zmt_tenant_load($tenant_id);
-      if ($tenant) {
-        $domain->tenant_id = $tenant->id;
-        $domain->cos_id = $tenant->cos_id;
-        $tenant_user = user_load($tenant->tenant_uid);
-        if ($tenant_user && (int) $tenant_user->uid > 0) {
-          $domain->uid = (int) $tenant_user->uid;
-        }
-      }
-
-      zmt_domain_save($domain, FALSE);
-      $count++;
     }
 
-    $progress++;
-    variable_set($progress_name, floor($progress * 100 / $total_domain));
+    $attrs = isset($zimbra_domain->a) ? $zimbra_domain->a : array();
+    if (is_array($attrs)) {
+      foreach ($attrs as $attr) {
+        if ($attr->n === 'zimbraDomainStatus') {
+          $domain->status = isset($attr->_content) ? $attr->_content : '';
+        }
+      }
+    }
+
+    $tenant = zmt_tenant_load($tenant_id);
+    if ($tenant) {
+      $domain->tenant_id = $tenant->id;
+      $tenant_user = user_load($tenant->tenant_uid);
+      if ($tenant_user && (int) $tenant_user->uid > 0) {
+        $domain->uid = (int) $tenant_user->uid;
+      }
+    }
+
+    zmt_domain_save($domain, FALSE);
+
+    $count++;
+    state_set($progress_name, floor($count * 100 / $total_domain));
   }
   backdrop_set_message($count . ' domains were updated.');
   return $count;
@@ -369,29 +378,38 @@ function _zmt_ui_update_domain_data(array $zimbra_domains, $server_id = 0, $tena
 function _zmt_ui_update_account_data(ZimbraAdminApi $api, array $zimbra_domains, $server_id = 0, array $excludes = array(), $progress_name = 'zmt_pulling_progress') {
   $count = 0;
   $progress = 0;
-  variable_set($progress_name, $progress);
+  state_set($progress_name, $progress);
   $total_account = (int) zimbra_count_account($api);
   foreach ($zimbra_domains as $zimbra_domain) {
     $domain_name = $zimbra_domain->name;
     $domain = zmt_domain_load_by_name($domain_name);
     if ($domain && $domain->server_id = $server_id) {
       $pager = array();
-      $limit = variable_get('zimbra_item_per_pull', 100);
-      $offset = 0;
-      do {
+      $total = zimbra_count_account($api, $domain_name);
+      $limit = state_get('zimbra_item_per_pull', 100);
+      for ($offset = 0; $offset < $total; $offset += $limit) { 
         $zmbra_accounts = zimbra_list_account($api, $domain_name, $limit, $offset, $pager);
-        $offset += $limit;
         foreach ($zmbra_accounts as $zimbra_id => $zmbra_account) {
           $account_name = substr($zmbra_account->name, 0, (int) strpos($zmbra_account->name, '@'));
           $match = zmt_is_matches($excludes, $account_name);
-          $exists = zmt_account_exists($domain->id, $account_name);
-          if (!$exists && !$match) {
-            $account = zmt_account_new($account_name);
-            $account->domain_id = $domain->id;
-            $account->zimbra_id = $zimbra_id;
+
+          if (!$match) {
+            $account = zmt_account_load_by_zimbra_id($zimbra_id);
+            if ($account && !zmt_account_exists($domain->id, $account_name)) {
+              $account->name = $account_name;
+            }
+            if (!$account) {
+              $account = zmt_account_load_by_name($domain->id, $account_name);
+            }
+            if (!$account) {
+              $account = zmt_account_new($account_name);
+              $account->domain_id = $domain->id;
+              $account->zimbra_id = $zimbra_id;
+            }
 
             $attrs = isset($zmbra_account->a) ? $zmbra_account->a : array();
             if (is_array($attrs)) {
+              $addresses = array();
               foreach ($attrs as $attr) {
                 if ($attr->n === 'displayName') {
                   $account->full_name = isset($attr->_content) ? $attr->_content : '';
@@ -411,6 +429,12 @@ function _zmt_ui_update_account_data(ZimbraAdminApi $api, array $zimbra_domains,
                 if ($attr->n === 'company') {
                   $account->company = isset($attr->_content) ? $attr->_content : '';
                 }
+                if ($attr->n === 'zimbraMailForwardingAddress' && !empty($attr->_content)) {
+                  $addresses[] = $attr->_content;
+                }
+              }
+              if (!empty($addresses)) {
+                $account->hidden_forwarding = implode(PHP_EOL, $addresses);
               }
             }
 
@@ -419,9 +443,9 @@ function _zmt_ui_update_account_data(ZimbraAdminApi $api, array $zimbra_domains,
           }
 
           $progress++;
-          variable_set($progress_name, floor($progress * 100 / $total_account));
+          state_set($progress_name, floor($progress * 100 / $total_account));
         }
-      } while (isset($pager['more']) && $pager['more'] === TRUE);
+      }
     }
   }
   backdrop_set_message($count . ' accounts were updated.');
@@ -441,14 +465,14 @@ function _zmt_ui_update_account_data(ZimbraAdminApi $api, array $zimbra_domains,
 function _zmt_ui_update_alias_data(ZimbraAdminApi $api, array $zimbra_domains, $server_id = 0, array $excludes = array(), $progress_name = 'zmt_pulling_progress') {
   $count = 0;
   $progress = 0;
-  variable_set($progress_name, $progress);
+  state_set($progress_name, $progress);
   $total_alias = (int) zimbra_count_alias($api);
   foreach ($zimbra_domains as $zimbra_domain) {
     $domain_name = $zimbra_domain->name;
     $domain = zmt_domain_load_by_name($domain_name);
     if ($domain && $domain->server_id = $server_id) {
       $pager = array();
-      $limit = variable_get('zimbra_item_per_pull', 100);
+      $limit = state_get('zimbra_item_per_pull', 100);
       $offset = 0;
       do {
         $zimbra_aliases = zimbra_list_alias($api, $domain_name, $limit, $offset, $pager);
@@ -471,7 +495,7 @@ function _zmt_ui_update_alias_data(ZimbraAdminApi $api, array $zimbra_domains, $
           }
 
           $progress++;
-          variable_set($progress_name, floor($progress * 100 / $total_alias));
+          state_set($progress_name, floor($progress * 100 / $total_alias));
         }
       } while (isset($pager['more']) && $pager['more'] === TRUE);
     }
@@ -492,8 +516,7 @@ function _zmt_ui_update_alias_data(ZimbraAdminApi $api, array $zimbra_domains, $
  */
 function _zmt_ui_update_group_data(ZimbraAdminApi $api, array $zimbra_domains, $server_id = 0, $progress_name = 'zmt_pulling_progress') {
   $count = 0;
-  $progress = 0;
-  variable_set($progress_name, $progress);
+  state_set($progress_name, $count);
   $total_dl = (int) zimbra_count_dl($api);
   foreach ($zimbra_domains as $zimbra_domain) {
     $domain_name = $zimbra_domain->name;
@@ -502,60 +525,70 @@ function _zmt_ui_update_group_data(ZimbraAdminApi $api, array $zimbra_domains, $
       $zimbra_dls = zimbra_get_all_dl($api, $domain_name);
       foreach ($zimbra_dls as $zimbra_id => $dl) {
         $group_name = substr($dl->name, 0, (int) strpos($dl->name, '@'));
-        $exists = zmt_group_exists($domain->id, $group_name);
-        if (!$exists) {
+        $group = zmt_group_load_by_zimbra_id($zimbra_id);
+        if ($group && !zmt_group_exists($domain->id, $group_name)) {
+          $group->name = $group_name;
+        }
+        if (!$group) {
+          $group = zmt_group_load_by_name($domain->id, $group_name);
+        }
+        if (!$group) {
           $group = zmt_group_new($group_name);
           $group->full_name = $group_name;
           $group->domain_id = $domain->id;
           $group->zimbra_id = $zimbra_id;
-          $attrs = isset($dl->a) ? $dl->a : array();
-          if (is_array($attrs)) {
-            foreach ($attrs as $attr) {
-              if ($attr->n === 'displayName') {
-                $group->full_name = isset($attr->_content) ? $attr->_content : '';
-              }
+        }
+
+        $attrs = isset($dl->a) ? $dl->a : array();
+        if (is_array($attrs)) {
+          foreach ($attrs as $attr) {
+            if ($attr->n === 'displayName') {
+              $group->full_name = isset($attr->_content) ? $attr->_content : '';
             }
           }
-          zmt_group_save($group, FALSE);
+        }
+        zmt_group_save($group, FALSE);
 
-          $members = !empty($dl->dlm) ? $dl->dlm : zimbra_get_dl_members($api, $dl->name);
-          if (!is_array($members)) {
-            $members = array($members);
+        $members = !empty($dl->dlm) ? $dl->dlm : zimbra_get_dl_members($api, $dl->name);
+        if (!is_array($members)) {
+          $members = array($members);
+        }
+
+        if (!empty($members)) {
+          $zmt_members = array();
+          $accounts = zmt_account_load_multiple_by_domain($domain);
+          foreach ($accounts as $account) {
+            $mailbox = $account->name . '@' . $domain->name;
+            $member = array(
+              'name' => $mailbox,
+              'id' => (int) $account->id,
+              'type' => GROUP_MEMBER_ACCOUNT,
+            );
+            $zmt_members[$mailbox] = (object) $member;
+          }
+          $aliases = zmt_alias_load_multiple_by_domain($domain);
+          foreach ($aliases as $alias) {
+            $mailbox = $alias->name . '@' . $domain->name;
+            $member = array(
+              'name' => $mailbox,
+              'id' => (int) $alias->id,
+              'type' => GROUP_MEMBER_ALIAS,
+            );
+            $zmt_members[$mailbox] = (object) $member;
+          }
+          $groups = zmt_group_load_multiple_by_domain($domain, $group->id);
+          foreach ($groups as $gr) {
+            $mailbox = $gr->name . '@' . $domain->name;
+            $member = array(
+              'name' => $mailbox,
+              'id' => (int) $gr->id,
+              'type' => GROUP_MEMBER_DL,
+            );
+            $zmt_members[$mailbox] = (object) $member;
           }
 
           if (!empty($members)) {
-            $zmt_members = array();
-            $accounts = zmt_account_load_multiple_by_domain($domain);
-            foreach ($accounts as $account) {
-              $mailbox = $account->name . '@' . $domain->name;
-              $member = array(
-                'name' => $mailbox,
-                'id' => (int) $account->id,
-                'type' => GROUP_MEMBER_ACCOUNT,
-              );
-              $zmt_members[$mailbox] = (object) $member;
-            }
-            $aliases = zmt_alias_load_multiple_by_domain($domain);
-            foreach ($aliases as $alias) {
-              $mailbox = $alias->name . '@' . $domain->name;
-              $member = array(
-                'name' => $mailbox,
-                'id' => (int) $alias->id,
-                'type' => GROUP_MEMBER_ALIAS,
-              );
-              $zmt_members[$mailbox] = (object) $member;
-            }
-            $groups = zmt_group_load_multiple_by_domain($domain, $group->id);
-            foreach ($groups as $gr) {
-              $mailbox = $gr->name . '@' . $domain->name;
-              $member = array(
-                'name' => $mailbox,
-                'id' => (int) $gr->id,
-                'type' => GROUP_MEMBER_DL,
-              );
-              $zmt_members[$mailbox] = (object) $member;
-            }
-
+            zmt_group_member_delete_multiple_by_group(array($group->id), FALSE);
             foreach ($members as $member) {
               $member_name = isset($member->_content) ? $member->_content : $member;
               $zmt_member = isset($zmt_members[$member_name]) ? $zmt_members[$member_name] : NULL;
@@ -568,14 +601,87 @@ function _zmt_ui_update_group_data(ZimbraAdminApi $api, array $zimbra_domains, $
               }
             }
           }
-          $count++;
         }
 
-        $progress++;
-        variable_set($progress_name, floor($progress * 100 / $total_dl));
+        $count++;
+        state_set($progress_name, floor($count * 100 / $total_dl));
       }
     }
   }
   backdrop_set_message($count . ' groups were updated.');
   return $count;
+}
+
+/**
+ * Mailbox Quota page 
+ */ 
+function zmt_account_quota_usage() {
+  module_load_include('inc', 'zmt_core', 'includes/zmt.zimbra');
+
+  backdrop_set_title('Mailbox Quota');
+  $header = array();
+  $header[] = array('data' => t('No.'));
+  $header[] = array('data' => t('Account name'));
+  $header[] = array('data' => t('Used quota (MB)'));
+  $header[] = array('data' => t('Quota limit (MB)'));
+
+  $domain_id = isset($_SESSION['zmt_filter_domain_id']) ? (int) $_SESSION['zmt_filter_domain_id'] : 0;
+  $domain = zmt_domain_load($domain_id);
+  if ($domain) {
+    $server_id = (int) $domain->server_id;
+  }
+  else {
+    $server_id = isset($_SESSION['zmt_filter_server_id']) ? (int) $_SESSION['zmt_filter_server_id'] : 0;
+  }
+
+  $result = array();
+  $rows = array();
+  $item_per_page = state_get('zimbra_item_per_page', 20);
+  $total = 0;
+  if ($server_id > 0) {
+    $api = zimbra_admin_api_by_server($server_id);
+    $pager = array();
+    $limit = 0;
+    $offset = 0;
+    if ($domain) {
+      $result = zimbra_get_quota_usage($api, $domain->name ,$limit, $offset, $pager);
+      $total = $pager['total'];
+      if($total > 0) {
+        $page = isset($_GET['page']) ? $_GET['page'] : 0;
+        $records_page = array_slice($result, $item_per_page * $page, $item_per_page);
+        pager_default_initialize($total, $item_per_page, $element = 0);
+        $mb = 1024 * 1024;   
+        $key = 1;
+        if($records_page) {
+          foreach ($records_page as $account) {
+            $row = array();
+            $row[] = $key + $page * $item_per_page ;
+            $row[] = array(
+              'data' => $account->name,
+            );
+            $row[] = array(
+              'data' => number_format($account->used / $mb, 2, '.', ' '),
+            );
+            $row[] = array(
+              'data' => number_format($account->limit / $mb, 2, '.', ' '),
+            );
+            $rows[] = $row;
+            $key ++ ;
+          }
+        }
+      }
+    }
+  }
+
+  $build = array();
+  $build['account_quota_filter'] = backdrop_get_form('zmt_filter_by_domain_form');
+  $build['account_quota_table']  = array(
+    '#theme' => 'table',
+    '#header' => $header,
+    '#rows' => $rows,
+    '#empty' => t('There are no accounts available.') ,
+  );
+  $build['account_quota_pager'] = array('#theme' => 'pager','#quantity' => $total,);
+
+  return $build;
 }

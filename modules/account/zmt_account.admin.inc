@@ -18,8 +18,6 @@ function zmt_account_list_all() {
   $query = db_select('zmt_account', 'za')->extend('PagerDefault')->extend('TableSort');
   $query->join('zmt_domain', 'zd', 'zd.id = za.domain_id');
   $query->leftJoin('zmt_cos', 'zc', 'zc.id = za.cos_id');
-  $query->addField('zd', 'name', 'domain');
-  $query->addField('zc', 'name', 'cos');
 
   $domain_ids = array();
   if (!(user_access('administer zmt'))) {
@@ -50,19 +48,22 @@ function zmt_account_list_all() {
     }
   }
 
-  $item_per_page = variable_get('zimbra_item_per_page', 20);
-  $result = $query
-    ->fields('za')
+  $statuses = zmt_account_statuses();
+  $destination = backdrop_get_destination();
+  $item_per_page = (int) config_get('zmt.settings', 'zimbra_item_per_page');
+  $ids = $query
+    ->fields('za', array('id'))
     ->orderByHeader($header)
     ->limit($item_per_page)
-    ->execute();
+    ->execute()
+    ->fetchCol();
+  $accounts = zmt_account_load_multiple($ids);
 
-  $destination = backdrop_get_destination();
-  $statuses = zmt_account_statuses();
+  $key = 1;
   $rows = array();
-  foreach ($result as $key => $account) {
+  foreach ($accounts as $account) {
     $row = array();
-    $row[] = $key + 1 + (pager_find_page() * $item_per_page);
+    $row[] = $key + (pager_find_page() * $item_per_page);
     $account_name = $account->name . '@' . $account->domain;
     $row[] = l($account_name, 'zmt/account/' . $account->id . '/edit', array('query' => $destination));
     $row[] = array(
@@ -74,19 +75,13 @@ function zmt_account_list_all() {
     $row[] = array(
       'data' => isset($statuses[$account->status]) ? $statuses[$account->status] : $account->status,
     );
+    $row[] = implode('&nbsp;&nbsp;&nbsp;', array(
+      l(t('edit'), 'zmt/account/' . $account->id . '/edit', array('query' => $destination)),
+      l(t('delete'), 'zmt/account/' . $account->id . '/delete', array('query' => $destination)),
+    ));
 
-    $operations = l(t('edit'), 'zmt/account/' . $account->id . '/edit', array('query' => $destination));
-    $operations .= '&nbsp;&nbsp;&nbsp;' . l(t('delete'), 'zmt/account/' . $account->id . '/delete', array('query' => $destination));
-    $row[] = $operations;
     $rows[] = $row;
-  }
-  if (empty($rows)) {
-    $rows[] = array(
-      array(
-        'data' => t('There are no accounts available.') . ' ' . l(t('Add one now'), 'zmt/account/add') . '.',
-        'colspan' => count($header)
-      ),
-    );
+    $key++;
   }
 
   $build = array();
@@ -102,6 +97,7 @@ function zmt_account_list_all() {
     '#theme' => 'table',
     '#header' => $header,
     '#rows' => $rows,
+    '#empty' => t('There are no accounts available.') . ' ' . l(t('Add one now.'), 'zmt/account/add'),
   );
   $build['account_pager'] = array('#theme' => 'pager');
 
@@ -200,7 +196,7 @@ function zmt_account_edit_form($form, &$form_state, $account){
   $form['password'] = array(
     '#type' => 'password_confirm',
     '#required' => !(isset($account->id) && (int) $account->id > 0),
-    '#size' => 30,
+    '#size' => 45,
   );
   $form['full_name'] = array(
     '#title' => t('Full name'),
@@ -236,6 +232,47 @@ function zmt_account_edit_form($form, &$form_state, $account){
     '#default_value' => $account->company,
   );
 
+  $form['hidden_forwarding'] = array(
+    '#title' => t('Hidden forwarding'),
+    '#type' => 'fieldset',
+  );
+
+  $addresses = backdrop_json_decode($account->hidden_forwarding);
+  if (!empty($addresses)) {
+    foreach ($addresses as $key => $address) {
+      $form['hidden_forwarding']['address_' . $key] = array(
+        '#type' => 'textfield',
+        '#name' => 'address[]',
+        '#size' => 45,
+        '#default_value' => $address,
+        '#theme_wrappers' => array(),
+        '#prefix' => '<div class="form-item form-type-textfield">',
+        '#suffix' => ' <a href="#" class="zmt-remove-parent">' . t('Remove') . '</a></div>',
+      );
+    }
+  }
+  else {
+    $form['hidden_forwarding']['address_0'] = array(
+      '#type' => 'textfield',
+      '#name' => 'address[]',
+      '#size' => 45,
+      '#theme_wrappers' => array(),
+      '#prefix' => '<div class="form-item form-type-textfield">',
+      '#suffix' => ' <a href="#" class="zmt-remove-parent">' . t('Remove') . '</a></div>',
+    );
+  }
+
+  $form['hidden_forwarding']['add'] = array(
+    '#type' => 'button',
+    '#value' => t('Add address'),
+    '#limit_validation_errors' => array(),
+    '#ajax' => array(
+      'callback' => 'zmt_account_edit_ajax_add_address',
+      'event' => 'click',
+      'prevent' => 'submit click mousedown',
+    ),
+  );
+
   $form['actions']['submit'] = array(
     '#type' => 'submit',
     '#value' => t('Save'),
@@ -244,6 +281,10 @@ function zmt_account_edit_form($form, &$form_state, $account){
   );
 
   $form['#validate'][] = 'zmt_account_edit_form_validate';
+  $path = backdrop_get_path('module', 'zmt_core');
+  $form['#attached']['js'] = array(
+    $path . '/js/zmt.js',
+  );
 
   return $form;
 }
@@ -273,6 +314,17 @@ function zmt_account_edit_form_validate($form, &$form_state) {
       form_set_error('name', t('The domain has reached the maximum number of accounts.'));
     }
   }
+
+  $hidden_forwarding = array();
+  $addresses = !empty($_POST['address']) ? $_POST['address'] : array();
+  $addresses = array_map('trim', $addresses);
+  foreach ($addresses as $address) {
+    $address = check_plain($address);
+    if (!empty($address) && valid_email_address($address)) {
+      $hidden_forwarding[] = $address;
+    }
+  }
+  $form_state['hidden_forwarding'] = $hidden_forwarding;
 }
 
 /**
@@ -280,6 +332,24 @@ function zmt_account_edit_form_validate($form, &$form_state) {
  */
 function zmt_account_ajax_domain_select_callback($form, $form_state) {
   return $form['cos_id'];
+}
+
+/**
+ * Zimbra account ajax add address callback.
+ */
+function zmt_account_edit_ajax_add_address($form, $form_state) {
+  $commands = array();
+  $address = array(
+    '#type' => 'textfield',
+    '#name' => 'address[]',
+    '#size' => 45,
+    '#theme_wrappers' => array(),
+    '#prefix' => '<div class="form-item form-type-textfield">',
+    '#suffix' => ' <a href="#" class="zmt-remove-parent">' . t('Remove') . '</a></div>',
+  );
+  $selector = '#edit-add';
+  $commands[] = ajax_command_before($selector, backdrop_render($address));
+  return array('#type' => 'ajax', '#commands' => $commands);
 }
 
 /**
@@ -299,6 +369,7 @@ function zmt_account_edit_form_submit($form, &$form_state) {
   $account->telephone = check_plain($values['telephone']);
   $account->mobile = check_plain($values['mobile']);
   $account->company = check_plain($values['company']);
+  $account->hidden_forwarding = backdrop_json_encode($form_state['hidden_forwarding']);
 
   zmt_account_save($account);
 
@@ -318,8 +389,6 @@ function zmt_account_import_page() {
  * Import accounts form
  */
 function zmt_account_import_form($form, &$form_state){
-  global $user;
-
   if (empty($form_state['time'])) {
     $form_state['time'] = REQUEST_TIME;
   }
@@ -333,24 +402,8 @@ function zmt_account_import_form($form, &$form_state){
     '#description' => t('Csv file fields: name,password,full_name,status,title,telephone,mobile,company'),
   );
 
-  $options = array();
-  if (!(user_access('administer zmt'))) {
-    $domains = zmt_domain_load_multiple_by_user($user);
-  }
-  else {
-    $domains = zmt_domain_load_all();
-  }
-  if (count($domains) !== 1) {
-    $options = array('' => t('- None -'));
-  }
-  foreach ($domains as $domain) {
-    $options[$domain->id] = $domain->name;
-  }
-
   $form['domain_id'] = array(
-    '#type' => 'select',
-    '#title' => t('Domain'),
-    '#options' => $options,
+    '#type' => 'zmt_domain_select',
     '#required' => TRUE,
     '#ajax' => array(
       'callback' => 'zmt_account_ajax_domain_select_callback',
@@ -419,8 +472,8 @@ function zmt_account_importing_progress($time) {
     'percentage' => -1,
   );
 
-  $message = variable_get('zmt_importing_message_' . $time, t('Importing data...'));
-  $percentage = variable_get('zmt_importing_progress_' . $time, 0);
+  $message = state_get('zmt_importing_message_' . $time, t('Importing data...'));
+  $percentage = state_get('zmt_importing_progress_' . $time, 0);
 
   if ($percentage) {
     $progress['message'] = $message;
@@ -523,18 +576,18 @@ function zmt_account_ajax_import_form_callback($form, $form_state) {
       $total_account = count($accounts);
       $message_name = 'zmt_importing_message_' . $form_state['time'];
       $progress_name = 'zmt_importing_progress_' . $form_state['time'];
-      variable_set($message_name, t('Importing accounts to Drupal...'));
-      variable_set($progress_name, $count);
+      state_set($message_name, t('Importing accounts to Drupal...'));
+      state_set($progress_name, $count);
 
       foreach ($accounts as $account) {
         zmt_account_save($account);
         $count++;
-        variable_set($progress_name, floor($count * 100 / $total_account));
+        state_set($progress_name, floor($count * 100 / $total_account));
       }
       backdrop_set_message(t('@count accounts were updated.', array('@count' => $count)));
       sleep(1);
-      variable_del($message_name);
-      variable_del($progress_name);
+      state_del($message_name);
+      state_del($progress_name);
     }
     $commands[] = zmt_ajax_command_redirect('zmt/account');
     return array(

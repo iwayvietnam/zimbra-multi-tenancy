@@ -27,27 +27,15 @@ function zimbra_admin_api($location = 'https://localhost:7071/service/admin/soap
  *   Zimbra admin user.
  * @param string $password
  *   Zimbra admin password.
- * @return bool
+ * @return authentication token
  */
 function zimbra_test_connection(
   $location = 'https://localhost:7071/service/admin/soap',
   $user = '',
   $password = ''
 ) {
-  $authenticated = FALSE;
   $api = zimbra_admin_api($location);
-  try {
-    $authToken = $api->authByName($user, $password);
-    $authenticated = !empty($authToken);
-    if ($authenticated) {
-      $sessKey = md5($api->location() . $user . $password) . 'authToken';
-      $_SESSION[$sessKey] = $authToken;
-    }
-  }
-  catch (Exception $ex) {
-    watchdog('zimbra', $ex->__toString());
-  }
-  return $authenticated;
+  return zimbra_authentication_by_name($api, $user, $password);
 }
 
 /**
@@ -88,13 +76,11 @@ function zimbra_admin_api_by_server($server_id) {
   if (!isset($cache[$server_id])) {
     $server = zmt_server_load($server_id);
     $location = $server ? $server->service_location : 'https://localhost:7071/service/admin/soap';
-    $user = $server ? $server->admin_user : '';
-    $password = $server ? $server->admin_password : '';
-    $password = zmt_password_decrypt($server->admin_password);
-
     $api = zimbra_admin_api($location);
-    $authenticated = zimbra_authentication($api, $user, $password);
-    if (!$authenticated) {
+
+    $auth_token = zimbra_authentication_by_server($api, $server_id);
+
+    if (empty($auth_token)) {
       $message = 'Connection or authentication to Zimbra server failed! <br />';
       $message .= 'Please contact to administrator to report this error.';
       backdrop_set_message(t($message), 'error');
@@ -107,7 +93,40 @@ function zimbra_admin_api_by_server($server_id) {
 }
 
 /**
- * Zimbra authentication
+ * Zimbra authentication by server
+ *
+ * @param ZimbraAdminApi $api
+ *   Zimbra admin api.
+ * @param string $server_id
+ *   Server id.
+ * @return authentication token
+ */
+function zimbra_authentication_by_server(ZimbraAdminApi $api, $server_id) {
+  $cache = &backdrop_static(__FUNCTION__, NULL);
+  $cache_key = md5($api->location() . $server_id);
+  if (!isset($cache[$cache_key])) {
+    $auth_token = FALSE;
+    $server = zmt_server_load($server_id);
+    if ($server) {
+      if (!empty($server->auth_token)) {
+        $auth_token = zimbra_authentication_by_token($api, $server->admin_user, $server->auth_token);
+      }
+      if (empty($auth_token)) {
+        $password = zmt_password_decrypt($server->admin_password);
+        $auth_token = zimbra_authentication_by_name($api, $server->admin_user, $password);
+      }
+      if (!empty($auth_token) && $server->auth_token !== $auth_token) {
+        $server->auth_token = $auth_token;
+        zmt_server_save($server);
+      }
+    }
+    $cache[$cache_key] = $auth_token;
+  }
+  return $cache[$cache_key];
+}
+
+/**
+ * Zimbra authentication by name
  *
  * @param ZimbraAdminApi $api
  *   Zimbra admin api.
@@ -115,37 +134,49 @@ function zimbra_admin_api_by_server($server_id) {
  *   Zimbra admin user.
  * @param string $password
  *   Zimbra admin password.
- * @return boolean
+ * @return authentication token
  */
-function zimbra_authentication(ZimbraAdminApi $api, $user, $password = '') {
+function zimbra_authentication_by_name(ZimbraAdminApi $api, $user, $password) {
   $cache = &backdrop_static(__FUNCTION__, NULL);
   $cache_key = md5($api->location() . $user . $password);
   if (!isset($cache[$cache_key])) {
-    $authenticated = FALSE;
-    $sessKey = $cache_key . 'authToken';
-    $sessAuthToken = isset($_SESSION[$sessKey]) ? $_SESSION[$sessKey] : '';
-    if (!empty($sessAuthToken)) {
+    $auth_token = FALSE;
+    try {
+      $auth_token = $api->authByName($user, $password);
+    }
+    catch (Exception $ex) {
+      watchdog('zimbra', $ex->__toString());
+    }
+    $cache[$cache_key] = $auth_token;
+  }
+  return $cache[$cache_key];
+}
+
+/**
+ * Zimbra authentication by token
+ *
+ * @param ZimbraAdminApi $api
+ *   Zimbra admin api.
+ * @param string $user
+ *   Zimbra admin user.
+ * @param string $token
+ *   Zimbra authentication token.
+ * @return authentication token
+ */
+function zimbra_authentication_by_token(ZimbraAdminApi $api, $user, $token = '') {
+  $cache = &backdrop_static(__FUNCTION__, NULL);
+  $cache_key = md5($api->location() . $token);
+  if (!isset($cache[$cache_key])) {
+    $auth_token = FALSE;
+    if (!empty($token)) {
       try {
-        $authToken = $api->authByToken($user, $sessAuthToken);
-        $authenticated = ($authToken === $sessAuthToken);
+        $auth_token = $api->authByToken($user, $token);
       }
       catch (Exception $ex) {
         watchdog('zimbra', $ex->__toString());
       }
     }
-    if(!$authenticated) {
-      try {
-        $authToken = $api->authByName($user, $password);
-        $authenticated = !empty($authToken);
-        if ($authenticated) {
-          $_SESSION[$sessKey] = $authToken;
-        }
-      }
-      catch (Exception $ex) {
-        watchdog('zimbra', $ex->__toString());
-      }
-    }
-    $cache[$cache_key] = $authenticated;
+    $cache[$cache_key] = ($auth_token === $token) ? $auth_token : FALSE;
   }
   return $cache[$cache_key];
 }
@@ -257,11 +288,7 @@ function zimbra_get_cos(ZimbraAdminApi $api, $name, $reset = FALSE) {
  */
 function zimbra_create_cos(ZimbraAdminApi $api, $name, array $attrs = array()) {
   try {
-    $a = array();
-    foreach ($attrs as $key => $value) {
-      $a[] = new KeyValuePair($key, $value);
-    }
-    $result = $api->createCos($name, $a);
+    $result = $api->createCos($name, _zimbra_attrs_normalize($attrs));
     return isset($result->cos[0]) ? $result->cos[0] : $result;
   }
   catch (Exception $ex) {
@@ -283,11 +310,7 @@ function zimbra_create_cos(ZimbraAdminApi $api, $name, array $attrs = array()) {
  */
 function zimbra_modify_cos(ZimbraAdminApi $api, $id, array $attrs = array()) {
   try {
-    $a = array();
-    foreach ($attrs as $key => $value) {
-      $a[] = new KeyValuePair($key, $value);
-    }
-    $result = $api->modifyCos($id, $a);
+    $result = $api->modifyCos($id, _zimbra_attrs_normalize($attrs));
     return isset($result->cos[0]) ? $result->cos[0] : $result;
   }
   catch (Exception $ex) {
@@ -410,11 +433,7 @@ function zimbra_get_domain(ZimbraAdminApi $api, $name, $reset = FALSE) {
  */
 function zimbra_create_domain(ZimbraAdminApi $api, $name, array $attrs = array()) {
   try {
-    $a = array();
-    foreach ($attrs as $key => $value) {
-      $a[] = new KeyValuePair($key, $value);
-    }
-    $result = $api->createDomain($name, $a);
+    $result = $api->createDomain($name, _zimbra_attrs_normalize($attrs));
     return isset($result->domain[0]) ? $result->domain[0] : $result;
   }
   catch (Exception $ex) {
@@ -436,11 +455,7 @@ function zimbra_create_domain(ZimbraAdminApi $api, $name, array $attrs = array()
  */
 function zimbra_modify_domain(ZimbraAdminApi $api, $id, array $attrs = array()) {
   try {
-    $a = array();
-    foreach ($attrs as $key => $value) {
-      $a[] = new KeyValuePair($key, $value);
-    }
-    $result = $api->modifyDomain($id, $a);
+    $result = $api->modifyDomain($id, _zimbra_attrs_normalize($attrs));
     return isset($result->domain[0]) ? $result->domain[0] : $result;
   }
   catch (Exception $ex) {
@@ -666,11 +681,7 @@ function zimbra_count_dl(ZimbraAdminApi $api, $domain = NULL) {
  */
 function zimbra_create_dl(ZimbraAdminApi $api, $name, array $attrs = array()) {
   try {
-    $a = array();
-    foreach ($attrs as $key => $value) {
-      $a[] = new KeyValuePair($key, $value);
-    }
-    $result = $api->createDistributionList($name, NULL, $a);
+    $result = $api->createDistributionList($name, NULL, _zimbra_attrs_normalize($attrs));
     return isset($result->dl[0]) ? $result->dl[0] : $result;
   }
   catch (Exception $ex) {
@@ -692,11 +703,7 @@ function zimbra_create_dl(ZimbraAdminApi $api, $name, array $attrs = array()) {
  */
 function zimbra_modify_dl(ZimbraAdminApi $api, $zimbra_id, array $attrs = array()) {
   try {
-    $a = array();
-    foreach ($attrs as $key => $value) {
-      $a[] = new KeyValuePair($key, $value);
-    }
-    $result = $api->modifyDistributionList($zimbra_id, $a);
+    $result = $api->modifyDistributionList($zimbra_id, _zimbra_attrs_normalize($attrs));
     return isset($result->dl[0]) ? $result->dl[0] : $result;
   }
   catch (Exception $ex) {
@@ -870,10 +877,11 @@ function zimbra_list_account(ZimbraAdminApi $api, $domain = NULL, $limit = NULL,
         'zimbraDomainType',
         'zimbraDomainName',
         'zimbraDomainStatus',
+        'zimbraMailForwardingAddress',
       );
       $result = $api->searchDirectory(
-        '', NULL, $limit, $offset, $domain, NULL, NULL,
-        'accounts', NULL, NULL, NULL, implode(',', $attrs)
+        '(&(!(zimbraIsSystemAccount=TRUE)))', NULL, $limit, $offset, $domain, FALSE, FALSE,
+        'accounts', 'name', TRUE, NULL, implode(',', $attrs)
       );
       $pager = array(
         'num' => isset($result->num) ? (int) $result->num : 0,
@@ -940,7 +948,7 @@ function zimbra_count_account(ZimbraAdminApi $api, $domain = NULL) {
   if (!isset($cache[$cache_key])) {
     try {
       $result = $api->searchDirectory(
-        '', NULL, 1, 0, $domain, NULL, NULL,
+        '', NULL, NULL, NULL, $domain, NULL, NULL,
         'accounts', NULL, NULL, TRUE, 'zimbraId'
       );
       if (!empty($result->num)) {
@@ -1001,11 +1009,7 @@ function zimbra_count_account_by_cos(ZimbraAdminApi $api, $domain) {
  */
 function zimbra_create_account(ZimbraAdminApi $api, $name, $password, array $attrs = array()) {
   try {
-    $a = array();
-    foreach ($attrs as $key => $value) {
-      $a[] = new KeyValuePair($key, $value);
-    }
-    $result = $api->createAccount($name, $password, $a);
+    $result = $api->createAccount($name, $password, _zimbra_attrs_normalize($attrs));
     return isset($result->account[0]) ? $result->account[0] : $result;
   }
   catch (Exception $ex) {
@@ -1027,11 +1031,7 @@ function zimbra_create_account(ZimbraAdminApi $api, $name, $password, array $att
  */
 function zimbra_modify_account(ZimbraAdminApi $api, $id, array $attrs = array()) {
   try {
-    $a = array();
-    foreach ($attrs as $key => $value) {
-      $a[] = new KeyValuePair($key, $value);
-    }
-    $result = $api->modifyAccount($id, $a);
+    $result = $api->modifyAccount($id, _zimbra_attrs_normalize($attrs));
     return isset($result->account[0]) ? $result->account[0] : $result;
   }
   catch (Exception $ex) {
@@ -1153,7 +1153,7 @@ function zimbra_list_alias(ZimbraAdminApi $api, $domain = NULL, $limit = NULL, $
           $mail_alias->id = $alias->id;
           $mail_alias->name = $alias->name;
           $mail_alias->account_id = '';
-          $mail_alias->account_name = $alias->targetName;
+          $mail_alias->account_name = !empty($alias->targetName) ? $alias->targetName : '';
           $mail_alias->domain = $domain;
           $attrs = isset($alias->a) ? $alias->a : array();
           foreach ($attrs as $attr) {
@@ -1188,7 +1188,7 @@ function zimbra_count_alias(ZimbraAdminApi $api, $domain = NULL) {
   if (!isset($cache[$cache_key])) {
     try {
       $result = $api->searchDirectory(
-        '', NULL, 1, 0, $domain, NULL, NULL,
+        '', NULL, NULL, NULL, $domain, NULL, NULL,
         'aliases', NULL, NULL, TRUE, 'zimbraId'
       );
       if (!empty($result->num)) {
@@ -1352,4 +1352,72 @@ function zimbra_check_password_strength(ZimbraAdminApi $api, $id, $password) {
     }
   }
   return $cache[$cache_key];
+}
+
+/**
+ * Get Quota Usage
+ *
+ * @param ZimbraAdminApi $api Zimbra admin api.
+ * @param string $domain Domain - the domain name to limit the search to
+ * @param int $limit Limit - the number of accounts to return (0 is default and means all)
+ * @param int $offset Offset - the starting offset (0, 25, etc)
+ * @return mix
+ */
+function zimbra_get_quota_usage(
+  ZimbraAdminApi $api,
+  $domain = null,
+  $limit = null,
+  $offset = null,
+  &$pager = array()
+) {
+  $cache = &backdrop_static(__FUNCTION__, array());
+  $cache_key = md5($api->location() . '-' . $domain . '-' . $limit . '-' . $offset);
+  if (!isset($cache[$cache_key])) {
+    $quota_usage = array();
+    try {
+      $result = $api->getQuotaUsage(
+        $domain, null, $limit, $offset, null, null, null
+      );
+      $pager = array(
+        'more' => isset($result->more) ? (bool) $result->more : false,
+        'total' => isset($result->searchTotal) ? (int) $result->searchTotal : 0,
+        'limit' => (int) $limit,
+        'offset' => (int) $offset,
+      );
+      if(isset($result->account)) {
+        $accounts = is_array($result->account) ? $result->account : array($result->account);
+        foreach ($accounts as $account) {
+          $quota_usage[$account->id] = $account;
+        }
+      }
+    }
+    catch (Exception $ex) {
+      watchdog('zimbra', $ex->__toString());
+    }
+    $cache[$cache_key] = $quota_usage;
+  }
+  return $cache[$cache_key];
+}
+
+/**
+ * Normalize zimbra attributes
+ */
+function _zimbra_attrs_normalize(array $attrs = array()) {
+  $a = array();
+  foreach ($attrs as $key => $value) {
+    if (is_array($value)) {
+      if (empty($value)) {
+        $a[] = new KeyValuePair($key, '');
+      }
+      else {
+        foreach ($value as $v) {
+          $a[] = new KeyValuePair($key, $v);
+        }
+      }
+    }
+    else {
+      $a[] = new KeyValuePair($key, $value);
+    }
+  }
+  return $a;
 }

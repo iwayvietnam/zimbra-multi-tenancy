@@ -11,12 +11,10 @@ function zmt_group_list_all() {
   $header[] = array('data' => t('No.'));
   $header[] = array('data' => t('Name'), 'field' => 'zg.name');
   $header[] = array('data' => t('Full name'), 'field' => 'zg.full_name');
-  $header[] = array('data' => t('Total member'), 'field' => 'total_member');
+  $header[] = array('data' => t('Total member'));
   $header[] = array('data' => t('Operations'));
 
   $query = db_select('zmt_group', 'zg')->extend('PagerDefault')->extend('TableSort');
-  $query->leftJoin('zmt_domain', 'zd', 'zd.id = zg.domain_id');
-  $query->addField('zd', 'name', 'domain');
 
   $domain_ids = array();
   if (!(user_access('administer zmt'))) {
@@ -45,25 +43,21 @@ function zmt_group_list_all() {
     }
   }
 
-  $group_member_query = db_select('zmt_group_member', 'zgm')
-    ->fields('zgm', array('group_id'))
-    ->groupBy('zgm.group_id');
-  $group_member_query->addExpression('COUNT(zgm.id)', 'total_member');
-  $query->leftJoin($group_member_query, 'gmq', 'gmq.group_id = zg.id');
-  $query->addExpression('IFNULL(gmq.total_member, 0)', 'total_member');
-
-  $item_per_page = variable_get('zimbra_item_per_page', 20);
-  $result = $query
-    ->fields('zg')
+  $destination = backdrop_get_destination();
+  $item_per_page = (int) config_get('zmt.settings', 'zimbra_item_per_page');
+  $ids = $query
+    ->fields('zg', array('id'))
     ->orderByHeader($header)
     ->limit($item_per_page)
-    ->execute();
+    ->execute()
+    ->fetchCol();
+  $groups = zmt_group_load_multiple($ids);
 
-  $destination = backdrop_get_destination();
+  $key = 1;
   $rows = array();
-  foreach ($result as $key => $group) {
+  foreach ($groups as $group) {
     $row = array();
-    $row[] = $key + 1 + (pager_find_page() * $item_per_page);
+    $row[] = $key + (pager_find_page() * $item_per_page);
     $group_name = $group->name . '@' . $group->domain;
     $row[] = l($group_name, 'zmt/group/' . $group->id . '/edit', array('query' => $destination));
     $row[] = array(
@@ -72,19 +66,13 @@ function zmt_group_list_all() {
     $row[] = array(
       'data' => $group->total_member,
     );
+    $row[] = implode('&nbsp;&nbsp;&nbsp;', array(
+      l(t('edit'), 'zmt/group/' . $group->id . '/edit', array('query' => $destination)),
+      l(t('delete'), 'zmt/group/' . $group->id . '/delete', array('query' => $destination)),
+    ));
 
-    $operations = l(t('edit'), 'zmt/group/' . $group->id . '/edit', array('query' => $destination));
-    $operations .= '&nbsp;&nbsp;&nbsp;' . l(t('delete'), 'zmt/group/' . $group->id . '/delete', array('query' => $destination));
-    $row[] = $operations;
     $rows[] = $row;
-  }
-  if (empty($rows)) {
-    $rows[] = array(
-      array(
-        'data' => t('There are no groups available.') . ' ' . l(t('Add one now'), 'zmt/group/add') . '.',
-        'colspan' => count($header)
-      ),
-    );
+    $key++;
   }
 
   $build = array();
@@ -100,6 +88,7 @@ function zmt_group_list_all() {
     '#theme' => 'table',
     '#header' => $header,
     '#rows' => $rows,
+    '#empty' => t('There are no groups available.') . ' ' . l(t('Add one now.'), 'zmt/group/add'),
   );
   $build['group_pager'] = array('#theme' => 'pager');
 
@@ -556,7 +545,7 @@ function zmt_group_edit_form_validate($form, &$form_state) {
     $mail = trim($values['mail']);
     form_set_value($form['group_user']['mail'], $mail, $form_state);
     // Validate the e-mail address, and check if it is taken by an existing user.
-    if ($error = zmt_user_validate_mail($values['mail'])) {
+    if ($error = user_validate_mail($values['mail'])) {
       form_set_error('mail', $error);
     }
     else {
@@ -590,20 +579,21 @@ function zmt_group_edit_form_submit($form, &$form_state) {
 
   $create_user = isset($values['create_user']) ? (int) $values['create_user'] : 0;
   if ($create_user) {
-    $account->name = check_plain($values['name']);
-    $account->mail = check_plain($values['mail']);
-    $account->status = (int) $values['status'];
-    $account->init = 'email address';
-    if (!empty($values['pass'])) {
-      $account->pass = trim($values['pass']);
+    $edit = array(
+      'name' => check_plain(trim($values['name'])),
+      'mail' => check_plain(trim($values['mail'])),
+      'status' => (int) $values['status'],
+      'init' => 'email address',
+    );
+    if (isset($values['pass']) && !empty($values['pass'])) {
+      $edit['pass'] = trim($values['pass']);
     }
+    $group_role = config_get('zmt.settings', 'zmt_group_role');
+    if ($group_role) {
+      $edit['roles'] = backdrop_map_assoc(array($group_role));
+    }
+    $account = user_save($account, $edit);
 
-    $config = config('zmt.settings');
-    $group_role = $config->get('zmt_group_role');
-    if (!empty($group_role)) {
-      $account->roles[] = $group_role;
-    }
-    $account->save();
     $group->group_uid = $account->uid;
   }
 

@@ -11,18 +11,13 @@ function zmt_domain_list_all() {
   $header[] = array('data' => t('No.'));
   $header[] = array('data' => t('Name'), 'field' => 'zd.name');
   $header[] = array('data' => t('Status'), 'field' => 'zd.status');
-  if (module_exists('zmt_account')) {
-    $header[] = array('data' => t('Total account'), 'field' => 'za.total_account');
-  }
+  $header[] = array('data' => t('Total account'));
   $header[] = array('data' => t('Tenant'), 'field' => 'u.name');
 
   $header[] = array('data' => t('Operations'));
   $query = db_select('zmt_domain', 'zd')->extend('PagerDefault')->extend('TableSort');
   $query->leftJoin('zmt_tenant', 'zt', 'zt.id = zd.tenant_id');
   $query->leftJoin('users', 'u', 'u.uid = zt.tenant_uid');
-  $query->addField('u', 'name', 'tenant');
-
-  $query->addTag('domain_count_account');
 
   if (!(user_access('administer zmt'))) {
     if (user_access('administer any zmt_domain')) {
@@ -37,45 +32,39 @@ function zmt_domain_list_all() {
     $query->condition('zd.server_id', $server_id);
   }
 
-  $item_per_page = variable_get('zimbra_item_per_page', 20);
-  $result = $query
-    ->fields('zd')
-    ->orderByHeader($header)
-    ->limit($item_per_page)
-    ->execute();
-
   $destination = backdrop_get_destination();
   $statuses = zmt_domain_statuses();
+  $item_per_page = (int) config_get('zmt.settings', 'zimbra_item_per_page');
+  $ids = $query
+    ->fields('zd', array('id'))
+    ->orderByHeader($header)
+    ->limit($item_per_page)
+    ->execute()
+    ->fetchCol();
+  $domains = zmt_domain_load_multiple($ids);
+
+  $key = 1;
   $rows = array();
-  foreach ($result as $key => $domain) {
+  foreach ($domains as $domain) {
     $row = array();
-    $row[] = $key + 1 + (pager_find_page() * $item_per_page);
+    $row[] = $key + (pager_find_page() * $item_per_page);
     $row[] = l($domain->name, 'zmt/domain/' . $domain->id . '/edit', array('query' => $destination));
     $row[] = array(
-      'data' => isset($statuses[$domain->status]) ? $statuses[$domain->status] : $domain->status,
+      'data' => !empty($statuses[$domain->status]) ? $statuses[$domain->status] : $domain->status,
     );
-    if (module_exists('zmt_account')) {
-      $total_account = isset($domain->total_account) ? $domain->total_account : 0;
-      $row[] = array(
-        'data' => $total_account,
-      );
-    }
+    $row[] = array(
+      'data' => !empty($domain->total_account) ? (int) $domain->total_account : 0,
+    );
     $row[] = array(
       'data' => $domain->tenant,
     );
+    $row[] = implode('&nbsp;&nbsp;&nbsp;', array(
+      l(t('edit'), 'zmt/domain/' . $domain->id . '/edit', array('query' => $destination)),
+      l(t('delete'), 'zmt/domain/' . $domain->id . '/delete', array('query' => $destination)),
+    ));
 
-    $operations = l(t('edit'), 'zmt/domain/' . $domain->id . '/edit', array('query' => $destination));
-    $operations .= '&nbsp;&nbsp;&nbsp;' . l(t('delete'), 'zmt/domain/' . $domain->id . '/delete', array('query' => $destination));
-    $row[] = $operations;
     $rows[] = $row;
-  }
-  if (empty($rows)) {
-    $rows[] = array(
-      array(
-        'data' => t('There are no domains available.') . ' ' . l(t('Add one now'), 'zmt/domain/add') . '.',
-        'colspan' => count($header)
-      ),
-    );
+    $key++;
   }
 
   $build = array();
@@ -86,6 +75,7 @@ function zmt_domain_list_all() {
     '#theme' => 'table',
     '#header' => $header,
     '#rows' => $rows,
+    '#empty' => t('There are no domains available.') . ' ' . l(t('Add one now.'), 'zmt/domain/add'),
   );
   $build['domains_pager'] = array('#theme' => 'pager');
 
@@ -117,9 +107,9 @@ function zmt_domain_edit_form($form, &$form_state, $domain) {
 
   $form_state['domain'] = $domain;
   $account = user_load($domain->domain_uid);
-  $form_state['user'] = ($account && (int) $account->uid > 0) ? $account : entity_create('user', array());
+  $form_state['user'] = ($account && (int) $account->uid > 0) ? $account : backdrop_anonymous_user();
   $values = &$form_state['values'];
-  $domain_id = !empty($domain->id) ? (int) $domain->id : 0;
+  $domain_id = isset($domain->id) ? (int) $domain->id : 0;
 
   $form['domain_name'] = array(
     '#title' => t('Name'),
@@ -363,7 +353,7 @@ function zmt_domain_edit_form_validate($form, &$form_state) {
     $mail = trim($values['mail']);
     form_set_value($form['domain_user']['mail'], $mail, $form_state);
     // Validate the e-mail address, and check if it is taken by an existing user.
-    if ($error = zmt_user_validate_mail($values['mail'])) {
+    if ($error = user_validate_mail($values['mail'])) {
       form_set_error('mail', $error);
     }
     else {
@@ -395,7 +385,7 @@ function zmt_domain_max_account_number_element_validate($element, &$form_state, 
   $title = $element['#title'];
 
   if ($id) {
-    $total_account = zmt_domain_count_accounts($id);
+    $total_account = !empty($domain->total_account) ? (int) $domain->total_account : 0;
     if ($value < $total_account) {
       form_error($element, t('Max account number must be greater than total account number.'));
     }
@@ -444,20 +434,21 @@ function zmt_domain_edit_form_submit($form, &$form_state) {
 
   $create_user = isset($values['create_user']) ? (int) $values['create_user'] : 0;
   if ($create_user) {
-    $account->name = check_plain($values['name']);
-    $account->mail = check_plain($values['mail']);
-    $account->status = (int) $values['status'];
-    $account->init = 'email address';
-    if (!empty($values['pass'])) {
-      $account->pass = trim($values['pass']);
+    $edit = array(
+      'name' => check_plain(trim($values['name'])),
+      'mail' => check_plain(trim($values['mail'])),
+      'status' => (int) $values['status'],
+      'init' => 'email address',
+    );
+    if (isset($values['pass']) && !empty($values['pass'])) {
+      $edit['pass'] = trim($values['pass']);
     }
+    $domain_role = config_get('zmt.settings', 'zmt_domain_role');
+    if ($domain_role) {
+      $edit['roles'] = backdrop_map_assoc(array($domain_role));
+    }
+    $account = user_save($account, $edit);
 
-    $config = config('zmt.settings');
-    $domain_role = $config->get('zmt_domain_role');
-    if (!empty($domain_role)) {
-      $account->roles[] = $domain_role;
-    }
-    $account->save();
     $domain->domain_uid = $account->uid;
   }
 
@@ -556,8 +547,17 @@ function zmt_domain_delete_form($form, &$form_state, $domain) {
  */
 function zmt_domain_delete_form_validate($form, &$form_state) {
   $domain = $form_state['domain'];
-  $mailbox_number = zmt_domain_count_mailboxes($domain->id);
-  if ($mailbox_number) {
+  $total_mailbox = 0;
+  if (!empty($domain->total_account)) {
+    $total_mailbox += (int) $domain->total_account;
+  }
+  if (!empty($domain->total_alias)) {
+    $total_mailbox += (int) $domain->total_alias;
+  }
+  if (!empty($domain->total_group)) {
+    $total_mailbox += (int) $domain->total_group;
+  }
+  if ($total_mailbox) {
     form_set_error('actions', t('Please delete all accounts, aliases, group of this domain before delete this domain.'));
   }
 }

@@ -10,14 +10,12 @@ function zmt_alias_list_all() {
   $header = array();
   $header[] = array('data' => t('No.'));
   $header[] = array('data' => t('Name'), 'field' => 'za.name');
-  $header[] = array('data' => t('Target account'), 'field' => 'za.account');
+  $header[] = array('data' => t('Target account'));
   $header[] = array('data' => t('Operations'));
 
   $query = db_select('zmt_alias', 'za')->extend('PagerDefault')->extend('TableSort');
   $query->leftJoin('zmt_domain', 'zd', 'zd.id = za.domain_id');
   $query->leftJoin('zmt_account', 'zac', 'zac.id = za.account_id');
-  $query->addField('zd', 'name', 'domain');
-  $query->addField('zac', 'name', 'account');
 
   $domain_ids = array();
   if (!(user_access('administer zmt'))) {
@@ -48,36 +46,33 @@ function zmt_alias_list_all() {
     }
   }
 
-  $item_per_page = variable_get('zimbra_item_per_page', 20);
-  $result = $query
-    ->fields('za')
+  $destination = backdrop_get_destination();
+  $item_per_page = (int) config_get('zmt.settings', 'zimbra_item_per_page');
+  $ids = $query
+    ->fields('za', array('id'))
     ->orderByHeader($header)
     ->limit($item_per_page)
-    ->execute();
+    ->execute()
+    ->fetchCol();
+  $aliases = zmt_alias_load_multiple($ids);
 
-  $destination = backdrop_get_destination();
+  $key = 1;
   $rows = array();
-  foreach ($result as $key => $alias) {
+  foreach ($aliases as $alias) {
     $row = array();
-    $row[] = $key + 1 + (pager_find_page() * $item_per_page);
+    $row[] = $key + (pager_find_page() * $item_per_page);
     $alias_name = $alias->name . '@' . $alias->domain;
     $row[] = l($alias_name, 'zmt/alias/' . $alias->id . '/edit', array('query' => $destination));
     $row[] = array(
       'data' => $alias->account . '@' . $alias->domain,
     );
+    $row[] = implode('&nbsp;&nbsp;&nbsp;', array(
+      l(t('edit'), 'zmt/alias/' . $alias->id . '/edit', array('query' => $destination)),
+      l(t('delete'), 'zmt/alias/' . $alias->id . '/delete', array('query' => $destination)),
+    ));
 
-    $operations = l(t('edit'), 'zmt/alias/' . $alias->id . '/edit', array('query' => $destination));
-    $operations .= '&nbsp;&nbsp;&nbsp;' . l(t('delete'), 'zmt/alias/' . $alias->id . '/delete', array('query' => $destination));
-    $row[] = $operations;
     $rows[] = $row;
-  }
-  if (empty($rows)) {
-    $rows[] = array(
-      array(
-        'data' => t('There are no aliases available.') . ' ' . l(t('Add one now'), 'zmt/alias/add') . '.',
-        'colspan' => count($header)
-      ),
-    );
+    $key++;
   }
 
   $build = array();
@@ -93,6 +88,7 @@ function zmt_alias_list_all() {
     '#theme' => 'table',
     '#header' => $header,
     '#rows' => $rows,
+    '#empty' => t('There are no aliases available.') . ' ' . l(t('Add one now.'), 'zmt/alias/add'),
   );
   $build['alias_pager'] = array('#theme' => 'pager');
 

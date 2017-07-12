@@ -132,8 +132,8 @@ function zmt_cos_load($id, $reset = FALSE) {
     return FALSE;
   }
 
-  $services = zmt_cos_load_multiple(array($id), array(), $reset);
-  return $services ? reset($services) : FALSE;
+  $coses = zmt_cos_load_multiple(array($id), array(), $reset);
+  return $coses ? reset($coses) : FALSE;
 }
 
 /**
@@ -167,7 +167,7 @@ function zmt_cos_load_multiple(array $ids = array(), array $conditions = array()
  */
 function zmt_cos_load_all($limit = 0, $offset = 0){
   $cache = &backdrop_static(__FUNCTION__, array());
-  $cache_key = $limit + $offset;
+  $cache_key = $limit . '-' . $offset;
   if (!isset($cache[$cache_key])) {
     $efq = new EntityFieldQuery();
     if ((int) $limit > 0) {
@@ -193,7 +193,7 @@ function zmt_cos_load_all($limit = 0, $offset = 0){
 function zmt_cos_load_multiple_by_server($server, $limit = 0, $offset = 0) {
   $cache = &backdrop_static(__FUNCTION__, array());
   $server_id = is_object($server) ? $server->id : $server;
-  $cache_key = $server_id + $limit + $offset;
+  $cache_key = $server_id . '-' . $limit . '-' . $offset;
   if (!isset($cache[$cache_key])) {
     $efq = new EntityFieldQuery();
     if ((int) $limit > 0) {
@@ -206,6 +206,27 @@ function zmt_cos_load_multiple_by_server($server, $limit = 0, $offset = 0) {
     $cache[$cache_key] = zmt_cos_load_multiple($ids);
   }
   return $cache[$cache_key];
+}
+
+/**
+ * Loads a cos by zimbra id.
+ * @param $zimbra_id
+ *   The cos zimbra id.
+ * @return
+ *   A cos object or FALSE.
+ */
+function zmt_cos_load_by_zimbra_id($zimbra_id) {
+  $cache = &backdrop_static(__FUNCTION__, array());
+  if (!isset($cache[$zimbra_id])) {
+    $query = new EntityFieldQuery();
+    $result = $query->entityCondition('entity_type', 'zmt_cos')
+      ->propertyCondition('zimbra_id', $zimbra_id)
+      ->execute();
+    $ids = isset($result['zmt_cos']) ? array_keys($result['zmt_cos']) : array();
+    $coses = zmt_cos_load_multiple($ids);
+    $cache[$zimbra_id] = $coses ? reset($coses) : FALSE;
+  }
+  return $cache[$zimbra_id];
 }
 
 /**

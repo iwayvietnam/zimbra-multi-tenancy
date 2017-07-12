@@ -31,6 +31,14 @@ function zmt_ui_menu() {
     'file' => 'zmt.admin.inc',
   );
 
+  $items['zmt/account/quota'] = array(
+    'title' => 'Mailbox Quota',
+    'page callback' => 'zmt_account_quota_usage',
+    'access callback' => 'zmt_account_list_access',
+    'type' => MENU_LOCAL_ACTION,
+    'file' => 'zmt.admin.inc',
+  );
+
   return $items;
 }
 
@@ -228,8 +236,8 @@ function zmt_ui_zmt_account_import_form_validate($form, &$form_state) {
       $total_account = count($accounts);
       $message_name = 'zmt_importing_message_' . $form_state['time'];
       $progress_name = 'zmt_importing_progress_' . $form_state['time'];
-      variable_set($message_name, t('Importing accounts to zimbra server...'));
-      variable_set($progress_name, $progress);
+      state_set($message_name, t('Importing accounts to zimbra server...'));
+      state_set($progress_name, $progress);
 
       module_load_include('inc', 'zmt_core', 'includes/zmt.zimbra');
       $domain_id = (int) $form_state['values']['domain_id'];
@@ -292,7 +300,7 @@ function zmt_ui_zmt_account_import_form_validate($form, &$form_state) {
         }
 
         $progress++;
-        variable_set($progress_name, floor($progress * 100 / $total_account));
+        state_set($progress_name, floor($progress * 100 / $total_account));
       }
     }
   }
@@ -461,7 +469,13 @@ function zmt_ui_account_edit_form_validate($form, &$form_state) {
       'telephoneNumber' => check_plain($values['telephone']),
       'company' => check_plain($values['company']),
       'mobile' => check_plain($values['mobile']),
+      'zimbraMailForwardingAddress' => array(),
     );
+
+    if (!empty($form_state['hidden_forwarding'])) {
+      $attrs['zimbraMailForwardingAddress'] = $form_state['hidden_forwarding'];
+    }
+
     if (!empty($cos_zimbra_id)) {
       $attrs['zimbraCOSId'] = $cos_zimbra_id;
     }
@@ -559,29 +573,27 @@ function zmt_ui_form_zmt_server_edit_form_alter(&$form, &$form_state) {
  */
 function ajax_zmt_server_test_connection($form, $form_state) {
   module_load_include('inc', 'zmt_core', 'includes/zmt.zimbra');
-  if (form_set_error()) {
-    return $form;
-  }
-  else {
-    $values = $form_state['values'];
-    $server = $form_state['server'];
-    $location = $values['service_location'];
-    $user = $values['admin_user'];
-    $password = $values['admin_password'];
-    if (empty($password)) {
-      $password = zmt_password_decrypt($server->admin_password);
-    }
-    $connected = zimbra_test_connection($location, $user, $password);
-    if ($connected) {
-      $message = 'Connection to zimbra server success!';
-    } else {
-      $message = 'Connection to zimbra server failed!';
-    }
 
-    $commands = array();
-    $commands[] = ajax_command_alert($message);
-    return array('#type' => 'ajax', '#commands' => $commands);
+  $values = $form_state['values'];
+  $server = $form_state['server'];
+  $location = $values['service_location'];
+  $user = $values['admin_user'];
+  $password = $values['admin_password'];
+  if (empty($password)) {
+    $password = zmt_password_decrypt($server->admin_password);
   }
+  $auth_token = zimbra_test_connection($location, $user, $password);
+  if ($auth_token) {
+    $server->auth_token = $auth_token;
+    zmt_server_save($server);
+    $message = 'Connection to zimbra server success!';
+  } else {
+    $message = 'Connection to zimbra server failed!';
+  }
+
+  $commands = array();
+  $commands[] = ajax_command_alert($message);
+  return array('#type' => 'ajax', '#commands' => $commands);
 }
 
 /**
@@ -600,8 +612,12 @@ function zmt_ui_test_server_connection_validate($form, &$form_state) {
     if (empty($password)) {
       $password = zmt_password_decrypt($server->admin_password);
     }
-    $connected = zimbra_test_connection($location, $user, $password);
-    if (!$connected) {
+    $auth_token = zimbra_test_connection($location, $user, $password);
+    if ($auth_token) {
+      $server->auth_token = $auth_token;
+      zmt_server_save($server);
+    }
+    else {
       form_set_error('', t('Connection to zimbra server failed!'));
     }
   }

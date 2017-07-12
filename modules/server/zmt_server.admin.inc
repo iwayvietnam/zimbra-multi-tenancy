@@ -19,19 +19,21 @@ function zmt_server_list_all() {
     $query->condition('zs.uid', $user->uid);
   }
 
-  $item_per_page = variable_get('zimbra_item_per_page', 20);
-  $result = $query
-    ->fields('zs')
+  $destination = backdrop_get_destination();
+  $item_per_page = (int) config_get('zmt.settings', 'zimbra_item_per_page')
+  $ids = $query
+    ->fields('zs', array('id'))
     ->orderByHeader($header)
     ->limit($item_per_page)
-    ->execute();
+    ->execute()
+    ->fetchCol();
+  $servers = zmt_server_load_multiple($ids);
 
-  $destination = backdrop_get_destination();
-
+  $key = 1;
   $rows = array();
-  foreach ($result as $key => $server) {
+  foreach ($servers as $server) {
     $row = array();
-    $row[] = $key + 1 + (pager_find_page() * $item_per_page);
+    $row[] = $key + (pager_find_page() * $item_per_page);
     $row[] = l($server->name, 'zmt/server/' . $server->id . '/edit', array('query' => $destination));
     $row[] = array(
       'data' => $server->service_location,
@@ -39,25 +41,20 @@ function zmt_server_list_all() {
     $row[] = array(
       'data' => $server->admin_user,
     );
+    $row[] = implode('&nbsp;&nbsp;&nbsp;', array(
+      l(t('edit'), 'zmt/server/' . $server->id . '/edit', array('query' => $destination)),
+      l(t('delete'), 'zmt/server/' . $server->id . '/delete', array('query' => $destination)),
+    ));
 
-    $operations = l(t('edit'), 'zmt/server/' . $server->id . '/edit', array('query' => $destination));
-    $operations .= '&nbsp;&nbsp;&nbsp;' . l(t('delete'), 'zmt/server/' . $server->id . '/delete', array('query' => $destination));
-    $row[] = $operations;
     $rows[] = $row;
-  }
-  if (empty($rows)) {
-    $rows[] = array(
-      array(
-        'data' => t('There are no servers available.') . ' ' . l(t('Add one now'), 'zmt/server/add') . '.',
-        'colspan' => count($header)
-      ),
-    );
+    $key++;
   }
 
   $build['servers_table']  = array(
     '#theme' => 'table',
     '#header' => $header,
     '#rows' => $rows,
+    '#empty' => t('There are no servers available.') . ' ' . l(t('Add one now.'), 'zmt/server/add'),
   );
   $build['servers_pager'] = array('#theme' => 'pager');
 
@@ -229,8 +226,8 @@ function zmt_server_delete_form($form, &$form_state, $server) {
  */
 function zmt_server_delete_form_validate($form, &$form_state) {
   $server = $form_state['server'];
-  $mailbox_number = zmt_server_count_domain($server->id);
-  if ($mailbox_number) {
+  $total_domain = !empty($server->total_domain) ? (int) $server->total_domain : 0;
+  if ($total_domain) {
     form_set_error('actions', t('Please delete all domains of this server before delete this server.'));
   }
 }

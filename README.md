@@ -4,7 +4,7 @@
 
 Copyright (C) 2013 [iWay Vietnam] (http://www.iwayvietnam.com/)
 
-##Licensing
+## Licensing
 [GNU Affero General Public License] (http://www.gnu.org/licenses/agpl-3.0.html)
 
     This program is free software: you can redistribute it and/or modify
@@ -20,58 +20,58 @@ Copyright (C) 2013 [iWay Vietnam] (http://www.iwayvietnam.com/)
     You should have received a copy of the GNU Affero General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-##Backgrounds
+## Backgrounds
 
-###Community Needs background
+### Community Needs background
   * As mentioned in http://www.zimbra.com/products/compare_products.html, Multi-tenancy and Domain Administration & Role-based Delegate features is just available in Zimbra Network Edition.
   * Since a lot of sites deployed Zimbra Open Source Edition, especially for providing cloud-based services, still need these features.
   * This project is contributed to fill this gap. All contributions are welcome.
 
-###Technical background
+### Technical background
   * Based technologies: LAMP, using Backdrop framework
   * Programming language: PHP
 
-##Functionality Details
+## Functionality Details
 
-###For supervisors
+### For supervisors
 
-####Server management
+#### Server management
   * Create a new server (create server and set permissions at the same time)
   * Update an existing server
   * Delete an existing server
 
-####Tenant management
+#### Tenant management
   * Create a new tenant (create tenant-account and set permissions at the same time)
   * Update an existing tenant
   * Delete an existing tenant
 
-###For tenants
+### For tenants
   
-####Domain management
+#### Domain management
   * Create a new domain (create domain-admin-account and set permissions at the same time)
   * Update an existing domain
   * Delete an existing domain
 
 
-###For domain admins
+### For domain admins
 
-####Group/Distribution List management
+#### Group/Distribution List management
   * Create a new distribution list
   * Update an existing distribution list
   * Delete an existing distribution list
   
-####Mailbox/Account management
+#### Mailbox/Account management
   * Create a new mailbox
   * Update an existing mailbox
   * Delete an existing mailbox
   * Reset mailbox password
 
-####Alias management
+#### Alias management
   * Create a new alias
   * Update an existing alias
   * Delete an existing alias
 
 **Many other functionalities would be added later.**
 
-##Credits
+## Credits
 Special thanks to: iWay Development team
