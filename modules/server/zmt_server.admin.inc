@@ -20,7 +20,7 @@ function zmt_server_list_all() {
   }
 
   $destination = backdrop_get_destination();
-  $item_per_page = (int) config_get('zmt.settings', 'zimbra_item_per_page')
+  $item_per_page = (int) config_get('zmt.settings', 'zimbra_item_per_page');
   $ids = $query
     ->fields('zs', array('id'))
     ->orderByHeader($header)
