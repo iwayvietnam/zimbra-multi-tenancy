@@ -1,6 +1,15 @@
 <?php
 
 /**
+ * Implements hook_autoload_info().
+ */
+function zmt_core_autoload_info() {
+  return array(
+    'ZmtEntityController' => 'includes/zmt.entity.inc',
+  );
+}
+
+/**
  * Implements hook_permission().
  */ 
 function zmt_core_permission() {
@@ -187,13 +196,4 @@ function _zmt_openssl_decrypt($edata, $password) {
   $key = substr($result, 0, 32);
   $iv  = substr($result, 32,16);
   return openssl_decrypt($ct, 'aes-256-cbc', $key, TRUE, $iv);
-}
-
-/**
- * Implements hook_autoload_info().
- */
-function zmt_autoload_info() {
-  return array(
-    'ZmtEntityController' => 'includes/zmt.entity.inc',
-  );
 }
