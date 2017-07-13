@@ -4,9 +4,9 @@
  * Implements hook_install().
  */ 
 function zmt_domain_install() {
-  $config = config('zmt.settings');
-  $zimbra_role = $config->get('zmt_zimbra_role');
-  $tenant_role = $config->get('zmt_tenant_role');
+  $zimbra_role = config_get('zmt.settings', 'zmt_zimbra_role');
+  $tenant_role = config_get('zmt.settings', 'zmt_tenant_role');
+
   $zmt_perm = array(
     'administer any zmt_domain' => 1,
   );
@@ -22,7 +22,7 @@ function zmt_domain_install() {
  * Implements hook_schema().
  */
 function zmt_domain_schema() {
-  return array(
+  $schema = array(
     'zmt_domain' => array(
       'description' => 'The base table for zimbra domain.',
       'fields' => array(
@@ -183,4 +183,12 @@ function zmt_domain_schema() {
       ),
     ),
   );
+
+  $cache_schema = backdrop_get_schema_unprocessed('system', 'cache');
+  $schema['cache_entity_zmt_domain'] = $cache_schema;
+  $schema['cache_entity_zmt_domain']['description'] = 'Cache table used to store zmt_domain entity records.';
+  $schema['cache_entity_zmt_domain_cos'] = $cache_schema;
+  $schema['cache_entity_zmt_domain_cos']['description'] = 'Cache table used to store zmt_domain_cos entity records.';
+
+  return $schema;
 }
