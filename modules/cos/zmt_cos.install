@@ -4,8 +4,7 @@
  * Implements hook_install().
  */
 function zmt_cos_install() {
-  $config = config('zmt.settings');
-  $zimbra_role = $config->get('zmt_zimbra_role');
+  $zimbra_role = config_get('zmt.settings', 'zmt_zimbra_role');
   if (!empty($zimbra_role)) {
     $zmt_perm = array(
       'administer any zmt_cos' => 1,
@@ -18,7 +17,7 @@ function zmt_cos_install() {
  * Implements hook_schema().
  */
 function zmt_cos_schema() {
-  return array(
+  $schema = array(
     'zmt_cos' => array(
       'description' => 'The base table for zimbra class of service.',
       'fields' => array(
@@ -104,4 +103,10 @@ function zmt_cos_schema() {
       ),
     ),
   );
+
+  $cache_schema = backdrop_get_schema_unprocessed('system', 'cache');
+  $schema['cache_entity_zmt_cos'] = $cache_schema;
+  $schema['cache_entity_zmt_cos']['description'] = 'Cache table used to store zmt_cos entity records.';
+
+  return $schema;
 }
