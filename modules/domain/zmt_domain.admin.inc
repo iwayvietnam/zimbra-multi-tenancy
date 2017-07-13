@@ -342,7 +342,7 @@ function zmt_domain_edit_form_validate($form, &$form_state) {
     else {
       $exists = db_select('users')
         ->fields('users', array('uid'))
-        ->condition('uid', $account->uid, '<>')
+        ->condition('uid', (int) $account->uid, '<>')
         ->condition('name', db_like($values['name']), 'LIKE')
         ->range(0, 1)->execute()->fetchField();
       if ((bool) $exists) {
@@ -359,7 +359,7 @@ function zmt_domain_edit_form_validate($form, &$form_state) {
     else {
       $exists = db_select('users')
         ->fields('users', array('uid'))
-        ->condition('uid', $account->uid, '<>')
+        ->condition('uid', (int) $account->uid, '<>')
         ->condition('mail', db_like($values['mail']), 'LIKE')
         ->range(0, 1)->execute()->fetchField();
       if ((bool) $exists) {
