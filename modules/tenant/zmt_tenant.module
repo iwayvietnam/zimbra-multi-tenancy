@@ -8,13 +8,15 @@ function zmt_tenant_entity_info() {
     'zmt_tenant' => array(
       'label' => t('Tenant'),
       'entity class' => 'ZmtTenantEntity',
-      'controller class' => 'EntityDatabaseStorageController',
+      'controller class' => 'ZmtEntityController',
       'base table' => 'zmt_tenant',
       'fieldable' => FALSE,
       'entity keys' => array(
         'id' => 'id',
         'label' => 'full_name',
       ),
+      'entity cache' => TRUE,
+      'bundles' => array(),
       'view modes' => array(
         'full' => array(
           'label' => t('Tenant'),
@@ -29,12 +31,14 @@ function zmt_tenant_entity_info() {
     'zmt_tenant_cos' => array(
       'label' => t('Class of Service for Tenant'),
       'entity class' => 'ZmtTenantCosEntity',
-      'controller class' => 'EntityDatabaseStorageController',
+      'controller class' => 'ZmtEntityController',
       'base table' => 'zmt_tenant_cos',
       'fieldable' => FALSE,
       'entity keys' => array(
         'id' => 'id',
       ),
+      'entity cache' => TRUE,
+      'bundles' => array(),
       'module' => 'zmt_tenant',
       'access callback' => 'zmt_tenant_access',
     ),

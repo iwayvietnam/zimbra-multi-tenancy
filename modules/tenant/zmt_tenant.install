@@ -4,8 +4,7 @@
  * Implements hook_install().
  */ 
 function zmt_tenant_install() {
-  $config = config('zmt.settings');
-  $zimbra_role = $config->get('zmt_zimbra_role');
+  $zimbra_role = config_get('zmt.settings', 'zmt_zimbra_role');
   if (!empty($zimbra_role)) {
     $zmt_perm = array(
       'administer any zmt_tenant' => 1,
@@ -18,7 +17,7 @@ function zmt_tenant_install() {
  * Implements hook_schema().
  */
 function zmt_tenant_schema() {
-  return array(
+  $schema = array(
     'zmt_tenant' => array(
       'description' => 'The base table for tenant.',
       'fields' => array(
@@ -152,4 +151,12 @@ function zmt_tenant_schema() {
       ),
     ),
   );
+
+  $cache_schema = backdrop_get_schema_unprocessed('system', 'cache');
+  $schema['cache_entity_zmt_tenant'] = $cache_schema;
+  $schema['cache_entity_zmt_tenant']['description'] = 'Cache table used to store zmt_tenant entity records.';
+  $schema['cache_entity_zmt_tenant_cos'] = $cache_schema;
+  $schema['cache_entity_zmt_tenant_cos']['description'] = 'Cache table used to store zmt_tenant_cos entity records.';
+
+  return $schema;
 }
