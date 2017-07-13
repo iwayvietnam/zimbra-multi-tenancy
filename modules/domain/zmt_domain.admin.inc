@@ -353,7 +353,7 @@ function zmt_domain_edit_form_validate($form, &$form_state) {
     $mail = trim($values['mail']);
     form_set_value($form['domain_user']['mail'], $mail, $form_state);
     // Validate the e-mail address, and check if it is taken by an existing user.
-    if ($error = user_validate_mail($values['mail'])) {
+    if ($error = zmt_user_validate_mail($values['mail'])) {
       form_set_error('mail', $error);
     }
     else {
