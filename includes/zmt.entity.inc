@@ -134,10 +134,11 @@ class ZmtEntityController extends EntityDatabaseStorageController {
     // load, if loading a revision, or if $conditions was passed without $ids.
     if ($ids === FALSE || $ids || $revision_id || ($conditions && !$passed_ids)) {
       // Build the query.
-      $query = $this->buildQuery($ids, $conditions, $revision_id);
-      $queried_entities = $query
-        ->execute()
-        ->fetchAllAssoc($this->idKey);
+      $query_result = $this->buildQuery($ids, $conditions, $revision_id)->execute();
+      if (!empty($this->entityInfo['entity class'])) {
+        $query_result->setFetchMode(PDO::FETCH_CLASS, $this->entityInfo['entity class'], array(array(), $this->entityType));
+      }
+      $queried_entities = $query_result->fetchAllAssoc($this->idKey);
     }
 
     // Pass all entities loaded from the database through $this->attachLoad(),
