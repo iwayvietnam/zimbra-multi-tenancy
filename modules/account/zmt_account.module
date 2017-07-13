@@ -8,13 +8,15 @@ function zmt_account_entity_info() {
     'zmt_account' => array(
       'label' => t('Account'),
       'entity class' => 'ZmtAccountEntity',
-      'controller class' => 'EntityDatabaseStorageController',
+      'controller class' => 'ZmtEntityController',
       'base table' => 'zmt_account',
       'fieldable' => FALSE,
       'entity keys' => array(
         'id' => 'id',
         'label' => 'name',
       ),
+      'entity cache' => TRUE,
+      'bundles' => array(),
       'view modes' => array(
         'full' => array(
           'label' => t('Account'),
