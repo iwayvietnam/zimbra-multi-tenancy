@@ -4,11 +4,10 @@
  * Implements hook_install().
  */ 
 function zmt_alias_install() {
-  $config = config('zmt.settings');
-  $zimbra_role = $config->get('zmt_zimbra_role');
-  $tenant_role = $config->get('zmt_tenant_role');
-  $domain_role = $config->get('zmt_domain_role');
-  $group_role = $config->get('zmt_group_role');
+  $zimbra_role = config_get('zmt.settings', 'zmt_zimbra_role');
+  $tenant_role = config_get('zmt.settings', 'zmt_tenant_role');
+  $domain_role = config_get('zmt.settings', 'zmt_domain_role');
+  $group_role = config_get('zmt.settings', 'zmt_group_role');
 
   $zmt_perm = array(
     'administer any zmt_alias' => 1,
@@ -31,7 +30,7 @@ function zmt_alias_install() {
  * Implements hook_schema().
  */
 function zmt_alias_schema() {
-  return array(
+  $schema = array(
     'zmt_alias' => array(
       'description' => 'The base table for zimbra alias.',
       'fields' => array(
@@ -113,4 +112,10 @@ function zmt_alias_schema() {
       ),
     ),
   );
+
+  $cache_schema = backdrop_get_schema_unprocessed('system', 'cache');
+  $schema['cache_entity_zmt_alias'] = $cache_schema;
+  $schema['cache_entity_zmt_alias']['description'] = 'Cache table used to store zmt_alias entity records.';
+
+  return $schema;
 }
