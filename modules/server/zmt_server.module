@@ -15,6 +15,7 @@ function zmt_server_entity_info() {
         'id' => 'id',
         'label' => 'name',
       ),
+      'entity cache' => TRUE,
       'bundles' => array(),
       'view modes' => array(
         'full' => array(
