@@ -8,7 +8,7 @@ function zmt_domain_entity_info() {
     'zmt_domain' => array(
       'label' => t('Domain'),
       'entity class' => 'ZmtDomainEntity',
-      'controller class' => 'EntityDatabaseStorageController',
+      'controller class' => 'ZmtEntityController',
       'base table' => 'zmt_domain',
       'fieldable' => FALSE,
       'entity keys' => array(
@@ -31,7 +31,7 @@ function zmt_domain_entity_info() {
     'zmt_domain_cos' => array(
       'label' => t('Class of Service for Domain'),
       'entity class' => 'ZmtDomainCosEntity',
-      'controller class' => 'EntityDatabaseStorageController',
+      'controller class' => 'ZmtEntityController',
       'base table' => 'zmt_domain_cos',
       'fieldable' => FALSE,
       'entity keys' => array(
