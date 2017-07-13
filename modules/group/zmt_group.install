@@ -4,10 +4,9 @@
  * Implements hook_install().
  */ 
 function zmt_group_install() {
-  $config = config('zmt.settings');
-  $zimbra_role = $config->get('zmt_zimbra_role');
-  $tenant_role = $config->get('zmt_tenant_role');
-  $domain_role = $config->get('zmt_domain_role');
+  $zimbra_role = config_get('zmt.settings', 'zmt_zimbra_role');
+  $tenant_role = config_get('zmt.settings', 'zmt_tenant_role');
+  $domain_role = config_get('zmt.settings', 'zmt_domain_role');
 
   $zmt_perm = array(
     'administer any zmt_group' => 1,
@@ -29,6 +28,12 @@ function zmt_group_install() {
 function zmt_group_schema() {
   $schema = _zmt_add_zmt_group_schema()
           + _zmt_add_zmt_group_member_schema();
+
+  $cache_schema = backdrop_get_schema_unprocessed('system', 'cache');
+  $schema['cache_entity_zmt_group'] = $cache_schema;
+  $schema['cache_entity_zmt_group']['description'] = 'Cache table used to store zmt_group entity records.';
+  $schema['cache_entity_zmt_group_member'] = $cache_schema;
+  $schema['cache_entity_zmt_group_member']['description'] = 'Cache table used to store zmt_group_member entity records.';
 
   return $schema;
 }

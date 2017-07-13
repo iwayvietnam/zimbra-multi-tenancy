@@ -8,13 +8,15 @@ function zmt_group_entity_info() {
     'zmt_group' => array(
       'label' => t('Group'),
       'entity class' => 'ZmtGroupEntity',
-      'controller class' => 'EntityDatabaseStorageController',
+      'controller class' => 'ZmtEntityController',
       'base table' => 'zmt_group',
       'fieldable' => FALSE,
       'entity keys' => array(
         'id' => 'id',
         'label' => 'name',
       ),
+      'entity cache' => TRUE,
+      'bundles' => array(),
       'view modes' => array(
         'full' => array(
           'label' => t('Group'),
@@ -29,13 +31,15 @@ function zmt_group_entity_info() {
     'zmt_group_member' => array(
       'label' => t('Group member'),
       'entity class' => 'ZmtGroupMemberEntity',
-      'controller class' => 'EntityDatabaseStorageController',
+      'controller class' => 'ZmtEntityController',
       'base table' => 'zmt_group_member',
       'fieldable' => FALSE,
       'entity keys' => array(
         'id' => 'id',
         'label' => 'name',
       ),
+      'entity cache' => TRUE,
+      'bundles' => array(),
       'module' => 'zmt_group',
       'access callback' => 'zmt_group_access',
     ),
