@@ -363,3 +363,10 @@ function zmt_cos_autoload_info() {
     'ZmtCosEntity' => 'zmt_cos.entity.inc',
   );
 }
+
+/**
+ * Implements hook_flush_caches().
+ */
+function zmt_cos_flush_caches() {
+  return array('cache_entity_zmt_cos');
+}

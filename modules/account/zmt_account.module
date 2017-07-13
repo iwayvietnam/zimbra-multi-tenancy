@@ -497,3 +497,10 @@ function zmt_account_autoload_info() {
     'ZmtAccountEntity' => 'zmt_account.entity.inc',
   );
 }
+
+/**
+ * Implements hook_flush_caches().
+ */
+function zmt_account_flush_caches() {
+  return array('cache_entity_zmt_account');
+}

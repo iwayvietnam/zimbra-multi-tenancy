@@ -953,3 +953,13 @@ function zmt_group_autoload_info() {
     'ZmtGroupMemberEntity' => 'zmt_group.entity.inc',
   );
 }
+
+/**
+ * Implements hook_flush_caches().
+ */
+function zmt_group_flush_caches() {
+  return array(
+    'cache_entity_zmt_group',
+    'cache_entity_zmt_group_member'
+  );
+}

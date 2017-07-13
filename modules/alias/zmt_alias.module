@@ -448,3 +448,10 @@ function zmt_alias_autoload_info() {
     'ZmtAliasEntity' => 'zmt_alias.entity.inc',
   );
 }
+
+/**
+ * Implements hook_flush_caches().
+ */
+function zmt_alias_flush_caches() {
+  return array('cache_entity_zmt_alias');
+}

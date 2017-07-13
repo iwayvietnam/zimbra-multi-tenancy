@@ -277,3 +277,10 @@ function zmt_server_autoload_info() {
     'ZmtServerEntity' => 'zmt_server.entity.inc',
   );
 }
+
+/**
+ * Implements hook_flush_caches().
+ */
+function zmt_server_flush_caches() {
+  return array('cache_entity_zmt_server');
+}

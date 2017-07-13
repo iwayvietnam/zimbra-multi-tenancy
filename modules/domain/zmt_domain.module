@@ -860,3 +860,13 @@ function zmt_domain_autoload_info() {
     'ZmtDomainCosEntity' => 'zmt_domain.entity.inc',
   );
 }
+
+/**
+ * Implements hook_flush_caches().
+ */
+function zmt_domain_flush_caches() {
+  return array(
+    'cache_entity_zmt_domain',
+    'cache_entity_zmt_domain_cos',
+  );
+}

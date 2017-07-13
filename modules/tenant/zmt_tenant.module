@@ -657,3 +657,13 @@ function zmt_tenant_autoload_info() {
     'ZmtTenantCosEntity' => 'zmt_tenant.entity.inc',
   );
 }
+
+/**
+ * Implements hook_flush_caches().
+ */
+function zmt_tenant_flush_caches() {
+  return array(
+    'cache_entity_zmt_tenant',
+    'cache_entity_zmt_tenant_cos',
+  );
+}
