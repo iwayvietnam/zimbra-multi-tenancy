@@ -8,7 +8,7 @@ function zmt_server_entity_info() {
     'zmt_server' => array(
       'label' => t('Zimbra server'),
       'entity class' => 'ZmtServerEntity',
-      'controller class' => 'EntityDatabaseStorageController',
+      'controller class' => 'ZmtEntityController',
       'base table' => 'zmt_server',
       'fieldable' => FALSE,
       'entity keys' => array(
