@@ -117,7 +117,7 @@ function zmt_cos_edit_form($form, &$form_state, $cos){
     '#type' => 'textfield',
     '#default_value' => $cos->max_account,
     '#element_validate' => array(
-      'element_validate_integer_positive',
+      'zmt_element_validate_integer_positive',
     ),
   );
 
