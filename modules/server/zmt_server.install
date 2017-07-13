@@ -4,8 +4,7 @@
  * Implements hook_install().
  */ 
 function zmt_server_install() {
-  $config = config('zmt.settings');
-  $zimbra_role = $config->get('zmt_zimbra_role');
+  $zimbra_role = config_get('zmt.settings', 'zmt_zimbra_role');
   if (!empty($zimbra_role)) {
     $zmt_perms = array(
       'administer any zmt_server' => 1,
@@ -18,7 +17,13 @@ function zmt_server_install() {
  * Implements hook_schema().
  */
 function zmt_server_schema() {
-  return array(
+  $schema = array();
+  $cache_schema = backdrop_get_schema_unprocessed('system', 'cache');
+
+  $schema['cache_entity_zmt_server'] = $cache_schema;
+  $schema['cache_entity_zmt_server']['description'] = 'Cache table used to store zmt_server entity records.';
+
+  return $schema + array(
     'zmt_server' => array(
       'description' => 'The base table for zimbra server.',
       'fields' => array(
@@ -125,14 +130,4 @@ function zmt_server_schema() {
       ),
     ),
   );
-}
-
-/**
- * Add auth token field to server.
- */
-function zmt_server_update_1001() {
-  db_add_field('zmt_server', 'auth_token', array(
-    'description' => 'The auth token of the server.',
-    'type' => 'text',
-  ));
 }
