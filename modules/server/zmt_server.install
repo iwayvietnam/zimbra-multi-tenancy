@@ -17,13 +17,7 @@ function zmt_server_install() {
  * Implements hook_schema().
  */
 function zmt_server_schema() {
-  $schema = array();
-  $cache_schema = backdrop_get_schema_unprocessed('system', 'cache');
-
-  $schema['cache_entity_zmt_server'] = $cache_schema;
-  $schema['cache_entity_zmt_server']['description'] = 'Cache table used to store zmt_server entity records.';
-
-  return $schema + array(
+  $schema = array(
     'zmt_server' => array(
       'description' => 'The base table for zimbra server.',
       'fields' => array(
@@ -130,4 +124,10 @@ function zmt_server_schema() {
       ),
     ),
   );
+
+  $cache_schema = backdrop_get_schema_unprocessed('system', 'cache');
+  $schema['cache_entity_zmt_server'] = $cache_schema;
+  $schema['cache_entity_zmt_server']['description'] = 'Cache table used to store zmt_server entity records.';
+
+  return $schema;
 }
