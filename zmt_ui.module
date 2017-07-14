@@ -581,8 +581,10 @@ function ajax_zmt_server_test_connection($form, $form_state) {
   }
   $auth_token = zimbra_test_connection($location, $user, $password);
   if ($auth_token) {
-    $server->auth_token = $auth_token;
-    zmt_server_save($server);
+    if (!empty($server->id)) {
+      $server->auth_token = $auth_token;
+      zmt_server_save($server);
+    }
     $message = 'Connection to zimbra server success!';
   } else {
     $message = 'Connection to zimbra server failed!';
@@ -611,8 +613,10 @@ function zmt_ui_test_server_connection_validate($form, &$form_state) {
     }
     $auth_token = zimbra_test_connection($location, $user, $password);
     if ($auth_token) {
-      $server->auth_token = $auth_token;
-      zmt_server_save($server);
+      if (!empty($server->id)) {
+        $server->auth_token = $auth_token;
+        zmt_server_save($server);
+      }
     }
     else {
       form_set_error('', t('Connection to zimbra server failed!'));
