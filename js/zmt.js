@@ -15,21 +15,21 @@
           if (this.checked) {
             switch(this.value){
               case 'group':
-                $('#edit-data-type-alias').attr('checked', 'checked');
+                $('#edit-data-type-alias').prop('checked', true);
               case 'alias':
-                $('#edit-data-type-account').attr('checked', 'checked');
+                $('#edit-data-type-account').prop('checked', true);
               case 'account':
-                $('#edit-data-type-domain').attr('checked', 'checked');
+                $('#edit-data-type-domain').prop('checked', true);
             }
           };
           if (!this.checked) {
             switch(this.value){
               case 'domain':
-                $('#edit-data-type-account').attr('checked', '');
+                $('#edit-data-type-account').prop('checked', false);
               case 'account':
-                $('#edit-data-type-alias').attr('checked', '');
+                $('#edit-data-type-alias').prop('checked', false);
               case 'alias':
-                $('#edit-data-type-group').attr('checked', '');
+                $('#edit-data-type-group').prop('checked', false);
             }
           };
         });
