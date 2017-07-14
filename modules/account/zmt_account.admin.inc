@@ -47,6 +47,14 @@ function zmt_account_list_all() {
       $query->condition('za.domain_id', $domain_id);
     }
   }
+  $status = isset($_SESSION['zmt_account_filter_status']) ? $_SESSION['zmt_account_filter_status'] : '';
+  if (!empty($status)) {
+    $query->condition('za.status', $status);
+  }
+  $name = isset($_SESSION['zmt_account_filter_name']) ? $_SESSION['zmt_account_filter_name'] : '';
+  if (!empty($name)) {
+    $query->condition('za.name', '%' . db_like($name) . '%', 'LIKE');
+  }
 
   $statuses = zmt_account_statuses();
   $destination = drupal_get_destination();
@@ -86,11 +94,11 @@ function zmt_account_list_all() {
 
   $build = array();
   if (user_access('administer zmt')) {
-    $build['account_filter'] = drupal_get_form('zmt_filter_by_domain_form');
+    $build['account_filter'] = drupal_get_form('zmt_account_filter_by_domain_form');
   }
   elseif (user_access('administer any zmt_account')) {
     if (count($domain_ids) > 1) {
-      $build['account_filter'] = drupal_get_form('zmt_filter_by_domain_form');
+      $build['account_filter'] = drupal_get_form('zmt_account_filter_by_domain_form');
     }
   }
   $build['account_table']  = array(
@@ -659,4 +667,55 @@ function zmt_account_delete_form_submit($form, &$form_state) {
   zmt_account_delete($account->id);
   drupal_set_message(t('%name has been deleted.', array('%name' => $account->name)));
   watchdog('zmt_account', 'Deleted account %name.', array('%name' => $account->name), WATCHDOG_NOTICE);
+}
+
+/**
+ * Filter account by domain form.
+ */
+function zmt_account_filter_by_domain_form($form, &$form_state) {
+  $form = zmt_filter_by_domain_form($form, $form_state);
+
+  $status = isset($_SESSION['zmt_account_filter_status']) ? $_SESSION['zmt_account_filter_status'] : '';
+  $form['status'] = array(
+    '#type' => 'select',
+    '#empty_option' => t('- Status -'),
+    '#options' => zmt_account_statuses(),
+    '#default_value' => $status,
+    '#theme_wrappers' => array(),
+  );
+
+  $name = isset($_SESSION['zmt_account_filter_name']) ? $_SESSION['zmt_account_filter_name'] : '';
+  $form['name'] = array(
+    '#type' => 'textfield',
+    '#size' => 15,
+    '#default_value' => $name,
+    '#attributes' => array(
+      'placeholder' => t('Account name'),
+    ),
+    '#theme_wrappers' => array(),
+  );
+
+  $form['apply']['#weight'] = 9;
+  $form['reset']['#weight'] = 10;
+
+  $form['apply']['#submit'][] = 'zmt_account_filter_by_domain_apply_callback';
+  $form['reset']['#submit'][] = 'zmt_account_filter_by_domain_reset_callback';
+
+  return $form;
+}
+
+/**
+ * zmt domain filter apply callback.
+ */
+function zmt_account_filter_by_domain_apply_callback($form, &$form_state) {
+  $_SESSION['zmt_account_filter_status'] = check_plain($form_state['values']['status']);
+  $_SESSION['zmt_account_filter_name'] = check_plain($form_state['values']['name']);
+}
+
+/**
+ * zmt domain filter reset callback.
+ */
+function zmt_account_filter_by_domain_reset_callback($form, &$form_state){
+  unset($_SESSION['zmt_account_filter_status']);
+  unset($_SESSION['zmt_account_filter_name']);
 }
