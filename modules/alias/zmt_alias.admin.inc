@@ -45,6 +45,10 @@ function zmt_alias_list_all() {
       $query->condition('za.domain_id', $domain_id);
     }
   }
+  $name = isset($_SESSION['zmt_alias_filter_name']) ? $_SESSION['zmt_alias_filter_name'] : '';
+  if (!empty($name)) {
+    $query->condition('za.name', '%' . db_like($name) . '%', 'LIKE');
+  }
 
   $destination = drupal_get_destination();
   $item_per_page = variable_get('zimbra_item_per_page', 20);
@@ -77,11 +81,11 @@ function zmt_alias_list_all() {
 
   $build = array();
   if (user_access('administer zmt')) {
-    $build['alias_filter'] = drupal_get_form('zmt_filter_by_domain_form');
+    $build['alias_filter'] = drupal_get_form('zmt_alias_filter_by_domain_form');
   }
   elseif (user_access('administer any zmt_account')) {
     if (count($domain_ids) > 1) {
-      $build['alias_filter'] = drupal_get_form('zmt_filter_by_domain_form');
+      $build['alias_filter'] = drupal_get_form('zmt_alias_filter_by_domain_form');
     }
   }
   $build['alias_table']  = array(
@@ -279,4 +283,44 @@ function zmt_alias_delete_form_submit($form, &$form_state) {
   zmt_alias_delete($alias->id);
   drupal_set_message(t('%name has been deleted.', array('%name' => $alias->name)));
   watchdog('zmt_alias', 'Deleted alias %name.', array('%name' => $alias->name), WATCHDOG_NOTICE);
+}
+
+/**
+ * Filter alias by domain form.
+ */
+function zmt_alias_filter_by_domain_form($form, &$form_state) {
+  $form = zmt_filter_by_domain_form($form, $form_state);
+
+  $name = isset($_SESSION['zmt_alias_filter_name']) ? $_SESSION['zmt_alias_filter_name'] : '';
+  $form['name'] = array(
+    '#type' => 'textfield',
+    '#size' => 15,
+    '#default_value' => $name,
+    '#attributes' => array(
+      'placeholder' => t('Alias name'),
+    ),
+    '#theme_wrappers' => array(),
+  );
+
+  $form['apply']['#weight'] = 9;
+  $form['reset']['#weight'] = 10;
+
+  $form['apply']['#submit'][] = 'zmt_alias_filter_by_domain_apply_callback';
+  $form['reset']['#submit'][] = 'zmt_alias_filter_by_domain_reset_callback';
+
+  return $form;
+}
+
+/**
+ * zmt alias filter apply callback.
+ */
+function zmt_alias_filter_by_domain_apply_callback($form, &$form_state) {
+  $_SESSION['zmt_alias_filter_name'] = check_plain($form_state['values']['name']);
+}
+
+/**
+ * zmt alias filter reset callback.
+ */
+function zmt_alias_filter_by_domain_reset_callback($form, &$form_state){
+  unset($_SESSION['zmt_alias_filter_name']);
 }
