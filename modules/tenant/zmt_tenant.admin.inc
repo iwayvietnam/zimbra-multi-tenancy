@@ -41,7 +41,7 @@ function zmt_tenant_list_all() {
 
   $key = 1;
   $rows = array();
-  foreach ($tenants as $key => $tenant) {
+  foreach ($tenants as $tenant) {
     $row = array();
     $row[] = $key + (pager_find_page() * $item_per_page);
     $row[] = l($tenant->full_name, 'zmt/tenant/' . $tenant->id . '/edit', array('query' => $destination));

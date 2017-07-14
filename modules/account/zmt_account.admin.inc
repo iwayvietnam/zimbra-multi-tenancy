@@ -209,6 +209,14 @@ function zmt_account_list_all() {
       $query->condition('za.domain_id', $domain_id);
     }
   }
+  $status = isset($_SESSION['zmt_account_filter_status']) ? $_SESSION['zmt_account_filter_status'] : '';
+  if (!empty($status)) {
+    $query->condition('za.status', $status);
+  }
+  $name = isset($_SESSION['zmt_account_filter_name']) ? $_SESSION['zmt_account_filter_name'] : '';
+  if (!empty($name)) {
+    $query->condition('za.name', '%' . db_like($name) . '%', 'LIKE');
+  }
 
   $statuses = zmt_account_statuses();
   $destination = drupal_get_destination();
@@ -248,11 +256,11 @@ function zmt_account_list_all() {
 
   $build = array();
   if (user_access('administer zmt')) {
-    $build['account_filter'] = drupal_get_form('zmt_filter_by_domain_form');
+    $build['account_filter'] = drupal_get_form('zmt_account_filter_by_domain_form');
   }
   elseif (user_access('administer any zmt_account')) {
     if (count($domain_ids) > 1) {
-      $build['account_filter'] = drupal_get_form('zmt_filter_by_domain_form');
+      $build['account_filter'] = drupal_get_form('zmt_account_filter_by_domain_form');
     }
   }
   $build['account_table']  = array(
@@ -824,75 +832,52 @@ function zmt_account_delete_form_submit($form, &$form_state) {
 }
 
 /**
- * Mailbox Quota page 
- */ 
-function zmt_account_quota_usage() {
-  module_load_include('inc', 'zmt_core', 'includes/zmt.zimbra');
+ * Filter account by domain form.
+ */
+function zmt_account_filter_by_domain_form($form, &$form_state) {
+  $form = zmt_filter_by_domain_form($form, $form_state);
 
-  drupal_set_title('Mailbox Quota');
-  $header = array();
-  $header[] = array('data' => t('No.'));
-  $header[] = array('data' => t('Account name'));
-  $header[] = array('data' => t('Used quota (MB)'));
-  $header[] = array('data' => t('Quota limit (MB)'));
-
-  $domain_id = isset($_SESSION['zmt_filter_domain_id']) ? (int) $_SESSION['zmt_filter_domain_id'] : 0;
-  $domain = zmt_domain_load($domain_id);
-  if ($domain) {
-    $server_id = (int) $domain->server_id;
-  }
-  else {
-    $server_id = isset($_SESSION['zmt_filter_server_id']) ? (int) $_SESSION['zmt_filter_server_id'] : 0;
-  }
-
-  $result = array();
-  $rows = array();
-  $item_per_page = variable_get('zimbra_item_per_page', 20);
-  $total = 0;
-  if ($server_id > 0) {
-    $api = zimbra_admin_api_by_server($server_id);
-    $pager = array();
-    $limit = 0;
-    $offset = 0;
-    if ($domain) {
-      $result = zimbra_get_quota_usage($api, $domain->name ,$limit, $offset, $pager);
-      $total = $pager['total'];
-      if($total > 0) {
-        $page = isset($_GET['page']) ? $_GET['page'] : 0;
-        $records_page = array_slice($result, $item_per_page * $page, $item_per_page);
-        pager_default_initialize($total, $item_per_page, $element = 0);
-        $mb = 1024 * 1024;   
-        $key = 1;
-        if($records_page) {
-          foreach ($records_page as $account) {
-            $row = array();
-            $row[] = $key + $page * $item_per_page ;
-            $row[] = array(
-              'data' => $account->name,
-            );
-            $row[] = array(
-              'data' => number_format($account->used / $mb, 2, '.', ' '),
-            );
-            $row[] = array(
-              'data' => number_format($account->limit / $mb, 2, '.', ' '),
-            );
-            $rows[] = $row;
-            $key ++ ;
-          }
-        }
-      }
-    }
-  }
-
-  $build = array();
-  $build['account_quota_filter'] = drupal_get_form('zmt_filter_by_domain_form');
-  $build['account_quota_table']  = array(
-    '#theme' => 'table',
-    '#header' => $header,
-    '#rows' => $rows,
-    '#empty' => t('There are no accounts available.') ,
+  $status = isset($_SESSION['zmt_account_filter_status']) ? $_SESSION['zmt_account_filter_status'] : '';
+  $form['status'] = array(
+    '#type' => 'select',
+    '#empty_option' => t('- Status -'),
+    '#options' => zmt_account_statuses(),
+    '#default_value' => $status,
+    '#theme_wrappers' => array(),
   );
-  $build['account_quota_pager'] = array('#theme' => 'pager','#quantity' => $total,);
 
-  return $build;
+  $name = isset($_SESSION['zmt_account_filter_name']) ? $_SESSION['zmt_account_filter_name'] : '';
+  $form['name'] = array(
+    '#type' => 'textfield',
+    '#size' => 15,
+    '#default_value' => $name,
+    '#attributes' => array(
+      'placeholder' => t('Account name'),
+    ),
+    '#theme_wrappers' => array(),
+  );
+
+  $form['apply']['#weight'] = 9;
+  $form['reset']['#weight'] = 10;
+
+  $form['apply']['#submit'][] = 'zmt_account_filter_by_domain_apply_callback';
+  $form['reset']['#submit'][] = 'zmt_account_filter_by_domain_reset_callback';
+
+  return $form;
+}
+
+/**
+ * zmt account filter apply callback.
+ */
+function zmt_account_filter_by_domain_apply_callback($form, &$form_state) {
+  $_SESSION['zmt_account_filter_status'] = check_plain($form_state['values']['status']);
+  $_SESSION['zmt_account_filter_name'] = check_plain($form_state['values']['name']);
+}
+
+/**
+ * zmt account filter reset callback.
+ */
+function zmt_account_filter_by_domain_reset_callback($form, &$form_state){
+  unset($_SESSION['zmt_account_filter_status']);
+  unset($_SESSION['zmt_account_filter_name']);
 }

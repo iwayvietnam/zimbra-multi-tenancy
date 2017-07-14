@@ -66,13 +66,6 @@ function zmt_account_ui_menu() {
     'access callback' => 'zmt_account_list_access',
     'file' => 'zmt_account.admin.inc',
   );
-  $items['zmt/account/quota'] = array(
-    'title' => 'Mailbox Quota',
-    'page callback' => 'zmt_account_quota_usage',
-    'access callback' => 'zmt_account_quota_usage_access',
-    'type' => MENU_LOCAL_ACTION,
-    'file' => 'zmt_account.admin.inc',
-  );
   return $items;
 }
 
@@ -135,11 +128,4 @@ function zmt_account_edit_access($acc, $account = NULL) {
  */
 function zmt_account_delete_access($acc, $account = NULL) {
   return zmt_account_edit_access($acc, $account);
-}
-
-/**
- * Quota Usage Callback
- */
-function zmt_account_quota_usage_access($account = NULL) {
-  return zmt_account_access('list', NULL, $account);
 }
