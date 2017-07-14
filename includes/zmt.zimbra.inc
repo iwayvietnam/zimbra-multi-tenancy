@@ -12,7 +12,7 @@ module_load_include('inc', 'zmt_core', 'includes/zmt.zimbra.api');
 function zimbra_admin_api($location = 'https://localhost:7071/service/admin/soap') {
   $cache = &backdrop_static(__FUNCTION__, NULL);
   if (!isset($cache[$location])) {
-    $debug = (bool) variable_get('zimbra_enable_debug', FALSE);
+    $debug = (bool) config_get('zmt.settings', 'zimbra_enable_debug');
     $cache[$location] = new ZimbraAdminApi($location, $debug);
   }
   return $cache[$location];
