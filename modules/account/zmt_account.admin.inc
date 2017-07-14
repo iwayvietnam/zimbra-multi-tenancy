@@ -705,7 +705,7 @@ function zmt_account_filter_by_domain_form($form, &$form_state) {
 }
 
 /**
- * zmt domain filter apply callback.
+ * zmt account filter apply callback.
  */
 function zmt_account_filter_by_domain_apply_callback($form, &$form_state) {
   $_SESSION['zmt_account_filter_status'] = check_plain($form_state['values']['status']);
@@ -713,7 +713,7 @@ function zmt_account_filter_by_domain_apply_callback($form, &$form_state) {
 }
 
 /**
- * zmt domain filter reset callback.
+ * zmt account filter reset callback.
  */
 function zmt_account_filter_by_domain_reset_callback($form, &$form_state){
   unset($_SESSION['zmt_account_filter_status']);
