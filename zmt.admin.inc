@@ -664,7 +664,7 @@ function zmt_account_quota_usage() {
     '#rows' => $rows,
     '#empty' => t('There are no accounts available.') ,
   );
-  $build['account_quota_pager'] = array('#theme' => 'pager','#quantity' => $total,);
+  $build['account_quota_pager'] = array('#theme' => 'pager');
 
   return $build;
 }
