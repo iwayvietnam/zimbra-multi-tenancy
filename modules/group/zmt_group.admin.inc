@@ -42,6 +42,14 @@ function zmt_group_list_all() {
       $query->condition('zg.domain_id', $domain_id);
     }
   }
+  $name = isset($_SESSION['zmt_group_filter_name']) ? $_SESSION['zmt_group_filter_name'] : '';
+  if (!empty($name)) {
+    $query->condition(
+      db_or()
+        ->condition('zg.name', '%' . db_like($name) . '%', 'LIKE')
+        ->condition('zg.full_name', '%' . db_like($name) . '%', 'LIKE')
+    );
+  }
 
   $destination = backdrop_get_destination();
   $item_per_page = (int) config_get('zmt.settings', 'zimbra_item_per_page');
@@ -77,11 +85,11 @@ function zmt_group_list_all() {
 
   $build = array();
   if (user_access('administer zmt')) {
-    $build['group_filter'] = backdrop_get_form('zmt_filter_by_domain_form');
+    $build['group_filter'] = backdrop_get_form('zmt_group_filter_by_domain_form');
   }
   elseif (user_access('administer any zmt_account')) {
     if (count($domain_ids) > 1) {
-      $build['group_filter'] = backdrop_get_form('zmt_filter_by_domain_form');
+      $build['group_filter'] = backdrop_get_form('zmt_group_filter_by_domain_form');
     }
   }
   $build['group_table']  = array(
@@ -680,4 +688,44 @@ function zmt_group_delete_form_submit($form, &$form_state) {
   zmt_group_delete($group->id);
   backdrop_set_message(t('%name has been deleted.', array('%name' => $group->name)));
   watchdog('zmt_group', 'Deleted group %name.', array('%name' => $group->name), WATCHDOG_NOTICE);
+}
+
+/**
+ * Filter group by domain form.
+ */
+function zmt_group_filter_by_domain_form($form, &$form_state) {
+  $form = zmt_filter_by_domain_form($form, $form_state);
+
+  $name = isset($_SESSION['zmt_group_filter_name']) ? $_SESSION['zmt_group_filter_name'] : '';
+  $form['name'] = array(
+    '#type' => 'textfield',
+    '#size' => 15,
+    '#default_value' => $name,
+    '#attributes' => array(
+      'placeholder' => t('Group name'),
+    ),
+    '#theme_wrappers' => array(),
+  );
+
+  $form['apply']['#weight'] = 9;
+  $form['reset']['#weight'] = 10;
+
+  $form['apply']['#submit'][] = 'zmt_group_filter_by_domain_apply_callback';
+  $form['reset']['#submit'][] = 'zmt_group_filter_by_domain_reset_callback';
+
+  return $form;
+}
+
+/**
+ * zmt group filter apply callback.
+ */
+function zmt_group_filter_by_domain_apply_callback($form, &$form_state) {
+  $_SESSION['zmt_group_filter_name'] = check_plain($form_state['values']['name']);
+}
+
+/**
+ * zmt group filter reset callback.
+ */
+function zmt_group_filter_by_domain_reset_callback($form, &$form_state){
+  unset($_SESSION['zmt_group_filter_name']);
 }
