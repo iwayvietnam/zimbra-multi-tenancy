@@ -562,7 +562,7 @@ function _zmt_ui_update_group_data(ZimbraAdminApi $api, array $zimbra_domains, $
             $member = array(
               'name' => $mailbox,
               'id' => (int) $account->id,
-              'type' => GROUP_MEMBER_ACCOUNT,
+              'type' => ZmtGroupMemberEntity::GROUP_MEMBER_ACCOUNT,
             );
             $zmt_members[$mailbox] = (object) $member;
           }
@@ -572,7 +572,7 @@ function _zmt_ui_update_group_data(ZimbraAdminApi $api, array $zimbra_domains, $
             $member = array(
               'name' => $mailbox,
               'id' => (int) $alias->id,
-              'type' => GROUP_MEMBER_ALIAS,
+              'type' => ZmtGroupMemberEntity::GROUP_MEMBER_ALIAS,
             );
             $zmt_members[$mailbox] = (object) $member;
           }
@@ -582,7 +582,7 @@ function _zmt_ui_update_group_data(ZimbraAdminApi $api, array $zimbra_domains, $
             $member = array(
               'name' => $mailbox,
               'id' => (int) $gr->id,
-              'type' => GROUP_MEMBER_DL,
+              'type' => ZmtGroupMemberEntity::GROUP_MEMBER_DL,
             );
             $zmt_members[$mailbox] = (object) $member;
           }
