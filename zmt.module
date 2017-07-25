@@ -1,0 +1,24 @@
+<?php
+
+/**
+ * @file
+ * Contains zmt.module.
+ */
+
+use Drupal\Core\Routing\RouteMatchInterface;
+
+/**
+ * Implements hook_help().
+ */
+function zmt_help($route_name, RouteMatchInterface $route_match) {
+  switch ($route_name) {
+    // Main module help for the zmt module.
+    case 'help.page.zmt':
+      $output = '';
+      $output .= '<h3>' . t('About') . '</h3>';
+      $output .= '<p>' . t('Add Multi-tenancy and Domain Administration &amp; Role-based Delegate features to Zimbra OSE.') . '</p>';
+      return $output;
+
+    default:
+  }
+}

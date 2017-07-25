@@ -1,0 +1,30 @@
+entity.zmt_server.add_form:
+  route_name: entity.zmt_server.add_form
+  title: 'Add Zimbra Server'
+  appears_on:
+    - entity.zmt_server.collection
+entity.zmt_cos.add_form:
+  route_name: entity.zmt_cos.add_form
+  title: 'Add Class of Service'
+  appears_on:
+    - entity.zmt_cos.collection
+entity.zmt_domain.add_form:
+  route_name: entity.zmt_domain.add_form
+  title: 'Add Domain'
+  appears_on:
+    - entity.zmt_domain.collection
+entity.zmt_account.add_form:
+  route_name: entity.zmt_account.add_form
+  title: 'Add Account'
+  appears_on:
+    - entity.zmt_account.collection
+entity.zmt_alias.add_form:
+  route_name: entity.zmt_alias.add_form
+  title: 'Add Alias'
+  appears_on:
+    - entity.zmt_alias.collection
+entity.zmt_group.add_form:
+  route_name: entity.zmt_group.add_form
+  title: 'Add Group'
+  appears_on:
+    - entity.zmt_group.collection

@@ -1,0 +1,14 @@
+{
+  "name": "drupal/zmt",
+  "type": "drupal-module",
+  "description": "Add Multi-tenancy and Domain Administration & Role-based Delegate features to Zimbra OSE.",
+  "keywords": ["Drupal"],
+  "license": "GPL-2.0+",
+  "homepage": "https://www.drupal.org/project/zmt",
+  "minimum-stability": "dev",
+  "support": {
+    "issues": "https://www.drupal.org/project/issues/zmt",
+    "source": "http://cgit.drupalcode.org/zmt"
+  },
+  "require": { }
+}

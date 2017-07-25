@@ -1,0 +1,132 @@
+add zimbra server entities:
+  title: 'Create new Zimbra Server entities'
+
+administer zimbra server entities:
+  title: 'Administer Zimbra Server entities'
+  description: 'Allow to access the administration form to configure Zimbra Server entities.'
+  restrict access: true
+
+delete zimbra server entities:
+  title: 'Delete Zimbra Server entities'
+
+edit zimbra server entities:
+  title: 'Edit Zimbra Server entities'
+
+access zimbra server overview:
+  title: 'Access the Zimbra Server overview page'
+
+view published zimbra server entities:
+  title: 'View published Zimbra Server entities'
+
+view unpublished zimbra server entities:
+  title: 'View unpublished Zimbra Server entities'
+add class of service entities:
+  title: 'Create new Class of Service entities'
+
+administer class of service entities:
+  title: 'Administer Class of Service entities'
+  description: 'Allow to access the administration form to configure Class of Service entities.'
+  restrict access: true
+
+delete class of service entities:
+  title: 'Delete Class of Service entities'
+
+edit class of service entities:
+  title: 'Edit Class of Service entities'
+
+access class of service overview:
+  title: 'Access the Class of Service overview page'
+
+view published class of service entities:
+  title: 'View published Class of Service entities'
+
+view unpublished class of service entities:
+  title: 'View unpublished Class of Service entities'
+add domain entities:
+  title: 'Create new Domain entities'
+
+administer domain entities:
+  title: 'Administer Domain entities'
+  description: 'Allow to access the administration form to configure Domain entities.'
+  restrict access: true
+
+delete domain entities:
+  title: 'Delete Domain entities'
+
+edit domain entities:
+  title: 'Edit Domain entities'
+
+access domain overview:
+  title: 'Access the Domain overview page'
+
+view published domain entities:
+  title: 'View published Domain entities'
+
+view unpublished domain entities:
+  title: 'View unpublished Domain entities'
+add account entities:
+  title: 'Create new Account entities'
+
+administer account entities:
+  title: 'Administer Account entities'
+  description: 'Allow to access the administration form to configure Account entities.'
+  restrict access: true
+
+delete account entities:
+  title: 'Delete Account entities'
+
+edit account entities:
+  title: 'Edit Account entities'
+
+access account overview:
+  title: 'Access the Account overview page'
+
+view published account entities:
+  title: 'View published Account entities'
+
+view unpublished account entities:
+  title: 'View unpublished Account entities'
+add alias entities:
+  title: 'Create new Alias entities'
+
+administer alias entities:
+  title: 'Administer Alias entities'
+  description: 'Allow to access the administration form to configure Alias entities.'
+  restrict access: true
+
+delete alias entities:
+  title: 'Delete Alias entities'
+
+edit alias entities:
+  title: 'Edit Alias entities'
+
+access alias overview:
+  title: 'Access the Alias overview page'
+
+view published alias entities:
+  title: 'View published Alias entities'
+
+view unpublished alias entities:
+  title: 'View unpublished Alias entities'
+add group entities:
+  title: 'Create new Group entities'
+
+administer group entities:
+  title: 'Administer Group entities'
+  description: 'Allow to access the administration form to configure Group entities.'
+  restrict access: true
+
+delete group entities:
+  title: 'Delete Group entities'
+
+edit group entities:
+  title: 'Edit Group entities'
+
+access group overview:
+  title: 'Access the Group overview page'
+
+view published group entities:
+  title: 'View published Group entities'
+
+view unpublished group entities:
+  title: 'View unpublished Group entities'

@@ -1,0 +1,5 @@
+name: Zimbra Multi-tenancy
+type: module
+description: Add Multi-tenancy and Domain Administration & Role-based Delegate features to Zimbra OSE.
+core: 8.x
+package: Zmt
