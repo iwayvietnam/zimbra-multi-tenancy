@@ -1,6 +1,0 @@
-name = Zimbra Multi Tenancy
-description = Zimbra Multi Tenancy Core Module
-package = Zimbra Multi Tenancy
-core = 7.x
-dependencies[] = entity
-files[] = zmt_core.test
