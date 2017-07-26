@@ -1,0 +1,46 @@
+entity.zmt_server.canonical:
+  path: '/zmt/server/{zmt_server}'
+  defaults:
+  # Calls the view controller, defined in the annotation of the zmt server entity
+    _entity_view: 'zmt_server'
+    _title: 'Zimbra Server'
+  requirements:
+  # Calls the access controller of the entity, $operation 'view'
+    _entity_access: 'zmt_server.view'
+
+entity.zmt_server.collection:
+  path: '/zmt/server/list'
+  defaults:
+  # Calls the list controller, defined in the annotation of the zmt server entity.
+    _entity_list: 'zmt_server'
+    _title: 'Zimbra Server List'
+  requirements:
+  # Checks for permission directly.
+    _permission: 'administer zmt + administer any zmt_server + administer own zmt_server'
+
+entity.zmt_server.add:
+  path: '/zmt/server/add'
+  defaults:
+  # Calls the form.add controller, defined in the zmt server entity.
+    _entity_form: zmt_server.add
+    _title: 'Add Zimbra Server'
+  requirements:
+    _entity_create_access: 'zmt_server'
+
+entity.zmt_server.edit:
+  path: '/zmt/server/{zmt_server}/edit'
+  defaults:
+  # Calls the form.edit controller, defined in the zmt server entity.
+    _entity_form: zmt_server.edit
+    _title: 'Edit Zimbra Server'
+  requirements:
+    _entity_access: 'zmt_server.edit'
+
+entity.zmt_server.delete:
+  path: '/zmt/server/{zmt_server}/delete'
+  defaults:
+    # Calls the form.delete controller, defined in the zmt server entity.
+    _entity_form: zmt_server.delete
+    _title: 'Delete Zimbra Server'
+  requirements:
+    _entity_access: 'zmt_server.delete'
