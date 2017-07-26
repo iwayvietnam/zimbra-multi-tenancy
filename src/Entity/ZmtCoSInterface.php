@@ -53,25 +53,4 @@ interface ZmtCoSInterface extends  ContentEntityInterface, EntityChangedInterfac
    */
   public function setCreatedTime($timestamp);
 
-  /**
-   * Returns the Class of Service published status indicator.
-   *
-   * Unpublished Class of Service are only visible to restricted users.
-   *
-   * @return bool
-   *   TRUE if the Class of Service is published.
-   */
-  public function isPublished();
-
-  /**
-   * Sets the published status of a Class of Service.
-   *
-   * @param bool $published
-   *   TRUE to set this Class of Service to published, FALSE to set it to unpublished.
-   *
-   * @return \Drupal\zmt\Entity\ZmtCoSInterface
-   *   The called Class of Service entity.
-   */
-  public function setPublished($published);
-
 }

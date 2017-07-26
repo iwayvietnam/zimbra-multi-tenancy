@@ -20,40 +20,33 @@ use Drupal\user\UserInterface;
  *   handlers = {
  *     "view_builder" = "Drupal\Core\Entity\EntityViewBuilder",
  *     "list_builder" = "Drupal\zmt\ZmtCoSListBuilder",
- *     "views_data" = "Drupal\zmt\Entity\ZmtCoSViewsData",
- *     "translation" = "Drupal\zmt\ZmtCoSTranslationHandler",
  *
  *     "form" = {
  *       "default" = "Drupal\zmt\Form\ZmtCoSForm",
  *       "add" = "Drupal\zmt\Form\ZmtCoSForm",
  *       "edit" = "Drupal\zmt\Form\ZmtCoSForm",
- *       "delete" = "Drupal\zmt\Form\ZmtCoSDeleteForm",
+ *       "delete" = "Drupal\zmt\Form\ZmtCoSDeleteForm"
  *     },
- *     "access" = "Drupal\zmt\ZmtCoSAccessControlHandler",
- *     "route_provider" = {
- *       "html" = "Drupal\zmt\ZmtCoSHtmlRouteProvider",
- *     },
+ *     "access" = "Drupal\zmt\ZmtEntityAccessControlHandler",
  *   },
  *   base_table = "zmt_cos",
- *   data_table = "zmt_cos_field_data",
+ *   fieldable = FALSE,
  *   translatable = TRUE,
- *   admin_permission = "administer class of service entities",
+ *   admin_permission = "administer zmt_cos",
  *   entity_keys = {
  *     "id" = "id",
  *     "label" = "name",
  *     "uuid" = "uuid",
  *     "uid" = "user_id",
- *     "langcode" = "langcode",
- *     "status" = "status",
+ *     "langcode" = "langcode"
  *   },
  *   links = {
- *     "canonical" = "/admin/structure/zmt_cos/{zmt_cos}",
- *     "add-form" = "/admin/structure/zmt_cos/add",
- *     "edit-form" = "/admin/structure/zmt_cos/{zmt_cos}/edit",
- *     "delete-form" = "/admin/structure/zmt_cos/{zmt_cos}/delete",
- *     "collection" = "/admin/structure/zmt_cos",
- *   },
- *   field_ui_base_route = "zmt_cos.settings"
+ *     "canonical" = "/zmt/cos/{zmt_cos}",
+ *     "add-form" = "/zmt/cos/add",
+ *     "edit-form" = "/zmt/cos/{zmt_cos}/edit",
+ *     "delete-form" = "/zmt/cos/{zmt_cos}/delete",
+ *     "collection" = "/zmt/cos"
+ *   }
  * )
  */
 class ZmtCoS extends ContentEntityBase implements ZmtCoSInterface {
@@ -127,21 +120,6 @@ class ZmtCoS extends ContentEntityBase implements ZmtCoSInterface {
    */
   public function setOwner(UserInterface $account) {
     $this->set('user_id', $account->id());
-    return $this;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function isPublished() {
-    return (bool) $this->getEntityKey('status');
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function setPublished($published) {
-    $this->set('status', $published ? TRUE : FALSE);
     return $this;
   }
 

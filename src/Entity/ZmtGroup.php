@@ -20,40 +20,33 @@ use Drupal\user\UserInterface;
  *   handlers = {
  *     "view_builder" = "Drupal\Core\Entity\EntityViewBuilder",
  *     "list_builder" = "Drupal\zmt\ZmtGroupListBuilder",
- *     "views_data" = "Drupal\zmt\Entity\ZmtGroupViewsData",
- *     "translation" = "Drupal\zmt\ZmtGroupTranslationHandler",
  *
  *     "form" = {
  *       "default" = "Drupal\zmt\Form\ZmtGroupForm",
  *       "add" = "Drupal\zmt\Form\ZmtGroupForm",
  *       "edit" = "Drupal\zmt\Form\ZmtGroupForm",
- *       "delete" = "Drupal\zmt\Form\ZmtGroupDeleteForm",
+ *       "delete" = "Drupal\zmt\Form\ZmtGroupDeleteForm"
  *     },
- *     "access" = "Drupal\zmt\ZmtGroupAccessControlHandler",
- *     "route_provider" = {
- *       "html" = "Drupal\zmt\ZmtGroupHtmlRouteProvider",
- *     },
+ *     "access" = "Drupal\zmt\ZmtEntityAccessControlHandler",
  *   },
  *   base_table = "zmt_group",
- *   data_table = "zmt_group_field_data",
+ *   fieldable = FALSE,
  *   translatable = TRUE,
- *   admin_permission = "administer group entities",
+ *   admin_permission = "administer zmt_group",
  *   entity_keys = {
  *     "id" = "id",
  *     "label" = "name",
  *     "uuid" = "uuid",
  *     "uid" = "user_id",
- *     "langcode" = "langcode",
- *     "status" = "status",
+ *     "langcode" = "langcode"
  *   },
  *   links = {
- *     "canonical" = "/admin/structure/zmt_group/{zmt_group}",
- *     "add-form" = "/admin/structure/zmt_group/add",
- *     "edit-form" = "/admin/structure/zmt_group/{zmt_group}/edit",
- *     "delete-form" = "/admin/structure/zmt_group/{zmt_group}/delete",
- *     "collection" = "/admin/structure/zmt_group",
- *   },
- *   field_ui_base_route = "zmt_group.settings"
+ *     "canonical" = "/zmt/group/{zmt_group}",
+ *     "add-form" = "/zmt/group/add",
+ *     "edit-form" = "/zmt/group/{zmt_group}/edit",
+ *     "delete-form" = "/zmt/group/{zmt_group}/delete",
+ *     "collection" = "/zmt/group"
+ *   }
  * )
  */
 class ZmtGroup extends ContentEntityBase implements ZmtGroupInterface {
@@ -127,21 +120,6 @@ class ZmtGroup extends ContentEntityBase implements ZmtGroupInterface {
    */
   public function setOwner(UserInterface $account) {
     $this->set('user_id', $account->id());
-    return $this;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function isPublished() {
-    return (bool) $this->getEntityKey('status');
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function setPublished($published) {
-    $this->set('status', $published ? TRUE : FALSE);
     return $this;
   }
 

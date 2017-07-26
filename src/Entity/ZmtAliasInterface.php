@@ -53,25 +53,4 @@ interface ZmtAliasInterface extends  ContentEntityInterface, EntityChangedInterf
    */
   public function setCreatedTime($timestamp);
 
-  /**
-   * Returns the Alias published status indicator.
-   *
-   * Unpublished Alias are only visible to restricted users.
-   *
-   * @return bool
-   *   TRUE if the Alias is published.
-   */
-  public function isPublished();
-
-  /**
-   * Sets the published status of a Alias.
-   *
-   * @param bool $published
-   *   TRUE to set this Alias to published, FALSE to set it to unpublished.
-   *
-   * @return \Drupal\zmt\Entity\ZmtAliasInterface
-   *   The called Alias entity.
-   */
-  public function setPublished($published);
-
 }

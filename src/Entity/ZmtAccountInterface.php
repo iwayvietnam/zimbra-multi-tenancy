@@ -11,7 +11,7 @@ use Drupal\user\EntityOwnerInterface;
  *
  * @ingroup zmt
  */
-interface ZmtAccountInterface extends  ContentEntityInterface, EntityChangedInterface, EntityOwnerInterface {
+interface ZmtAccountInterface extends ContentEntityInterface, EntityChangedInterface, EntityOwnerInterface {
 
   // Add get/set methods for your configuration properties here.
 
@@ -52,26 +52,5 @@ interface ZmtAccountInterface extends  ContentEntityInterface, EntityChangedInte
    *   The called Account entity.
    */
   public function setCreatedTime($timestamp);
-
-  /**
-   * Returns the Account published status indicator.
-   *
-   * Unpublished Account are only visible to restricted users.
-   *
-   * @return bool
-   *   TRUE if the Account is published.
-   */
-  public function isPublished();
-
-  /**
-   * Sets the published status of a Account.
-   *
-   * @param bool $published
-   *   TRUE to set this Account to published, FALSE to set it to unpublished.
-   *
-   * @return \Drupal\zmt\Entity\ZmtAccountInterface
-   *   The called Account entity.
-   */
-  public function setPublished($published);
 
 }

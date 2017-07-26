@@ -20,40 +20,33 @@ use Drupal\user\UserInterface;
  *   handlers = {
  *     "view_builder" = "Drupal\Core\Entity\EntityViewBuilder",
  *     "list_builder" = "Drupal\zmt\ZmtAliasListBuilder",
- *     "views_data" = "Drupal\zmt\Entity\ZmtAliasViewsData",
- *     "translation" = "Drupal\zmt\ZmtAliasTranslationHandler",
  *
  *     "form" = {
  *       "default" = "Drupal\zmt\Form\ZmtAliasForm",
  *       "add" = "Drupal\zmt\Form\ZmtAliasForm",
  *       "edit" = "Drupal\zmt\Form\ZmtAliasForm",
- *       "delete" = "Drupal\zmt\Form\ZmtAliasDeleteForm",
+ *       "delete" = "Drupal\zmt\Form\ZmtAliasDeleteForm"
  *     },
- *     "access" = "Drupal\zmt\ZmtAliasAccessControlHandler",
- *     "route_provider" = {
- *       "html" = "Drupal\zmt\ZmtAliasHtmlRouteProvider",
- *     },
+ *     "access" = "Drupal\zmt\ZmtEntityAccessControlHandler",
  *   },
  *   base_table = "zmt_alias",
- *   data_table = "zmt_alias_field_data",
+ *   fieldable = FALSE,
  *   translatable = TRUE,
- *   admin_permission = "administer alias entities",
+ *   admin_permission = "administer zmt_alias",
  *   entity_keys = {
  *     "id" = "id",
  *     "label" = "name",
  *     "uuid" = "uuid",
  *     "uid" = "user_id",
- *     "langcode" = "langcode",
- *     "status" = "status",
+ *     "langcode" = "langcode"
  *   },
  *   links = {
- *     "canonical" = "/admin/structure/zmt_alias/{zmt_alias}",
- *     "add-form" = "/admin/structure/zmt_alias/add",
- *     "edit-form" = "/admin/structure/zmt_alias/{zmt_alias}/edit",
- *     "delete-form" = "/admin/structure/zmt_alias/{zmt_alias}/delete",
- *     "collection" = "/admin/structure/zmt_alias",
+ *     "canonical" = "/zmt/alias/{zmt_alias}",
+ *     "add-form" = "/zmt/alias/add",
+ *     "edit-form" = "/zmt/alias/{zmt_alias}/edit",
+ *     "delete-form" = "/zmt/alias/{zmt_alias}/delete",
+ *     "collection" = "/zmt/alias"
  *   },
- *   field_ui_base_route = "zmt_alias.settings"
  * )
  */
 class ZmtAlias extends ContentEntityBase implements ZmtAliasInterface {
@@ -127,21 +120,6 @@ class ZmtAlias extends ContentEntityBase implements ZmtAliasInterface {
    */
   public function setOwner(UserInterface $account) {
     $this->set('user_id', $account->id());
-    return $this;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function isPublished() {
-    return (bool) $this->getEntityKey('status');
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function setPublished($published) {
-    $this->set('status', $published ? TRUE : FALSE);
     return $this;
   }
 

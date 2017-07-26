@@ -16,44 +16,37 @@ use Drupal\user\UserInterface;
  *
  * @ContentEntityType(
  *   id = "zmt_account",
- *   label = @Translation("Account"),
+ *   label = @Translation("Zimbra Account"),
  *   handlers = {
  *     "view_builder" = "Drupal\Core\Entity\EntityViewBuilder",
  *     "list_builder" = "Drupal\zmt\ZmtAccountListBuilder",
- *     "views_data" = "Drupal\zmt\Entity\ZmtAccountViewsData",
- *     "translation" = "Drupal\zmt\ZmtAccountTranslationHandler",
  *
  *     "form" = {
  *       "default" = "Drupal\zmt\Form\ZmtAccountForm",
  *       "add" = "Drupal\zmt\Form\ZmtAccountForm",
  *       "edit" = "Drupal\zmt\Form\ZmtAccountForm",
- *       "delete" = "Drupal\zmt\Form\ZmtAccountDeleteForm",
+ *       "delete" = "Drupal\zmt\Form\ZmtAccountDeleteForm"
  *     },
- *     "access" = "Drupal\zmt\ZmtAccountAccessControlHandler",
- *     "route_provider" = {
- *       "html" = "Drupal\zmt\ZmtAccountHtmlRouteProvider",
- *     },
+ *     "access" = "Drupal\zmt\ZmtEntityAccessControlHandler",
  *   },
  *   base_table = "zmt_account",
- *   data_table = "zmt_account_field_data",
+ *   fieldable = FALSE,
  *   translatable = TRUE,
- *   admin_permission = "administer account entities",
+ *   admin_permission = "administer zmt_account",
  *   entity_keys = {
  *     "id" = "id",
  *     "label" = "name",
  *     "uuid" = "uuid",
  *     "uid" = "user_id",
- *     "langcode" = "langcode",
- *     "status" = "status",
+ *     "langcode" = "langcode"
  *   },
  *   links = {
- *     "canonical" = "/admin/structure/zmt_account/{zmt_account}",
- *     "add-form" = "/admin/structure/zmt_account/add",
- *     "edit-form" = "/admin/structure/zmt_account/{zmt_account}/edit",
- *     "delete-form" = "/admin/structure/zmt_account/{zmt_account}/delete",
- *     "collection" = "/admin/structure/zmt_account",
- *   },
- *   field_ui_base_route = "zmt_account.settings"
+ *     "canonical" = "/zmt/account/{zmt_account}",
+ *     "add-form" = "/zmt/account/add",
+ *     "edit-form" = "/zmt/account/{zmt_account}/edit",
+ *     "delete-form" = "/zmt/account/{zmt_account}/delete",
+ *     "collection" = "/zmt/account"
+ *   }
  * )
  */
 class ZmtAccount extends ContentEntityBase implements ZmtAccountInterface {
@@ -127,21 +120,6 @@ class ZmtAccount extends ContentEntityBase implements ZmtAccountInterface {
    */
   public function setOwner(UserInterface $account) {
     $this->set('user_id', $account->id());
-    return $this;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function isPublished() {
-    return (bool) $this->getEntityKey('status');
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function setPublished($published) {
-    $this->set('status', $published ? TRUE : FALSE);
     return $this;
   }
 

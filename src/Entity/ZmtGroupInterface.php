@@ -53,25 +53,4 @@ interface ZmtGroupInterface extends  ContentEntityInterface, EntityChangedInterf
    */
   public function setCreatedTime($timestamp);
 
-  /**
-   * Returns the Group published status indicator.
-   *
-   * Unpublished Group are only visible to restricted users.
-   *
-   * @return bool
-   *   TRUE if the Group is published.
-   */
-  public function isPublished();
-
-  /**
-   * Sets the published status of a Group.
-   *
-   * @param bool $published
-   *   TRUE to set this Group to published, FALSE to set it to unpublished.
-   *
-   * @return \Drupal\zmt\Entity\ZmtGroupInterface
-   *   The called Group entity.
-   */
-  public function setPublished($published);
-
 }

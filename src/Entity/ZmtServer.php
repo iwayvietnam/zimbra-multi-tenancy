@@ -20,7 +20,6 @@ use Drupal\user\UserInterface;
  *   handlers = {
  *     "view_builder" = "Drupal\Core\Entity\EntityViewBuilder",
  *     "list_builder" = "Drupal\zmt\ZmtServerListBuilder",
- *     "translation" = "Drupal\zmt\ZmtServerTranslationHandler",
  *
  *     "form" = {
  *       "default" = "Drupal\zmt\Form\ZmtServerForm",

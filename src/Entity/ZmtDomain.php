@@ -20,40 +20,33 @@ use Drupal\user\UserInterface;
  *   handlers = {
  *     "view_builder" = "Drupal\Core\Entity\EntityViewBuilder",
  *     "list_builder" = "Drupal\zmt\ZmtDomainListBuilder",
- *     "views_data" = "Drupal\zmt\Entity\ZmtDomainViewsData",
- *     "translation" = "Drupal\zmt\ZmtDomainTranslationHandler",
  *
  *     "form" = {
  *       "default" = "Drupal\zmt\Form\ZmtDomainForm",
  *       "add" = "Drupal\zmt\Form\ZmtDomainForm",
  *       "edit" = "Drupal\zmt\Form\ZmtDomainForm",
- *       "delete" = "Drupal\zmt\Form\ZmtDomainDeleteForm",
+ *       "delete" = "Drupal\zmt\Form\ZmtDomainDeleteForm"
  *     },
- *     "access" = "Drupal\zmt\ZmtDomainAccessControlHandler",
- *     "route_provider" = {
- *       "html" = "Drupal\zmt\ZmtDomainHtmlRouteProvider",
- *     },
+ *     "access" = "Drupal\zmt\ZmtEntityAccessControlHandler",
  *   },
  *   base_table = "zmt_domain",
- *   data_table = "zmt_domain_field_data",
+ *   fieldable = FALSE,
  *   translatable = TRUE,
- *   admin_permission = "administer domain entities",
+ *   admin_permission = "administer zmt_domain",
  *   entity_keys = {
  *     "id" = "id",
  *     "label" = "name",
  *     "uuid" = "uuid",
  *     "uid" = "user_id",
- *     "langcode" = "langcode",
- *     "status" = "status",
+ *     "langcode" = "langcode"
  *   },
  *   links = {
- *     "canonical" = "/admin/structure/zmt_domain/{zmt_domain}",
- *     "add-form" = "/admin/structure/zmt_domain/add",
- *     "edit-form" = "/admin/structure/zmt_domain/{zmt_domain}/edit",
- *     "delete-form" = "/admin/structure/zmt_domain/{zmt_domain}/delete",
- *     "collection" = "/admin/structure/zmt_domain",
- *   },
- *   field_ui_base_route = "zmt_domain.settings"
+ *     "canonical" = "/zmt/domain/{zmt_domain}",
+ *     "add-form" = "/zmt/domain/add",
+ *     "edit-form" = "/zmt/domain/{zmt_domain}/edit",
+ *     "delete-form" = "/zmt/domain/{zmt_domain}/delete",
+ *     "collection" = "/zmt/domain"
+ *   }
  * )
  */
 class ZmtDomain extends ContentEntityBase implements ZmtDomainInterface {
@@ -127,21 +120,6 @@ class ZmtDomain extends ContentEntityBase implements ZmtDomainInterface {
    */
   public function setOwner(UserInterface $account) {
     $this->set('user_id', $account->id());
-    return $this;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function isPublished() {
-    return (bool) $this->getEntityKey('status');
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function setPublished($published) {
-    $this->set('status', $published ? TRUE : FALSE);
     return $this;
   }
 
