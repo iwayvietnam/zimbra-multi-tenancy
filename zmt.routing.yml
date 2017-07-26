@@ -44,3 +44,238 @@ entity.zmt_server.delete:
     _title: 'Delete Zimbra Server'
   requirements:
     _entity_access: 'zmt_server.delete'
+
+entity.zmt_cos.canonical:
+  path: '/zmt/cos/{zmt_cos}'
+  defaults:
+  # Calls the view controller, defined in the annotation of the zmt cos entity
+    _entity_view: 'zmt_cos'
+    _title: 'Class of Service'
+  requirements:
+  # Calls the access controller of the entity, $operation 'view'
+    _entity_access: 'zmt_cos.view'
+
+entity.zmt_cos.collection:
+  path: '/zmt/cos/list'
+  defaults:
+  # Calls the list controller, defined in the annotation of the zmt cos entity.
+    _entity_list: 'zmt_cos'
+    _title: 'Class of Service List'
+  requirements:
+  # Checks for permission directly.
+    _permission: 'administer zmt + administer any zmt_cos + administer own zmt_cos'
+
+entity.zmt_cos.add:
+  path: '/zmt/cos/add'
+  defaults:
+  # Calls the form.add controller, defined in the zmt cos entity.
+    _entity_form: zmt_cos.add
+    _title: 'Add Class of Service'
+  requirements:
+    _entity_create_access: 'zmt_cos'
+
+entity.zmt_cos.edit:
+  path: '/zmt/cos/{zmt_cos}/edit'
+  defaults:
+  # Calls the form.edit controller, defined in the zmt cos entity.
+    _entity_form: zmt_cos.edit
+    _title: 'Edit Class of Service'
+  requirements:
+    _entity_access: 'zmt_cos.edit'
+
+entity.zmt_cos.delete:
+  path: '/zmt/cos/{zmt_cos}/delete'
+  defaults:
+    # Calls the form.delete controller, defined in the zmt cos entity.
+    _entity_form: zmt_cos.delete
+    _title: 'Delete Class of Service'
+  requirements:
+    _entity_access: 'zmt_cos.delete'
+
+entity.zmt_domain.canonical:
+  path: '/zmt/cos/{zmt_domain}'
+  defaults:
+  # Calls the view controller, defined in the annotation of the zmt cos entity
+    _entity_view: 'zmt_domain'
+    _title: 'Zimbra Domain'
+  requirements:
+  # Calls the access controller of the entity, $operation 'view'
+    _entity_access: 'zmt_domain.view'
+
+entity.zmt_domain.collection:
+  path: '/zmt/cos/list'
+  defaults:
+  # Calls the list controller, defined in the annotation of the zmt cos entity.
+    _entity_list: 'zmt_domain'
+    _title: 'Zimbra Domain List'
+  requirements:
+  # Checks for permission directly.
+    _permission: 'administer zmt + administer any zmt_domain + administer own zmt_domain'
+
+entity.zmt_domain.add:
+  path: '/zmt/cos/add'
+  defaults:
+  # Calls the form.add controller, defined in the zmt cos entity.
+    _entity_form: zmt_domain.add
+    _title: 'Add Zimbra Domain'
+  requirements:
+    _entity_create_access: 'zmt_domain'
+
+entity.zmt_domain.edit:
+  path: '/zmt/cos/{zmt_domain}/edit'
+  defaults:
+  # Calls the form.edit controller, defined in the zmt cos entity.
+    _entity_form: zmt_domain.edit
+    _title: 'Edit Zimbra Domain'
+  requirements:
+    _entity_access: 'zmt_domain.edit'
+
+entity.zmt_domain.delete:
+  path: '/zmt/cos/{zmt_domain}/delete'
+  defaults:
+    # Calls the form.delete controller, defined in the zmt cos entity.
+    _entity_form: zmt_domain.delete
+    _title: 'Delete Zimbra Domain'
+  requirements:
+    _entity_access: 'zmt_domain.delete'
+
+entity.zmt_account.canonical:
+  path: '/zmt/cos/{zmt_account}'
+  defaults:
+  # Calls the view controller, defined in the annotation of the zmt cos entity
+    _entity_view: 'zmt_account'
+    _title: 'Zimbra Account'
+  requirements:
+  # Calls the access controller of the entity, $operation 'view'
+    _entity_access: 'zmt_account.view'
+
+entity.zmt_account.collection:
+  path: '/zmt/cos/list'
+  defaults:
+  # Calls the list controller, defined in the annotation of the zmt cos entity.
+    _entity_list: 'zmt_account'
+    _title: 'Zimbra Account List'
+  requirements:
+  # Checks for permission directly.
+    _permission: 'administer zmt + administer any zmt_account + administer own zmt_account'
+
+entity.zmt_account.add:
+  path: '/zmt/cos/add'
+  defaults:
+  # Calls the form.add controller, defined in the zmt cos entity.
+    _entity_form: zmt_account.add
+    _title: 'Add Zimbra Account'
+  requirements:
+    _entity_create_access: 'zmt_account'
+
+entity.zmt_account.edit:
+  path: '/zmt/cos/{zmt_account}/edit'
+  defaults:
+  # Calls the form.edit controller, defined in the zmt cos entity.
+    _entity_form: zmt_account.edit
+    _title: 'Edit Zimbra Account'
+  requirements:
+    _entity_access: 'zmt_account.edit'
+
+entity.zmt_account.delete:
+  path: '/zmt/cos/{zmt_account}/delete'
+  defaults:
+    # Calls the form.delete controller, defined in the zmt cos entity.
+    _entity_form: zmt_account.delete
+    _title: 'Delete Zimbra Account'
+  requirements:
+    _entity_access: 'zmt_account.delete'
+
+entity.zmt_alias.canonical:
+  path: '/zmt/cos/{zmt_alias}'
+  defaults:
+  # Calls the view controller, defined in the annotation of the zmt cos entity
+    _entity_view: 'zmt_alias'
+    _title: 'Zimbra Alias'
+  requirements:
+  # Calls the access controller of the entity, $operation 'view'
+    _entity_access: 'zmt_alias.view'
+
+entity.zmt_alias.collection:
+  path: '/zmt/cos/list'
+  defaults:
+  # Calls the list controller, defined in the annotation of the zmt cos entity.
+    _entity_list: 'zmt_alias'
+    _title: 'Zimbra Alias List'
+  requirements:
+  # Checks for permission directly.
+    _permission: 'administer zmt + administer any zmt_alias + administer own zmt_alias'
+
+entity.zmt_alias.add:
+  path: '/zmt/cos/add'
+  defaults:
+  # Calls the form.add controller, defined in the zmt cos entity.
+    _entity_form: zmt_alias.add
+    _title: 'Add Zimbra Alias'
+  requirements:
+    _entity_create_access: 'zmt_alias'
+
+entity.zmt_alias.edit:
+  path: '/zmt/cos/{zmt_alias}/edit'
+  defaults:
+  # Calls the form.edit controller, defined in the zmt cos entity.
+    _entity_form: zmt_alias.edit
+    _title: 'Edit Zimbra Alias'
+  requirements:
+    _entity_access: 'zmt_alias.edit'
+
+entity.zmt_alias.delete:
+  path: '/zmt/cos/{zmt_alias}/delete'
+  defaults:
+    # Calls the form.delete controller, defined in the zmt cos entity.
+    _entity_form: zmt_alias.delete
+    _title: 'Delete Zimbra Alias'
+  requirements:
+    _entity_access: 'zmt_alias.delete'
+
+entity.zmt_group.canonical:
+  path: '/zmt/cos/{zmt_group}'
+  defaults:
+  # Calls the view controller, defined in the annotation of the zmt cos entity
+    _entity_view: 'zmt_group'
+    _title: 'Zimbra Group'
+  requirements:
+  # Calls the access controller of the entity, $operation 'view'
+    _entity_access: 'zmt_group.view'
+
+entity.zmt_group.collection:
+  path: '/zmt/cos/list'
+  defaults:
+  # Calls the list controller, defined in the annotation of the zmt cos entity.
+    _entity_list: 'zmt_group'
+    _title: 'Zimbra Group List'
+  requirements:
+  # Checks for permission directly.
+    _permission: 'administer zmt + administer any zmt_group + administer own zmt_group'
+
+entity.zmt_group.add:
+  path: '/zmt/cos/add'
+  defaults:
+  # Calls the form.add controller, defined in the zmt cos entity.
+    _entity_form: zmt_group.add
+    _title: 'Add Zimbra Group'
+  requirements:
+    _entity_create_access: 'zmt_group'
+
+entity.zmt_group.edit:
+  path: '/zmt/cos/{zmt_group}/edit'
+  defaults:
+  # Calls the form.edit controller, defined in the zmt cos entity.
+    _entity_form: zmt_group.edit
+    _title: 'Edit Zimbra Group'
+  requirements:
+    _entity_access: 'zmt_group.edit'
+
+entity.zmt_group.delete:
+  path: '/zmt/cos/{zmt_group}/delete'
+  defaults:
+    # Calls the form.delete controller, defined in the zmt cos entity.
+    _entity_form: zmt_group.delete
+    _title: 'Delete Zimbra Group'
+  requirements:
+    _entity_access: 'zmt_group.delete'
