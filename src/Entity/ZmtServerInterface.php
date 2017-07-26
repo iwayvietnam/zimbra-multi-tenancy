@@ -11,7 +11,7 @@ use Drupal\user\EntityOwnerInterface;
  *
  * @ingroup zmt
  */
-interface ZmtServerInterface extends  ContentEntityInterface, EntityChangedInterface, EntityOwnerInterface {
+interface ZmtServerInterface extends ContentEntityInterface, EntityChangedInterface, EntityOwnerInterface {
 
   // Add get/set methods for your configuration properties here.
 

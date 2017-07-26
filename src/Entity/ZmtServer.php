@@ -26,32 +26,28 @@ use Drupal\user\UserInterface;
  *       "default" = "Drupal\zmt\Form\ZmtServerForm",
  *       "add" = "Drupal\zmt\Form\ZmtServerForm",
  *       "edit" = "Drupal\zmt\Form\ZmtServerForm",
- *       "delete" = "Drupal\zmt\Form\ZmtServerDeleteForm",
+ *       "delete" = "Drupal\zmt\Form\ZmtServerDeleteForm"
  *     },
- *     "access" = "Drupal\zmt\ZmtServerAccessControlHandler",
- *     "route_provider" = {
- *       "html" = "Drupal\zmt\ZmtServerHtmlRouteProvider",
- *     },
+ *     "access" = "Drupal\zmt\ZmtEntityAccessControlHandler"
  *   },
  *   base_table = "zmt_server",
  *   fieldable = FALSE,
  *   translatable = TRUE,
- *   admin_permission = "administer zimbra server entities",
+ *   admin_permission = "administer zmt_server",
  *   entity_keys = {
  *     "id" = "id",
  *     "label" = "name",
  *     "uuid" = "uuid",
  *     "uid" = "user_id",
- *     "langcode" = "langcode",
+ *     "langcode" = "langcode"
  *   },
  *   links = {
  *     "canonical" = "/zmt/server/{zmt_server}",
  *     "add-form" = "/zmt/server/add",
  *     "edit-form" = "/zmt/server/{zmt_server}/edit",
  *     "delete-form" = "/zmt/server/{zmt_server}/delete",
- *     "collection" = "/zmt/server",
- *   },
- *   field_ui_base_route = "zmt_server.settings"
+ *     "collection" = "/zmt/server"
+ *   }
  * )
  */
 class ZmtServer extends ContentEntityBase implements ZmtServerInterface {
