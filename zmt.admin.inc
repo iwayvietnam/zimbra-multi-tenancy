@@ -480,7 +480,7 @@ function _zmt_ui_update_alias_data(ZimbraAdminApi $api, array $zimbra_domains, $
         foreach ($zimbra_aliases as $zimbra_id => $zmbra_alias) {
           $alias_name = substr($zmbra_alias->name, 0, (int) strpos($zmbra_alias->name, '@'));
           $account_name = substr($zmbra_alias->account_name, 0, (int) strpos($zmbra_alias->account_name, '@'));
-          $account = zmt_account_load_by_name($domain->id, $account_name);
+          $account = zmt_account_load_by_name($domain->id, $account_name, TRUE);
 
           $match = zmt_is_matches($excludes, $zmbra_alias->name);
           $exists = zmt_alias_exists($domain->id, $alias_name);
