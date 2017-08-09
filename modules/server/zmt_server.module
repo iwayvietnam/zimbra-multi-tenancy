@@ -23,6 +23,7 @@ function zmt_server_entity_info() {
           'custom settings' => FALSE,
         ),
       ),
+      'load hook' => 'zmt_server_load',
       'label callback' => 'zmt_server_label',
       'uri callback' => 'zmt_server_uri',
       'module' => 'zmt_server',

@@ -21,6 +21,7 @@ function zmt_alias_entity_info() {
           'custom settings' => FALSE,
         ),
       ),
+      'load hook' => 'zmt_alias_load',
       'label callback' => 'zmt_alias_label',
       'uri callback' => 'zmt_alias_uri',
       'module' => 'zmt_alias',

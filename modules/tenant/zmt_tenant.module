@@ -21,6 +21,7 @@ function zmt_tenant_entity_info() {
           'custom settings' => FALSE,
         ),
       ),
+      'load hook' => 'zmt_tenant_load',
       'label callback' => 'zmt_tenant_label',
       'uri callback' => 'zmt_tenant_uri',
       'module' => 'zmt_tenant',
@@ -35,6 +36,7 @@ function zmt_tenant_entity_info() {
       'entity keys' => array(
         'id' => 'id',
       ),
+      'load hook' => 'zmt_tenant_cos_load',
       'module' => 'zmt_tenant',
       'access callback' => 'zmt_tenant_access',
     ),
