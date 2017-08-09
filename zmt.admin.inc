@@ -371,9 +371,9 @@ function _zmt_ui_update_account_data(ZimbraAdminApi $api, array $zimbra_domains,
       $total = zimbra_count_account($api, $domain_name);
       $limit = variable_get('zimbra_item_per_pull', 100);
       for ($offset = 0; $offset < $total; $offset += $limit) { 
-        $zmbra_accounts = zimbra_list_account($api, $domain_name, $limit, $offset, $pager);
-        foreach ($zmbra_accounts as $zimbra_id => $zmbra_account) {
-          $account_name = substr($zmbra_account->name, 0, (int) strpos($zmbra_account->name, '@'));
+        $zimbra_accounts = zimbra_list_account($api, $domain_name, $limit, $offset, $pager);
+        foreach ($zimbra_accounts as $zimbra_id => $zimbra_account) {
+          $account_name = substr($zimbra_account->name, 0, (int) strpos($zimbra_account->name, '@'));
           $match = zmt_is_matches($excludes, $account_name);
 
           if (!$match) {
@@ -390,7 +390,7 @@ function _zmt_ui_update_account_data(ZimbraAdminApi $api, array $zimbra_domains,
               $account->zimbra_id = $zimbra_id;
             }
 
-            $attrs = isset($zmbra_account->a) ? $zmbra_account->a : array();
+            $attrs = isset($zimbra_account->a) ? $zimbra_account->a : array();
             if (is_array($attrs)) {
               $addresses = array();
               foreach ($attrs as $attr) {
