@@ -2,7 +2,7 @@
 REQUIREMENTS
 ____________
 
-- Backdrop 1.x (https://github.com/backdrop/backdrop/releases);
+- Backdrop 1.7.x (https://backdropcms.org/);
 - Zimbra mail server (http://www.zimbra.com)
 
 

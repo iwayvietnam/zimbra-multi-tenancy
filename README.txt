@@ -41,14 +41,13 @@ ________
 REQUIREMENTS
 ____________
 
-- Backdrop 1.x (https://www.drupal.org/project/drupal);
-- Entity module (https://drupal.org/project/entity)
+- Backdrop 1.7.x (https://backdropcms.org/);
 - Zimbra server (http://www.zimbra.com);
 
 INSTALLATION
 ____________
 
-Add this module to the modules folder (sites/all/modules), enable it and configure to meet your needs.
+Add this module to the modules folder (modules), enable it and configure to meet your needs.
 
 
 AUTHOR
@@ -56,4 +55,3 @@ ______
 
 - Nguyễn Văn Nguyên
 Email: nguyennv1981@gmail.com
-
