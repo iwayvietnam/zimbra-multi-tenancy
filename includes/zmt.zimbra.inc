@@ -1164,7 +1164,8 @@ function zimbra_list_alias(ZimbraAdminApi $api, $domain = NULL, $limit = NULL, $
         'description',
         'zimbraIsDelegatedAdminAccount',
         'zimbraIsAdminAccount',
-        'zimbraIsSystemResource'
+        'zimbraIsSystemResource',
+        'zimbraCreateTimestamp',
       );
       $result = $api->searchDirectory(
         '', NULL, $limit, $offset, $domain, NULL, NULL,
