@@ -23,6 +23,7 @@ function zmt_tenant_entity_info() {
           'custom settings' => FALSE,
         ),
       ),
+      'load hook' => 'zmt_tenant_load',
       'label callback' => 'zmt_tenant_label',
       'uri callback' => 'zmt_tenant_uri',
       'module' => 'zmt_tenant',
@@ -39,6 +40,7 @@ function zmt_tenant_entity_info() {
       ),
       'entity cache' => TRUE,
       'bundles' => array(),
+      'load hook' => 'zmt_tenant_cos_load',
       'module' => 'zmt_tenant',
       'access callback' => 'zmt_tenant_access',
     ),
@@ -227,10 +229,10 @@ function zmt_tenant_load_multiple($ids = array(), array $conditions = array(), $
  *
  * @see zmt_tenant_load_multiple()
  */
-function zmt_tenant_load_all($limit = 0, $offset = 0){
+function zmt_tenant_load_all($limit = 0, $offset = 0, $reset = FALSE){
   $cache = &backdrop_static(__FUNCTION__, array());
   $cache_key = $limit . '-' . $offset;
-  if (!isset($cache[$cache_key])) {
+  if (!isset($cache[$cache_key]) || $reset === TRUE) {
     $efq = new EntityFieldQuery();
     if ((int) $limit > 0) {
       $efq->range($offset, $limit);
@@ -252,11 +254,11 @@ function zmt_tenant_load_all($limit = 0, $offset = 0){
  *
  * @see zmt_tenant_load_multiple()
  */
-function zmt_tenant_load_multiple_by_server($server, $limit = 0, $offset = 0) {
+function zmt_tenant_load_multiple_by_server($server, $limit = 0, $offset = 0, $reset = FALSE) {
   $cache = &backdrop_static(__FUNCTION__, array());
   $server_id = is_object($server) ? (int) $server->id : (int) $server;
   $cache_key = $server_id . '-' . $limit . '-' . $offset;
-  if (!isset($cache[$cache_key])) {
+  if (!isset($cache[$cache_key]) || $reset === TRUE) {
     $efq = new EntityFieldQuery();
     if ((int) $limit > 0) {
       $efq->range($offset, $limit);
@@ -281,10 +283,10 @@ function zmt_tenant_load_multiple_by_server($server, $limit = 0, $offset = 0) {
  *
  * @see zmt_tenant_load_multiple()
  */
-function zmt_tenant_load_by_user($user) {
+function zmt_tenant_load_by_user($user, $reset = FALSE) {
   $cache = &backdrop_static(__FUNCTION__, FALSE);
   $uid = is_object($user) ? $user->uid : (int) $user;
-  if (!isset($cache[$uid])) {
+  if (!isset($cache[$uid]) || $reset === TRUE) {
     $efq = new EntityFieldQuery();
     $result = $efq->entityCondition('entity_type', 'zmt_tenant')
       ->propertyCondition('tenant_uid', $uid)
@@ -465,11 +467,11 @@ function zmt_tenant_cos_load_multiple($ids = array(), array $conditions = array(
  * @return
  *   An array of mapping objects indexed by id.
  */
-function zmt_tenant_cos_load_multiple_by_cos(array $cos_ids = array(), $tenant_id = NULL) {
+function zmt_tenant_cos_load_multiple_by_cos(array $cos_ids = array(), $tenant_id = NULL, $reset = FALSE) {
   if (!empty($cos_ids)) {
     $cache = &backdrop_static(__FUNCTION__, array());
     $cache_key = md5(implode(',', $cos_ids) . $tenant_id);
-    if (!isset($cache[$cache_key])) {
+    if (!isset($cache[$cache_key]) || $reset === TRUE) {
       $efq = new EntityFieldQuery();
       $efq->entityCondition('entity_type', 'zmt_tenant_cos')
         ->propertyCondition('cos_id', $cos_ids);
@@ -496,11 +498,11 @@ function zmt_tenant_cos_load_multiple_by_cos(array $cos_ids = array(), $tenant_i
  * @return
  *   An array of mapping objects indexed by id.
  */
-function zmt_tenant_cos_load_multiple_by_tenant(array $tenant_ids = array(), $cos_id = NULL) {
+function zmt_tenant_cos_load_multiple_by_tenant(array $tenant_ids = array(), $cos_id = NULL, $reset = FALSE) {
   if (!empty($tenant_ids)) {
     $cache = &backdrop_static(__FUNCTION__, array());
     $cache_key = md5(implode(',', $tenant_ids) . $cos_id);
-    if (!isset($cache[$cache_key])) {
+    if (!isset($cache[$cache_key]) || $reset === TRUE) {
       $efq = new EntityFieldQuery();
       $efq->entityCondition('entity_type', 'zmt_tenant_cos')
         ->propertyCondition('tenant_id', $tenant_ids);
@@ -519,10 +521,10 @@ function zmt_tenant_cos_load_multiple_by_tenant(array $tenant_ids = array(), $co
 /**
  * Loads a tenant cos entity by id of cos and tenant.
  */
-function zmt_tenant_cos_load_single($tenant_id, $cos_id) {
+function zmt_tenant_cos_load_single($tenant_id, $cos_id, $reset = FALSE) {
   $cache = &backdrop_static(__FUNCTION__, FALSE);
   $cache_key = $tenant_id . '-' . $cos_id;
-  if (!isset($cache[$cache_key])) {
+  if (!isset($cache[$cache_key]) || $reset === TRUE) {
     $efq = new EntityFieldQuery();
     $result = $efq->entityCondition('entity_type', 'zmt_tenant_cos')
       ->propertyCondition('tenant_id', $tenant_id)

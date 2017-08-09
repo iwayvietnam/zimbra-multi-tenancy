@@ -23,6 +23,7 @@ function zmt_cos_entity_info() {
           'custom settings' => FALSE,
         ),
       ),
+      'load hook' => 'zmt_cos_load',
       'label callback' => 'zmt_cos_label',
       'uri callback' => 'zmt_cos_uri',
       'module' => 'zmt_cos',
@@ -167,10 +168,10 @@ function zmt_cos_load_multiple(array $ids = array(), array $conditions = array()
  *
  * @see zmt_cos_load_multiple()
  */
-function zmt_cos_load_all($limit = 0, $offset = 0){
+function zmt_cos_load_all($limit = 0, $offset = 0, $reset = FALSE){
   $cache = &backdrop_static(__FUNCTION__, array());
   $cache_key = $limit . '-' . $offset;
-  if (!isset($cache[$cache_key])) {
+  if (!isset($cache[$cache_key]) || $reset === TRUE) {
     $efq = new EntityFieldQuery();
     if ((int) $limit > 0) {
       $efq->range($offset, $limit);
@@ -192,11 +193,11 @@ function zmt_cos_load_all($limit = 0, $offset = 0){
  *
  * @see zmt_cos_load_multiple()
  */
-function zmt_cos_load_multiple_by_server($server, $limit = 0, $offset = 0) {
+function zmt_cos_load_multiple_by_server($server, $limit = 0, $offset = 0, $reset = FALSE) {
   $cache = &backdrop_static(__FUNCTION__, array());
   $server_id = is_object($server) ? $server->id : $server;
   $cache_key = $server_id . '-' . $limit . '-' . $offset;
-  if (!isset($cache[$cache_key])) {
+  if (!isset($cache[$cache_key]) || $reset === TRUE) {
     $efq = new EntityFieldQuery();
     if ((int) $limit > 0) {
       $efq->range($offset, $limit);
@@ -217,9 +218,9 @@ function zmt_cos_load_multiple_by_server($server, $limit = 0, $offset = 0) {
  * @return
  *   A cos object or FALSE.
  */
-function zmt_cos_load_by_zimbra_id($zimbra_id) {
+function zmt_cos_load_by_zimbra_id($zimbra_id, $reset = FALSE) {
   $cache = &backdrop_static(__FUNCTION__, array());
-  if (!isset($cache[$zimbra_id])) {
+  if (!isset($cache[$zimbra_id]) || $reset === TRUE) {
     $query = new EntityFieldQuery();
     $result = $query->entityCondition('entity_type', 'zmt_cos')
       ->propertyCondition('zimbra_id', $zimbra_id)
@@ -239,9 +240,9 @@ function zmt_cos_load_by_zimbra_id($zimbra_id) {
  * @return
  *   TRUE or FALSE.
  */
-function zmt_cos_exists($zimbra_id) {
+function zmt_cos_exists($zimbra_id, $reset = FALSE) {
   $cache = &backdrop_static(__FUNCTION__);
-  if (!isset($cache[$zimbra_id])) {
+  if (!isset($cache[$zimbra_id]) || $reset === TRUE) {
     $query = new EntityFieldQuery();
     $result = $query->entityCondition('entity_type', 'zmt_cos')
       ->propertyCondition('zimbra_id', $zimbra_id)

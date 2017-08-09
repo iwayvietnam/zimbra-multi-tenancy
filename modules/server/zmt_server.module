@@ -23,6 +23,7 @@ function zmt_server_entity_info() {
           'custom settings' => FALSE,
         ),
       ),
+      'load hook' => 'zmt_server_load',
       'label callback' => 'zmt_server_label',
       'uri callback' => 'zmt_server_uri',
       'module' => 'zmt_server',
@@ -144,10 +145,10 @@ function zmt_server_load_multiple($ids = array(), array $conditions = array(), $
  *
  * @see zmt_server_load_multiple()
  */
-function zmt_server_load_all($limit = 0, $offset = 0){
+function zmt_server_load_all($limit = 0, $offset = 0, $reset = FALSE){
   $cache = &backdrop_static(__FUNCTION__, array());
   $cache_key = $limit . '-' . $offset;
-  if (!isset($cache[$cache_key])) {
+  if (!isset($cache[$cache_key]) || $reset === TRUE) {
     $efq = new EntityFieldQuery();
     if ((int) $limit > 0) {
       $efq->range($offset, $limit);

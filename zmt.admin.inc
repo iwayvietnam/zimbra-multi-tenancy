@@ -325,12 +325,12 @@ function _zmt_ui_update_domain_data(array $zimbra_domains, $server_id = 0, $tena
   state_set($progress_name, $count);
   $total_domain = count($zimbra_domains);
   foreach ($zimbra_domains as $zimbra_id => $zimbra_domain) {
-    $domain = zmt_domain_load_by_zimbra_id($zimbra_id);
-    if ($domain && !zmt_domain_exists($zimbra_domain->name)) {
+    $domain = zmt_domain_load_by_zimbra_id($zimbra_id, TRUE);
+    if ($domain && !zmt_domain_exists($zimbra_domain->name, 0, TRUE)) {
       $domain->name = $zimbra_domain->name;
     }
     if (!$domain) {
-      $domain = zmt_domain_load_by_name($zimbra_domain->name);
+      $domain = zmt_domain_load_by_name($zimbra_domain->name, TRUE);
     }
     if (!$domain) {
       $domain = zmt_domain_new($zimbra_domain->name);
@@ -343,6 +343,9 @@ function _zmt_ui_update_domain_data(array $zimbra_domains, $server_id = 0, $tena
       foreach ($attrs as $attr) {
         if ($attr->n === 'zimbraDomainStatus') {
           $domain->status = isset($attr->_content) ? $attr->_content : '';
+        }
+        if ($attr->n === 'zimbraCreateTimestamp' && !empty($attr->_content)) {
+          $domain->created = strtotime($attr->_content);
         }
       }
     }
@@ -382,15 +385,15 @@ function _zmt_ui_update_account_data(ZimbraAdminApi $api, array $zimbra_domains,
   $total_account = (int) zimbra_count_account($api);
   foreach ($zimbra_domains as $zimbra_domain) {
     $domain_name = $zimbra_domain->name;
-    $domain = zmt_domain_load_by_name($domain_name);
-    if ($domain && $domain->server_id = $server_id) {
+    $domain = zmt_domain_load_by_name($domain_name, TRUE);
+    if ($domain && $domain->server_id == $server_id) {
       $pager = array();
       $total = zimbra_count_account($api, $domain_name);
       $limit = state_get('zimbra_item_per_pull', 100);
       for ($offset = 0; $offset < $total; $offset += $limit) { 
-        $zmbra_accounts = zimbra_list_account($api, $domain_name, $limit, $offset, $pager);
-        foreach ($zmbra_accounts as $zimbra_id => $zmbra_account) {
-          $account_name = substr($zmbra_account->name, 0, (int) strpos($zmbra_account->name, '@'));
+        $zimbra_accounts = zimbra_list_account($api, $domain_name, $limit, $offset, $pager);
+        foreach ($zimbra_accounts as $zimbra_id => $zimbra_account) {
+          $account_name = substr($zimbra_account->name, 0, (int) strpos($zimbra_account->name, '@'));
           $match = zmt_is_matches($excludes, $account_name);
 
           if (!$match) {
@@ -407,7 +410,7 @@ function _zmt_ui_update_account_data(ZimbraAdminApi $api, array $zimbra_domains,
               $account->zimbra_id = $zimbra_id;
             }
 
-            $attrs = isset($zmbra_account->a) ? $zmbra_account->a : array();
+            $attrs = isset($zimbra_account->a) ? $zimbra_account->a : array();
             if (is_array($attrs)) {
               $addresses = array();
               foreach ($attrs as $attr) {
@@ -428,6 +431,9 @@ function _zmt_ui_update_account_data(ZimbraAdminApi $api, array $zimbra_domains,
                 }
                 if ($attr->n === 'company') {
                   $account->company = isset($attr->_content) ? $attr->_content : '';
+                }
+                if ($attr->n === 'zimbraCreateTimestamp' && !empty($attr->_content)) {
+                  $account->created = strtotime($attr->_content);
                 }
                 if ($attr->n === 'zimbraMailForwardingAddress' && !empty($attr->_content)) {
                   $addresses[] = $attr->_content;
@@ -469,8 +475,8 @@ function _zmt_ui_update_alias_data(ZimbraAdminApi $api, array $zimbra_domains, $
   $total_alias = (int) zimbra_count_alias($api);
   foreach ($zimbra_domains as $zimbra_domain) {
     $domain_name = $zimbra_domain->name;
-    $domain = zmt_domain_load_by_name($domain_name);
-    if ($domain && $domain->server_id = $server_id) {
+    $domain = zmt_domain_load_by_name($domain_name, TRUE);
+    if ($domain && $domain->server_id == $server_id) {
       $pager = array();
       $limit = state_get('zimbra_item_per_pull', 100);
       $offset = 0;
@@ -489,6 +495,15 @@ function _zmt_ui_update_alias_data(ZimbraAdminApi $api, array $zimbra_domains, $
             $alias->domain_id = $domain->id;
             $alias->account_id = $account->id;
             $alias->zimbra_target_id = $account->zimbra_id;
+
+            $attrs = isset($zmbra_alias->a) ? $zmbra_alias->a : array();
+            if (is_array($attrs)) {
+              foreach ($attrs as $attr) {
+                if ($attr->n === 'zimbraCreateTimestamp' && !empty($attr->_content)) {
+                  $alias->created = strtotime($attr->_content);
+                }
+              }
+            }
 
             zmt_alias_save($alias, FALSE);
             $count++;
@@ -520,8 +535,8 @@ function _zmt_ui_update_group_data(ZimbraAdminApi $api, array $zimbra_domains, $
   $total_dl = (int) zimbra_count_dl($api);
   foreach ($zimbra_domains as $zimbra_domain) {
     $domain_name = $zimbra_domain->name;
-    $domain = zmt_domain_load_by_name($domain_name);
-    if ($domain && $domain->server_id = $server_id) {
+    $domain = zmt_domain_load_by_name($domain_name, TRUE);
+    if ($domain && $domain->server_id == $server_id) {
       $zimbra_dls = zimbra_get_all_dl($api, $domain_name);
       foreach ($zimbra_dls as $zimbra_id => $dl) {
         $group_name = substr($dl->name, 0, (int) strpos($dl->name, '@'));
@@ -544,6 +559,9 @@ function _zmt_ui_update_group_data(ZimbraAdminApi $api, array $zimbra_domains, $
           foreach ($attrs as $attr) {
             if ($attr->n === 'displayName') {
               $group->full_name = isset($attr->_content) ? $attr->_content : '';
+            }
+            if ($attr->n === 'zimbraCreateTimestamp' && !empty($attr->_content)) {
+              $group->created = strtotime($attr->_content);
             }
           }
         }

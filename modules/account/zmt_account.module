@@ -23,6 +23,7 @@ function zmt_account_entity_info() {
           'custom settings' => FALSE,
         ),
       ),
+      'load hook' => 'zmt_account_load',
       'label callback' => 'zmt_account_label',
       'uri callback' => 'zmt_account_uri',
       'module' => 'zmt_account',
@@ -299,9 +300,9 @@ function zmt_account_load_by_name($domain, $name, $reset = FALSE) {
  * @return
  *   An account object or FALSE.
  */
-function zmt_account_load_by_zimbra_id($zimbra_id) {
+function zmt_account_load_by_zimbra_id($zimbra_id, $reset = FALSE) {
   $cache = &backdrop_static(__FUNCTION__, array());
-  if (!isset($cache[$zimbra_id])) {
+  if (!isset($cache[$zimbra_id]) || $reset === TRUE) {
     $query = new EntityFieldQuery();
     $result = $query->entityCondition('entity_type', 'zmt_account')
       ->propertyCondition('zimbra_id', $zimbra_id)
@@ -322,10 +323,10 @@ function zmt_account_load_by_zimbra_id($zimbra_id) {
  * @return
  *   Total number of account objects.
  */
-function zmt_account_count_by_domain($domain) {
+function zmt_account_count_by_domain($domain, $reset = FALSE) {
   $cache = &backdrop_static(__FUNCTION__);
   $domain_id = is_object($domain) ? $domain->id : $domain;
-  if (!isset($cache[$domain_id])) {
+  if (!isset($cache[$domain_id]) || $reset === TRUE) {
     $query = new EntityFieldQuery();
     $query->entityCondition('entity_type', 'zmt_account')
       ->propertyCondition('domain_id', $domain_id);
@@ -346,11 +347,11 @@ function zmt_account_count_by_domain($domain) {
  * @return
  *   TRUE or FALSE.
  */
-function zmt_account_exists($domain, $name, $id = 0) {
+function zmt_account_exists($domain, $name, $id = 0, $reset = FALSE) {
   $cache = &backdrop_static(__FUNCTION__);
   $domain_id = is_object($domain) ? $domain->id : $domain;
   $cache_key = md5($domain_id . '-' . $name . '-' . $id);
-  if (!isset($cache[$cache_key])) {
+  if (!isset($cache[$cache_key]) || $reset === TRUE) {
     $query = db_select('zmt_account', 'zac')
       ->fields('zac', array('id'))
       ->condition('zac.domain_id', $domain_id)
