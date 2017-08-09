@@ -21,6 +21,7 @@ function zmt_cos_entity_info() {
           'custom settings' => FALSE,
         ),
       ),
+      'load hook' => 'zmt_cos_load',
       'label callback' => 'zmt_cos_label',
       'uri callback' => 'zmt_cos_uri',
       'module' => 'zmt_cos',

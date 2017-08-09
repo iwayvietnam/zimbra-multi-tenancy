@@ -21,6 +21,7 @@ function zmt_account_entity_info() {
           'custom settings' => FALSE,
         ),
       ),
+      'load hook' => 'zmt_account_load',
       'label callback' => 'zmt_account_label',
       'uri callback' => 'zmt_account_uri',
       'module' => 'zmt_account',
