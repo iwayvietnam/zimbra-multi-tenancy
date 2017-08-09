@@ -308,12 +308,12 @@ function _zmt_ui_update_domain_data(array $zimbra_domains, $server_id = 0, $tena
   variable_set($progress_name, $count);
   $total_domain = count($zimbra_domains);
   foreach ($zimbra_domains as $zimbra_id => $zimbra_domain) {
-    $domain = zmt_domain_load_by_zimbra_id($zimbra_id);
-    if ($domain && !zmt_domain_exists($zimbra_domain->name)) {
+    $domain = zmt_domain_load_by_zimbra_id($zimbra_id, TRUE);
+    if ($domain && !zmt_domain_exists($zimbra_domain->name, 0, TRUE)) {
       $domain->name = $zimbra_domain->name;
     }
     if (!$domain) {
-      $domain = zmt_domain_load_by_name($zimbra_domain->name);
+      $domain = zmt_domain_load_by_name($zimbra_domain->name, TRUE);
     }
     if (!$domain) {
       $domain = zmt_domain_new($zimbra_domain->name);
@@ -368,8 +368,8 @@ function _zmt_ui_update_account_data(ZimbraAdminApi $api, array $zimbra_domains,
   $total_account = (int) zimbra_count_account($api);
   foreach ($zimbra_domains as $zimbra_domain) {
     $domain_name = $zimbra_domain->name;
-    $domain = zmt_domain_load_by_name($domain_name);
-    if ($domain && $domain->server_id = $server_id) {
+    $domain = zmt_domain_load_by_name($domain_name, TRUE);
+    if ($domain && $domain->server_id == $server_id) {
       $pager = array();
       $total = zimbra_count_account($api, $domain_name);
       $limit = variable_get('zimbra_item_per_pull', 100);
@@ -458,8 +458,8 @@ function _zmt_ui_update_alias_data(ZimbraAdminApi $api, array $zimbra_domains, $
   $total_alias = (int) zimbra_count_alias($api);
   foreach ($zimbra_domains as $zimbra_domain) {
     $domain_name = $zimbra_domain->name;
-    $domain = zmt_domain_load_by_name($domain_name);
-    if ($domain && $domain->server_id = $server_id) {
+    $domain = zmt_domain_load_by_name($domain_name, TRUE);
+    if ($domain && $domain->server_id == $server_id) {
       $pager = array();
       $limit = variable_get('zimbra_item_per_pull', 100);
       $offset = 0;
@@ -518,8 +518,8 @@ function _zmt_ui_update_group_data(ZimbraAdminApi $api, array $zimbra_domains, $
   $total_dl = (int) zimbra_count_dl($api);
   foreach ($zimbra_domains as $zimbra_domain) {
     $domain_name = $zimbra_domain->name;
-    $domain = zmt_domain_load_by_name($domain_name);
-    if ($domain && $domain->server_id = $server_id) {
+    $domain = zmt_domain_load_by_name($domain_name, TRUE);
+    if ($domain && $domain->server_id == $server_id) {
       $zimbra_dls = zimbra_get_all_dl($api, $domain_name);
       foreach ($zimbra_dls as $zimbra_id => $dl) {
         $group_name = substr($dl->name, 0, (int) strpos($dl->name, '@'));

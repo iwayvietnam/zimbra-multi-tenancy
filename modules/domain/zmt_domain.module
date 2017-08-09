@@ -286,11 +286,11 @@ function zmt_domain_load_multiple(array $ids = array(), array $conditions = arra
  *
  * @see zmt_domain_load_multiple()
  */
-function zmt_domain_load_all($filter_by_user = FALSE, $limit = 0, $offset = 0) {
+function zmt_domain_load_all($filter_by_user = FALSE, $limit = 0, $offset = 0, $reset = FALSE) {
   global $user;
   $cache = &drupal_static(__FUNCTION__, array());
   $cache_key = md5(var_export($filter_by_user, TRUE) . $limit . $limit);
-  if (!isset($cache[$cache_key])) {
+  if (!isset($cache[$cache_key]) || $reset === TRUE) {
     $query = new EntityFieldQuery();
     $query->entityCondition('entity_type', 'zmt_domain');
     if ($filter_by_user === TRUE) {
@@ -319,12 +319,12 @@ function zmt_domain_load_all($filter_by_user = FALSE, $limit = 0, $offset = 0) {
  *
  * @see zmt_domain_load_multiple()
  */
-function zmt_domain_load_multiple_by_server($server, $filter_by_user = FALSE, $limit = 0, $offset = 0) {
+function zmt_domain_load_multiple_by_server($server, $filter_by_user = FALSE, $limit = 0, $offset = 0, $reset = FALSE) {
   global $user;
   $cache = &drupal_static(__FUNCTION__, array());
   $server_id = is_object($server) ? $server->id : $server;
   $cache_key = md5($server_id . var_export($filter_by_user, TRUE) . $limit . $limit);
-  if (!isset($cache[$cache_key])) {
+  if (!isset($cache[$cache_key]) || $reset === TRUE) {
     $query = db_select('zmt_domain', 'zd');
     $query->leftJoin('zmt_tenant', 'zt', 'zt.id = zd.tenant_id');
     $query->leftJoin('users', 'u', 'u.uid = zt.tenant_uid');
@@ -371,11 +371,11 @@ function zmt_domain_load_multiple_by_server($server, $filter_by_user = FALSE, $l
  *
  * @see zmt_domain_load_multiple()
  */
-function zmt_domain_load_multiple_by_tenant($tenant, $limit = 0, $offset = 0) {
+function zmt_domain_load_multiple_by_tenant($tenant, $limit = 0, $offset = 0, $reset = FALSE) {
   $cache = &drupal_static(__FUNCTION__, array());
   $tenant_id = is_object($tenant) ? (int) $tenant->id : (int) $tenant;
   $cache_key = $tenant_id . '-' . $limit . '-' . $offset;
-  if (!isset($cache[$cache_key])) {
+  if (!isset($cache[$cache_key]) || $reset === TRUE) {
     $query = new EntityFieldQuery();
     if ((int) $limit > 0) {
       $efq->range($offset, $limit);
@@ -399,7 +399,7 @@ function zmt_domain_load_multiple_by_tenant($tenant, $limit = 0, $offset = 0) {
  *
  * @see zmt_domain_load_multiple()
  */
-function zmt_domain_load_multiple_by_user($domain_user = NULL, $limit = 0, $offset = 0) {
+function zmt_domain_load_multiple_by_user($domain_user = NULL, $limit = 0, $offset = 0, $reset = FALSE) {
   global $user;
   if (NULL === $domain_user) {
     $domain_user = $user;
@@ -407,7 +407,7 @@ function zmt_domain_load_multiple_by_user($domain_user = NULL, $limit = 0, $offs
   $uid = (int) $domain_user->uid;
   $cache = &drupal_static(__FUNCTION__, array());
   $cache_key = $uid . '-' . $limit . '-' . $offset;
-  if (!isset($cache[$cache_key])) {
+  if (!isset($cache[$cache_key]) || $reset === TRUE) {
     $query = db_select('zmt_domain', 'd');
     $query->leftJoin('zmt_tenant', 't', 't.id = d.tenant_id');
     $query->leftJoin('users', 'u', 'u.uid = t.tenant_uid');
@@ -446,9 +446,9 @@ function zmt_domain_load_multiple_by_user($domain_user = NULL, $limit = 0, $offs
  * @return
  *   A domain object or FALSE.
  */
-function zmt_domain_load_by_name($name) {
+function zmt_domain_load_by_name($name, $reset = FALSE) {
   $cache = &drupal_static(__FUNCTION__, array());
-  if (!isset($cache[$name])) {
+  if (!isset($cache[$name]) || $reset === TRUE) {
     $query = new EntityFieldQuery();
     $result = $query->entityCondition('entity_type', 'zmt_domain')
       ->propertyCondition('name', $name)
@@ -467,9 +467,9 @@ function zmt_domain_load_by_name($name) {
  * @return
  *   A domain object or FALSE.
  */
-function zmt_domain_load_by_zimbra_id($zimbra_id) {
+function zmt_domain_load_by_zimbra_id($zimbra_id, $reset = FALSE) {
   $cache = &drupal_static(__FUNCTION__, array());
-  if (!isset($cache[$zimbra_id])) {
+  if (!isset($cache[$zimbra_id]) || $reset === TRUE) {
     $query = new EntityFieldQuery();
     $result = $query->entityCondition('entity_type', 'zmt_domain')
       ->propertyCondition('zimbra_id', $zimbra_id)
@@ -489,10 +489,14 @@ function zmt_domain_load_by_zimbra_id($zimbra_id) {
  * @return
  *   Server entity object.
  */
-function zmt_domain_get_server($id) {
-  $domain = zmt_domain_load($id);
-  $server_id = $domain ? $domain->server_id : 0;
-  return zmt_server_load($server_id);
+function zmt_domain_get_server($id, $reset = FALSE) {
+  $cache = &drupal_static(__FUNCTION__, FALSE);
+  if (!isset($cache[$id]) || $reset === TRUE) {
+    $domain = zmt_domain_load($id);
+    $server_id = $domain ? $domain->server_id : 0;
+    $cache[$id] = zmt_server_load($server_id);
+  }
+  return $cache[$id];
 }
 
 /**
@@ -505,10 +509,10 @@ function zmt_domain_get_server($id) {
  * @return
  *   TRUE or FALSE.
  */
-function zmt_domain_exists($name, $id = 0) {
+function zmt_domain_exists($name, $id = 0, $reset = FALSE) {
   $cache = &drupal_static(__FUNCTION__);
   $cache_key = md5($name . '-' . $id);
-  if (!isset($cache[$cache_key])) {
+  if (!isset($cache[$cache_key]) || $reset === TRUE) {
     $query = new EntityFieldQuery();
     $result = $query->entityCondition('entity_type', 'zmt_domain')
       ->propertyCondition('name', $name)
@@ -668,11 +672,11 @@ function zmt_domain_cos_load_multiple($ids = array(), array $conditions = array(
  * @return
  *   An array of entity objects indexed by id.
  */
-function zmt_domain_cos_load_multiple_by_cos(array $cos_ids = array(), $domain_id = NULL) {
+function zmt_domain_cos_load_multiple_by_cos(array $cos_ids = array(), $domain_id = NULL, $reset = FALSE) {
   if (empty($cos_ids)) {
     $cache = &drupal_static(__FUNCTION__, array());
     $cache_key = md5(implode(',', $cos_ids) . $domain_id);
-    if (!isset($cache[$cache_key])) {
+    if (!isset($cache[$cache_key]) || $reset === TRUE) {
       $efq = new EntityFieldQuery();
       $efq->entityCondition('entity_type', 'zmt_domain_cos')
         ->propertyCondition('cos_id', $cos_ids);
@@ -699,11 +703,11 @@ function zmt_domain_cos_load_multiple_by_cos(array $cos_ids = array(), $domain_i
  * @return
  *   An array of entity objects indexed by id.
  */
-function zmt_domain_cos_load_multiple_by_domain(array $domain_ids = array(), $cos_id = NULL) {
+function zmt_domain_cos_load_multiple_by_domain(array $domain_ids = array(), $cos_id = NULL, $reset = FALSE) {
   if (!empty($domain_ids)) {
     $cache = &drupal_static(__FUNCTION__, array());
     $cache_key = md5(implode(',', $domain_ids) . $cos_id);
-    if (!isset($cache[$cache_key])) {
+    if (!isset($cache[$cache_key]) || $reset === TRUE) {
       $efq = new EntityFieldQuery();
       $efq->entityCondition('entity_type', 'zmt_domain_cos')
         ->propertyCondition('domain_id', $domain_ids);

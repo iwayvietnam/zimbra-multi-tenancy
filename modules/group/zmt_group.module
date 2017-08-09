@@ -491,10 +491,10 @@ function zmt_group_load_multiple(array $ids = array(), array $conditions = array
  *
  * @see zmt_group_load_multiple()
  */
-function zmt_group_load_multiple_by_domain($domain, $exclude = 0) {
+function zmt_group_load_multiple_by_domain($domain, $exclude = 0, $reset = FALSE) {
   $cache = &drupal_static(__FUNCTION__, array());
   $domain_id = is_object($domain) ? $domain->id : $domain;
-  if (!isset($cache[$domain_id])) {
+  if (!isset($cache[$domain_id]) || $reset === TRUE) {
     $query = new EntityFieldQuery();
     $result = $query->entityCondition('entity_type', 'zmt_group')
       ->propertyCondition('domain_id', $domain_id)
@@ -514,10 +514,10 @@ function zmt_group_load_multiple_by_domain($domain, $exclude = 0) {
  * @return
  *   Total number of group objects.
  */
-function zmt_group_count_by_domain($domain) {
+function zmt_group_count_by_domain($domain, $reset = FALSE) {
   $cache = &drupal_static(__FUNCTION__, array());
   $domain_id = is_object($domain) ? $domain->id : $domain;
-  if (!isset($cache[$domain_id])) {
+  if (!isset($cache[$domain_id]) || $reset === TRUE) {
     $query = new EntityFieldQuery();
     $query->entityCondition('entity_type', 'zmt_group')
       ->propertyCondition('domain_id', $domain_id);
@@ -536,10 +536,10 @@ function zmt_group_count_by_domain($domain) {
  *
  * @see zmt_group_load_multiple()
  */
-function zmt_group_load_by_user($user) {
+function zmt_group_load_by_user($user, $reset = FALSE) {
   $cache = &drupal_static(__FUNCTION__, array());
   $uid = is_object($user) ? $user->uid : $user;
-  if (!isset($cache[$uid])) {
+  if (!isset($cache[$uid]) || $reset === TRUE) {
     $query = new EntityFieldQuery();
     $result = $query->entityCondition('entity_type', 'zmt_group')
       ->propertyCondition('group_uid', $uid)
@@ -561,11 +561,11 @@ function zmt_group_load_by_user($user) {
  * @return
  *   An group object or FALSE.
  */
-function zmt_group_load_by_name($domain, $name) {
+function zmt_group_load_by_name($domain, $name, $reset = FALSE) {
   $cache = &drupal_static(__FUNCTION__, array());
   $domain_id = is_object($domain) ? $domain->id : $domain;
   $cache_key = md5($domain_id . '-' . $name);
-  if (!isset($cache[$cache_key])) {
+  if (!isset($cache[$cache_key]) || $reset === TRUE) {
     $query = new EntityFieldQuery();
     $result = $query->entityCondition('entity_type', 'zmt_group')
       ->propertyCondition('domain_id', $domain_id)
@@ -587,9 +587,9 @@ function zmt_group_load_by_name($domain, $name) {
  * @return
  *   An group object or FALSE.
  */
-function zmt_group_load_by_zimbra_id($zimbra_id) {
+function zmt_group_load_by_zimbra_id($zimbra_id, $reset = FALSE) {
   $cache = &drupal_static(__FUNCTION__, array());
-  if (!isset($cache[$zimbra_id])) {
+  if (!isset($cache[$zimbra_id]) || $reset === TRUE) {
     $query = new EntityFieldQuery();
     $result = $query->entityCondition('entity_type', 'zmt_group')
       ->propertyCondition('zimbra_id', $zimbra_id)
@@ -814,9 +814,9 @@ function zmt_group_member_load_multiple_by_group(array $group_ids = array()) {
  * @return
  *   An array of group member objects indexed by id.
  */
-function zmt_group_member_load_multiple_by_group_user($uid) {
+function zmt_group_member_load_multiple_by_group_user($uid, $reset = FALSE) {
   $cache = &drupal_static(__FUNCTION__, array());
-  if (!isset($cache[$uid])) {
+  if (!isset($cache[$uid]) || $reset === TRUE) {
     $query = db_select('zmt_group_member', 'zgm');
     $query->leftJoin('zmt_group', 'zg', 'zg.id = zgm.group_id');
     $query->condition('zg.group_uid', $uid);
