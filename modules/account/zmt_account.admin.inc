@@ -584,7 +584,7 @@ function zmt_account_ajax_import_form_callback($form, $form_state) {
       $total_account = count($accounts);
       $message_name = 'zmt_importing_message_' . $form_state['time'];
       $progress_name = 'zmt_importing_progress_' . $form_state['time'];
-      state_set($message_name, t('Importing accounts to Drupal...'));
+      state_set($message_name, t('Importing accounts to Zmt...'));
       state_set($progress_name, $count);
 
       foreach ($accounts as $account) {
