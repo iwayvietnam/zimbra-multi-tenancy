@@ -1,9 +1,4 @@
 # Zimbra Server routing definition
-zmt_server.settings_tab:
-  route_name: zmt_server.settings
-  title: 'Settings'
-  base_route: zmt_server.settings
-
 entity.zmt_server.canonical:
   route_name: entity.zmt_server.canonical
   base_route: entity.zmt_server.canonical
@@ -21,11 +16,6 @@ entity.zmt_server.delete_form:
   weight: 10
 
 # Class of Service routing definition
-zmt_cos.settings_tab:
-  route_name: zmt_cos.settings
-  title: 'Settings'
-  base_route: zmt_cos.settings
-
 entity.zmt_cos.canonical:
   route_name: entity.zmt_cos.canonical
   base_route: entity.zmt_cos.canonical
@@ -43,11 +33,6 @@ entity.zmt_cos.delete_form:
   weight: 10
 
 # Domain routing definition
-zmt_domain.settings_tab:
-  route_name: zmt_domain.settings
-  title: 'Settings'
-  base_route: zmt_domain.settings
-
 entity.zmt_domain.canonical:
   route_name: entity.zmt_domain.canonical
   base_route: entity.zmt_domain.canonical
@@ -65,11 +50,6 @@ entity.zmt_domain.delete_form:
   weight: 10
 
 # Account routing definition
-zmt_account.settings_tab:
-  route_name: zmt_account.settings
-  title: 'Settings'
-  base_route: zmt_account.settings
-
 entity.zmt_account.canonical:
   route_name: entity.zmt_account.canonical
   base_route: entity.zmt_account.canonical
@@ -87,11 +67,6 @@ entity.zmt_account.delete_form:
   weight: 10
 
 # Alias routing definition
-zmt_alias.settings_tab:
-  route_name: zmt_alias.settings
-  title: 'Settings'
-  base_route: zmt_alias.settings
-
 entity.zmt_alias.canonical:
   route_name: entity.zmt_alias.canonical
   base_route: entity.zmt_alias.canonical
@@ -109,11 +84,6 @@ entity.zmt_alias.delete_form:
   weight: 10
 
 # Group routing definition
-zmt_group.settings_tab:
-  route_name: zmt_group.settings
-  title: 'Settings'
-  base_route: zmt_group.settings
-
 entity.zmt_group.canonical:
   route_name: entity.zmt_group.canonical
   base_route: entity.zmt_group.canonical

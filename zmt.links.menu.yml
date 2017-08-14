@@ -1,7 +1,7 @@
 
 # Zimbra Server menu items definition
 entity.zmt_server.collection:
-  title: 'Zimbra Server List'
+  title: 'Zimbra Servers'
   route_name: entity.zmt_server.collection
   description: 'List Zimbra Server entities'
   weight: 10
@@ -15,28 +15,28 @@ entity.zmt_cos.collection:
 
 # Domain menu items definition
 entity.zmt_domain.collection:
-  title: 'Domain List'
+  title: 'Domains'
   route_name: entity.zmt_domain.collection
   description: 'List Domain entities'
   weight: 10
 
 # Account menu items definition
 entity.zmt_account.collection:
-  title: 'Account List'
+  title: 'Accounts'
   route_name: entity.zmt_account.collection
   description: 'List Account entities'
   weight: 10
 
 # Alias menu items definition
 entity.zmt_alias.collection:
-  title: 'Alias List'
+  title: 'Aliases'
   route_name: entity.zmt_alias.collection
   description: 'List Alias entities'
   weight: 10
 
 # Group menu items definition
 entity.zmt_group.collection:
-  title: 'Group List'
+  title: 'Groups'
   route_name: entity.zmt_group.collection
   description: 'List Group entities'
   weight: 10
