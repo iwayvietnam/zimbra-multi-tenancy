@@ -13,12 +13,11 @@ use Drupal\Core\Link;
  */
 class ZmtServerListBuilder extends EntityListBuilder {
 
-
   /**
    * {@inheritdoc}
    */
   public function buildHeader() {
-    $header['id'] = $this->t('Zimbra Server ID');
+    $header['id'] = $this->t('ID');
     $header['name'] = $this->t('Name');
     return $header + parent::buildHeader();
   }

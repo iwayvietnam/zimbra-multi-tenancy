@@ -4,6 +4,8 @@ namespace Drupal\zmt\Form;
 
 use Drupal\Core\Entity\ContentEntityForm;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Link;
+use Drupal\Core\Url;
 
 /**
  * Form controller for Zimbra Server edit forms.
@@ -16,10 +18,10 @@ class ZmtServerForm extends ContentEntityForm {
    * {@inheritdoc}
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
-    /* @var $entity \Drupal\zmt\Entity\ZmtServer */
+    /* @var $entity \Drupal\zmt\Entity\ZmtAccount */
     $form = parent::buildForm($form, $form_state);
 
-    $entity = $this->entity;
+    $form['actions']['submit']['#suffix'] = Link::fromTextAndUrl(t('Cancel'), Url::fromRoute('entity.zmt_server.collection'))->toString();
 
     return $form;
   }
@@ -28,23 +30,8 @@ class ZmtServerForm extends ContentEntityForm {
    * {@inheritdoc}
    */
   public function save(array $form, FormStateInterface $form_state) {
-    $entity = &$this->entity;
-
-    $status = parent::save($form, $form_state);
-
-    switch ($status) {
-      case SAVED_NEW:
-        drupal_set_message($this->t('Created the %label Zimbra Server.', [
-          '%label' => $entity->label(),
-        ]));
-        break;
-
-      default:
-        drupal_set_message($this->t('Saved the %label Zimbra Server.', [
-          '%label' => $entity->label(),
-        ]));
-    }
-    $form_state->setRedirect('entity.zmt_server.canonical', ['zmt_server' => $entity->id()]);
+    parent::save($form, $form_state);
+    $form_state->setRedirect('entity.zmt_server.collection');
   }
 
 }
