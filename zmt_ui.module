@@ -588,9 +588,9 @@ function ajax_zmt_server_test_connection($form, $form_state) {
       $server->auth_token = $auth_token;
       zmt_server_save($server);
     }
-    $message = 'Connection to zimbra server success!';
+    $message = t('Connection to zimbra server success!');
   } else {
-    $message = 'Connection to zimbra server failed!';
+    $message = t('Connection to zimbra server failed!');
   }
 
   $commands = array();

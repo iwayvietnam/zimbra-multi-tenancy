@@ -167,24 +167,26 @@ function zmt_server_edit_form_validate($form, &$form_state) {
  * Zimbra server edit form submit callback.
  */
 function zmt_server_edit_form_submit($form, &$form_state) {
-  $server = $form_state['server'];
-  $values = $form_state['values'];
+  if (!form_set_error() && !zmt_is_ajax_request()) {
+    $server = $form_state['server'];
+    $values = $form_state['values'];
 
-  $server->name = check_plain($values['name']);
-  $server->service_location = check_plain($values['service_location']);
-  $server->admin_user = check_plain($values['admin_user']);
-  $password = trim($values['admin_password']);
-  if (!empty($password)) {
-    $server->admin_password = zmt_password_encrypt($values['admin_password']);
+    $server->name = check_plain($values['name']);
+    $server->service_location = check_plain($values['service_location']);
+    $server->admin_user = check_plain($values['admin_user']);
+    $password = trim($values['admin_password']);
+    if (!empty($password)) {
+      $server->admin_password = zmt_password_encrypt($values['admin_password']);
+    }
+    $server->exclude_mailbox = check_plain($values['exclude_mailbox']);
+    $server->delete_domain = (int) $values['delete_domain'];
+    $server->delete_dl = (int) $values['delete_dl'];
+    $server->delete_account = (int) $values['delete_account'];
+    $server->delete_alias = (int) $values['delete_alias'];
+    zmt_server_save($server);
+
+    $form_state['redirect'] = 'zmt/server';
   }
-  $server->exclude_mailbox = check_plain($values['exclude_mailbox']);
-  $server->delete_domain = (int) $values['delete_domain'];
-  $server->delete_dl = (int) $values['delete_dl'];
-  $server->delete_account = (int) $values['delete_account'];
-  $server->delete_alias = (int) $values['delete_alias'];
-  zmt_server_save($server);
-
-  $form_state['redirect'] = 'zmt/server';
 }
 
 /**
