@@ -398,7 +398,7 @@ class DistributionListSelector extends SoapStruct {
   );
 
   /**
-   * Constructor method for CosSelector
+   * Constructor method for DistributionListSelector
    * @param  string $by
    * @param  string $value
    * @return self
@@ -441,7 +441,7 @@ class DomainSelector extends SoapStruct {
   );
 
   /**
-   * Constructor method for CosSelector
+   * Constructor method for DomainSelector
    * @param  string $by
    * @param  string $value
    * @return self
@@ -891,7 +891,7 @@ class DeleteCosRequest extends SoapRequest {
    */
   public function __construct($id) {
     parent::__construct();
-    $this->id = trim($id);
+    $this->id = array(array('_content' => trim($id)));
   }
 }
 
