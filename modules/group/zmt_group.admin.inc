@@ -33,7 +33,11 @@ function zmt_group_list_all() {
       }
     }
     else {
-      $query->condition('zg.uid', $user->uid);
+      $query->condition(
+        db_or()
+          ->condition('zg.uid', $user->uid)
+          ->condition('zg.group_uid', $user->uid)
+      );
     }
   }
   else {

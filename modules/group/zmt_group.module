@@ -424,7 +424,7 @@ function zmt_group_access($op, $group, $account = NULL, $entity_type = NULL) {
     return user_access('administer own zmt_group', $account);
   }
   else {
-    $is_own = isset($group->uid) && $group->uid == $account->uid;
+    $is_own = isset($group->uid) && ($group->uid == $account->uid || $group->group_uid == $account->uid);
     return user_access('administer own zmt_group', $account) && $is_own;
   }
 }
