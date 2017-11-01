@@ -126,20 +126,23 @@ function zmt_domain_permission() {
 /**
  * Implements hook_user_delete().
  */
-function zmt_domain_user_delete($domain) {
+function zmt_domain_user_delete($user) {
   db_update('zmt_domain')
     ->fields(array(
       'domain_uid' => 0,
     ))
-    ->condition('domain_uid', $domain->uid)
+    ->condition('domain_uid', $user->uid)
     ->execute();
+  if (module_exists('entitycache')) {
+    entity_get_controller('zmt_domain')->resetCache();
+  }
 }
 
 /**
  * Implements hook_zmt_server_delete().
  */ 
 function zmt_domain_zmt_server_delete($server){
-  $id = $server ? $server->id : 0;
+  $id = $server ? (int) $server->id : 0;
   zmt_domain_delete_multiple_by_server(array($id));
 }
 
@@ -147,8 +150,24 @@ function zmt_domain_zmt_server_delete($server){
  * Implements hook_zmt_cos_delete().
  */ 
 function zmt_domain_zmt_cos_delete($cos){
-  $id = $cos ? $cos->id : 0;
+  $id = $cos ? (int) $cos->id : 0;
   zmt_domain_cos_delete_multiple_by_cos(array($id));
+}
+
+/**
+ * Implements hook_zmt_tenant_delete().
+ */ 
+function zmt_domain_zmt_tenant_delete($tenant){
+  $id = $tenant ? (int) $tenant->id : 0;
+  db_update('zmt_domain')
+    ->fields(array(
+      'tenant_id' => 0,
+    ))
+    ->condition('tenant_id', $id)
+    ->execute();
+  if (module_exists('entitycache')) {
+    entity_get_controller('zmt_domain')->resetCache();
+  }
 }
 
 /**
