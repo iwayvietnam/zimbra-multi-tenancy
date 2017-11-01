@@ -343,6 +343,30 @@ function zmt_account_count_by_domain($domain, $reset = FALSE) {
 }
 
 /**
+ * Counts account by domain and cos.
+ *
+ * @param $domain
+ *   The domain to load account for, or its id.
+ * @param $cos
+ *   The cos to load account for, or its id.
+ * @return
+ *   Total number of account objects.
+ */
+function zmt_account_count_by_domain_cos($domain, $cos, $reset = FALSE) {
+  $cache = &drupal_static(__FUNCTION__);
+  $domain_id = is_object($domain) ? $domain->id : $domain;
+  $cos_id = is_object($cos) ? $cos->id : $cos;
+  $cache_key = $domain_id . '-' . $cos_id;
+  if (!isset($cache[$cache_key]) || $reset === TRUE) {
+    $query = new EntityFieldQuery();
+    $query->entityCondition('entity_type', 'zmt_account')
+      ->propertyCondition('cos_id', $cos_id);
+    $cache[$cache_key] = $query->count()->execute();
+  }
+  return $cache[$cache_key];
+}
+
+/**
  * Checks account exists by domain.
  *
  * @param $domain
