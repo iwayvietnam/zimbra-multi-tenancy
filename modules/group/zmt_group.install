@@ -7,6 +7,8 @@ function zmt_group_install() {
   $zimbra_rid = (int) variable_get('zmt_zimbra_role_id', 0);
   $tenant_rid = (int) variable_get('zmt_tenant_role_id', 0);
   $domain_rid = (int) variable_get('zmt_domain_role_id', 0);
+  $group_rid  = (int) variable_get('zmt_group_role_id',  0);
+
   $zmt_perm = array(
     'administer any zmt_group' => 1,
   );
@@ -18,6 +20,11 @@ function zmt_group_install() {
   }
   if ($domain_rid > 0 ) {
     user_role_change_permissions($domain_rid, $zmt_perm);
+  }
+  if ($group_rid > 0 ) {
+    user_role_change_permissions($group_rid, array(
+      'administer own zmt_group' => 1,
+    ));
   }
 }
 
