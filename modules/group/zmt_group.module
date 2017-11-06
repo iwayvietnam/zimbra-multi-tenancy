@@ -145,11 +145,13 @@ function zmt_group_permission() {
 function zmt_group_query_zmt_group_load_multiple_alter(QueryAlterableInterface $query) {
   $query->leftJoin('zmt_domain', 'zd', 'zd.id = base.domain_id');
   $query->leftJoin('zmt_server', 'zs', 'zs.id = zd.server_id');
+  $query->leftJoin('zmt_group_member', 'zgm', 'zgm.member_id = zd.id & zgm.type = ' . GROUP_MEMBER_DL);
 
   $query->addField('zd', 'name', 'domain');
   $query->addField('zs', 'name', 'server');
   $query->addField('zs', 'delete_dl');
   $query->addField('zs', 'id', 'server_id');
+  $query->addField('zgm', 'group_id', 'parent_id');
 
   $group_member_query = db_select('zmt_group_member', 'zgm')
     ->fields('zgm', array('group_id'))
@@ -641,6 +643,165 @@ function zmt_group_exists($domain, $name, $id = 0) {
     $cache[$cache_key] = $result > 0;
   }
   return $cache[$cache_key];
+}
+
+/**
+ * Create a hierarchical representation of groups.
+ *
+ * @param $domain
+ *   Which domain to generate the tree for.
+ * @param $parent_id
+ *   The group ID under which to generate the tree. If 0, generate the tree
+ *   for the entire groups.
+ *
+ * @return
+ *   An array of all term objects in the tree. Each term object is extended
+ *   to have "depth" and "parents" attributes in addition to its normal ones.
+ */
+function zmt_group_get_tree($domain = 0, $parent_id = 0, $filter_name = '') {
+  $children = &drupal_static(__FUNCTION__, array());
+  $parents = &drupal_static(__FUNCTION__ . ':parents', array());
+  $groups = &drupal_static(__FUNCTION__ . ':groups', array());
+
+  if (!isset($children[$domain])) {
+    $children[$domain] = array();
+    $parents[$domain] = array();
+    $groups[$domain] = array();
+
+    $query = db_select('zmt_group', 'zg')->fields('zg', array('id'));
+    $query->leftJoin('zmt_group_member', 'zgm', 'zgm.member_id = zg.id AND zgm.type = ' . GROUP_MEMBER_DL);
+    $query->addField('zgm', 'group_id', 'parent_id');
+    if (!empty($domain)) {
+      $query->condition('zg.domain_id', $domain);
+    }
+    if (!empty($filter_name)) {
+      $query->condition(
+        db_or()
+          ->condition('zg.name', '%' . db_like($filter_name) . '%', 'LIKE')
+          ->condition('zg.full_name', '%' . db_like($filter_name) . '%', 'LIKE')
+      );
+    }
+    $result = $query->execute();
+    foreach ($result as $group) {
+      $children[$domain][(int) $group->parent_id][] = (int) $group->id;
+      $parents[$domain][(int) $group->id][] = (int) $group->parent_id;
+      $groups[$domain][(int) $group->id] = (int) $group->id;
+    }
+  }
+
+  $group_entities = zmt_group_load_multiple($groups[$domain]);
+  $tree = array();
+  $process_parents = array($parent_id);
+  while (count($process_parents)) {
+    $has_children = FALSE;
+    $parent = array_pop($process_parents);
+    $depth = count($process_parents);
+    $child = current($children[$domain][$parent]);
+    do {
+        if (empty($child)) {
+          break;
+        }
+        $group = !empty($group_entities[$child]) ? $group_entities[$child] : FALSE;
+        if (!empty($group)) {
+          $group->depth = $depth;
+          $group->parent_ids = $parents[$domain][$group->id];
+          $tree[$group->id] = $group;
+          if (!empty($children[$domain][$group->id])) {
+            $has_children = TRUE;
+
+            // We have to continue with this parent later.
+            $process_parents[] = $parent;
+            // Use the current group as parent for the next iteration.
+            $process_parents[] = $group->id;
+
+            // Reset pointers for child lists because we step in there more often
+            // with multi parents.
+            reset($children[$domain][$group->id]);
+            // Move pointer so that we get the correct group the next time.
+            next($children[$domain][$parent]);
+            break;
+          }
+        }
+    } while ($child = next($children[$domain][$parent]));
+
+    if (!$has_children) {
+      reset($children[$domain][$parent]);
+    }
+  }
+  return $tree;
+}
+
+/**
+ * Finds all children of a group ID.
+ *
+ * @param $id
+ *   A group ID.
+ *
+ * @return
+ *   An array of group objects that are the children of the group $id, or an
+ *   empty array when no children exist.
+ */
+function zmt_group_get_children($id = 0) {
+  $children = &drupal_static(__FUNCTION__, array());
+
+  if ($id && !isset($children[$id])) {
+    $query = db_select('zmt_group', 'zg')->fields('zg', array('id'));
+    $query->join('zmt_group_member', 'zgm', 'zgm.member_id = zg.id AND zgm.type = ' . GROUP_MEMBER_DL);
+    $query->condition('zgm.group_id', $id);
+    $gids = $query->execute()->fetchCol();
+    $children[$id] = zmt_group_load_multiple($gids);
+  }
+
+  return isset($children[$id]) ? $children[$id] : array();
+}
+
+/**
+ * Finds all parents of a given group ID.
+ *
+ * @param $id
+ *   A group ID.
+ *
+ * @return
+ *   An array of group objects which are the parents of the group $id, or an
+ *   empty array if parents are not found.
+ */
+function zmt_group_get_parents($id = 0) {
+  $parents = &drupal_static(__FUNCTION__, array());
+
+  if ($id && !isset($parents[$id])) {
+    $query = db_select('zmt_group', 'zg')->fields('zg', array('id'));
+    $query->join('zmt_group_member', 'zgm', 'zgm.group_id = zg.id AND zgm.type = ' . GROUP_MEMBER_DL);
+    $query->condition('zgm.member_id', $tid);
+    $gids = $query->execute()->fetchCol();
+    $parents[$id] = zmt_group_load_multiple($gids);
+  }
+
+  return isset($parents[$id]) ? $parents[$id] : array();
+}
+
+/**
+ * Find all ancestors of a given group ID.
+ */
+function zmt_group_get_parents_all($id = 0) {
+  $cache = &drupal_static(__FUNCTION__, array());
+
+  if (isset($cache[$id])) {
+    return $cache[$id];
+  }
+
+  $parents = array();
+  if ($group = zmt_group_load($id)) {
+    $parents[] = $group;
+    $n = 0;
+    while ($parent = taxonomy_get_parents($parents[$n]->id)) {
+      $parents = array_merge($parents, $parent);
+      $n++;
+    }
+  }
+
+  $cache[$id] = $parents;
+
+  return $parents;
 }
 
 /**
