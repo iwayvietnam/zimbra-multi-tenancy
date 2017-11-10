@@ -360,6 +360,7 @@ function zmt_account_count_by_domain_cos($domain, $cos, $reset = FALSE) {
   if (!isset($cache[$cache_key]) || $reset === TRUE) {
     $query = new EntityFieldQuery();
     $query->entityCondition('entity_type', 'zmt_account')
+      ->propertyCondition('domain_id', $domain_id)
       ->propertyCondition('cos_id', $cos_id);
     $cache[$cache_key] = $query->count()->execute();
   }
