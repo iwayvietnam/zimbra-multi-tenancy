@@ -261,6 +261,7 @@ function zmt_ajax_pull_data_callback($form, &$form_state) {
 function _zmt_ui_update_cos_data(array $zimbra_coses, $server_id = 0, $progress_name = 'zmt_pulling_progress') {
   $count = 0;
   variable_set($progress_name, $count);
+  $cos_zids = array();
   $total_cos = count($zimbra_coses);
   $mb = 1024 * 1024;
   foreach ($zimbra_coses as $zimbra_id => $zimbra_cos) {
@@ -281,12 +282,21 @@ function _zmt_ui_update_cos_data(array $zimbra_coses, $server_id = 0, $progress_
         }
       }
     }
-    $cos->zimbra_id = $zimbra_id;
+    $cos_zids[] = $cos->zimbra_id = $zimbra_id;
     zmt_cos_save($cos, FALSE);
 
     $count++;
     variable_set($progress_name, floor($count * 100 / $total_cos));
   }
+
+  if (!empty($cos_zids)) {
+    $query = db_select('zmt_cos', 'zc')
+      ->fields('zc', array('id'))
+      ->condition('zc.zimbra_id', $cos_zids, 'NOT IN');
+    $ids = $query->execute()->fetchCol();
+    zmt_cos_delete_multiple($ids);
+  }
+
   drupal_set_message($count . ' coses were updated.');
   return $count;
 }
@@ -306,8 +316,10 @@ function _zmt_ui_update_cos_data(array $zimbra_coses, $server_id = 0, $progress_
 function _zmt_ui_update_domain_data(array $zimbra_domains, $server_id = 0, $tenant_id = 0, $progress_name = 'zmt_pulling_progress') {
   $count = 0;
   variable_set($progress_name, $count);
+  $domain_zids = array();
   $total_domain = count($zimbra_domains);
   foreach ($zimbra_domains as $zimbra_id => $zimbra_domain) {
+    $domain_zids[] = $zimbra_id;
     $domain = zmt_domain_load_by_zimbra_id($zimbra_id, TRUE);
     if ($domain && !zmt_domain_exists($zimbra_domain->name, 0, TRUE)) {
       $domain->name = $zimbra_domain->name;
@@ -347,6 +359,15 @@ function _zmt_ui_update_domain_data(array $zimbra_domains, $server_id = 0, $tena
     $count++;
     variable_set($progress_name, floor($count * 100 / $total_domain));
   }
+
+  if (!empty($domain_zids)) {
+    $query = db_select('zmt_domain', 'zd')
+      ->fields('zd', array('id'))
+      ->condition('zd.zimbra_id', $domain_zids, 'NOT IN');
+    $ids = $query->execute()->fetchCol();
+    zmt_domain_delete_multiple($ids);
+  }
+
   drupal_set_message($count . ' domains were updated.');
   return $count;
 }
@@ -365,6 +386,7 @@ function _zmt_ui_update_account_data(ZimbraAdminApi $api, array $zimbra_domains,
   $count = 0;
   $progress = 0;
   variable_set($progress_name, $progress);
+  $account_zids = array();
   $total_account = (int) zimbra_count_account($api);
   foreach ($zimbra_domains as $zimbra_domain) {
     $domain_name = $zimbra_domain->name;
@@ -376,6 +398,7 @@ function _zmt_ui_update_account_data(ZimbraAdminApi $api, array $zimbra_domains,
       for ($offset = 0; $offset < $total; $offset += $limit) { 
         $zimbra_accounts = zimbra_list_account($api, $domain_name, $limit, $offset, $pager);
         foreach ($zimbra_accounts as $zimbra_id => $zimbra_account) {
+          $account_zids[] = $zimbra_id;
           $account_name = substr($zimbra_account->name, 0, (int) strpos($zimbra_account->name, '@'));
           $match = zmt_is_matches($excludes, $account_name);
 
@@ -424,6 +447,12 @@ function _zmt_ui_update_account_data(ZimbraAdminApi $api, array $zimbra_domains,
                 if ($attr->n === 'zimbraMailForwardingAddress' && !empty($attr->_content)) {
                   $addresses[] = $attr->_content;
                 }
+                if ($attr->n === 'zimbraCOSId' && !empty($attr->_content)) {
+                  $cos = zmt_cos_load_by_zimbra_id($attr->_content);
+                  if ($cos) {
+                    $account->cos_id = $cos->id;
+                  }
+                }
               }
               if (!empty($addresses)) {
                 $account->hidden_forwarding = implode(PHP_EOL, $addresses);
@@ -440,6 +469,15 @@ function _zmt_ui_update_account_data(ZimbraAdminApi $api, array $zimbra_domains,
       }
     }
   }
+
+  if (!empty($account_zids)) {
+    $query = db_select('zmt_account', 'za')
+      ->fields('za', array('id'))
+      ->condition('za.zimbra_id', $account_zids, 'NOT IN');
+    $ids = $query->execute()->fetchCol();
+    zmt_account_delete_multiple($ids);
+  }
+
   drupal_set_message($count . ' accounts were updated.');
   return $count;
 }
@@ -458,6 +496,7 @@ function _zmt_ui_update_alias_data(ZimbraAdminApi $api, array $zimbra_domains, $
   $count = 0;
   $progress = 0;
   variable_set($progress_name, $progress);
+  $alias_zids = array();
   $total_alias = (int) zimbra_count_alias($api);
   foreach ($zimbra_domains as $zimbra_domain) {
     $domain_name = $zimbra_domain->name;
@@ -470,6 +509,7 @@ function _zmt_ui_update_alias_data(ZimbraAdminApi $api, array $zimbra_domains, $
         $zimbra_aliases = zimbra_list_alias($api, $domain_name, $limit, $offset, $pager);
         $offset += $limit;
         foreach ($zimbra_aliases as $zimbra_id => $zmbra_alias) {
+          $alias_zids[] = $zimbra_id;
           $alias_name = substr($zmbra_alias->name, 0, (int) strpos($zmbra_alias->name, '@'));
           $account_name = substr($zmbra_alias->account_name, 0, (int) strpos($zmbra_alias->account_name, '@'));
           $account = zmt_account_load_by_name($domain->id, $account_name, TRUE);
@@ -501,6 +541,15 @@ function _zmt_ui_update_alias_data(ZimbraAdminApi $api, array $zimbra_domains, $
       } while (isset($pager['more']) && $pager['more'] === TRUE);
     }
   }
+
+  if (!empty($alias_zids)) {
+    $query = db_select('zmt_alias', 'za')
+      ->fields('za', array('id'))
+      ->condition('za.zimbra_id', $alias_zids, 'NOT IN');
+    $ids = $query->execute()->fetchCol();
+    zmt_alias_delete_multiple($ids);
+  }
+
   drupal_set_message($count . ' aliases were updated.');
   return $count;
 }
@@ -518,6 +567,7 @@ function _zmt_ui_update_alias_data(ZimbraAdminApi $api, array $zimbra_domains, $
 function _zmt_ui_update_group_data(ZimbraAdminApi $api, array $zimbra_domains, $server_id = 0, $progress_name = 'zmt_pulling_progress') {
   $count = 0;
   variable_set($progress_name, $count);
+  $dl_zids = array();
   $total_dl = (int) zimbra_count_dl($api);
   foreach ($zimbra_domains as $zimbra_domain) {
     $domain_name = $zimbra_domain->name;
@@ -525,6 +575,7 @@ function _zmt_ui_update_group_data(ZimbraAdminApi $api, array $zimbra_domains, $
     if ($domain && $domain->server_id == $server_id) {
       $zimbra_dls = zimbra_get_all_dl($api, $domain_name);
       foreach ($zimbra_dls as $zimbra_id => $dl) {
+        $dl_zids[] = $zimbra_id;
         $group_name = substr($dl->name, 0, (int) strpos($dl->name, '@'));
         $group = zmt_group_load_by_zimbra_id($zimbra_id);
         if ($group && !zmt_group_exists($domain->id, $group_name)) {
@@ -612,6 +663,15 @@ function _zmt_ui_update_group_data(ZimbraAdminApi $api, array $zimbra_domains, $
       }
     }
   }
+
+  if (!empty($dl_zids)) {
+    $query = db_select('zmt_group', 'zg')
+      ->fields('zg', array('id'))
+      ->condition('zg.zimbra_id', $dl_zids, 'NOT IN');
+    $ids = $query->execute()->fetchCol();
+    zmt_group_delete_multiple($ids);
+  }
+
   drupal_set_message($count . ' groups were updated.');
   return $count;
 }
