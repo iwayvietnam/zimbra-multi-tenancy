@@ -406,6 +406,9 @@ function _zmt_ui_update_account_data(ZimbraAdminApi $api, array $zimbra_domains,
                 if ($attr->n === 'title') {
                   $account->title = isset($attr->_content) ? $attr->_content : '';
                 }
+                if ($attr->n === 'description') {
+                  $account->description = isset($attr->_content) ? $attr->_content : '';
+                }
                 if ($attr->n === 'mobile') {
                   $account->mobile = isset($attr->_content) ? $attr->_content : '';
                 }

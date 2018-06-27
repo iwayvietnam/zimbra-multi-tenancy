@@ -374,6 +374,11 @@ function zmt_account_edit_form($form, &$form_state, $account){
     '#default_value' => $account->full_name,
     '#required' => TRUE,
   );
+  $form['description'] = array(
+    '#title' => t('Description'),
+    '#type' => 'textfield',
+    '#default_value' => $account->description,
+  );
   $options = zmt_account_statuses();
   $form['status'] = array(
     '#type' => 'select',
