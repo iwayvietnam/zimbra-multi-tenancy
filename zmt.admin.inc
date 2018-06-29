@@ -328,7 +328,10 @@ function _zmt_ui_update_domain_data(array $zimbra_domains, $server_id = 0, $tena
           $domain->status = isset($attr->_content) ? $attr->_content : '';
         }
         if ($attr->n === 'zimbraCreateTimestamp' && !empty($attr->_content)) {
-          $domain->created = strtotime($attr->_content);
+          $time = strtotime($attr->_content);
+          if ($time) {
+            $domain->created = $time;
+          }
         }
       }
     }
@@ -416,7 +419,10 @@ function _zmt_ui_update_account_data(ZimbraAdminApi $api, array $zimbra_domains,
                   $account->company = isset($attr->_content) ? $attr->_content : '';
                 }
                 if ($attr->n === 'zimbraCreateTimestamp' && !empty($attr->_content)) {
-                  $account->created = strtotime($attr->_content);
+                  $time = strtotime($attr->_content);
+                  if ($time) {
+                    $account->created = $time;
+                  }
                 }
                 if ($attr->n === 'zimbraMailForwardingAddress' && !empty($attr->_content)) {
                   $addresses[] = $attr->_content;
@@ -483,7 +489,10 @@ function _zmt_ui_update_alias_data(ZimbraAdminApi $api, array $zimbra_domains, $
             if (is_array($attrs)) {
               foreach ($attrs as $attr) {
                 if ($attr->n === 'zimbraCreateTimestamp' && !empty($attr->_content)) {
-                  $alias->created = strtotime($attr->_content);
+                  $time = strtotime($attr->_content);
+                  if ($time) {
+                    $alias->created = $time;
+                  }
                 }
               }
             }
@@ -544,7 +553,10 @@ function _zmt_ui_update_group_data(ZimbraAdminApi $api, array $zimbra_domains, $
               $group->full_name = isset($attr->_content) ? $attr->_content : '';
             }
             if ($attr->n === 'zimbraCreateTimestamp' && !empty($attr->_content)) {
-              $group->created = strtotime($attr->_content);
+              $time = strtotime($attr->_content);
+              if ($time) {
+                $group->created = $time;
+              }
             }
           }
         }
