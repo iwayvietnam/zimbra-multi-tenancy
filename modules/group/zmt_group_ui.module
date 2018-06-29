@@ -81,13 +81,15 @@ function zmt_group_edit_access($group, $account = NULL) {
     return TRUE;
   }
   else {
-    $domains = zmt_domain_load_multiple_by_user($account);
-    $domain_ids = array_keys($domains);
-    if (!empty($domain_ids)) {
-      return in_array($group->domain_id, $domain_ids);
+    if (user_access('administer any zmt_group')) {
+      $domains = zmt_domain_load_multiple_by_user($account);
+      $domain_ids = array_keys($domains);
+      if (!empty($domain_ids)) {
+        return in_array($group->domain_id, $domain_ids);
+      }
     }
-    else {
-      return (int) $group->group_uid == (int) $account->uid;
+    elseif (user_access('administer own zmt_group')) {
+      return (int) $group->group_uid == (int) $account->uid || (int) $group->uid == (int) $account->uid;
     }
   }
   return FALSE;

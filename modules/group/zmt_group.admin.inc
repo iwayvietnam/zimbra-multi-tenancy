@@ -33,7 +33,11 @@ function zmt_group_list_all() {
       }
     }
     else {
-      $query->condition('zg.uid', $user->uid);
+      $query->condition(
+        db_or()
+          ->condition('zg.uid', $user->uid)
+          ->condition('zg.group_uid', $user->uid)
+      );
     }
   }
   else {
@@ -551,7 +555,6 @@ function zmt_group_edit_form_validate($form, &$form_state) {
     }
 
     $mail = trim($values['mail']);
-    form_set_value($form['group_user']['mail'], $mail, $form_state);
     // Validate the e-mail address, and check if it is taken by an existing user.
     if ($error = user_validate_mail($values['mail'])) {
       form_set_error('mail', $error);
