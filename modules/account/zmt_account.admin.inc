@@ -173,6 +173,7 @@ function zmt_account_list_all() {
   $header[] = array('data' => t('No.'));
   $header[] = array('data' => t('Name'), 'field' => 'za.name');
   $header[] = array('data' => t('Full name'), 'field' => 'za.full_name');
+  $header[] = array('data' => t('Description'), 'field' => 'za.description');
   $header[] = array('data' => t('COS'), 'field' => 'zc.name');
   $header[] = array('data' => t('Status'), 'field' => 'za.status');
   $header[] = array('data' => t('Operations'));
@@ -238,6 +239,9 @@ function zmt_account_list_all() {
     $row[] = l($account_name, 'zmt/account/' . $account->id . '/edit', array('query' => $destination));
     $row[] = array(
       'data' => $account->full_name,
+    );
+    $row[] = array(
+      'data' => $account->description,
     );
     $row[] = array(
       'data' => $account->cos,
@@ -539,6 +543,7 @@ function zmt_account_edit_form_submit($form, &$form_state) {
   $account->name = filter_var($values['name'], FILTER_SANITIZE_EMAIL);
   $account->password = check_plain($values['password']);
   $account->full_name = check_plain($values['full_name']);
+  $account->description = check_plain($values['description']);
   $account->status = check_plain($values['status']);
   $account->title = check_plain($values['title']);
   $account->telephone = check_plain($values['telephone']);
