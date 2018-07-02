@@ -554,7 +554,7 @@ function _zmt_ui_update_alias_data(ZimbraAdminApi $api, array $zimbra_domains, $
   if (!empty($alias_zids)) {
     $query = db_select('zmt_alias', 'za')
       ->fields('za', array('id'))
-      ->condition('za.zimbra_id', $alias_zids, 'NOT IN');
+      ->condition('za.zimbra_target_id', $alias_zids, 'NOT IN');
     $ids = $query->execute()->fetchCol();
     zmt_alias_delete_multiple($ids);
   }
