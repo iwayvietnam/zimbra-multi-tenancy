@@ -292,6 +292,7 @@ function _zmt_ui_update_cos_data(array $zimbra_coses, $server_id = 0, $progress_
   if (!empty($cos_zids)) {
     $query = db_select('zmt_cos', 'zc')
       ->fields('zc', array('id'))
+      ->condition('zc.server_id', $server_id)
       ->condition('zc.zimbra_id', $cos_zids, 'NOT IN');
     $ids = $query->execute()->fetchCol();
     zmt_cos_delete_multiple($ids);
@@ -366,6 +367,7 @@ function _zmt_ui_update_domain_data(array $zimbra_domains, $server_id = 0, $tena
   if (!empty($domain_zids)) {
     $query = db_select('zmt_domain', 'zd')
       ->fields('zd', array('id'))
+      ->condition('zd.server_id', $server_id)
       ->condition('zd.zimbra_id', $domain_zids, 'NOT IN');
     $ids = $query->execute()->fetchCol();
     zmt_domain_delete_multiple($ids);
@@ -479,6 +481,7 @@ function _zmt_ui_update_account_data(ZimbraAdminApi $api, array $zimbra_domains,
   if (!empty($account_zids)) {
     $query = db_select('zmt_account', 'za')
       ->fields('za', array('id'))
+      ->condition('za.server_id', $server_id)
       ->condition('za.zimbra_id', $account_zids, 'NOT IN');
     $ids = $query->execute()->fetchCol();
     zmt_account_delete_multiple($ids);
@@ -554,6 +557,7 @@ function _zmt_ui_update_alias_data(ZimbraAdminApi $api, array $zimbra_domains, $
   if (!empty($alias_zids)) {
     $query = db_select('zmt_alias', 'za')
       ->fields('za', array('id'))
+      ->condition('za.server_id', $server_id)
       ->condition('za.zimbra_target_id', $alias_zids, 'NOT IN');
     $ids = $query->execute()->fetchCol();
     zmt_alias_delete_multiple($ids);
@@ -679,6 +683,7 @@ function _zmt_ui_update_group_data(ZimbraAdminApi $api, array $zimbra_domains, $
   if (!empty($dl_zids)) {
     $query = db_select('zmt_group', 'zg')
       ->fields('zg', array('id'))
+      ->condition('zg.server_id', $server_id)
       ->condition('zg.zimbra_id', $dl_zids, 'NOT IN');
     $ids = $query->execute()->fetchCol();
     zmt_group_delete_multiple($ids);
