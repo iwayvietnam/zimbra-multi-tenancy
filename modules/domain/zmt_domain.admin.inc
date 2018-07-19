@@ -384,13 +384,6 @@ function zmt_domain_max_account_number_element_validate($element, &$form_state, 
   $value = abs((int) $element['#value']);
   $title = $element['#title'];
 
-  if ($id) {
-    $total_account = !empty($domain->total_account) ? (int) $domain->total_account : 0;
-    if ($value < $total_account) {
-      form_error($element, t('Max account number must be greater than total account number.'));
-    }
-  }
-
   $tenant_id = (int) $form_state['values']['tenant_id'];
   $cos_id = (int) ltrim($element['#name'], 'max_account_');
   $cos = zmt_cos_load($cos_id);
@@ -450,6 +443,17 @@ function zmt_domain_edit_form_submit($form, &$form_state) {
     $account = user_save($account, $edit);
 
     $domain->domain_uid = $account->uid;
+  }
+  elseif (!empty($account->uid)) {
+    $edit = array(
+      'name' => check_plain(trim($values['name'])),
+      'mail' => check_plain(trim($values['mail'])),
+      'status' => (int) $values['status'],
+    );
+    if (isset($values['pass']) && !empty($values['pass'])) {
+      $edit['pass'] = trim($values['pass']);
+    }
+    user_save($account, $edit);
   }
 
   $domain->name = check_plain($values['domain_name']);
