@@ -1164,12 +1164,13 @@ function zimbra_list_alias(ZimbraAdminApi $api, $domain = NULL, $limit = NULL, $
         'description',
         'zimbraIsDelegatedAdminAccount',
         'zimbraIsAdminAccount',
-        'zimbraIsSystemResource',
+        'zimbraIsSystemAccount',
+        'zimbraIsExternalVirtualAccount',
         'zimbraCreateTimestamp',
       );
       $result = $api->searchDirectory(
-        '', NULL, $limit, $offset, $domain, NULL, NULL,
-        'aliases', NULL, NULL, NULL, implode(',', $attrs)
+        '(&(!(zimbraIsSystemAccount=TRUE)))', NULL, $limit, $offset, $domain, FALSE, FALSE,
+        'aliases', 'name', 1, NULL, implode(',', $attrs)
       );
       $pager = array(
         'num' => isset($result->num) ? (int) $result->num : 0,
