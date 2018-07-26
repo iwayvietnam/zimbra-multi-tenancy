@@ -408,12 +408,12 @@ function _zmt_ui_update_account_data(ZimbraAdminApi $api, array $zimbra_domains,
           $match = zmt_is_matches($excludes, $account_name);
 
           if (!$match) {
-            $account = zmt_account_load_by_zimbra_id($zimbra_id);
+            $account = zmt_account_load_by_zimbra_id($zimbra_id, TRUE);
             if ($account && !zmt_account_exists($domain->id, $account_name)) {
               $account->name = $account_name;
             }
             if (!$account) {
-              $account = zmt_account_load_by_name($domain->id, $account_name);
+              $account = zmt_account_load_by_name($domain->id, $account_name, TRUE);
             }
             if (!$account) {
               $account = zmt_account_new($account_name);
@@ -519,7 +519,7 @@ function _zmt_ui_update_alias_data(ZimbraAdminApi $api, array $zimbra_domains, $
   $count = 0;
   $progress = 0;
   variable_set($progress_name, $progress);
-  $alias_zids = array();
+  $target_zids = array();
   $total_alias = (int) zimbra_count_alias($api);
   foreach ($zimbra_domains as $zimbra_domain) {
     $domain_name = $zimbra_domain->name;
@@ -532,10 +532,9 @@ function _zmt_ui_update_alias_data(ZimbraAdminApi $api, array $zimbra_domains, $
         $zimbra_aliases = zimbra_list_alias($api, $domain_name, $limit, $offset, $pager);
         $offset += $limit;
         foreach ($zimbra_aliases as $zimbra_id => $zmbra_alias) {
-          $alias_zids[] = $zimbra_id;
+          $target_zids[] = $zmbra_alias->account_id;
           $alias_name = substr($zmbra_alias->name, 0, (int) strpos($zmbra_alias->name, '@'));
-          $account_name = substr($zmbra_alias->account_name, 0, (int) strpos($zmbra_alias->account_name, '@'));
-          $account = zmt_account_load_by_name($domain->id, $account_name, TRUE);
+          $account = zmt_account_load_by_zimbra_id($zmbra_alias->account_id, TRUE);
 
           $match = zmt_is_matches($excludes, $zmbra_alias->name);
           $exists = zmt_alias_exists($domain->id, $alias_name);
@@ -568,11 +567,11 @@ function _zmt_ui_update_alias_data(ZimbraAdminApi $api, array $zimbra_domains, $
     }
   }
 
-  if (!empty($alias_zids)) {
+  if (!empty($target_zids)) {
     $query = db_select('zmt_alias', 'za')
       ->fields('za', array('id'))
       ->condition('zd.server_id', $server_id)
-      ->condition('za.zimbra_target_id', $alias_zids, 'NOT IN');
+      ->condition('za.zimbra_target_id', $target_zids, 'NOT IN');
     $query->leftJoin('zmt_domain', 'zd', 'zd.id = za.domain_id');
     $ids = $query->execute()->fetchCol();
     zmt_alias_delete_multiple($ids);

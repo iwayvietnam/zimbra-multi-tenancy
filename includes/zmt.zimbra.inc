@@ -1170,7 +1170,7 @@ function zimbra_list_alias(ZimbraAdminApi $api, $domain = NULL, $limit = NULL, $
       );
       $result = $api->searchDirectory(
         '(&(!(zimbraIsSystemAccount=TRUE)))', NULL, $limit, $offset, $domain, FALSE, FALSE,
-        'aliases', 'name', 1, NULL, implode(',', $attrs)
+        'aliases', 'name', TRUE, NULL, implode(',', $attrs)
       );
       $pager = array(
         'num' => isset($result->num) ? (int) $result->num : 0,
