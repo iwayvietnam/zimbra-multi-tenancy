@@ -423,6 +423,7 @@ function _zmt_ui_update_account_data(ZimbraAdminApi $api, array $zimbra_domains,
 
             $attrs = isset($zimbra_account->a) ? $zimbra_account->a : array();
             if (is_array($attrs)) {
+              $zimbra_cos_id = NULL;
               $addresses = array();
               foreach ($attrs as $attr) {
                 if ($attr->n === 'displayName') {
@@ -455,24 +456,21 @@ function _zmt_ui_update_account_data(ZimbraAdminApi $api, array $zimbra_domains,
                 if ($attr->n === 'zimbraMailForwardingAddress' && !empty($attr->_content)) {
                   $addresses[] = $attr->_content;
                 }
-                $zimbra_cos_id = NULL;
                 if ($attr->n === 'zimbraCOSId' && !empty($attr->_content)) {
                   $zimbra_cos_id = $attr->_content;
                 }
-                else {
-                  if (!empty($zimbra_domain->a)) {
-                    foreach ($zimbra_domain->a as $domain_attr) {
-                      if ($domain_attr->n === 'zimbraDomainDefaultCOSId' && !empty($domain_attr->_content)) {
-                        $zimbra_cos_id = $domain_attr->_content;
-                      }
-                    }
+              }
+              if (empty($zimbra_cos_id) && !empty($zimbra_domain->a)) {
+                foreach ($zimbra_domain->a as $domain_attr) {
+                  if ($domain_attr->n === 'zimbraDomainDefaultCOSId' && !empty($domain_attr->_content)) {
+                    $zimbra_cos_id = $domain_attr->_content;
                   }
                 }
-                if (!empty($zimbra_cos_id)) {
-                  $cos = zmt_cos_load_by_zimbra_id($zimbra_cos_id);
-                  if ($cos) {
-                    $account->cos_id = $cos->id;
-                  }
+              }
+              if (!empty($zimbra_cos_id)) {
+                $cos = zmt_cos_load_by_zimbra_id($zimbra_cos_id);
+                if ($cos) {
+                  $account->cos_id = $cos->id;
                 }
               }
               if (!empty($addresses)) {
