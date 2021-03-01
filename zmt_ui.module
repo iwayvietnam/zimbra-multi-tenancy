@@ -282,7 +282,7 @@ function zmt_ui_zmt_account_import_form_validate($form, &$form_state) {
         else {
           zimbra_modify_account($api, $zimbra_account->id, $attrs);
 
-          $result = zimbra_check_password_strength($api, $zimbra_account->id, $password);
+          $result = zimbra_check_password_strength($api, $zimbra_account->id, $account->password);
           if ($result instanceof Exception) {
             drupal_set_message(t('Account @name is invalid. @message', array(
               '@name' => $account->name,
@@ -290,7 +290,7 @@ function zmt_ui_zmt_account_import_form_validate($form, &$form_state) {
             )), 'error');
           }
           else {
-            zimbra_set_password($api, $zimbra_account->id, $password);
+            zimbra_set_password($api, $zimbra_account->id, $account->password);
             $synchronized = TRUE;
           }
         }
