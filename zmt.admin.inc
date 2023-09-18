@@ -613,8 +613,8 @@ function _zmt_ui_update_group_data(ZimbraAdminApi $api, array $zimbra_domains, $
           $group = zmt_group_new($group_name);
           $group->full_name = $group_name;
           $group->domain_id = $domain->id;
-          $group->zimbra_id = $zimbra_id;
         }
+        $group->zimbra_id = $zimbra_id;
 
         $attrs = isset($dl->a) ? $dl->a : array();
         if (is_array($attrs)) {
