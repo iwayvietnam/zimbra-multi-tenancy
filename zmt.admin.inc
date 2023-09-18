@@ -331,8 +331,8 @@ function _zmt_ui_update_domain_data(array $zimbra_domains, $server_id = 0, $tena
     if (!$domain) {
       $domain = zmt_domain_new($zimbra_domain->name);
       $domain->server_id = $server_id;
-      $domain->zimbra_id = $zimbra_id;
     }
+    $domain->zimbra_id = $zimbra_id;
 
     $attrs = isset($zimbra_domain->a) ? $zimbra_domain->a : array();
     if (is_array($attrs)) {
