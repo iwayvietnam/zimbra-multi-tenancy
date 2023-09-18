@@ -418,8 +418,8 @@ function _zmt_ui_update_account_data(ZimbraAdminApi $api, array $zimbra_domains,
             if (!$account) {
               $account = zmt_account_new($account_name);
               $account->domain_id = $domain->id;
-              $account->zimbra_id = $zimbra_id;
             }
+            $account->zimbra_id = $zimbra_id;
 
             $attrs = isset($zimbra_account->a) ? $zimbra_account->a : array();
             if (is_array($attrs)) {
